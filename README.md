@@ -237,3 +237,7 @@ npm run sera -- knowledge documents
 npm run sera -- knowledge search "planner task queue" 5
 npm run sera -- knowledge summary
 ```
+
+### Phase 10: Model Provider Adapter v1
+
+S.E.R.A. includes a safe optional model-provider adapter layer. The certified provider is a deterministic local mock provider. External providers remain disabled until explicit configuration and safety gates exist.

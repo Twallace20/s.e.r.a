@@ -4,6 +4,7 @@ import path from "node:path";
 import { SeraKernel } from "@sera/kernel";
 import { KnowledgeStore } from "@sera/knowledge";
 import { MemoryStore } from "@sera/memory";
+import { ModelProviderStore } from "@sera/model-provider";
 
 export interface CertCheck {
   id: string;
@@ -14,7 +15,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -34,8 +35,9 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runActiveLessonsV1Checks());
   checks.push(...runTaskQueueV1Checks());
   checks.push(...runKnowledgeRetrievalV1Checks());
+  checks.push(...runModelProviderV1Checks());
 
-  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_")).every((c) => c.pass);
+  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const developerV2ChecksPass = checks.filter((c) => c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const selfImprovementV1ChecksPass = checks.filter((c) => c.id.startsWith("self_improvement_")).every((c) => c.pass);
@@ -44,8 +46,11 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   const activeLessonsV1ChecksPass = checks.filter((c) => c.id.startsWith("active_lessons_")).every((c) => c.pass);
   const taskQueueV1ChecksPass = checks.filter((c) => c.id.startsWith("task_queue_")).every((c) => c.pass);
   const knowledgeV1ChecksPass = checks.filter((c) => c.id.startsWith("knowledge_")).every((c) => c.pass);
+  const modelProviderV1ChecksPass = checks.filter((c) => c.id.startsWith("model_provider_")).every((c) => c.pass);
   const pass = checks.every((c) => c.pass);
-  const level = pass && knowledgeV1ChecksPass
+  const level = pass && modelProviderV1ChecksPass
+    ? "model-provider-v1"
+    : pass && knowledgeV1ChecksPass
     ? "knowledge-retrieval-v1"
     : pass && taskQueueV1ChecksPass
     ? "planner-task-queue-v1"
@@ -691,6 +696,75 @@ function runKnowledgeRetrievalV1Checks(): CertCheck[] {
       name: "Knowledge directory ingestion ignores runtime directories and summarizes records",
       pass: ingestDir.ok && documents.some((doc) => doc.relativePath === "docs/vision.md") && documents.every((doc) => !doc.relativePath.startsWith(".sera-memory/")) && chunks.length >= documents.length && summary.documentCount === documents.length && summary.searchCount >= 1,
       detail: JSON.stringify(summary)
+    }
+  ];
+}
+
+
+function runModelProviderV1Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-model-provider-cert-"));
+  const kernel = new SeraKernel({ rootDir: root });
+
+  const providers = kernel.listModelProviders();
+  const mock = providers.providers.find((provider) => provider.id === "mock-local");
+  const external = providers.providers.find((provider) => provider.id === "external-disabled");
+
+  const secretPrompt = "Summarize this safely with api_key=sk-1234567890abcdef and token=my-token.";
+  const invocation = kernel.invokeModelProvider({
+    providerId: "mock-local",
+    prompt: secretPrompt,
+    purpose: "certified mock invocation",
+    maxOutputTokens: 40
+  });
+  const modelStore = new ModelProviderStore(root);
+  const requests = modelStore.listRequests();
+  const responses = modelStore.listResponses();
+  const events = modelStore.listEvents();
+  const summaryAfterInvoke = modelStore.summarize();
+  const requestFileText = fs.existsSync(path.join(root, ".sera-models", "model-requests.jsonl"))
+    ? fs.readFileSync(path.join(root, ".sera-models", "model-requests.jsonl"), "utf8")
+    : "";
+
+  const unknown = kernel.invokeModelProvider({
+    providerId: "missing-provider",
+    prompt: "Should be blocked."
+  });
+  const disabled = kernel.invokeModelProvider({
+    providerId: "external-disabled",
+    prompt: "Should also be blocked."
+  });
+  const finalSummary = kernel.getModelProviderSummary().summary;
+
+  return [
+    {
+      id: "model_provider_lists_mock_and_disabled_external",
+      name: "Model Provider lists mock provider and disabled external provider slot",
+      pass: providers.ok && mock?.available === true && mock.localOnly === true && external?.available === false && external.networkAllowed === false,
+      detail: providers.modelDir
+    },
+    {
+      id: "model_provider_mock_invocation_records_request_response",
+      name: "Model Provider mock invocation records request and response evidence",
+      pass: invocation.ok && requests.length === 1 && responses.length === 1 && responses[0].requestId === requests[0].id && invocation.response?.output.includes("mock-local response") === true,
+      detail: invocation.responsePath ?? invocation.message
+    },
+    {
+      id: "model_provider_redacts_prompt_records",
+      name: "Model Provider redacts secrets before persisting prompt records",
+      pass: requestFileText.includes("[REDACTED]") && !requestFileText.includes("sk-1234567890abcdef") && !requestFileText.includes("my-token"),
+      detail: invocation.requestPath ?? "missing request path"
+    },
+    {
+      id: "model_provider_blocks_unknown_and_external",
+      name: "Model Provider blocks unknown and disabled external providers",
+      pass: !unknown.ok && unknown.status === "blocked" && !disabled.ok && disabled.status === "blocked",
+      detail: `${unknown.message} / ${disabled.message}`
+    },
+    {
+      id: "model_provider_summary_counts_events",
+      name: "Model Provider summary counts requests, responses, and blocked events",
+      pass: summaryAfterInvoke.requestCount === 1 && summaryAfterInvoke.responseCount === 1 && finalSummary.blockedEventCount >= 2 && events.length >= 3,
+      detail: JSON.stringify(finalSummary)
     }
   ];
 }

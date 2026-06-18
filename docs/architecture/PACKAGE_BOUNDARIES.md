@@ -62,3 +62,7 @@ Owns the local task queue, task lifecycle records, task event records, and task 
 ## `@sera/knowledge`
 
 Owns local file ingestion, document records, chunk records, deterministic lexical search, search history, and knowledge summaries under `.sera-knowledge/`. It must not execute tasks, mutate source files, activate lessons, or call LLM providers.
+
+## @sera/model-provider
+
+Owns optional model-provider adapter records, mock provider invocation, redacted request/response evidence, and provider summaries. It must not execute tools or mutate runtime state outside `.sera-models`.

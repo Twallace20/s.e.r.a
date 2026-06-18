@@ -28,6 +28,14 @@ import {
   KnowledgeSummaryResult
 } from "@sera/knowledge";
 import {
+  ModelInvocationInput,
+  ModelInvocationResult,
+  ModelProviderHistoryResult,
+  ModelProviderListResult,
+  ModelProviderStore,
+  ModelProviderSummaryResult
+} from "@sera/model-provider";
+import {
   CreateQueuedTaskInput,
   QueuedTaskRecord,
   QueuedTaskStatus,
@@ -209,6 +217,16 @@ export interface KnowledgeInspectTaskResult extends KnowledgeInspectResult {}
 export interface KnowledgeSearchTaskResult extends KnowledgeSearchResult {}
 
 export interface KnowledgeSummaryTaskResult extends KnowledgeSummaryResult {}
+
+export interface ModelProviderListTaskResult extends ModelProviderListResult {}
+
+export interface ModelInvocationTaskInput extends ModelInvocationInput {}
+
+export interface ModelInvocationTaskResult extends ModelInvocationResult {}
+
+export interface ModelProviderHistoryTaskResult extends ModelProviderHistoryResult {}
+
+export interface ModelProviderSummaryTaskResult extends ModelProviderSummaryResult {}
 
 export class SeraKernel {
   private readonly workspaceManager = new WorkspaceManager();
@@ -639,6 +657,35 @@ export class SeraKernel {
     const summaryPath = knowledge.writeSummary();
     const summary = knowledge.summarize();
     return { ok: true, status: "completed", knowledgeDir: knowledge.knowledgeDir, summary: { ...summary, knowledgeDir: knowledge.knowledgeDir }, summaryPath };
+  }
+
+
+  listModelProviders(): ModelProviderListTaskResult {
+    const models = new ModelProviderStore(this.options.rootDir);
+    return models.listProviders();
+  }
+
+  invokeModelProvider(input: ModelInvocationTaskInput): ModelInvocationTaskResult {
+    const models = new ModelProviderStore(this.options.rootDir);
+    return models.invoke(input);
+  }
+
+  listModelProviderHistory(kind: "requests" | "responses" | "events"): ModelProviderHistoryTaskResult {
+    const models = new ModelProviderStore(this.options.rootDir);
+    if (kind === "requests") {
+      return { ok: true, status: "completed", modelDir: models.modelDir, requests: models.listRequests() };
+    }
+    if (kind === "responses") {
+      return { ok: true, status: "completed", modelDir: models.modelDir, responses: models.listResponses() };
+    }
+    return { ok: true, status: "completed", modelDir: models.modelDir, events: models.listEvents() };
+  }
+
+  getModelProviderSummary(): ModelProviderSummaryTaskResult {
+    const models = new ModelProviderStore(this.options.rootDir);
+    const summaryPath = models.writeSummary();
+    const summary = models.summarize();
+    return { ok: true, status: "completed", modelDir: models.modelDir, summary: { ...summary, modelDir: models.modelDir }, summaryPath };
   }
 
   private createTask(prompt: string): SeraTask {
