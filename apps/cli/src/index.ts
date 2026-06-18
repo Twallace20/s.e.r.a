@@ -53,6 +53,11 @@ Usage:
   sera models responses
   sera models events
   sera models summary
+  sera auto propose <relative-file> <find-text> <replace-text> [expected-occurrences]
+  sera auto apply-cert <task-id> <relative-file> <find-text> <replace-text> [expected-occurrences]
+  sera auto loops
+  sera auto events
+  sera auto summary
 
 NPM examples:
   npm run sera -- run "create hello file"
@@ -81,6 +86,9 @@ NPM examples:
   npm run sera -- models providers
   npm run sera -- models invoke-mock "Summarize local evidence only."
   npm run sera -- models summary
+  npm run sera -- auto propose README.md "old" "new" 1
+  npm run sera -- auto apply-cert queued_task_123 README.md "old" "new" 1
+  npm run sera -- auto summary
 
 Secure base behavior:
   - runs locally
@@ -98,6 +106,7 @@ Secure base behavior:
   - Planner creates, queues, transitions, and records task history without autonomous execution
   - Knowledge ingestion indexes local files and retrieves lexical evidence without an LLM
   - Model Provider Adapter offers a deterministic local mock provider and blocks external providers by default
+  - Autonomous Dev Loop can propose bounded dev changes and only applies them behind validation gates
   - does not require an LLM provider
 `);
 }
@@ -691,6 +700,31 @@ async function main(): Promise<void> {
     }
 
     throw new Error("Models command must be 'providers', 'invoke-mock', 'requests', 'responses', 'events', or 'summary'.");
+  }
+
+  if (cmd === "auto") {
+    const [autoMode, first, second, third, fourth, fifth] = rest;
+    if (autoMode === "propose") {
+      const result = kernel.runAutonomousDevLoop({ mode: "propose", goal: `Propose bounded change for ${requireArg(first, "relative file path")}.`, relativePath: requireArg(first, "relative file path"), operations: [{ kind: "replace", find: requireArg(second, "find text"), replaceWith: requireArg(third, "replace text"), expectedOccurrences: parseExpectedOccurrences(fourth) }] });
+      console.log(JSON.stringify({ ok: result.ok, status: result.status, message: result.message, runDir: result.run.runDir, autonomyDir: result.autonomy.autonomyDir, loop: result.autonomy.loop, patch: result.autonomy.patch, knowledgeHitCount: result.autonomy.knowledge?.hits.length ?? 0, modelResponse: result.autonomy.model?.response, loopPath: result.autonomy.loopPath, eventPath: result.autonomy.eventPath, summaryPath: result.autonomy.summaryPath }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (autoMode === "apply-cert") {
+      const result = kernel.runAutonomousDevLoop({ mode: "apply", taskId: requireArg(first, "task id"), goal: `Apply bounded certified change for ${requireArg(second, "relative file path")}.`, relativePath: requireArg(second, "relative file path"), operations: [{ kind: "replace", find: requireArg(third, "find text"), replaceWith: requireArg(fourth, "replace text"), expectedOccurrences: parseExpectedOccurrences(fifth) }], validationCommand: { command: "npm", args: ["run", "certify"] } });
+      console.log(JSON.stringify({ ok: result.ok, status: result.status, message: result.message, runDir: result.run.runDir, autonomyDir: result.autonomy.autonomyDir, loop: result.autonomy.loop, task: result.autonomy.task, taskResult: result.autonomy.taskResult, patch: result.autonomy.patch, loopPath: result.autonomy.loopPath, eventPath: result.autonomy.eventPath, summaryPath: result.autonomy.summaryPath }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (autoMode === "loops" || autoMode === "events") {
+      const result = kernel.listAutonomousDevLoops(autoMode);
+      console.log(JSON.stringify({ ok: result.ok, status: result.status, autonomyDir: result.autonomyDir, loops: result.loops, events: result.events }, null, 2));
+      process.exit(0);
+    }
+    if (autoMode === "summary") {
+      const result = kernel.getAutonomousDevLoopSummary();
+      console.log(JSON.stringify({ ok: result.ok, status: result.status, autonomyDir: result.autonomyDir, summary: result.summary, summaryPath: result.summaryPath }, null, 2));
+      process.exit(0);
+    }
+    throw new Error("Auto command must be 'propose', 'apply-cert', 'loops', 'events', or 'summary'.");
   }
 
   console.error(`Unknown command: ${cmd}`);

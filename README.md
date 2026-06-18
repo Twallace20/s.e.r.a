@@ -14,6 +14,9 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - `lesson-review-v1`
 - `active-lessons-v1`
 - `planner-task-queue-v1`
+- `knowledge-retrieval-v1`
+- `model-provider-v1`
+- `autonomous-dev-loop-v1`
 
 ## What works now
 
@@ -44,12 +47,16 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - local planner task queue
 - task lifecycle event records
 - task queue memory integration
+- local knowledge ingestion and lexical retrieval
+- deterministic mock model provider adapter
+- bounded autonomous dev loop proposal and validation-gated apply modes
 
 ## What is intentionally not here yet
 
 - no LLM dependency in the kernel
 - no Ollama/OpenAI provider requirement
 - no uncontrolled autonomous self-modification
+- no autonomous mutation without validation gate
 - no semantic code refactoring
 - no cloud dependency
 - no database requirement
@@ -138,6 +145,9 @@ Nothing gets called working unless it has:
 - `@sera/certs` — certification checks
 - `@sera/memory` — local run memory, lesson review, activation records, and regression-rule evidence
 - `@sera/planner` — local task queue, task lifecycle events, and task memory integration
+- `@sera/knowledge` — local document and chunk ingestion plus lexical retrieval
+- `@sera/model-provider` — optional model adapter records, deterministic mock provider, and redacted model events
+- `@sera/autonomy` — bounded autonomous dev loop orchestration with validation-gated apply
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1
@@ -241,3 +251,31 @@ npm run sera -- knowledge summary
 ### Phase 10: Model Provider Adapter v1
 
 S.E.R.A. includes a safe optional model-provider adapter layer. The certified provider is a deterministic local mock provider. External providers remain disabled until explicit configuration and safety gates exist.
+
+## Phase 11: Autonomous Dev Loop v1
+
+S.E.R.A. now has a bounded autonomous development loop. It can connect a queued task, local knowledge search, the deterministic mock model provider, and the Developer Worker into one auditable loop.
+
+Autonomy remains safety-gated:
+
+- proposal mode creates a patch artifact without mutating source
+- apply mode requires a queued task id
+- apply mode requires a validation gate
+- failed validation rolls back source changes
+- successful validation completes the queued task
+- failed application blocks the queued task and records memory evidence
+- external model providers remain blocked by default
+
+```bash
+npm run sera -- auto propose README.md "old text" "new text" 1
+npm run sera -- auto apply-cert queued_task_123 README.md "old text" "new text" 1
+npm run sera -- auto loops
+npm run sera -- auto events
+npm run sera -- auto summary
+```
+
+Current certified level after Phase 11:
+
+```text
+autonomous-dev-loop-v1
+```

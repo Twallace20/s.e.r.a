@@ -1,4 +1,5 @@
 import path from "node:path";
+import { AutonomousDevLoopInput, AutonomousDevLoopListResult, AutonomousDevLoopResult, AutonomousDevLoopSummaryResult, AutonomousDevLoopWorker } from "@sera/autonomy";
 import { ArtifactStore } from "@sera/artifacts";
 import { SafetyPolicy } from "@sera/safety";
 import {
@@ -227,6 +228,13 @@ export interface ModelInvocationTaskResult extends ModelInvocationResult {}
 export interface ModelProviderHistoryTaskResult extends ModelProviderHistoryResult {}
 
 export interface ModelProviderSummaryTaskResult extends ModelProviderSummaryResult {}
+
+export interface AutonomousDevLoopTaskInput extends AutonomousDevLoopInput {
+  validationCommand?: DeveloperPatchValidationCommand;
+}
+export interface AutonomousDevLoopTaskResult extends SeraResult { autonomy: AutonomousDevLoopResult; }
+export interface AutonomousDevLoopListTaskResult extends AutonomousDevLoopListResult {}
+export interface AutonomousDevLoopSummaryTaskResult extends AutonomousDevLoopSummaryResult {}
 
 export class SeraKernel {
   private readonly workspaceManager = new WorkspaceManager();
@@ -688,6 +696,36 @@ export class SeraKernel {
     return { ok: true, status: "completed", modelDir: models.modelDir, summary: { ...summary, modelDir: models.modelDir }, summaryPath };
   }
 
+  runAutonomousDevLoop(input: AutonomousDevLoopTaskInput): AutonomousDevLoopTaskResult {
+    const prompt = `autonomous-dev-loop ${input.mode} ${input.relativePath}: ${input.goal}`;
+    const task = this.createTask(prompt);
+    const run = this.workspaceManager.createRun({ rootDir: this.options.rootDir, taskId: task.id });
+    const artifacts = new ArtifactStore(run.runDir);
+    const projectRoot = path.resolve(this.options.rootDir);
+    const safety = new SafetyPolicy({ workspaceDir: projectRoot, allowedCommands: ["node", "npm"] });
+    const shellTool = new ShellTool(run.id, safety, artifacts);
+    const plan = this.createAutonomousDevLoopPlan(task.id, input);
+    this.writeRunStartArtifacts(artifacts, task, plan, run, prompt);
+    const validate = input.validationCommand ? () => {
+      const commandResult = shellTool.run(input.validationCommand!.command, input.validationCommand!.args, projectRoot);
+      artifacts.writeJson(path.join("artifacts", "autonomy", "validation-command.json"), { command: input.validationCommand!.command, args: input.validationCommand!.args, ok: commandResult.ok, exitCode: commandResult.exitCode, stdout: commandResult.stdout, stderr: commandResult.stderr, message: commandResult.message });
+      return { ok: commandResult.ok, message: commandResult.ok ? `Validation command passed: ${input.validationCommand!.command} ${input.validationCommand!.args.join(" ")}`.trim() : `Validation command failed: ${input.validationCommand!.command} ${input.validationCommand!.args.join(" ")}`.trim() };
+    } : input.validate;
+    const worker = new AutonomousDevLoopWorker(projectRoot);
+    const autonomy = worker.run({ ...input, validate, validationDescription: input.validationCommand ? `${input.validationCommand.command} ${input.validationCommand.args.join(" ")}`.trim() : input.validate ? "custom validation callback" : input.validationDescription }, { runId: run.id, artifacts, safety });
+    artifacts.appendJsonl("steps.jsonl", { ts: isoNow(), runId: run.id, step: input.mode === "propose" ? "autonomy_propose_dev_loop" : "autonomy_apply_dev_loop", status: autonomy.status, loopId: autonomy.loop.id, taskId: autonomy.loop.taskId, changed: autonomy.patch?.changed ?? false, restored: autonomy.patch?.restored ?? false });
+    const base = this.finalizeRun({ artifacts, run, task, status: autonomy.status, summary: autonomy.message, extraArtifacts: ["artifacts/autonomy/validation-command.json", "artifacts/patches", "artifacts/backups", ".sera-autonomy/loops.jsonl", ".sera-autonomy/events.jsonl", ".sera-autonomy/summary.json"] });
+    return { ...base, autonomy };
+  }
+
+  listAutonomousDevLoops(kind: "loops" | "events"): AutonomousDevLoopListTaskResult {
+    return new AutonomousDevLoopWorker(this.options.rootDir).list(kind);
+  }
+
+  getAutonomousDevLoopSummary(): AutonomousDevLoopSummaryTaskResult {
+    return new AutonomousDevLoopWorker(this.options.rootDir).getSummary();
+  }
+
   private createTask(prompt: string): SeraTask {
     return {
       id: createSeraId("task"),
@@ -780,6 +818,15 @@ export class SeraKernel {
       message: input.summary,
       artifacts
     };
+  }
+
+  private createAutonomousDevLoopPlan(taskId: string, input: AutonomousDevLoopTaskInput): SeraPlan {
+    return { id: createSeraId("plan"), taskId, createdAt: isoNow(), steps: [
+      { id: createSeraId("step"), title: "Inspect queued task and target file before autonomous action", tool: "TaskQueueStore + DeveloperWorker", risk: "low", expectedArtifact: ".sera-autonomy/events.jsonl" },
+      { id: createSeraId("step"), title: "Search local knowledge and invoke deterministic mock provider", tool: "KnowledgeStore + ModelProviderStore", risk: "low", expectedArtifact: ".sera-knowledge/search-history.jsonl and .sera-models/model-responses.jsonl" },
+      { id: createSeraId("step"), title: input.mode === "propose" ? "Create autonomous patch proposal without source mutation" : "Apply bounded patch only behind validation gate", tool: "DeveloperWorker", risk: input.mode === "propose" ? "low" : "medium", expectedArtifact: input.mode === "propose" ? "artifacts/patches" : "artifacts/backups" },
+      { id: createSeraId("step"), title: "Record autonomy loop, task transition, and final evidence", tool: "AutonomousDevLoopWorker", risk: "low", expectedArtifact: ".sera-autonomy/loops.jsonl" }
+    ] };
   }
 
   private createStarterPlan(taskId: string, prompt: string): SeraPlan {

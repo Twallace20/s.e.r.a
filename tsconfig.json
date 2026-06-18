@@ -32,6 +32,9 @@
       "path": "packages/model-provider"
     },
     {
+      "path": "packages/autonomy"
+    },
+    {
       "path": "packages/self-improvement"
     },
     {

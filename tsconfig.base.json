@@ -53,6 +53,9 @@
       ],
       "@sera/model-provider": [
         "packages/model-provider/src/index.ts"
+      ],
+      "@sera/autonomy": [
+        "packages/autonomy/src/index.ts"
       ]
     }
   }

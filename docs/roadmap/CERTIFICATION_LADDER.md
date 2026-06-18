@@ -76,3 +76,7 @@ The system can ingest local files, chunk them into `.sera-knowledge/`, perform d
 ## Level: model-provider-v1
 
 Certifies that S.E.R.A. can list model providers, invoke the local mock provider, redact prompt records, block unknown/external providers, and summarize provider events without requiring an LLM for core runtime.
+
+## Level: autonomous-dev-loop-v1
+
+Certifies that S.E.R.A. can run a bounded autonomous development loop that proposes changes without mutation, refuses apply mode without validation, applies validated changes to queued tasks, rolls back failed validation, blocks failed tasks, and records autonomy loop/event summaries. This is not uncontrolled autonomy; it is a local, auditable, validation-gated orchestration layer.
