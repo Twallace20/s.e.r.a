@@ -2,11 +2,30 @@ import path from "node:path";
 import { ArtifactStore } from "@sera/artifacts";
 import { SafetyPolicy } from "@sera/safety";
 import { FileTool } from "@sera/tools";
+import { DeveloperEditMode, DeveloperEditResult, DeveloperWorker, DeveloperValidationResult } from "@sera/workers";
 import { WorkspaceManager } from "@sera/workspace";
-import { createSeraId, isoNow, SeraFinalReport, SeraPlan, SeraResult, SeraTask } from "@sera/shared";
+import { createSeraId, isoNow, SeraFinalReport, SeraPlan, SeraResult, SeraRun, SeraStatus, SeraTask } from "@sera/shared";
 
 export interface KernelOptions {
   rootDir: string;
+}
+
+export interface DeveloperEditTaskInput {
+  relativePath: string;
+  find: string;
+  replaceWith: string;
+  mode: DeveloperEditMode;
+  validate?: (context: {
+    projectRoot: string;
+    absolutePath: string;
+    relativePath: string;
+    before: string;
+    after: string;
+  }) => DeveloperValidationResult;
+}
+
+export interface DeveloperEditTaskResult extends SeraResult {
+  developer: DeveloperEditResult;
 }
 
 export class SeraKernel {
@@ -15,27 +34,18 @@ export class SeraKernel {
   constructor(private readonly options: KernelOptions) {}
 
   runTask(prompt: string): SeraResult {
-    const task: SeraTask = {
-      id: createSeraId("task"),
-      prompt,
-      createdAt: isoNow(),
-      requestedBy: "local-user"
-    };
-
+    const task = this.createTask(prompt);
     const run = this.workspaceManager.createRun({ rootDir: this.options.rootDir, taskId: task.id });
     const artifacts = new ArtifactStore(run.runDir);
     const safety = new SafetyPolicy({ workspaceDir: run.workspaceDir, allowedCommands: ["node", "npm"] });
     const fileTool = new FileTool(run.id, safety, artifacts);
 
     const plan = this.createStarterPlan(task.id, prompt);
-    artifacts.writeJson("task.json", task);
-    artifacts.writeJson("plan.json", plan);
-    artifacts.writeJson("run.json", run);
-    artifacts.appendJsonl("steps.jsonl", { ts: isoNow(), runId: run.id, step: "start", status: "completed", prompt });
+    this.writeRunStartArtifacts(artifacts, task, plan, run, prompt);
 
     const normalized = prompt.toLowerCase();
     let resultPath: string | undefined;
-    let status: SeraResult["status"] = "completed";
+    let status: SeraStatus = "completed";
     let summary = "S.E.R.A. completed the starter deterministic task.";
 
     if (normalized.includes("create hello file") || normalized.includes("hello file")) {
@@ -62,40 +72,124 @@ export class SeraKernel {
       artifacts.appendJsonl("steps.jsonl", { ts: isoNow(), runId: run.id, step: "write_task_note", status, resultPath });
     }
 
-    run.status = status;
-    run.finishedAt = isoNow();
+    return this.finalizeRun({ artifacts, run, task, status, summary });
+  }
+
+  runDeveloperEditTask(input: DeveloperEditTaskInput): DeveloperEditTaskResult {
+    const prompt = `developer ${input.mode} edit ${input.relativePath}`;
+    const task = this.createTask(prompt);
+    const run = this.workspaceManager.createRun({ rootDir: this.options.rootDir, taskId: task.id });
+    const artifacts = new ArtifactStore(run.runDir);
+    const projectRoot = path.resolve(this.options.rootDir);
+    const safety = new SafetyPolicy({ workspaceDir: projectRoot, allowedCommands: ["node", "npm"] });
+    const plan = this.createDeveloperEditPlan(task.id, input);
+    this.writeRunStartArtifacts(artifacts, task, plan, run, prompt);
+
+    const worker = new DeveloperWorker();
+    const developer = worker.edit({
+      runId: run.id,
+      projectRoot,
+      relativePath: input.relativePath,
+      find: input.find,
+      replaceWith: input.replaceWith,
+      mode: input.mode,
+      artifacts,
+      safety,
+      validate: input.validate
+    });
+
+    artifacts.appendJsonl("steps.jsonl", {
+      ts: isoNow(),
+      runId: run.id,
+      step: input.mode === "suggested" ? "developer_suggest_edit" : "developer_direct_edit",
+      status: developer.status,
+      relativePath: developer.relativePath,
+      changed: developer.changed,
+      occurrences: developer.occurrences
+    });
+
+    const base = this.finalizeRun({
+      artifacts,
+      run,
+      task,
+      status: developer.status,
+      summary: developer.message,
+      extraArtifacts: ["artifacts/developer-edit-suggestion.json", "artifacts/developer-edit-direct.json", "artifacts/developer-edit-rollback.json"]
+    });
+    return { ...base, developer };
+  }
+
+  private createTask(prompt: string): SeraTask {
+    return {
+      id: createSeraId("task"),
+      prompt,
+      createdAt: isoNow(),
+      requestedBy: "local-user"
+    };
+  }
+
+  private writeRunStartArtifacts(artifacts: ArtifactStore, task: SeraTask, plan: SeraPlan, run: SeraRun, prompt: string): void {
+    artifacts.writeJson("task.json", task);
+    artifacts.writeJson("plan.json", plan);
     artifacts.writeJson("run.json", run);
+    artifacts.appendJsonl("steps.jsonl", { ts: isoNow(), runId: run.id, step: "start", status: "completed", prompt });
+  }
+
+  private finalizeRun(input: {
+    artifacts: ArtifactStore;
+    run: SeraRun;
+    task: SeraTask;
+    status: SeraStatus;
+    summary: string;
+    extraArtifacts?: string[];
+  }): SeraResult {
+    const artifacts = [
+      "task.json",
+      "plan.json",
+      "run.json",
+      "steps.jsonl",
+      "tool-events.jsonl",
+      "safety-events.jsonl",
+      "final-report.md"
+    ];
+    for (const extra of input.extraArtifacts ?? []) {
+      artifacts.push(extra);
+    }
+
+    input.run.status = input.status;
+    input.run.finishedAt = isoNow();
+    input.artifacts.writeJson("run.json", input.run);
 
     const finalReport: SeraFinalReport = {
-      runId: run.id,
-      taskId: task.id,
-      status,
-      summary,
-      artifacts: ["task.json", "plan.json", "run.json", "steps.jsonl", "tool-events.jsonl", "safety-events.jsonl", "final-report.md"],
+      runId: input.run.id,
+      taskId: input.task.id,
+      status: input.status,
+      summary: input.summary,
+      artifacts,
       createdAt: isoNow()
     };
-    artifacts.writeJson("final-report.json", finalReport);
-    artifacts.writeMarkdown("final-report.md", [
+    input.artifacts.writeJson("final-report.json", finalReport);
+    input.artifacts.writeMarkdown("final-report.md", [
       `# S.E.R.A. Run Report`,
       ``,
-      `Run: ${run.id}`,
-      `Task: ${task.prompt}`,
-      `Status: ${status}`,
+      `Run: ${input.run.id}`,
+      `Task: ${input.task.prompt}`,
+      `Status: ${input.status}`,
       ``,
       `## Summary`,
-      summary,
+      input.summary,
       ``,
       `## Workspace`,
-      run.workspaceDir,
+      input.run.workspaceDir,
       ``
     ].join("\n"));
 
     return {
-      ok: status !== "blocked",
-      status,
-      run,
-      message: summary,
-      artifacts: finalReport.artifacts
+      ok: input.status !== "blocked" && input.status !== "failed",
+      status: input.status,
+      run: input.run,
+      message: input.summary,
+      artifacts
     };
   }
 
@@ -111,6 +205,37 @@ export class SeraKernel {
           tool: "FileTool",
           risk: "low",
           expectedArtifact: "workspace file"
+        },
+        {
+          id: createSeraId("step"),
+          title: "Write final report and evidence trail",
+          tool: "ArtifactStore",
+          risk: "low",
+          expectedArtifact: "final-report.md"
+        }
+      ]
+    };
+  }
+
+  private createDeveloperEditPlan(taskId: string, input: DeveloperEditTaskInput): SeraPlan {
+    return {
+      id: createSeraId("plan"),
+      taskId,
+      createdAt: isoNow(),
+      steps: [
+        {
+          id: createSeraId("step"),
+          title: `Inspect target file ${input.relativePath}`,
+          tool: "DeveloperWorker",
+          risk: "low",
+          expectedArtifact: "tool-events.jsonl"
+        },
+        {
+          id: createSeraId("step"),
+          title: input.mode === "suggested" ? "Create suggested edit artifact" : "Apply direct edit with backup",
+          tool: "DeveloperWorker",
+          risk: input.mode === "suggested" ? "low" : "medium",
+          expectedArtifact: input.mode === "suggested" ? "artifacts/suggestions" : "artifacts/backups"
         },
         {
           id: createSeraId("step"),

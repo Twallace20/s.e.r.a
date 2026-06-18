@@ -30,20 +30,38 @@ export class SafetyPolicy {
     this.requireApprovalForDestructiveActions = options.requireApprovalForDestructiveActions ?? true;
   }
 
-  canWritePath(targetPath: string): SafetyDecision {
+  canReadPath(targetPath: string): SafetyDecision {
     const resolved = path.resolve(targetPath);
     if (!isPathInside(this.workspaceDir, resolved)) {
       return {
         decision: "block",
-        reason: "Writes are restricted to the active S.E.R.A. workspace.",
-        policy: "workspace_boundary_v1",
+        reason: "Reads are restricted to the active S.E.R.A. workspace or approved project root.",
+        policy: "workspace_read_boundary_v1",
         target: resolved
       };
     }
     return {
       decision: "allow",
-      reason: "Path is inside the active workspace.",
-      policy: "workspace_boundary_v1",
+      reason: "Path is inside the active workspace or approved project root.",
+      policy: "workspace_read_boundary_v1",
+      target: resolved
+    };
+  }
+
+  canWritePath(targetPath: string): SafetyDecision {
+    const resolved = path.resolve(targetPath);
+    if (!isPathInside(this.workspaceDir, resolved)) {
+      return {
+        decision: "block",
+        reason: "Writes are restricted to the active S.E.R.A. workspace or approved project root.",
+        policy: "workspace_write_boundary_v1",
+        target: resolved
+      };
+    }
+    return {
+      decision: "allow",
+      reason: "Path is inside the active workspace or approved project root.",
+      policy: "workspace_write_boundary_v1",
       target: resolved
     };
   }

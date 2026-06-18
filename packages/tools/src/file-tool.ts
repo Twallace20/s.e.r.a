@@ -45,7 +45,36 @@ export class FileTool {
     return { ok: true, path: resolved, message: "File written." };
   }
 
-  readText(targetPath: string): string {
-    return fs.readFileSync(path.resolve(targetPath), "utf8");
+  readText(targetPath: string): { ok: boolean; text?: string; message: string; path?: string } {
+    const resolved = path.resolve(targetPath);
+    const decision = this.safety.canReadPath(resolved);
+    this.artifacts.appendJsonl("safety-events.jsonl", this.safety.toSafetyEvent(this.runId, decision));
+
+    if (decision.decision !== "allow") {
+      const event: SeraToolEvent = {
+        ts: isoNow(),
+        runId: this.runId,
+        tool: "FileTool",
+        action: "readText",
+        ok: false,
+        message: decision.reason,
+        target: resolved
+      };
+      this.artifacts.appendJsonl("tool-events.jsonl", event);
+      return { ok: false, message: decision.reason, path: resolved };
+    }
+
+    const text = fs.readFileSync(resolved, "utf8");
+    const event: SeraToolEvent = {
+      ts: isoNow(),
+      runId: this.runId,
+      tool: "FileTool",
+      action: "readText",
+      ok: true,
+      message: "File read inside workspace.",
+      target: resolved
+    };
+    this.artifacts.appendJsonl("tool-events.jsonl", event);
+    return { ok: true, text, message: "File read.", path: resolved };
   }
 }

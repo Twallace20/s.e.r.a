@@ -10,9 +10,6 @@
   "references": [
     { "path": "../shared" },
     { "path": "../safety" },
-    { "path": "../artifacts" },
-    { "path": "../workspace" },
-    { "path": "../tools" },
-    { "path": "../workers" }
+    { "path": "../artifacts" }
   ]
 }

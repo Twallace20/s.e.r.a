@@ -31,3 +31,8 @@
 - Source citations.
 
 The goal is not maximum feature count. The goal is a small number of trustworthy capabilities.
+
+
+## Phase 2 Developer Worker v1
+
+The first worker layer should remain deterministic and LLM-free. It supports bounded text replacement, suggested edit artifacts, direct edit backups, protected path blocking, and validation rollback. This creates the first safe path toward S.E.R.A. eventually improving its own code through certified steps.

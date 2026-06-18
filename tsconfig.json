@@ -17,6 +17,9 @@
       "path": "packages/tools"
     },
     {
+      "path": "packages/workers"
+    },
+    {
       "path": "packages/kernel"
     },
     {
