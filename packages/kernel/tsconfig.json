@@ -29,6 +29,9 @@
       "path": "../workers"
     },
     {
+      "path": "../memory"
+    },
+    {
       "path": "../self-improvement"
     }
   ]

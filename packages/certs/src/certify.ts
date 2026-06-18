@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { SeraKernel } from "@sera/kernel";
+import { MemoryStore } from "@sera/memory";
 
 export interface CertCheck {
   id: string;
@@ -12,7 +13,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -27,15 +28,19 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runDeveloperWorkerV1Checks());
   checks.push(...runDeveloperWorkerV2Checks());
   checks.push(...runSelfImprovementV1Checks());
+  checks.push(...runTaskMemoryV1Checks());
 
-  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_")).every((c) => c.pass);
+  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const developerV2ChecksPass = checks.filter((c) => c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const selfImprovementV1ChecksPass = checks.filter((c) => c.id.startsWith("self_improvement_")).every((c) => c.pass);
+  const memoryV1ChecksPass = checks.filter((c) => c.id.startsWith("memory_")).every((c) => c.pass);
   const pass = checks.every((c) => c.pass);
-  const level = pass && selfImprovementV1ChecksPass
-    ? "self-improvement-v1"
-    : pass && developerV2ChecksPass
+  const level = pass && memoryV1ChecksPass
+    ? "task-memory-v1"
+    : pass && selfImprovementV1ChecksPass
+      ? "self-improvement-v1"
+      : pass && developerV2ChecksPass
       ? "developer-worker-v2"
       : secureChecksPass && developerV1ChecksPass
         ? "developer-worker-v1"
@@ -325,6 +330,52 @@ function runSelfImprovementV1Checks(): CertCheck[] {
       name: "Self-improvement blocks mismatched occurrence expectations",
       pass: !mismatch.ok && mismatch.status === "blocked" && !mismatch.selfImprovement.changed && sourceAfterMismatch === "export const value = 'safe';\n",
       detail: mismatch.message
+    }
+  ];
+}
+
+
+function runTaskMemoryV1Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-memory-cert-"));
+  const kernel = new SeraKernel({ rootDir: root });
+
+  const successful = kernel.runTask("create hello file");
+  const blocked = kernel.runDeveloperPatchTask({
+    mode: "direct",
+    relativePath: "../outside.txt",
+    operations: [{ kind: "replace", find: "x", replaceWith: "y", expectedOccurrences: 1 }]
+  });
+
+  const memory = new MemoryStore(root);
+  const runs = memory.listRuns();
+  const failures = memory.listFailures();
+  const lessons = memory.listLessonCandidates();
+  const summary = memory.summarize();
+
+  return [
+    {
+      id: "memory_run_history_records_completed_run",
+      name: "Task Memory records completed runs in run history",
+      pass: successful.ok && runs.some((r) => r.runId === successful.run.id && r.status === "completed_with_changes"),
+      detail: memory.path("run-history.jsonl")
+    },
+    {
+      id: "memory_failure_journal_records_blocked_run",
+      name: "Task Memory records blocked runs in failure journal",
+      pass: !blocked.ok && failures.some((f) => f.runId === blocked.run.id && f.status === "blocked"),
+      detail: memory.path("failure-journal.jsonl")
+    },
+    {
+      id: "memory_lesson_candidate_requires_manual_approval",
+      name: "Task Memory creates inactive lesson candidates only",
+      pass: lessons.length === 1 && lessons[0].status === "candidate" && lessons[0].activation === "manual-approval-required",
+      detail: memory.path("lesson-candidates.jsonl")
+    },
+    {
+      id: "memory_summary_counts_runs_failures_and_candidates",
+      name: "Task Memory summary counts runs, failures, and lesson candidates",
+      pass: summary.runCount === 2 && summary.failureCount === 1 && summary.lessonCandidateCount === 1 && summary.approvedLessonCount === 0,
+      detail: JSON.stringify(summary)
     }
   ];
 }

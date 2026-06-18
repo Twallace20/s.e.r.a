@@ -49,3 +49,7 @@ S.E.R.A. can:
 ## Level: `self-improvement-v1`
 
 S.E.R.A. can create self-improvement proposals without mutation and can apply bounded changes only with a validation gate. Failed validation rolls back to the original source and writes evidence artifacts.
+
+## Phase 5 — task-memory-v1
+
+The system records completed runs in local memory, writes blocked/failed runs to a failure journal, creates inactive lesson candidates, and refuses automatic learning. This level proves S.E.R.A. can remember outcomes without allowing memory to become uncontrolled behavior.

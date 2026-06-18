@@ -12,3 +12,5 @@ coverage/
 Thumbs.db
 
 *.tsbuildinfo
+
+.sera-memory/

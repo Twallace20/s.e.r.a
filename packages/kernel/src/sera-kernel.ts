@@ -1,6 +1,7 @@
 import path from "node:path";
 import { ArtifactStore } from "@sera/artifacts";
 import { SafetyPolicy } from "@sera/safety";
+import { MemoryStore, MemorySummary, MemoryRunRecord, MemoryFailureRecord, LessonCandidateRecord } from "@sera/memory";
 import { FileTool, ShellTool } from "@sera/tools";
 import { SelfImprovementMode, SelfImprovementResult, SelfImprovementWorker } from "@sera/self-improvement";
 import {
@@ -86,6 +87,22 @@ export interface DeveloperPatchTaskResult extends SeraResult {
 
 export interface SelfImprovementTaskResult extends SeraResult {
   selfImprovement: SelfImprovementResult;
+}
+
+export interface MemorySummaryTaskResult {
+  ok: true;
+  status: "completed";
+  summary: MemorySummary;
+  memoryDir: string;
+}
+
+export interface MemoryListTaskResult {
+  ok: true;
+  status: "completed";
+  memoryDir: string;
+  runs?: MemoryRunRecord[];
+  failures?: MemoryFailureRecord[];
+  lessons?: LessonCandidateRecord[];
 }
 
 export class SeraKernel {
@@ -358,6 +375,24 @@ export class SeraKernel {
     return { ...base, selfImprovement };
   }
 
+  getMemorySummary(): MemorySummaryTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    const summaryPath = memory.writeSummary();
+    const summary = memory.summarize();
+    return { ok: true, status: "completed", summary: { ...summary, memoryDir: memory.memoryDir }, memoryDir: path.dirname(summaryPath) };
+  }
+
+  listMemory(kind: "runs" | "failures" | "lessons"): MemoryListTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    if (kind === "runs") {
+      return { ok: true, status: "completed", memoryDir: memory.memoryDir, runs: memory.listRuns() };
+    }
+    if (kind === "failures") {
+      return { ok: true, status: "completed", memoryDir: memory.memoryDir, failures: memory.listFailures() };
+    }
+    return { ok: true, status: "completed", memoryDir: memory.memoryDir, lessons: memory.listLessonCandidates() };
+  }
+
   private createTask(prompt: string): SeraTask {
     return {
       id: createSeraId("task"),
@@ -389,7 +424,8 @@ export class SeraKernel {
       "steps.jsonl",
       "tool-events.jsonl",
       "safety-events.jsonl",
-      "final-report.md"
+      "final-report.md",
+      "artifacts/memory/record.json"
     ];
     for (const extra of input.extraArtifacts ?? []) {
       artifacts.push(extra);
@@ -422,6 +458,25 @@ export class SeraKernel {
       input.run.workspaceDir,
       ``
     ].join("\n"));
+
+    const memory = new MemoryStore(this.options.rootDir);
+    const memoryResult = memory.recordRun({
+      runId: input.run.id,
+      taskId: input.task.id,
+      prompt: input.task.prompt,
+      status: input.status,
+      summary: input.summary,
+      startedAt: input.run.startedAt,
+      finishedAt: input.run.finishedAt,
+      runDir: input.run.runDir,
+      artifacts
+    });
+    memory.writeSummary();
+    input.artifacts.writeJson(path.join("artifacts", "memory", "record.json"), {
+      runRecordPath: memoryResult.runRecordPath,
+      failureRecordPath: memoryResult.failureRecordPath,
+      lessonCandidatePath: memoryResult.lessonCandidatePath
+    });
 
     return {
       ok: input.status !== "blocked" && input.status !== "failed",
