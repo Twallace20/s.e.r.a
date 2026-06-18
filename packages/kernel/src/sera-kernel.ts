@@ -1,7 +1,18 @@
 import path from "node:path";
 import { ArtifactStore } from "@sera/artifacts";
 import { SafetyPolicy } from "@sera/safety";
-import { MemoryStore, MemorySummary, MemoryRunRecord, MemoryFailureRecord, LessonCandidateRecord } from "@sera/memory";
+import {
+  ApprovedLessonRecord,
+  LessonCandidateRecord,
+  LessonDecisionRecord,
+  LessonReviewDecision,
+  LessonReviewResult,
+  MemoryFailureRecord,
+  MemoryRunRecord,
+  MemoryStore,
+  MemorySummary,
+  RejectedLessonRecord
+} from "@sera/memory";
 import { FileTool, ShellTool } from "@sera/tools";
 import { SelfImprovementMode, SelfImprovementResult, SelfImprovementWorker } from "@sera/self-improvement";
 import {
@@ -104,6 +115,27 @@ export interface MemoryListTaskResult {
   failures?: MemoryFailureRecord[];
   lessons?: LessonCandidateRecord[];
 }
+
+export interface LessonListTaskResult {
+  ok: true;
+  status: "completed";
+  memoryDir: string;
+  candidates?: LessonCandidateRecord[];
+  approved?: ApprovedLessonRecord[];
+  rejected?: RejectedLessonRecord[];
+  decisions?: LessonDecisionRecord[];
+}
+
+export interface LessonInspectTaskResult extends LessonReviewResult {}
+
+export interface LessonReviewTaskInput {
+  candidateId: string;
+  decision: LessonReviewDecision;
+  reviewer?: string;
+  rationale: string;
+}
+
+export interface LessonReviewTaskResult extends LessonReviewResult {}
 
 export class SeraKernel {
   private readonly workspaceManager = new WorkspaceManager();
@@ -391,6 +423,34 @@ export class SeraKernel {
       return { ok: true, status: "completed", memoryDir: memory.memoryDir, failures: memory.listFailures() };
     }
     return { ok: true, status: "completed", memoryDir: memory.memoryDir, lessons: memory.listLessonCandidates() };
+  }
+
+
+  listLessons(kind: "candidates" | "approved" | "rejected" | "decisions"): LessonListTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    if (kind === "candidates") {
+      return { ok: true, status: "completed", memoryDir: memory.memoryDir, candidates: memory.listLessonCandidates() };
+    }
+    if (kind === "approved") {
+      return { ok: true, status: "completed", memoryDir: memory.memoryDir, approved: memory.listApprovedLessons() };
+    }
+    if (kind === "rejected") {
+      return { ok: true, status: "completed", memoryDir: memory.memoryDir, rejected: memory.listRejectedLessons() };
+    }
+    return { ok: true, status: "completed", memoryDir: memory.memoryDir, decisions: memory.listLessonDecisions() };
+  }
+
+  inspectLessonCandidate(candidateId: string): LessonInspectTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    return memory.inspectLessonCandidate(candidateId);
+  }
+
+  reviewLessonCandidate(input: LessonReviewTaskInput): LessonReviewTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    if (input.decision === "approved") {
+      return memory.approveLessonCandidate(input.candidateId, input.reviewer ?? "local-user", input.rationale);
+    }
+    return memory.rejectLessonCandidate(input.candidateId, input.reviewer ?? "local-user", input.rationale);
   }
 
   private createTask(prompt: string): SeraTask {

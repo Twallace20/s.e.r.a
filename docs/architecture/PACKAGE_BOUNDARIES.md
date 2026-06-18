@@ -48,3 +48,6 @@ Owns bounded self-improvement coordination: inspection, proposal records, valida
 ## @sera/memory
 
 Owns local run memory, failure journal entries, lesson candidate records, and memory summaries. It must not execute tools, mutate source files, or activate lessons. It stores reviewable runtime data under `.sera-memory/`.
+
+
+Lesson Review + Approval v1 extends `@sera/memory`; it does not add an execution package. This keeps learning governance close to the memory evidence trail and prevents reviewed lessons from becoming runtime behavior automatically.

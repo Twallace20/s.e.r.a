@@ -53,3 +53,8 @@ S.E.R.A. can create self-improvement proposals without mutation and can apply bo
 ## Phase 5 — task-memory-v1
 
 The system records completed runs in local memory, writes blocked/failed runs to a failure journal, creates inactive lesson candidates, and refuses automatic learning. This level proves S.E.R.A. can remember outcomes without allowing memory to become uncontrolled behavior.
+
+
+## Phase 6 — lesson-review-v1
+
+The system can list, inspect, approve, and reject lesson candidates. Approved lessons remain inactive and require a later activation phase before they can affect behavior. Duplicate reviews, missing candidates, and reviews without rationale are blocked.

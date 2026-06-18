@@ -18,6 +18,13 @@ Usage:
   sera memory runs
   sera memory failures
   sera memory lessons
+  sera lessons candidates
+  sera lessons inspect <candidate-id>
+  sera lessons approve <candidate-id> <rationale>
+  sera lessons reject <candidate-id> <rationale>
+  sera lessons approved
+  sera lessons rejected
+  sera lessons decisions
 
 NPM examples:
   npm run sera -- run "create hello file"
@@ -30,6 +37,10 @@ NPM examples:
   npm run sera -- self apply-cert README.md "old" "new" 1
   npm run sera -- memory summary
   npm run sera -- memory failures
+  npm run sera -- lessons candidates
+  npm run sera -- lessons inspect <candidate-id>
+  npm run sera -- lessons approve <candidate-id> "Reviewed and valid."
+  npm run sera -- lessons reject <candidate-id> "Not actually a reusable lesson."
 
 Secure base behavior:
   - runs locally
@@ -42,6 +53,7 @@ Secure base behavior:
   - Self-improvement proposal mode writes evidence without mutating source
   - Self-improvement apply-cert requires npm run certify to pass or rolls back
   - Memory records run history, failure journal entries, and lesson candidates without activating lessons
+  - Lesson Review approves or rejects candidates while keeping approved lessons inactive
   - does not require an LLM provider
 `);
 }
@@ -231,6 +243,63 @@ async function main(): Promise<void> {
       process.exit(0);
     }
     throw new Error("Memory command must be 'summary', 'runs', 'failures', or 'lessons'.");
+  }
+
+  if (cmd === "lessons") {
+    const [lessonMode, candidateId, ...reasonParts] = rest;
+    if (lessonMode === "candidates" || lessonMode === "approved" || lessonMode === "rejected" || lessonMode === "decisions") {
+      const result = kernel.listLessons(lessonMode);
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        memoryDir: result.memoryDir,
+        candidates: result.candidates,
+        approved: result.approved,
+        rejected: result.rejected,
+        decisions: result.decisions
+      }, null, 2));
+      process.exit(0);
+    }
+
+    if (lessonMode === "inspect") {
+      const result = kernel.inspectLessonCandidate(requireArg(candidateId, "candidate id"));
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        memoryDir: result.memoryDir,
+        candidate: result.candidate,
+        candidatePath: result.candidatePath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (lessonMode === "approve" || lessonMode === "reject") {
+      const rationale = reasonParts.join(" ").trim();
+      const result = kernel.reviewLessonCandidate({
+        candidateId: requireArg(candidateId, "candidate id"),
+        decision: lessonMode === "approve" ? "approved" : "rejected",
+        reviewer: "local-user",
+        rationale
+      });
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        memoryDir: result.memoryDir,
+        candidate: result.candidate,
+        approvedLesson: result.approvedLesson,
+        rejectedLesson: result.rejectedLesson,
+        decision: result.decision,
+        candidatePath: result.candidatePath,
+        approvedLessonPath: result.approvedLessonPath,
+        rejectedLessonPath: result.rejectedLessonPath,
+        decisionPath: result.decisionPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    throw new Error("Lessons command must be 'candidates', 'inspect', 'approve', 'reject', 'approved', 'rejected', or 'decisions'.");
   }
 
   console.error(`Unknown command: ${cmd}`);

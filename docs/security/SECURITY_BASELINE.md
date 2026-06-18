@@ -35,3 +35,8 @@ Self-improvement apply mode requires a validation gate. Unvalidated self-modific
 ## Phase 5 memory safety
 
 The memory layer records evidence only. It does not approve lessons, alter prompts, modify source code, or change future behavior. Lesson candidates remain inactive until a future human-reviewed learning phase turns them into tests or rules.
+
+
+## Phase 6 lesson review safety
+
+Lesson review requires explicit human rationale. Approved lessons are stored with `active: false` and `activation: manual-activation-required`. S.E.R.A. can preserve reviewed knowledge, but it still cannot alter future behavior from memory on its own.
