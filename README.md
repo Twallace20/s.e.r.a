@@ -9,6 +9,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - `secure-base`
 - `developer-worker-v1`
 - `developer-worker-v2`
+- `self-improvement-v1`
 
 ## What works now
 
@@ -24,6 +25,8 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - direct patch application with expected occurrence checks
 - validation command support through the safe shell tool
 - rollback when validation fails
+- bounded self-improvement proposal mode
+- validation-gated self-improvement apply mode
 - protected path blocking
 - JSON/JSONL/Markdown artifact trail
 - certification runner
@@ -71,7 +74,7 @@ npm run sera -- dev apply examples/demo.txt "old text" "new text"
 
 Use suggested mode first for important files. Direct mode should stay narrow and reviewable.
 
-## Developer Worker v2
+## Developer Worker v2 and Self-Improvement Loop v1
 
 Inspect mode fingerprints a file without changing it:
 

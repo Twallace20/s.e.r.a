@@ -39,3 +39,8 @@ Certification runner and capability checks.
 - `packages/knowledge`
 - `apps/local-api`
 - `apps/console`
+
+
+## `@sera/self-improvement`
+
+Owns bounded self-improvement coordination: inspection, proposal records, validation-gated application, rollback evidence, and refusal of uncertified self-modification. It depends on Developer Worker behavior but does not choose arbitrary files or goals autonomously.

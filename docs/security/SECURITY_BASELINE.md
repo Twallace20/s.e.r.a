@@ -26,3 +26,8 @@ The first secure base protects against the highest-risk legacy failure modes.
 - Plugin marketplace controls.
 
 Those belong to later phases.
+
+
+## Self-improvement safety
+
+Self-improvement apply mode requires a validation gate. Unvalidated self-modification is blocked. Proposal mode may create artifacts but must not mutate source files.

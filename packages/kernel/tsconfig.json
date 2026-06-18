@@ -6,13 +6,30 @@
     "composite": true,
     "tsBuildInfoFile": "dist/.tsbuildinfo"
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts"
+  ],
   "references": [
-    { "path": "../shared" },
-    { "path": "../safety" },
-    { "path": "../artifacts" },
-    { "path": "../workspace" },
-    { "path": "../tools" },
-    { "path": "../workers" }
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../safety"
+    },
+    {
+      "path": "../artifacts"
+    },
+    {
+      "path": "../workspace"
+    },
+    {
+      "path": "../tools"
+    },
+    {
+      "path": "../workers"
+    },
+    {
+      "path": "../self-improvement"
+    }
   ]
 }

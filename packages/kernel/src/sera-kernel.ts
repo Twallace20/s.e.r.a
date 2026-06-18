@@ -2,6 +2,7 @@ import path from "node:path";
 import { ArtifactStore } from "@sera/artifacts";
 import { SafetyPolicy } from "@sera/safety";
 import { FileTool, ShellTool } from "@sera/tools";
+import { SelfImprovementMode, SelfImprovementResult, SelfImprovementWorker } from "@sera/self-improvement";
 import {
   DeveloperEditMode,
   DeveloperEditResult,
@@ -56,6 +57,21 @@ export interface DeveloperPatchTaskInput {
   validationCommand?: DeveloperPatchValidationCommand;
 }
 
+export interface SelfImprovementTaskInput {
+  goal: string;
+  relativePath: string;
+  operations: DeveloperPatchOperation[];
+  mode: SelfImprovementMode;
+  validate?: (context: {
+    projectRoot: string;
+    absolutePath: string;
+    relativePath: string;
+    before: string;
+    after: string;
+  }) => DeveloperValidationResult;
+  validationCommand?: DeveloperPatchValidationCommand;
+}
+
 export interface DeveloperEditTaskResult extends SeraResult {
   developer: DeveloperEditResult;
 }
@@ -66,6 +82,10 @@ export interface DeveloperInspectTaskResult extends SeraResult {
 
 export interface DeveloperPatchTaskResult extends SeraResult {
   patch: DeveloperPatchResult;
+}
+
+export interface SelfImprovementTaskResult extends SeraResult {
+  selfImprovement: SelfImprovementResult;
 }
 
 export class SeraKernel {
@@ -271,6 +291,73 @@ export class SeraKernel {
     return { ...base, patch };
   }
 
+  runSelfImprovementTask(input: SelfImprovementTaskInput): SelfImprovementTaskResult {
+    const prompt = `self-improvement ${input.mode} ${input.relativePath}: ${input.goal}`;
+    const task = this.createTask(prompt);
+    const run = this.workspaceManager.createRun({ rootDir: this.options.rootDir, taskId: task.id });
+    const artifacts = new ArtifactStore(run.runDir);
+    const projectRoot = path.resolve(this.options.rootDir);
+    const safety = new SafetyPolicy({ workspaceDir: projectRoot, allowedCommands: ["node", "npm"] });
+    const shellTool = new ShellTool(run.id, safety, artifacts);
+    const plan = this.createSelfImprovementPlan(task.id, input);
+    this.writeRunStartArtifacts(artifacts, task, plan, run, prompt);
+
+    const validate = input.validationCommand
+      ? () => {
+          const commandResult = shellTool.run(input.validationCommand!.command, input.validationCommand!.args, projectRoot);
+          artifacts.writeJson(path.join("artifacts", "self-improvement", "validation-command.json"), {
+            command: input.validationCommand!.command,
+            args: input.validationCommand!.args,
+            ok: commandResult.ok,
+            exitCode: commandResult.exitCode,
+            stdout: commandResult.stdout,
+            stderr: commandResult.stderr,
+            message: commandResult.message
+          });
+          return {
+            ok: commandResult.ok,
+            message: commandResult.ok
+              ? `Validation command passed: ${input.validationCommand!.command} ${input.validationCommand!.args.join(" ")}`.trim()
+              : `Validation command failed: ${input.validationCommand!.command} ${input.validationCommand!.args.join(" ")}`.trim()
+          };
+        }
+      : input.validate;
+
+    const worker = new SelfImprovementWorker();
+    const selfImprovement = worker.run({
+      runId: run.id,
+      projectRoot,
+      goal: input.goal,
+      relativePath: input.relativePath,
+      operations: input.operations,
+      mode: input.mode,
+      artifacts,
+      safety,
+      validate,
+      validationDescription: input.validationCommand
+        ? `${input.validationCommand.command} ${input.validationCommand.args.join(" ")}`.trim()
+        : input.validate
+          ? "custom validation callback"
+          : undefined
+    });
+
+    const base = this.finalizeRun({
+      artifacts,
+      run,
+      task,
+      status: selfImprovement.status,
+      summary: selfImprovement.message,
+      extraArtifacts: [
+        "artifacts/self-improvement/record.json",
+        "artifacts/self-improvement/validation-command.json",
+        "artifacts/inspections",
+        "artifacts/patches",
+        "artifacts/backups"
+      ]
+    });
+    return { ...base, selfImprovement };
+  }
+
   private createTask(prompt: string): SeraTask {
     return {
       id: createSeraId("task"),
@@ -461,4 +548,43 @@ export class SeraKernel {
       ]
     };
   }
+
+  private createSelfImprovementPlan(taskId: string, input: SelfImprovementTaskInput): SeraPlan {
+    return {
+      id: createSeraId("plan"),
+      taskId,
+      createdAt: isoNow(),
+      steps: [
+        {
+          id: createSeraId("step"),
+          title: `Inspect self-improvement target ${input.relativePath}`,
+          tool: "SelfImprovementWorker",
+          risk: "low",
+          expectedArtifact: "artifacts/inspections"
+        },
+        {
+          id: createSeraId("step"),
+          title: input.mode === "propose" ? "Create self-improvement proposal artifact" : "Apply self-improvement through DeveloperWorker with backup",
+          tool: "SelfImprovementWorker",
+          risk: input.mode === "propose" ? "low" : "high",
+          expectedArtifact: "artifacts/self-improvement/record.json"
+        },
+        {
+          id: createSeraId("step"),
+          title: input.mode === "apply" ? "Require validation gate before completion" : "Record proposal without source mutation",
+          tool: input.mode === "apply" ? "ShellTool" : "ArtifactStore",
+          risk: input.mode === "apply" ? "high" : "low",
+          expectedArtifact: input.mode === "apply" ? "artifacts/self-improvement/validation-command.json" : "artifacts/patches"
+        },
+        {
+          id: createSeraId("step"),
+          title: "Write final report and evidence trail",
+          tool: "ArtifactStore",
+          risk: "low",
+          expectedArtifact: "final-report.md"
+        }
+      ]
+    };
+  }
+
 }
