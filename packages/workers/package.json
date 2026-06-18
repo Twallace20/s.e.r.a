@@ -1,5 +1,5 @@
 {
-  "name": "@sera/kernel",
+  "name": "@sera/workers",
   "version": "0.1.0",
   "private": true,
   "main": "dist/index.js",
@@ -10,9 +10,6 @@
   "dependencies": {
     "@sera/artifacts": "0.1.0",
     "@sera/safety": "0.1.0",
-    "@sera/shared": "0.1.0",
-    "@sera/tools": "0.1.0",
-    "@sera/workers": "0.1.0",
-    "@sera/workspace": "0.1.0"
+    "@sera/shared": "0.1.0"
   }
 }

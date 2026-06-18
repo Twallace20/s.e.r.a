@@ -1,75 +1,93 @@
-# S.E.R.A. — Secure Evidence-Driven Runtime Architecture
+# S.E.R.A. Clean Core
 
-S.E.R.A. is a local-first AI work operating system in progress. This clean-core repo starts with the part that must be trustworthy before anything intelligent or autonomous is added: a secure local runtime that can accept a task, create an isolated workspace, use approved tools, write evidence, and report honestly.
+S.E.R.A. is a local-first AI work operating system foundation: a secure, modular, evidence-driven agent runtime that can accept a task, use approved tools, write artifacts, report honestly, and grow into specialized workers without corrupting its core.
 
-This repo intentionally does **not** depend on Ollama, OpenAI, Codex, Copilot, Replit, Base44, Docker, cloud hosting, or any LLM provider in the secure base. Those can become adapters later. The kernel must stand on its own.
+This repo is the clean rebuild foundation. The legacy SERA repo remains a reference archive only.
 
-## Current scope
+## Current certified level
 
-The first version proves the foundation:
+- `secure-base`
+- `developer-worker-v1`
 
-- local CLI entry point
-- modular TypeScript/npm workspace structure
-- task/run/plan/step data model
-- isolated run workspace
+## What works now
+
+- TypeScript + Node local runtime
+- npm workspace monorepo
+- secure kernel run lifecycle
+- workspace-only starter task execution
+- project-root-bounded Developer Worker v1
+- suggested edit mode
+- direct edit mode with backup artifacts
+- validation rollback support
+- protected path blocking
 - JSON/JSONL/Markdown artifact trail
-- workspace-only file writes
-- allowlisted shell execution model
-- secret redaction
-- blocked-action reporting
-- starter cert runner
-- starter integration tests
+- starter certification runner
+- integration tests
 
-## Quick start
+## What is intentionally not here yet
+
+- no LLM dependency in the kernel
+- no Ollama/OpenAI provider requirement
+- no autonomous self-modification
+- no semantic code refactoring
+- no cloud dependency
+- no database requirement
+
+## Setup
 
 ```bash
 npm install
 npm run build
 npm test
 npm run certify
+```
+
+## Starter secure-base run
+
+```bash
 npm run sera -- run "create hello file"
 ```
 
-The demo run writes a folder under `.sera-runs/` with a workspace, task, plan, tool events, safety events, and a final report.
+This creates `.sera-runs/<run-id>/` with task, plan, tool, safety, and final report artifacts.
 
-## Core rule
+## Developer Worker v1
 
-A S.E.R.A. capability only counts when it has:
+Suggested edit mode creates an artifact proposal and does not mutate the source file:
+
+```bash
+npm run sera -- dev suggest README.md "old text" "new text"
+```
+
+Direct edit mode applies a narrow literal replacement inside the approved project root and captures a backup artifact:
+
+```bash
+npm run sera -- dev apply examples/demo.txt "old text" "new text"
+```
+
+Use suggested mode first for important files. Direct mode should stay narrow and reviewable.
+
+## Core law
+
+Nothing gets called working unless it has:
 
 1. a clear contract
 2. a safe boundary
-3. a test or cert
+3. a cert/test
 4. an artifact trail
 5. an honest final status
 
-## Repo layout
+## Current package boundaries
 
-```txt
-apps/
-  cli/                 local CLI entry point
-packages/
-  shared/              shared types and utilities
-  artifacts/           evidence and artifact writer
-  safety/              safety policy and redaction
-  workspace/           workspace/run directory management
-  tools/               controlled tool adapters
-  kernel/              task execution lifecycle
-  certs/               certification runner
-docs/
-  vision/              product charter and principles
-  architecture/        package boundaries and system design
-  security/            baseline, approvals, starter threat model
-  data-design/         task/run/artifact schemas
-  legacy-autopsy/      lessons from the legacy repo
-  roadmap/             certification ladder and 30/60/90 plan
-tests/
-  integration/         secure-base integration tests
-```
+- `@sera/shared` — shared IDs, paths, redaction, and core types
+- `@sera/safety` — workspace boundaries, command allowlists, internet default-off policy
+- `@sera/workspace` — run/workspace creation
+- `@sera/artifacts` — JSON, JSONL, and Markdown evidence writing
+- `@sera/tools` — controlled tools such as file and shell tools
+- `@sera/workers` — bounded worker modules, starting with Developer Worker v1
+- `@sera/kernel` — task/run orchestration
+- `@sera/certs` — certification checks
+- `apps/cli` — local command-line interface
 
-## What this is not yet
+## Next phase
 
-This is not yet a code-writing AI, app builder, autonomous worker, cloud backend, desktop app, PWA, or local LLM. Those are future layers. This repo starts by making sure the base is safe, modular, inspectable, and certifiable.
-
-## Legacy policy
-
-The old SERA/LocalAgent6 repo is a reference archive only. Ideas can migrate; structure cannot. Code can migrate only after it has a clear purpose, clean interface, safety boundary, and passing cert.
+Phase 3 should add a real validation layer for developer work: syntax checks, test command orchestration through the safe shell tool, and stricter diff artifacts before S.E.R.A. moves toward semantic code editing.
