@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"],
+  "references": [
+    { "path": "../shared" },
+    { "path": "../memory" },
+    { "path": "../planner" },
+    { "path": "../knowledge" },
+    { "path": "../model-provider" },
+    { "path": "../autonomy" }
+  ]
+}

@@ -56,6 +56,9 @@
       ],
       "@sera/autonomy": [
         "packages/autonomy/src/index.ts"
+      ],
+      "@sera/operator-console": [
+        "packages/operator-console/src/index.ts"
       ]
     }
   }

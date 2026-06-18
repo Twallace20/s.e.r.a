@@ -70,3 +70,8 @@ Owns optional model-provider adapter records, mock provider invocation, redacted
 ## @sera/autonomy
 
 Owns the bounded Autonomous Dev Loop. It may coordinate task queue records, local knowledge search, deterministic mock model output, and Developer Worker patching. It must not bypass validation gates, must not use external providers, and must not apply source mutations unless a queued task and validation gate are present.
+
+
+## @sera/operator-console
+
+Owns local operator snapshots, health checks, and reports. It reads certified subsystem summaries and writes `.sera-console/` evidence artifacts. It must not apply patches, approve lessons, activate lessons, enable model providers, or bypass validation gates.

@@ -58,6 +58,11 @@ Usage:
   sera auto loops
   sera auto events
   sera auto summary
+  sera console status
+  sera console health
+  sera console report
+  sera console history
+  sera console summary
 
 NPM examples:
   npm run sera -- run "create hello file"
@@ -89,6 +94,8 @@ NPM examples:
   npm run sera -- auto propose README.md "old" "new" 1
   npm run sera -- auto apply-cert queued_task_123 README.md "old" "new" 1
   npm run sera -- auto summary
+  npm run sera -- console status
+  npm run sera -- console report
 
 Secure base behavior:
   - runs locally
@@ -107,6 +114,7 @@ Secure base behavior:
   - Knowledge ingestion indexes local files and retrieves lexical evidence without an LLM
   - Model Provider Adapter offers a deterministic local mock provider and blocks external providers by default
   - Autonomous Dev Loop can propose bounded dev changes and only applies them behind validation gates
+  - Operator Console summarizes health, evidence, tasks, knowledge, models, and autonomy from one local command
   - does not require an LLM provider
 `);
 }
@@ -725,6 +733,37 @@ async function main(): Promise<void> {
       process.exit(0);
     }
     throw new Error("Auto command must be 'propose', 'apply-cert', 'loops', 'events', or 'summary'.");
+  }
+
+
+  if (cmd === "console") {
+    const [consoleMode] = rest;
+    if (consoleMode === "status") {
+      const result = kernel.getOperatorConsoleStatus();
+      console.log(JSON.stringify({ ok: result.ok, status: result.status, consoleDir: result.consoleDir, snapshot: result.snapshot, snapshotPath: result.snapshotPath, eventPath: result.eventPath, summaryPath: result.summaryPath }, null, 2));
+      process.exit(0);
+    }
+    if (consoleMode === "health") {
+      const result = kernel.getOperatorConsoleHealth();
+      console.log(JSON.stringify({ ok: result.ok, status: result.status, consoleDir: result.consoleDir, health: result.health, healthPath: result.healthPath, eventPath: result.eventPath, summaryPath: result.summaryPath }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (consoleMode === "report") {
+      const result = kernel.writeOperatorConsoleReport();
+      console.log(JSON.stringify({ ok: result.ok, status: result.status, consoleDir: result.consoleDir, report: result.report, markdownPath: result.markdownPath, jsonPath: result.jsonPath, eventPath: result.eventPath, summaryPath: result.summaryPath }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (consoleMode === "history") {
+      const result = kernel.listOperatorConsoleHistory();
+      console.log(JSON.stringify({ ok: result.ok, status: result.status, consoleDir: result.consoleDir, snapshots: result.snapshots, events: result.events, reports: result.reports }, null, 2));
+      process.exit(0);
+    }
+    if (consoleMode === "summary") {
+      const result = kernel.getOperatorConsoleSummary();
+      console.log(JSON.stringify({ ok: result.ok, status: result.status, consoleDir: result.consoleDir, summary: result.summary, summaryPath: result.summaryPath }, null, 2));
+      process.exit(0);
+    }
+    throw new Error("Console command must be 'status', 'health', 'report', 'history', or 'summary'.");
   }
 
   console.error(`Unknown command: ${cmd}`);

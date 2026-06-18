@@ -37,6 +37,14 @@ import {
   ModelProviderSummaryResult
 } from "@sera/model-provider";
 import {
+  OperatorConsoleHealthResult,
+  OperatorConsoleHistoryResult,
+  OperatorConsoleReportResult,
+  OperatorConsoleStatusResult,
+  OperatorConsoleStore,
+  OperatorConsoleSummaryResult
+} from "@sera/operator-console";
+import {
   CreateQueuedTaskInput,
   QueuedTaskRecord,
   QueuedTaskStatus,
@@ -235,6 +243,11 @@ export interface AutonomousDevLoopTaskInput extends AutonomousDevLoopInput {
 export interface AutonomousDevLoopTaskResult extends SeraResult { autonomy: AutonomousDevLoopResult; }
 export interface AutonomousDevLoopListTaskResult extends AutonomousDevLoopListResult {}
 export interface AutonomousDevLoopSummaryTaskResult extends AutonomousDevLoopSummaryResult {}
+export interface OperatorConsoleStatusTaskResult extends OperatorConsoleStatusResult {}
+export interface OperatorConsoleHealthTaskResult extends OperatorConsoleHealthResult {}
+export interface OperatorConsoleReportTaskResult extends OperatorConsoleReportResult {}
+export interface OperatorConsoleHistoryTaskResult extends OperatorConsoleHistoryResult {}
+export interface OperatorConsoleSummaryTaskResult extends OperatorConsoleSummaryResult {}
 
 export class SeraKernel {
   private readonly workspaceManager = new WorkspaceManager();
@@ -724,6 +737,26 @@ export class SeraKernel {
 
   getAutonomousDevLoopSummary(): AutonomousDevLoopSummaryTaskResult {
     return new AutonomousDevLoopWorker(this.options.rootDir).getSummary();
+  }
+
+  getOperatorConsoleStatus(): OperatorConsoleStatusTaskResult {
+    return new OperatorConsoleStore(this.options.rootDir).getStatus();
+  }
+
+  getOperatorConsoleHealth(): OperatorConsoleHealthTaskResult {
+    return new OperatorConsoleStore(this.options.rootDir).getHealth();
+  }
+
+  writeOperatorConsoleReport(): OperatorConsoleReportTaskResult {
+    return new OperatorConsoleStore(this.options.rootDir).writeReport();
+  }
+
+  listOperatorConsoleHistory(): OperatorConsoleHistoryTaskResult {
+    return new OperatorConsoleStore(this.options.rootDir).listHistory();
+  }
+
+  getOperatorConsoleSummary(): OperatorConsoleSummaryTaskResult {
+    return new OperatorConsoleStore(this.options.rootDir).getSummary();
   }
 
   private createTask(prompt: string): SeraTask {
