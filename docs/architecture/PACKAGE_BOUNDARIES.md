@@ -66,3 +66,7 @@ Owns local file ingestion, document records, chunk records, deterministic lexica
 ## @sera/model-provider
 
 Owns optional model-provider adapter records, mock provider invocation, redacted request/response evidence, and provider summaries. It must not execute tools or mutate runtime state outside `.sera-models`.
+
+## @sera/autonomy
+
+Owns the bounded Autonomous Dev Loop. It may coordinate task queue records, local knowledge search, deterministic mock model output, and Developer Worker patching. It must not bypass validation gates, must not use external providers, and must not apply source mutations unless a queued task and validation gate are present.

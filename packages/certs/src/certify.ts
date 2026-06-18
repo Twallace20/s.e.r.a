@@ -15,7 +15,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -36,8 +36,9 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runTaskQueueV1Checks());
   checks.push(...runKnowledgeRetrievalV1Checks());
   checks.push(...runModelProviderV1Checks());
+  checks.push(...runAutonomousDevLoopV1Checks());
 
-  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_")).every((c) => c.pass);
+  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const developerV2ChecksPass = checks.filter((c) => c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const selfImprovementV1ChecksPass = checks.filter((c) => c.id.startsWith("self_improvement_")).every((c) => c.pass);
@@ -47,8 +48,11 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   const taskQueueV1ChecksPass = checks.filter((c) => c.id.startsWith("task_queue_")).every((c) => c.pass);
   const knowledgeV1ChecksPass = checks.filter((c) => c.id.startsWith("knowledge_")).every((c) => c.pass);
   const modelProviderV1ChecksPass = checks.filter((c) => c.id.startsWith("model_provider_")).every((c) => c.pass);
+  const autonomyV1ChecksPass = checks.filter((c) => c.id.startsWith("autonomy_")).every((c) => c.pass);
   const pass = checks.every((c) => c.pass);
-  const level = pass && modelProviderV1ChecksPass
+  const level = pass && autonomyV1ChecksPass
+    ? "autonomous-dev-loop-v1"
+    : pass && modelProviderV1ChecksPass
     ? "model-provider-v1"
     : pass && knowledgeV1ChecksPass
     ? "knowledge-retrieval-v1"
@@ -766,6 +770,40 @@ function runModelProviderV1Checks(): CertCheck[] {
       pass: summaryAfterInvoke.requestCount === 1 && summaryAfterInvoke.responseCount === 1 && finalSummary.blockedEventCount >= 2 && events.length >= 3,
       detail: JSON.stringify(finalSummary)
     }
+  ];
+}
+
+
+function runAutonomousDevLoopV1Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-autonomy-cert-"));
+  const kernel = new SeraKernel({ rootDir: root });
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+  fs.writeFileSync(path.join(root, "src", "feature.ts"), "export const mode = 'legacy';\n", "utf8");
+  fs.writeFileSync(path.join(root, "src", "failure.ts"), "export const flag = 'bad';\n", "utf8");
+  fs.writeFileSync(path.join(root, "docs", "autonomy.md"), "Autonomous dev loops must be bounded, validated, and locally evidenced.\n", "utf8");
+  kernel.ingestKnowledgeFile({ relativePath: "docs/autonomy.md", title: "Autonomy Guardrails" });
+  const proposal = kernel.runAutonomousDevLoop({ mode: "propose", goal: "Propose a bounded autonomous update for a local feature file.", relativePath: "src/feature.ts", operations: [{ kind: "replace", find: "legacy", replaceWith: "proposed", expectedOccurrences: 1 }] });
+  const afterProposal = fs.readFileSync(path.join(root, "src", "feature.ts"), "utf8");
+  const noValidation = kernel.runAutonomousDevLoop({ mode: "apply", goal: "Try to apply without validation and confirm it is blocked.", relativePath: "src/feature.ts", operations: [{ kind: "replace", find: "legacy", replaceWith: "unsafe", expectedOccurrences: 1 }] });
+  const afterNoValidation = fs.readFileSync(path.join(root, "src", "feature.ts"), "utf8");
+  const queued = kernel.createQueuedTask({ title: "Autonomous certified feature update", prompt: "Apply a bounded autonomous change only if validation passes.", requestedBy: "cert-runner" });
+  const applied = kernel.runAutonomousDevLoop({ mode: "apply", taskId: queued.task?.id, goal: "Apply bounded autonomous feature update with validation.", relativePath: "src/feature.ts", operations: [{ kind: "replace", find: "legacy", replaceWith: "autonomous", expectedOccurrences: 1 }], validate: ({ after }) => ({ ok: after.includes("autonomous"), message: "autonomous marker exists" }) });
+  const afterApply = fs.readFileSync(path.join(root, "src", "feature.ts"), "utf8");
+  const appliedTask = kernel.inspectQueuedTask(queued.task?.id ?? "missing");
+  const failureTask = kernel.createQueuedTask({ title: "Autonomous rollback validation", prompt: "Confirm a failed autonomous validation rolls back and blocks task.", requestedBy: "cert-runner" });
+  const failedApply = kernel.runAutonomousDevLoop({ mode: "apply", taskId: failureTask.task?.id, goal: "Attempt autonomous change that should fail validation.", relativePath: "src/failure.ts", operations: [{ kind: "replace", find: "bad", replaceWith: "invalid", expectedOccurrences: 1 }], validate: () => ({ ok: false, message: "simulated autonomous validation failure" }) });
+  const afterFailedApply = fs.readFileSync(path.join(root, "src", "failure.ts"), "utf8");
+  const failedTask = kernel.inspectQueuedTask(failureTask.task?.id ?? "missing");
+  const loops = kernel.listAutonomousDevLoops("loops").loops ?? [];
+  const events = kernel.listAutonomousDevLoops("events").events ?? [];
+  const summary = kernel.getAutonomousDevLoopSummary().summary;
+  return [
+    { id: "autonomy_proposal_no_source_mutation", name: "Autonomous Dev Loop proposal mode does not mutate source", pass: proposal.ok && proposal.autonomy.loop.mode === "propose" && proposal.autonomy.patch?.totalOccurrences === 1 && afterProposal === "export const mode = 'legacy';\n", detail: proposal.autonomy.patch?.patchArtifactPath ?? proposal.message },
+    { id: "autonomy_apply_requires_validation_gate", name: "Autonomous Dev Loop apply mode requires validation", pass: !noValidation.ok && noValidation.status === "blocked" && afterNoValidation === "export const mode = 'legacy';\n", detail: noValidation.message },
+    { id: "autonomy_apply_certifies_and_completes_task", name: "Autonomous Dev Loop applies bounded change and completes queued task after validation", pass: applied.ok && applied.status === "completed_with_changes" && afterApply.includes("autonomous") && appliedTask.task?.status === "completed" && Boolean(applied.autonomy.taskResult?.memoryRunRecordPath), detail: applied.autonomy.taskResult?.memoryRunRecordPath ?? applied.message },
+    { id: "autonomy_failed_validation_rolls_back_and_blocks_task", name: "Autonomous Dev Loop rolls back failed validation and blocks queued task", pass: !failedApply.ok && failedApply.status === "blocked" && failedApply.autonomy.patch?.restored === true && afterFailedApply === "export const flag = 'bad';\n" && failedTask.task?.status === "blocked" && Boolean(failedApply.autonomy.taskResult?.lessonCandidatePath), detail: failedApply.autonomy.taskResult?.lessonCandidatePath ?? failedApply.message },
+    { id: "autonomy_summary_counts_loops_and_events", name: "Autonomous Dev Loop summary and events track proposed, applied, and blocked loops", pass: loops.length === 4 && events.length >= 10 && summary.loopCount === 4 && summary.proposedCount === 1 && summary.appliedCount === 1 && summary.blockedCount === 2, detail: JSON.stringify(summary) }
   ];
 }
 

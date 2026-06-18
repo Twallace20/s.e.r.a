@@ -58,3 +58,7 @@ Knowledge ingestion is read-only. It only accepts paths inside the project root,
 ## Model Provider Baseline
 
 Model providers are optional adapters. External providers are blocked by default, unknown providers are refused, and prompt records are redacted before they are persisted.
+
+## Phase 11 Autonomous Dev Loop Safety
+
+The autonomous development loop is bounded and validation-gated. Proposal mode cannot mutate source. Apply mode requires a queued task and validation gate. Failed validation rolls back source changes and blocks the queued task. Successful validation records task completion and autonomy evidence. External model providers remain blocked by default.
