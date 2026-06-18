@@ -14,3 +14,4 @@ Thumbs.db
 *.tsbuildinfo
 
 .sera-memory/
+.sera-tasks/

@@ -53,3 +53,7 @@ Lesson Review + Approval v1 extends `@sera/memory`; it does not add an execution
 
 
 Active Lessons + Regression Rules v1 extends `@sera/memory` with activation records, active lesson records, regression rule records, and activation decisions. It intentionally does not add a behavior-changing runtime engine; active lessons are certified guardrails, not autonomous policy changes.
+
+## `@sera/planner`
+
+Owns the local task queue, task lifecycle records, task event records, and task queue summaries. It can record completed or blocked task outcomes into memory, but it does not execute tasks autonomously and does not mutate source code.

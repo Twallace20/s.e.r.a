@@ -14,28 +14,7 @@
       "path": "../shared"
     },
     {
-      "path": "../safety"
-    },
-    {
-      "path": "../artifacts"
-    },
-    {
-      "path": "../workspace"
-    },
-    {
-      "path": "../tools"
-    },
-    {
-      "path": "../workers"
-    },
-    {
       "path": "../memory"
-    },
-    {
-      "path": "../planner"
-    },
-    {
-      "path": "../self-improvement"
     }
   ]
 }

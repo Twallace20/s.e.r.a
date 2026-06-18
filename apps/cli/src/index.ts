@@ -31,6 +31,15 @@ Usage:
   sera lessons activate <approved-lesson-id> <rationale>
   sera lessons deactivate <active-lesson-id> <rationale>
   sera lessons check-rules
+  sera tasks create <title> <prompt> [priority]
+  sera tasks list [status]
+  sera tasks inspect <task-id>
+  sera tasks start <task-id> <rationale>
+  sera tasks complete <task-id> <summary>
+  sera tasks block <task-id> <reason>
+  sera tasks cancel <task-id> <reason>
+  sera tasks events
+  sera tasks summary
 
 NPM examples:
   npm run sera -- run "create hello file"
@@ -49,6 +58,10 @@ NPM examples:
   npm run sera -- lessons reject <candidate-id> "Not actually a reusable lesson."
   npm run sera -- lessons activate <approved-lesson-id> "Use as a regression guardrail."
   npm run sera -- lessons check-rules
+  npm run sera -- tasks create "Write first plan" "Draft the first queued task" normal
+  npm run sera -- tasks list
+  npm run sera -- tasks start queued_task_123 "Begin work."
+  npm run sera -- tasks complete queued_task_123 "Finished successfully."
 
 Secure base behavior:
   - runs locally
@@ -63,6 +76,7 @@ Secure base behavior:
   - Memory records run history, failure journal entries, and lesson candidates without activating lessons
   - Lesson Review approves or rejects candidates while keeping approved lessons inactive
   - Active Lessons converts approved lessons into auditable regression rules without changing runtime behavior
+  - Planner creates, queues, transitions, and records task history without autonomous execution
   - does not require an LLM provider
 `);
 }
@@ -374,6 +388,113 @@ async function main(): Promise<void> {
     }
 
     throw new Error("Lessons command must be 'candidates', 'inspect', 'approve', 'reject', 'approved', 'rejected', 'decisions', 'active', 'rules', 'activations', 'activate', 'deactivate', or 'check-rules'.");
+  }
+
+
+
+  if (cmd === "tasks") {
+    const [taskMode, taskIdOrTitle, promptOrReason, priorityOrRest, ...taskRest] = rest;
+
+    if (taskMode === "create") {
+      const title = requireArg(taskIdOrTitle, "task title");
+      const prompt = requireArg(promptOrReason, "task prompt");
+      const priorityRaw = priorityOrRest;
+      const priority = priorityRaw === "low" || priorityRaw === "normal" || priorityRaw === "high" ? priorityRaw : "normal";
+      const result = kernel.createQueuedTask({ title, prompt, priority, requestedBy: "local-user" });
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        taskDir: result.taskDir,
+        task: result.task,
+        event: result.event,
+        taskPath: result.taskPath,
+        eventPath: result.eventPath,
+        summaryPath: result.summaryPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (taskMode === "list") {
+      const statusRaw = taskIdOrTitle;
+      const allowed = ["queued", "in_progress", "completed", "blocked", "cancelled"];
+      if (statusRaw && !allowed.includes(statusRaw)) {
+        throw new Error("Task status filter must be queued, in_progress, completed, blocked, or cancelled.");
+      }
+      const result = kernel.listQueuedTasks(statusRaw as any);
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        taskDir: result.taskDir,
+        tasks: result.tasks
+      }, null, 2));
+      process.exit(0);
+    }
+
+    if (taskMode === "inspect") {
+      const result = kernel.inspectQueuedTask(requireArg(taskIdOrTitle, "task id"));
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        taskDir: result.taskDir,
+        task: result.task,
+        taskPath: result.taskPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (taskMode === "start" || taskMode === "complete" || taskMode === "block" || taskMode === "cancel") {
+      const id = requireArg(taskIdOrTitle, "task id");
+      const reason = [promptOrReason, priorityOrRest, ...taskRest].filter(Boolean).join(" ").trim();
+      const requiredReason = requireArg(reason, "rationale or summary");
+      const result = taskMode === "start"
+        ? kernel.startQueuedTask(id, requiredReason)
+        : taskMode === "complete"
+          ? kernel.completeQueuedTask(id, requiredReason)
+          : taskMode === "block"
+            ? kernel.blockQueuedTask(id, requiredReason)
+            : kernel.cancelQueuedTask(id, requiredReason);
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        taskDir: result.taskDir,
+        task: result.task,
+        event: result.event,
+        taskPath: result.taskPath,
+        eventPath: result.eventPath,
+        summaryPath: result.summaryPath,
+        memoryRunRecordPath: result.memoryRunRecordPath,
+        memoryFailureRecordPath: result.memoryFailureRecordPath,
+        lessonCandidatePath: result.lessonCandidatePath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (taskMode === "events") {
+      const result = kernel.listTaskQueueEvents();
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        taskDir: result.taskDir,
+        events: result.events
+      }, null, 2));
+      process.exit(0);
+    }
+
+    if (taskMode === "summary") {
+      const result = kernel.getTaskQueueSummary();
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        taskDir: result.taskDir,
+        summary: result.summary
+      }, null, 2));
+      process.exit(0);
+    }
+
+    throw new Error("Tasks command must be 'create', 'list', 'inspect', 'start', 'complete', 'block', 'cancel', 'events', or 'summary'.");
   }
 
   console.error(`Unknown command: ${cmd}`);

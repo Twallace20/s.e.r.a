@@ -63,3 +63,7 @@ The system can list, inspect, approve, and reject lesson candidates. Approved le
 ## Phase 7 — active-lessons-v1
 
 The system can activate approved lessons into auditable regression rules, check those rules for traceability, block duplicate or missing activations, deactivate active lessons, and keep all activations rationale-gated. Active lessons do not silently mutate runtime behavior; they become certified guardrails.
+
+## Phase 8 — planner-task-queue-v1
+
+The system can create queued tasks, list and inspect them, enforce strict lifecycle transitions, record task events, summarize queue state, and write completed/blocked task outcomes into memory. Queued tasks do not execute automatically.
