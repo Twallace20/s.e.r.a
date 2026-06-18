@@ -47,6 +47,12 @@ Usage:
   sera knowledge inspect <document-id>
   sera knowledge search <query> [limit]
   sera knowledge summary
+  sera models providers
+  sera models invoke-mock <prompt>
+  sera models requests
+  sera models responses
+  sera models events
+  sera models summary
 
 NPM examples:
   npm run sera -- run "create hello file"
@@ -72,6 +78,9 @@ NPM examples:
   npm run sera -- knowledge ingest-file README.md "Project README"
   npm run sera -- knowledge search "planner task queue" 5
   npm run sera -- knowledge summary
+  npm run sera -- models providers
+  npm run sera -- models invoke-mock "Summarize local evidence only."
+  npm run sera -- models summary
 
 Secure base behavior:
   - runs locally
@@ -88,6 +97,7 @@ Secure base behavior:
   - Active Lessons converts approved lessons into auditable regression rules without changing runtime behavior
   - Planner creates, queues, transitions, and records task history without autonomous execution
   - Knowledge ingestion indexes local files and retrieves lexical evidence without an LLM
+  - Model Provider Adapter offers a deterministic local mock provider and blocks external providers by default
   - does not require an LLM provider
 `);
 }
@@ -615,6 +625,72 @@ async function main(): Promise<void> {
     }
 
     throw new Error("Knowledge command must be 'ingest-file', 'ingest-dir', 'documents', 'chunks', 'inspect', 'search', or 'summary'.");
+  }
+
+
+  if (cmd === "models") {
+    const [modelMode, ...modelRest] = rest;
+
+    if (modelMode === "providers") {
+      const result = kernel.listModelProviders();
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        modelDir: result.modelDir,
+        providers: result.providers
+      }, null, 2));
+      process.exit(0);
+    }
+
+    if (modelMode === "invoke-mock") {
+      const prompt = modelRest.join(" ").trim();
+      const result = kernel.invokeModelProvider({
+        providerId: "mock-local",
+        prompt: requireArg(prompt, "model prompt"),
+        purpose: "local-cli-mock-invocation"
+      });
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        modelDir: result.modelDir,
+        provider: result.provider,
+        request: result.request,
+        response: result.response,
+        requestPath: result.requestPath,
+        responsePath: result.responsePath,
+        eventPath: result.eventPath,
+        summaryPath: result.summaryPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (modelMode === "requests" || modelMode === "responses" || modelMode === "events") {
+      const result = kernel.listModelProviderHistory(modelMode);
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        modelDir: result.modelDir,
+        requests: result.requests,
+        responses: result.responses,
+        events: result.events
+      }, null, 2));
+      process.exit(0);
+    }
+
+    if (modelMode === "summary") {
+      const result = kernel.getModelProviderSummary();
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        modelDir: result.modelDir,
+        summary: result.summary,
+        summaryPath: result.summaryPath
+      }, null, 2));
+      process.exit(0);
+    }
+
+    throw new Error("Models command must be 'providers', 'invoke-mock', 'requests', 'responses', 'events', or 'summary'.");
   }
 
   console.error(`Unknown command: ${cmd}`);

@@ -60,3 +60,7 @@ Planner + Task Queue v1 gives S.E.R.A. a local operating rhythm. Tasks can be qu
 ## Phase 9 — Knowledge Ingestion + Local Retrieval v1
 
 Add a local, deterministic knowledge index for project files and evidence retrieval. Keep retrieval read-only and model-free until provider adapters are introduced later.
+
+## Phase 10 Complete: Model Provider Adapter v1
+
+S.E.R.A. now has a safe optional model-provider adapter layer with a deterministic local mock provider and blocked external-provider slots.

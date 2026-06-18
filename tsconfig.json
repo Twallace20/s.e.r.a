@@ -29,6 +29,9 @@
       "path": "packages/knowledge"
     },
     {
+      "path": "packages/model-provider"
+    },
+    {
       "path": "packages/self-improvement"
     },
     {

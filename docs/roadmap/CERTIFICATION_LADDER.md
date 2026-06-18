@@ -72,3 +72,7 @@ The system can create queued tasks, list and inspect them, enforce strict lifecy
 ## Phase 9 — knowledge-retrieval-v1
 
 The system can ingest local files, chunk them into `.sera-knowledge/`, perform deterministic lexical search, inspect indexed documents, ignore runtime folders during directory ingestion, and summarize knowledge records. Retrieval is read-only and does not require an LLM.
+
+## Level: model-provider-v1
+
+Certifies that S.E.R.A. can list model providers, invoke the local mock provider, redact prompt records, block unknown/external providers, and summarize provider events without requiring an LLM for core runtime.

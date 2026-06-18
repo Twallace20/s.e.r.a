@@ -54,3 +54,7 @@ The task queue creates operating rhythm without autonomous execution. Tasks must
 ## Phase 9 Knowledge Boundary
 
 Knowledge ingestion is read-only. It only accepts paths inside the project root, ignores runtime/system directories, supports a bounded set of text-like file extensions, blocks path traversal, and performs deterministic lexical search without external services.
+
+## Model Provider Baseline
+
+Model providers are optional adapters. External providers are blocked by default, unknown providers are refused, and prompt records are redacted before they are persisted.

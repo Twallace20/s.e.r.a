@@ -50,6 +50,9 @@
       ],
       "@sera/knowledge": [
         "packages/knowledge/src/index.ts"
+      ],
+      "@sera/model-provider": [
+        "packages/model-provider/src/index.ts"
       ]
     }
   }
