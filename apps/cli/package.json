@@ -1,0 +1,15 @@
+{
+  "name": "@sera/cli",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "bin": {
+    "sera": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@sera/kernel": "0.1.0"
+  }
+}

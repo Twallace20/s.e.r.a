@@ -1,0 +1,28 @@
+{
+  "name": "s-e-r-a",
+  "version": "0.1.0",
+  "private": true,
+  "description": "S.E.R.A. clean-core: secure local runtime, evidence artifacts, modular agent foundation.",
+  "type": "commonjs",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "node scripts/clean.mjs",
+    "test": "vitest run",
+    "certify": "npm run build && npm test && node packages/certs/dist/certify.js",
+    "sera": "npm run build --silent && node apps/cli/dist/index.js",
+    "doctor": "node scripts/doctor.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

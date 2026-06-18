@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "lib": [
+      "ES2022"
+    ],
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "sourceMap": true,
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@sera/shared": [
+        "packages/shared/src/index.ts"
+      ],
+      "@sera/safety": [
+        "packages/safety/src/index.ts"
+      ],
+      "@sera/artifacts": [
+        "packages/artifacts/src/index.ts"
+      ],
+      "@sera/workspace": [
+        "packages/workspace/src/index.ts"
+      ],
+      "@sera/tools": [
+        "packages/tools/src/index.ts"
+      ],
+      "@sera/kernel": [
+        "packages/kernel/src/index.ts"
+      ],
+      "@sera/certs": [
+        "packages/certs/src/index.ts"
+      ]
+    }
+  }
+}

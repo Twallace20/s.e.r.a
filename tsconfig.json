@@ -1,0 +1,29 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/shared"
+    },
+    {
+      "path": "packages/safety"
+    },
+    {
+      "path": "packages/artifacts"
+    },
+    {
+      "path": "packages/workspace"
+    },
+    {
+      "path": "packages/tools"
+    },
+    {
+      "path": "packages/kernel"
+    },
+    {
+      "path": "packages/certs"
+    },
+    {
+      "path": "apps/cli"
+    }
+  ]
+}

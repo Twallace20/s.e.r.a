@@ -1,0 +1,15 @@
+{
+  "name": "@sera/tools",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@sera/shared": "0.1.0",
+    "@sera/safety": "0.1.0",
+    "@sera/artifacts": "0.1.0"
+  }
+}
