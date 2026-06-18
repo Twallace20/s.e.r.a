@@ -12,7 +12,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -26,18 +26,22 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runSecureBaseChecks(sandboxRoot));
   checks.push(...runDeveloperWorkerV1Checks());
   checks.push(...runDeveloperWorkerV2Checks());
+  checks.push(...runSelfImprovementV1Checks());
 
-  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_")).every((c) => c.pass);
+  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const developerV2ChecksPass = checks.filter((c) => c.id.startsWith("developer_v2_")).every((c) => c.pass);
+  const selfImprovementV1ChecksPass = checks.filter((c) => c.id.startsWith("self_improvement_")).every((c) => c.pass);
   const pass = checks.every((c) => c.pass);
-  const level = pass && developerV2ChecksPass
-    ? "developer-worker-v2"
-    : secureChecksPass && developerV1ChecksPass
-      ? "developer-worker-v1"
-      : secureChecksPass
-        ? "secure-base"
-        : "none";
+  const level = pass && selfImprovementV1ChecksPass
+    ? "self-improvement-v1"
+    : pass && developerV2ChecksPass
+      ? "developer-worker-v2"
+      : secureChecksPass && developerV1ChecksPass
+        ? "developer-worker-v1"
+        : secureChecksPass
+          ? "secure-base"
+          : "none";
 
   const report: CertReport = {
     createdAt: new Date().toISOString(),
@@ -235,6 +239,92 @@ function runDeveloperWorkerV2Checks(): CertCheck[] {
       name: "Developer Worker v2 rolls back when validation command is not allowlisted",
       pass: !blockedCommandRollback.ok && blockedCommandRollback.status === "failed" && blockedCommandRollback.patch.restored === true && sourceAfterBlockedCommand === "export const status = 'bad';\n",
       detail: blockedCommandRollback.message
+    }
+  ];
+}
+
+
+function runSelfImprovementV1Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-self-cert-"));
+  const kernel = new SeraKernel({ rootDir: root });
+  const filePath = path.join(root, "src", "self.ts");
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, "export const phase = 'phase3';\n", "utf8");
+
+  const proposal = kernel.runSelfImprovementTask({
+    mode: "propose",
+    goal: "Create a safe phase marker proposal.",
+    relativePath: "src/self.ts",
+    operations: [{ kind: "replace", find: "phase3", replaceWith: "phase4", expectedOccurrences: 1 }]
+  });
+  const sourceAfterProposal = fs.readFileSync(filePath, "utf8");
+
+  const noValidation = kernel.runSelfImprovementTask({
+    mode: "apply",
+    goal: "Refuse uncertified self-modification.",
+    relativePath: "src/self.ts",
+    operations: [{ kind: "replace", find: "phase3", replaceWith: "unsafe", expectedOccurrences: 1 }]
+  });
+  const sourceAfterNoValidation = fs.readFileSync(filePath, "utf8");
+
+  const applied = kernel.runSelfImprovementTask({
+    mode: "apply",
+    goal: "Advance phase marker after validation.",
+    relativePath: "src/self.ts",
+    operations: [{ kind: "replace", find: "phase3", replaceWith: "phase4", expectedOccurrences: 1 }],
+    validate: ({ after }) => ({ ok: after.includes("phase4"), message: "phase4 marker exists" })
+  });
+  const sourceAfterApplied = fs.readFileSync(filePath, "utf8");
+
+  fs.writeFileSync(filePath, "export const value = 'safe';\n", "utf8");
+  const rollback = kernel.runSelfImprovementTask({
+    mode: "apply",
+    goal: "Rollback failed self-improvement.",
+    relativePath: "src/self.ts",
+    operations: [{ kind: "replace", find: "safe", replaceWith: "unsafe", expectedOccurrences: 1 }],
+    validate: () => ({ ok: false, message: "simulated cert failure" })
+  });
+  const sourceAfterRollback = fs.readFileSync(filePath, "utf8");
+
+  const mismatch = kernel.runSelfImprovementTask({
+    mode: "apply",
+    goal: "Block ambiguous self-improvement.",
+    relativePath: "src/self.ts",
+    operations: [{ kind: "replace", find: "safe", replaceWith: "changed", expectedOccurrences: 2 }],
+    validate: ({ after }) => ({ ok: after.includes("changed"), message: "changed marker exists" })
+  });
+  const sourceAfterMismatch = fs.readFileSync(filePath, "utf8");
+
+  return [
+    {
+      id: "self_improvement_v1_proposal_no_mutation",
+      name: "Self-improvement proposal creates evidence without mutating source",
+      pass: proposal.ok && proposal.status === "completed" && !proposal.selfImprovement.changed && sourceAfterProposal === "export const phase = 'phase3';\n" && Boolean(proposal.selfImprovement.recordPath),
+      detail: proposal.selfImprovement.recordPath ?? proposal.message
+    },
+    {
+      id: "self_improvement_v1_requires_validation",
+      name: "Self-improvement apply mode refuses to run without a validation gate",
+      pass: !noValidation.ok && noValidation.status === "blocked" && sourceAfterNoValidation === "export const phase = 'phase3';\n",
+      detail: noValidation.message
+    },
+    {
+      id: "self_improvement_v1_applies_after_validation",
+      name: "Self-improvement applies only when validation passes",
+      pass: applied.ok && applied.selfImprovement.changed && applied.selfImprovement.validationGate.status === "passed" && sourceAfterApplied === "export const phase = 'phase4';\n",
+      detail: applied.message
+    },
+    {
+      id: "self_improvement_v1_rolls_back_failed_validation",
+      name: "Self-improvement rolls back when validation fails",
+      pass: !rollback.ok && rollback.status === "failed" && rollback.selfImprovement.restored === true && sourceAfterRollback === "export const value = 'safe';\n",
+      detail: rollback.message
+    },
+    {
+      id: "self_improvement_v1_blocks_occurrence_mismatch",
+      name: "Self-improvement blocks mismatched occurrence expectations",
+      pass: !mismatch.ok && mismatch.status === "blocked" && !mismatch.selfImprovement.changed && sourceAfterMismatch === "export const value = 'safe';\n",
+      detail: mismatch.message
     }
   ];
 }

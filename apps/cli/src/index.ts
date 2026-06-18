@@ -12,6 +12,8 @@ Usage:
   sera dev patch suggest <relative-file> <find-text> <replace-text> [expected-occurrences]
   sera dev patch apply <relative-file> <find-text> <replace-text> [expected-occurrences]
   sera dev patch apply-build <relative-file> <find-text> <replace-text> [expected-occurrences]
+  sera self propose <relative-file> <find-text> <replace-text> [expected-occurrences]
+  sera self apply-cert <relative-file> <find-text> <replace-text> [expected-occurrences]
 
 NPM examples:
   npm run sera -- run "create hello file"
@@ -20,6 +22,8 @@ NPM examples:
   npm run sera -- dev apply examples/demo.txt "old" "new"
   npm run sera -- dev patch suggest README.md "old" "new" 1
   npm run sera -- dev patch apply-build README.md "old" "new" 1
+  npm run sera -- self propose README.md "old" "new" 1
+  npm run sera -- self apply-cert README.md "old" "new" 1
 
 Secure base behavior:
   - runs locally
@@ -29,6 +33,8 @@ Secure base behavior:
   - Developer Worker direct mode creates backup artifacts before writing
   - Developer Worker patch mode supports expected occurrence checks
   - Developer Worker apply-build validates with npm run build and rolls back on failure
+  - Self-improvement proposal mode writes evidence without mutating source
+  - Self-improvement apply-cert requires npm run certify to pass or rolls back
   - does not require an LLM provider
 `);
 }
@@ -154,6 +160,43 @@ async function main(): Promise<void> {
     }
 
     throw new Error("Developer command must be 'inspect', 'suggest', 'apply', or 'patch'.");
+  }
+
+
+  if (cmd === "self") {
+    const [modeRaw, relativePath, find, replaceWith, expectedRaw] = rest;
+    if (modeRaw !== "propose" && modeRaw !== "apply-cert") {
+      throw new Error("Self-improvement command must be 'propose' or 'apply-cert'.");
+    }
+    const expectedOccurrences = parseExpectedOccurrences(expectedRaw);
+    const result = kernel.runSelfImprovementTask({
+      mode: modeRaw === "propose" ? "propose" : "apply",
+      goal: modeRaw === "propose" ? "Create a bounded self-improvement proposal." : "Apply a bounded self-improvement only if certification passes.",
+      relativePath: requireArg(relativePath, "relative file path"),
+      operations: [
+        {
+          kind: "replace",
+          find: requireArg(find, "find text"),
+          replaceWith: requireArg(replaceWith, "replace text"),
+          expectedOccurrences
+        }
+      ],
+      validationCommand: modeRaw === "apply-cert" ? { command: "npm", args: ["run", "certify"] } : undefined
+    });
+    console.log(JSON.stringify({
+      ok: result.ok,
+      status: result.status,
+      message: result.message,
+      changed: result.selfImprovement.changed,
+      restored: result.selfImprovement.restored,
+      validationGate: result.selfImprovement.validationGate,
+      recordPath: result.selfImprovement.recordPath,
+      inspectionArtifactPath: result.selfImprovement.inspectionArtifactPath,
+      patchArtifactPath: result.selfImprovement.patchArtifactPath,
+      backupPath: result.selfImprovement.backupPath,
+      runDir: result.run.runDir
+    }, null, 2));
+    process.exit(result.ok ? 0 : 1);
   }
 
   console.error(`Unknown command: ${cmd}`);

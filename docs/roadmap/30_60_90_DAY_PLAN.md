@@ -32,3 +32,8 @@ Outcome: S.E.R.A. can prepare self-improvement changes safely, but still require
 - approved regression tests
 
 Outcome: S.E.R.A. starts learning from verified work without corrupting the core.
+
+
+## Added milestone — Self-Improvement Loop v1
+
+After Developer Worker v2, the next milestone is a conservative self-improvement loop: propose first, apply only through validation, preserve backups, roll back failures, and write an explicit self-improvement record.

@@ -44,3 +44,8 @@ S.E.R.A. can:
 - `self-review-v1`: evidence review and human approval report before merge-like actions
 - `learning-v1`: approved lessons and regression creation from verified failures
 - `operator-console-v1`: UI for task runs, approval queue, artifacts, certs, memory, and knowledge
+
+
+## Level: `self-improvement-v1`
+
+S.E.R.A. can create self-improvement proposals without mutation and can apply bounded changes only with a validation gate. Failed validation rolls back to the original source and writes evidence artifacts.
