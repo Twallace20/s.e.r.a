@@ -46,3 +46,8 @@ Task Memory + Failure Journal v1 is the next learning foundation. S.E.R.A. can n
 ## Phase 6 update
 
 Lesson Review + Approval v1 creates the human governance gate for learning. S.E.R.A. can now turn lesson candidates into approved or rejected records, but approved lessons remain inactive until a future activation/regression phase.
+
+
+## Phase 7 update
+
+Active Lessons + Regression Rules v1 converts approved lessons into explicit regression-rule records. This creates the first controlled bridge from reviewed learning to cert-checkable guardrails while preserving the no-silent-behavior-change rule.

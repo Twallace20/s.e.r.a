@@ -40,3 +40,8 @@ The memory layer records evidence only. It does not approve lessons, alter promp
 ## Phase 6 lesson review safety
 
 Lesson review requires explicit human rationale. Approved lessons are stored with `active: false` and `activation: manual-activation-required`. S.E.R.A. can preserve reviewed knowledge, but it still cannot alter future behavior from memory on its own.
+
+
+## Phase 7 active lesson safety
+
+Active lesson activation requires an approved lesson and an explicit rationale. Pending, rejected, missing, or already active lessons cannot be activated. Activation writes audit records and regression-rule evidence only; it does not silently change prompts, tools, code, or runtime behavior. Deactivation is also rationale-gated and marks the linked regression rule inactive.

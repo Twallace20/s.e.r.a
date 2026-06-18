@@ -4,6 +4,8 @@ import { createSeraId, isoNow, redactSecrets, SeraStatus } from "@sera/shared";
 
 export type LessonCandidateStatus = "candidate" | "approved" | "rejected" | "archived";
 export type LessonReviewDecision = "approved" | "rejected";
+export type LessonActivationDecision = "activated" | "deactivated";
+export type RegressionRuleStatus = "active" | "inactive";
 
 export interface MemoryRunRecord {
   id: string;
@@ -64,8 +66,8 @@ export interface ApprovedLessonRecord {
   approvedBy: string;
   rationale: string;
   proposedAction: string;
-  active: false;
-  activation: "manual-activation-required";
+  active: boolean;
+  activation: "manual-activation-required" | "activated-as-regression-rule" | "deactivated";
   source: "lesson-review-v1";
 }
 
@@ -96,6 +98,58 @@ export interface LessonDecisionRecord {
   source: "lesson-review-v1";
 }
 
+export interface ActiveLessonRecord {
+  id: string;
+  createdAt: string;
+  approvedLessonId: string;
+  candidateId: string;
+  sourceFailureId: string;
+  runId: string;
+  taskId: string;
+  title: string;
+  hypothesis: string;
+  evidence: string[];
+  proposedAction: string;
+  activatedBy: string;
+  rationale: string;
+  active: boolean;
+  status: RegressionRuleStatus;
+  regressionRuleId: string;
+  source: "active-lessons-v1";
+  deactivatedAt?: string;
+  deactivatedBy?: string;
+  deactivationRationale?: string;
+}
+
+export interface RegressionRuleRecord {
+  id: string;
+  createdAt: string;
+  approvedLessonId: string;
+  activeLessonId: string;
+  candidateId: string;
+  title: string;
+  assertion: string;
+  evidence: string[];
+  status: RegressionRuleStatus;
+  source: "active-lessons-v1";
+  deactivatedAt?: string;
+  deactivationRationale?: string;
+}
+
+export interface LessonActivationDecisionRecord {
+  id: string;
+  createdAt: string;
+  approvedLessonId: string;
+  activeLessonId?: string;
+  regressionRuleId?: string;
+  decision: LessonActivationDecision;
+  reviewer: string;
+  rationale: string;
+  beforeStatus: "inactive" | "active";
+  afterStatus: "inactive" | "active";
+  source: "active-lessons-v1";
+}
+
 export interface LessonReviewResult {
   ok: boolean;
   status: "completed" | "blocked";
@@ -111,6 +165,38 @@ export interface LessonReviewResult {
   decisionPath?: string;
 }
 
+export interface LessonActivationResult {
+  ok: boolean;
+  status: "completed" | "blocked";
+  message: string;
+  memoryDir: string;
+  approvedLesson?: ApprovedLessonRecord;
+  activeLesson?: ActiveLessonRecord;
+  regressionRule?: RegressionRuleRecord;
+  decision?: LessonActivationDecisionRecord;
+  approvedLessonPath?: string;
+  activeLessonPath?: string;
+  regressionRulePath?: string;
+  activationDecisionPath?: string;
+}
+
+export interface RegressionRuleCheck {
+  id: string;
+  name: string;
+  pass: boolean;
+  detail: string;
+}
+
+export interface RegressionRuleCheckResult {
+  ok: boolean;
+  status: "completed" | "blocked";
+  message: string;
+  memoryDir: string;
+  checks: RegressionRuleCheck[];
+  activeRuleCount: number;
+  inactiveRuleCount: number;
+}
+
 export interface MemorySummary {
   createdAt: string;
   memoryDir: string;
@@ -119,6 +205,8 @@ export interface MemorySummary {
   lessonCandidateCount: number;
   approvedLessonCount: number;
   rejectedLessonCount: number;
+  activeLessonCount: number;
+  regressionRuleCount: number;
 }
 
 export interface RecordRunInput {
@@ -229,6 +317,18 @@ export class MemoryStore {
     return this.readJsonl<LessonDecisionRecord>("lesson-decisions.jsonl");
   }
 
+  listActiveLessons(): ActiveLessonRecord[] {
+    return this.readJsonl<ActiveLessonRecord>("active-lessons.jsonl");
+  }
+
+  listRegressionRules(): RegressionRuleRecord[] {
+    return this.readJsonl<RegressionRuleRecord>("regression-rules.jsonl");
+  }
+
+  listLessonActivationDecisions(): LessonActivationDecisionRecord[] {
+    return this.readJsonl<LessonActivationDecisionRecord>("lesson-activation-decisions.jsonl");
+  }
+
   inspectLessonCandidate(candidateId: string): LessonReviewResult {
     const candidate = this.findLessonCandidate(candidateId);
     if (!candidate) {
@@ -258,6 +358,259 @@ export class MemoryStore {
     return this.reviewLessonCandidate(candidateId, "rejected", reviewer, rationale);
   }
 
+  activateApprovedLesson(approvedLessonId: string, reviewer: string, rationale: string): LessonActivationResult {
+    this.ensureMemoryDir();
+    const cleanReviewer = reviewer.trim() || "local-user";
+    const cleanRationale = rationale.trim();
+    if (!cleanRationale) {
+      return {
+        ok: false,
+        status: "blocked",
+        message: "Lesson activation requires a rationale.",
+        memoryDir: this.memoryDir
+      };
+    }
+
+    const approvedLessons = this.listApprovedLessons();
+    const approvedIndex = approvedLessons.findIndex((lesson) => lesson.id === approvedLessonId);
+    if (approvedIndex < 0) {
+      return {
+        ok: false,
+        status: "blocked",
+        message: `Approved lesson not found: ${approvedLessonId}`,
+        memoryDir: this.memoryDir
+      };
+    }
+
+    const approvedLesson = approvedLessons[approvedIndex];
+    if (approvedLesson.active) {
+      return {
+        ok: false,
+        status: "blocked",
+        message: `Approved lesson is already active: ${approvedLessonId}`,
+        memoryDir: this.memoryDir,
+        approvedLesson
+      };
+    }
+
+    const activeRecords = this.listActiveLessons();
+    if (activeRecords.some((lesson) => lesson.approvedLessonId === approvedLessonId && lesson.active && lesson.status === "active")) {
+      return {
+        ok: false,
+        status: "blocked",
+        message: `Approved lesson already has an active regression rule: ${approvedLessonId}`,
+        memoryDir: this.memoryDir,
+        approvedLesson
+      };
+    }
+
+    const createdAt = isoNow();
+    const activeLessonId = createSeraId("active_lesson");
+    const regressionRuleId = createSeraId("regression_rule");
+    const activeLesson: ActiveLessonRecord = {
+      id: activeLessonId,
+      createdAt,
+      approvedLessonId: approvedLesson.id,
+      candidateId: approvedLesson.candidateId,
+      sourceFailureId: approvedLesson.sourceFailureId,
+      runId: approvedLesson.runId,
+      taskId: approvedLesson.taskId,
+      title: approvedLesson.title,
+      hypothesis: approvedLesson.hypothesis,
+      evidence: approvedLesson.evidence,
+      proposedAction: approvedLesson.proposedAction,
+      activatedBy: cleanReviewer,
+      rationale: cleanRationale,
+      active: true,
+      status: "active",
+      regressionRuleId,
+      source: "active-lessons-v1"
+    };
+    const regressionRule: RegressionRuleRecord = {
+      id: regressionRuleId,
+      createdAt,
+      approvedLessonId: approvedLesson.id,
+      activeLessonId: activeLesson.id,
+      candidateId: approvedLesson.candidateId,
+      title: approvedLesson.title,
+      assertion: `Approved lesson ${approvedLesson.id} must remain traceable to evidence and must not mutate behavior without an explicit phase-certified implementation.`,
+      evidence: approvedLesson.evidence,
+      status: "active",
+      source: "active-lessons-v1"
+    };
+    const updatedApproved: ApprovedLessonRecord = {
+      ...approvedLesson,
+      active: true,
+      activation: "activated-as-regression-rule"
+    };
+    approvedLessons[approvedIndex] = updatedApproved;
+    const approvedLessonPath = this.writeJsonl("approved-lessons.jsonl", approvedLessons);
+    const activeLessonPath = this.appendJsonl("active-lessons.jsonl", activeLesson);
+    const regressionRulePath = this.appendJsonl("regression-rules.jsonl", regressionRule);
+    const decision: LessonActivationDecisionRecord = {
+      id: createSeraId("activation_decision"),
+      createdAt,
+      approvedLessonId: approvedLesson.id,
+      activeLessonId: activeLesson.id,
+      regressionRuleId: regressionRule.id,
+      decision: "activated",
+      reviewer: cleanReviewer,
+      rationale: cleanRationale,
+      beforeStatus: "inactive",
+      afterStatus: "active",
+      source: "active-lessons-v1"
+    };
+    const activationDecisionPath = this.appendJsonl("lesson-activation-decisions.jsonl", decision);
+    this.writeSummary();
+    return {
+      ok: true,
+      status: "completed",
+      message: "Approved lesson activated as an auditable regression rule. No runtime behavior was changed.",
+      memoryDir: this.memoryDir,
+      approvedLesson: updatedApproved,
+      activeLesson,
+      regressionRule,
+      decision,
+      approvedLessonPath,
+      activeLessonPath,
+      regressionRulePath,
+      activationDecisionPath
+    };
+  }
+
+  deactivateActiveLesson(activeLessonId: string, reviewer: string, rationale: string): LessonActivationResult {
+    this.ensureMemoryDir();
+    const cleanReviewer = reviewer.trim() || "local-user";
+    const cleanRationale = rationale.trim();
+    if (!cleanRationale) {
+      return {
+        ok: false,
+        status: "blocked",
+        message: "Lesson deactivation requires a rationale.",
+        memoryDir: this.memoryDir
+      };
+    }
+
+    const activeLessons = this.listActiveLessons();
+    const activeIndex = activeLessons.findIndex((lesson) => lesson.id === activeLessonId);
+    if (activeIndex < 0) {
+      return {
+        ok: false,
+        status: "blocked",
+        message: `Active lesson not found: ${activeLessonId}`,
+        memoryDir: this.memoryDir
+      };
+    }
+
+    const activeLesson = activeLessons[activeIndex];
+    if (!activeLesson.active || activeLesson.status !== "active") {
+      return {
+        ok: false,
+        status: "blocked",
+        message: `Active lesson is already inactive: ${activeLessonId}`,
+        memoryDir: this.memoryDir,
+        activeLesson
+      };
+    }
+
+    const deactivatedAt = isoNow();
+    const updatedActiveLesson: ActiveLessonRecord = {
+      ...activeLesson,
+      active: false,
+      status: "inactive",
+      deactivatedAt,
+      deactivatedBy: cleanReviewer,
+      deactivationRationale: cleanRationale
+    };
+    activeLessons[activeIndex] = updatedActiveLesson;
+    const activeLessonPath = this.writeJsonl("active-lessons.jsonl", activeLessons);
+
+    const rules = this.listRegressionRules();
+    const ruleIndex = rules.findIndex((rule) => rule.id === activeLesson.regressionRuleId);
+    let regressionRule: RegressionRuleRecord | undefined;
+    let regressionRulePath: string | undefined;
+    if (ruleIndex >= 0) {
+      regressionRule = {
+        ...rules[ruleIndex],
+        status: "inactive",
+        deactivatedAt,
+        deactivationRationale: cleanRationale
+      };
+      rules[ruleIndex] = regressionRule;
+      regressionRulePath = this.writeJsonl("regression-rules.jsonl", rules);
+    }
+
+    const approvedLessons = this.listApprovedLessons();
+    const approvedIndex = approvedLessons.findIndex((lesson) => lesson.id === activeLesson.approvedLessonId);
+    let approvedLesson: ApprovedLessonRecord | undefined;
+    let approvedLessonPath: string | undefined;
+    if (approvedIndex >= 0) {
+      approvedLesson = {
+        ...approvedLessons[approvedIndex],
+        active: false,
+        activation: "deactivated"
+      };
+      approvedLessons[approvedIndex] = approvedLesson;
+      approvedLessonPath = this.writeJsonl("approved-lessons.jsonl", approvedLessons);
+    }
+
+    const decision: LessonActivationDecisionRecord = {
+      id: createSeraId("activation_decision"),
+      createdAt: deactivatedAt,
+      approvedLessonId: activeLesson.approvedLessonId,
+      activeLessonId: activeLesson.id,
+      regressionRuleId: activeLesson.regressionRuleId,
+      decision: "deactivated",
+      reviewer: cleanReviewer,
+      rationale: cleanRationale,
+      beforeStatus: "active",
+      afterStatus: "inactive",
+      source: "active-lessons-v1"
+    };
+    const activationDecisionPath = this.appendJsonl("lesson-activation-decisions.jsonl", decision);
+    this.writeSummary();
+    return {
+      ok: true,
+      status: "completed",
+      message: "Active lesson deactivated and its regression rule marked inactive.",
+      memoryDir: this.memoryDir,
+      approvedLesson,
+      activeLesson: updatedActiveLesson,
+      regressionRule,
+      decision,
+      approvedLessonPath,
+      activeLessonPath,
+      regressionRulePath,
+      activationDecisionPath
+    };
+  }
+
+  checkRegressionRules(): RegressionRuleCheckResult {
+    const activeLessons = this.listActiveLessons();
+    const rules = this.listRegressionRules();
+    const activeRules = rules.filter((rule) => rule.status === "active");
+    const inactiveRules = rules.filter((rule) => rule.status === "inactive");
+    const checks: RegressionRuleCheck[] = activeRules.map((rule) => {
+      const activeLesson = activeLessons.find((lesson) => lesson.id === rule.activeLessonId);
+      const pass = Boolean(activeLesson && activeLesson.active && activeLesson.status === "active" && activeLesson.regressionRuleId === rule.id && rule.evidence.length > 0);
+      return {
+        id: `regression_${rule.id}`,
+        name: `Regression rule is traceable and active: ${rule.title}`,
+        pass,
+        detail: pass ? `Traceable to active lesson ${rule.activeLessonId}` : `Missing active lesson or evidence for rule ${rule.id}`
+      };
+    });
+    return {
+      ok: checks.every((check) => check.pass),
+      status: "completed",
+      message: activeRules.length === 0 ? "No active regression rules to check." : `Checked ${activeRules.length} active regression rule(s).`,
+      memoryDir: this.memoryDir,
+      checks,
+      activeRuleCount: activeRules.length,
+      inactiveRuleCount: inactiveRules.length
+    };
+  }
+
   summarize(): MemorySummary {
     const lessons = this.listLessonCandidates();
     return {
@@ -267,7 +620,9 @@ export class MemoryStore {
       failureCount: this.listFailures().length,
       lessonCandidateCount: lessons.filter((l) => l.status === "candidate").length,
       approvedLessonCount: this.listApprovedLessons().length,
-      rejectedLessonCount: this.listRejectedLessons().length
+      rejectedLessonCount: this.listRejectedLessons().length,
+      activeLessonCount: this.listActiveLessons().filter((lesson) => lesson.active && lesson.status === "active").length,
+      regressionRuleCount: this.listRegressionRules().filter((rule) => rule.status === "active").length
     };
   }
 

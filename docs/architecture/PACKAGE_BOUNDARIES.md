@@ -35,7 +35,6 @@ Certification runner and capability checks.
 ## Future packages
 
 - `packages/evaluator`
-- `packages/memory`
 - `packages/knowledge`
 - `apps/local-api`
 - `apps/console`
@@ -51,3 +50,6 @@ Owns local run memory, failure journal entries, lesson candidate records, and me
 
 
 Lesson Review + Approval v1 extends `@sera/memory`; it does not add an execution package. This keeps learning governance close to the memory evidence trail and prevents reviewed lessons from becoming runtime behavior automatically.
+
+
+Active Lessons + Regression Rules v1 extends `@sera/memory` with activation records, active lesson records, regression rule records, and activation decisions. It intentionally does not add a behavior-changing runtime engine; active lessons are certified guardrails, not autonomous policy changes.

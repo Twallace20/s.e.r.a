@@ -2,7 +2,10 @@ import path from "node:path";
 import { ArtifactStore } from "@sera/artifacts";
 import { SafetyPolicy } from "@sera/safety";
 import {
+  ActiveLessonRecord,
   ApprovedLessonRecord,
+  LessonActivationDecisionRecord,
+  LessonActivationResult,
   LessonCandidateRecord,
   LessonDecisionRecord,
   LessonReviewDecision,
@@ -11,7 +14,9 @@ import {
   MemoryRunRecord,
   MemoryStore,
   MemorySummary,
-  RejectedLessonRecord
+  RejectedLessonRecord,
+  RegressionRuleCheckResult,
+  RegressionRuleRecord
 } from "@sera/memory";
 import { FileTool, ShellTool } from "@sera/tools";
 import { SelfImprovementMode, SelfImprovementResult, SelfImprovementWorker } from "@sera/self-improvement";
@@ -124,6 +129,9 @@ export interface LessonListTaskResult {
   approved?: ApprovedLessonRecord[];
   rejected?: RejectedLessonRecord[];
   decisions?: LessonDecisionRecord[];
+  active?: ActiveLessonRecord[];
+  rules?: RegressionRuleRecord[];
+  activations?: LessonActivationDecisionRecord[];
 }
 
 export interface LessonInspectTaskResult extends LessonReviewResult {}
@@ -136,6 +144,17 @@ export interface LessonReviewTaskInput {
 }
 
 export interface LessonReviewTaskResult extends LessonReviewResult {}
+
+export interface LessonActivationTaskInput {
+  approvedLessonId?: string;
+  activeLessonId?: string;
+  reviewer?: string;
+  rationale: string;
+}
+
+export interface LessonActivationTaskResult extends LessonActivationResult {}
+
+export interface RegressionRuleCheckTaskResult extends RegressionRuleCheckResult {}
 
 export class SeraKernel {
   private readonly workspaceManager = new WorkspaceManager();
@@ -426,7 +445,7 @@ export class SeraKernel {
   }
 
 
-  listLessons(kind: "candidates" | "approved" | "rejected" | "decisions"): LessonListTaskResult {
+  listLessons(kind: "candidates" | "approved" | "rejected" | "decisions" | "active" | "rules" | "activations"): LessonListTaskResult {
     const memory = new MemoryStore(this.options.rootDir);
     if (kind === "candidates") {
       return { ok: true, status: "completed", memoryDir: memory.memoryDir, candidates: memory.listLessonCandidates() };
@@ -436,6 +455,15 @@ export class SeraKernel {
     }
     if (kind === "rejected") {
       return { ok: true, status: "completed", memoryDir: memory.memoryDir, rejected: memory.listRejectedLessons() };
+    }
+    if (kind === "active") {
+      return { ok: true, status: "completed", memoryDir: memory.memoryDir, active: memory.listActiveLessons() };
+    }
+    if (kind === "rules") {
+      return { ok: true, status: "completed", memoryDir: memory.memoryDir, rules: memory.listRegressionRules() };
+    }
+    if (kind === "activations") {
+      return { ok: true, status: "completed", memoryDir: memory.memoryDir, activations: memory.listLessonActivationDecisions() };
     }
     return { ok: true, status: "completed", memoryDir: memory.memoryDir, decisions: memory.listLessonDecisions() };
   }
@@ -451,6 +479,29 @@ export class SeraKernel {
       return memory.approveLessonCandidate(input.candidateId, input.reviewer ?? "local-user", input.rationale);
     }
     return memory.rejectLessonCandidate(input.candidateId, input.reviewer ?? "local-user", input.rationale);
+  }
+
+  activateApprovedLesson(input: LessonActivationTaskInput): LessonActivationTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    return memory.activateApprovedLesson(
+      input.approvedLessonId ?? "",
+      input.reviewer ?? "local-user",
+      input.rationale
+    );
+  }
+
+  deactivateActiveLesson(input: LessonActivationTaskInput): LessonActivationTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    return memory.deactivateActiveLesson(
+      input.activeLessonId ?? "",
+      input.reviewer ?? "local-user",
+      input.rationale
+    );
+  }
+
+  checkLessonRegressionRules(): RegressionRuleCheckTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    return memory.checkRegressionRules();
   }
 
   private createTask(prompt: string): SeraTask {

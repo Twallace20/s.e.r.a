@@ -25,6 +25,12 @@ Usage:
   sera lessons approved
   sera lessons rejected
   sera lessons decisions
+  sera lessons active
+  sera lessons rules
+  sera lessons activations
+  sera lessons activate <approved-lesson-id> <rationale>
+  sera lessons deactivate <active-lesson-id> <rationale>
+  sera lessons check-rules
 
 NPM examples:
   npm run sera -- run "create hello file"
@@ -41,6 +47,8 @@ NPM examples:
   npm run sera -- lessons inspect <candidate-id>
   npm run sera -- lessons approve <candidate-id> "Reviewed and valid."
   npm run sera -- lessons reject <candidate-id> "Not actually a reusable lesson."
+  npm run sera -- lessons activate <approved-lesson-id> "Use as a regression guardrail."
+  npm run sera -- lessons check-rules
 
 Secure base behavior:
   - runs locally
@@ -54,6 +62,7 @@ Secure base behavior:
   - Self-improvement apply-cert requires npm run certify to pass or rolls back
   - Memory records run history, failure journal entries, and lesson candidates without activating lessons
   - Lesson Review approves or rejects candidates while keeping approved lessons inactive
+  - Active Lessons converts approved lessons into auditable regression rules without changing runtime behavior
   - does not require an LLM provider
 `);
 }
@@ -247,7 +256,7 @@ async function main(): Promise<void> {
 
   if (cmd === "lessons") {
     const [lessonMode, candidateId, ...reasonParts] = rest;
-    if (lessonMode === "candidates" || lessonMode === "approved" || lessonMode === "rejected" || lessonMode === "decisions") {
+    if (lessonMode === "candidates" || lessonMode === "approved" || lessonMode === "rejected" || lessonMode === "decisions" || lessonMode === "active" || lessonMode === "rules" || lessonMode === "activations") {
       const result = kernel.listLessons(lessonMode);
       console.log(JSON.stringify({
         ok: result.ok,
@@ -256,7 +265,10 @@ async function main(): Promise<void> {
         candidates: result.candidates,
         approved: result.approved,
         rejected: result.rejected,
-        decisions: result.decisions
+        decisions: result.decisions,
+        active: result.active,
+        rules: result.rules,
+        activations: result.activations
       }, null, 2));
       process.exit(0);
     }
@@ -299,7 +311,69 @@ async function main(): Promise<void> {
       process.exit(result.ok ? 0 : 1);
     }
 
-    throw new Error("Lessons command must be 'candidates', 'inspect', 'approve', 'reject', 'approved', 'rejected', or 'decisions'.");
+    if (lessonMode === "activate") {
+      const rationale = reasonParts.join(" ").trim();
+      const result = kernel.activateApprovedLesson({
+        approvedLessonId: requireArg(candidateId, "approved lesson id"),
+        reviewer: "local-user",
+        rationale
+      });
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        memoryDir: result.memoryDir,
+        approvedLesson: result.approvedLesson,
+        activeLesson: result.activeLesson,
+        regressionRule: result.regressionRule,
+        decision: result.decision,
+        approvedLessonPath: result.approvedLessonPath,
+        activeLessonPath: result.activeLessonPath,
+        regressionRulePath: result.regressionRulePath,
+        activationDecisionPath: result.activationDecisionPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (lessonMode === "deactivate") {
+      const rationale = reasonParts.join(" ").trim();
+      const result = kernel.deactivateActiveLesson({
+        activeLessonId: requireArg(candidateId, "active lesson id"),
+        reviewer: "local-user",
+        rationale
+      });
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        memoryDir: result.memoryDir,
+        approvedLesson: result.approvedLesson,
+        activeLesson: result.activeLesson,
+        regressionRule: result.regressionRule,
+        decision: result.decision,
+        approvedLessonPath: result.approvedLessonPath,
+        activeLessonPath: result.activeLessonPath,
+        regressionRulePath: result.regressionRulePath,
+        activationDecisionPath: result.activationDecisionPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (lessonMode === "check-rules") {
+      const result = kernel.checkLessonRegressionRules();
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        memoryDir: result.memoryDir,
+        activeRuleCount: result.activeRuleCount,
+        inactiveRuleCount: result.inactiveRuleCount,
+        checks: result.checks
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    throw new Error("Lessons command must be 'candidates', 'inspect', 'approve', 'reject', 'approved', 'rejected', 'decisions', 'active', 'rules', 'activations', 'activate', 'deactivate', or 'check-rules'.");
   }
 
   console.error(`Unknown command: ${cmd}`);
