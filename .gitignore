@@ -18,3 +18,8 @@ Thumbs.db
 .sera-knowledge/
 
 .sera-models/
+
+# Generated TypeScript outputs should not live in src
+packages/*/src/*.js
+packages/*/src/*.js.map
+packages/*/src/*.d.ts
