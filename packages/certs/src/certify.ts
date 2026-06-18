@@ -5,6 +5,7 @@ import { SeraKernel } from "@sera/kernel";
 import { KnowledgeStore } from "@sera/knowledge";
 import { MemoryStore } from "@sera/memory";
 import { ModelProviderStore } from "@sera/model-provider";
+import { OperatorConsoleStore } from "@sera/operator-console";
 
 export interface CertCheck {
   id: string;
@@ -15,7 +16,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -37,8 +38,9 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runKnowledgeRetrievalV1Checks());
   checks.push(...runModelProviderV1Checks());
   checks.push(...runAutonomousDevLoopV1Checks());
+  checks.push(...runOperatorConsoleV1Checks());
 
-  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_")).every((c) => c.pass);
+  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const developerV2ChecksPass = checks.filter((c) => c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const selfImprovementV1ChecksPass = checks.filter((c) => c.id.startsWith("self_improvement_")).every((c) => c.pass);
@@ -49,8 +51,11 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   const knowledgeV1ChecksPass = checks.filter((c) => c.id.startsWith("knowledge_")).every((c) => c.pass);
   const modelProviderV1ChecksPass = checks.filter((c) => c.id.startsWith("model_provider_")).every((c) => c.pass);
   const autonomyV1ChecksPass = checks.filter((c) => c.id.startsWith("autonomy_")).every((c) => c.pass);
+  const operatorConsoleV1ChecksPass = checks.filter((c) => c.id.startsWith("console_")).every((c) => c.pass);
   const pass = checks.every((c) => c.pass);
-  const level = pass && autonomyV1ChecksPass
+  const level = pass && operatorConsoleV1ChecksPass
+    ? "operator-console-v1"
+    : pass && autonomyV1ChecksPass
     ? "autonomous-dev-loop-v1"
     : pass && modelProviderV1ChecksPass
     ? "model-provider-v1"
@@ -804,6 +809,63 @@ function runAutonomousDevLoopV1Checks(): CertCheck[] {
     { id: "autonomy_apply_certifies_and_completes_task", name: "Autonomous Dev Loop applies bounded change and completes queued task after validation", pass: applied.ok && applied.status === "completed_with_changes" && afterApply.includes("autonomous") && appliedTask.task?.status === "completed" && Boolean(applied.autonomy.taskResult?.memoryRunRecordPath), detail: applied.autonomy.taskResult?.memoryRunRecordPath ?? applied.message },
     { id: "autonomy_failed_validation_rolls_back_and_blocks_task", name: "Autonomous Dev Loop rolls back failed validation and blocks queued task", pass: !failedApply.ok && failedApply.status === "blocked" && failedApply.autonomy.patch?.restored === true && afterFailedApply === "export const flag = 'bad';\n" && failedTask.task?.status === "blocked" && Boolean(failedApply.autonomy.taskResult?.lessonCandidatePath), detail: failedApply.autonomy.taskResult?.lessonCandidatePath ?? failedApply.message },
     { id: "autonomy_summary_counts_loops_and_events", name: "Autonomous Dev Loop summary and events track proposed, applied, and blocked loops", pass: loops.length === 4 && events.length >= 10 && summary.loopCount === 4 && summary.proposedCount === 1 && summary.appliedCount === 1 && summary.blockedCount === 2, detail: JSON.stringify(summary) }
+  ];
+}
+
+
+function runOperatorConsoleV1Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-console-cert-"));
+  const kernel = new SeraKernel({ rootDir: root });
+  fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+  fs.writeFileSync(path.join(root, "docs", "console.md"), "Operator console should summarize local evidence, tasks, models, and autonomy.\n", "utf8");
+
+  kernel.runTask("create hello file");
+  const task = kernel.createQueuedTask({ title: "Console certified task", prompt: "Validate the operator console task counts.", requestedBy: "cert-runner" });
+  kernel.startQueuedTask(task.task?.id ?? "missing", "Start during console certification.", "cert-runner");
+  kernel.ingestKnowledgeFile({ relativePath: "docs/console.md", title: "Console Notes" });
+  kernel.invokeModelProvider({ providerId: "mock-local", prompt: "Console cert prompt", purpose: "operator-console-v1-cert" });
+  kernel.runAutonomousDevLoop({ mode: "propose", goal: "Propose a harmless console cert patch.", relativePath: "docs/console.md", operations: [{ kind: "replace", find: "Operator console", replaceWith: "S.E.R.A. operator console", expectedOccurrences: 1 }] });
+
+  const status = kernel.getOperatorConsoleStatus();
+  const health = kernel.getOperatorConsoleHealth();
+  const report = kernel.writeOperatorConsoleReport();
+  const history = kernel.listOperatorConsoleHistory();
+  const summary = kernel.getOperatorConsoleSummary().summary;
+  const consoleStore = new OperatorConsoleStore(root);
+  const reportMarkdownExists = fs.existsSync(report.markdownPath);
+  const reportText = reportMarkdownExists ? fs.readFileSync(report.markdownPath, "utf8") : "";
+
+  return [
+    {
+      id: "console_snapshot_collects_subsystems",
+      name: "Operator Console status snapshot collects all certified subsystems",
+      pass: status.ok && status.snapshot.subsystems.length === 5 && status.snapshot.subsystems.some((subsystem) => subsystem.name === "memory" && subsystem.counts.runs >= 1) && status.snapshot.subsystems.some((subsystem) => subsystem.name === "knowledge" && subsystem.counts.documents >= 1) && status.snapshot.subsystems.some((subsystem) => subsystem.name === "autonomy" && subsystem.counts.loops >= 1),
+      detail: status.snapshotPath
+    },
+    {
+      id: "console_health_detects_model_guardrails",
+      name: "Operator Console health verifies model guardrails",
+      pass: health.ok && health.health.checks.some((check) => check.id === "console_external_models_disabled" && check.pass) && health.health.checks.some((check) => check.id === "console_mock_model_available" && check.pass),
+      detail: health.healthPath
+    },
+    {
+      id: "console_report_writes_markdown_and_json",
+      name: "Operator Console writes auditable markdown and JSON reports",
+      pass: report.ok && reportMarkdownExists && fs.existsSync(report.jsonPath) && reportText.includes("S.E.R.A. Operator Console Report") && reportText.includes("## Health Checks"),
+      detail: report.markdownPath
+    },
+    {
+      id: "console_history_records_snapshots_events_and_reports",
+      name: "Operator Console records snapshot, event, and report history",
+      pass: history.ok && history.snapshots.length >= 2 && history.events.length >= 3 && history.reports.length >= 1,
+      detail: consoleStore.consoleDir
+    },
+    {
+      id: "console_summary_counts_operator_activity",
+      name: "Operator Console summary counts operator activity",
+      pass: summary.snapshotCount >= 2 && summary.eventCount >= 3 && summary.reportCount >= 1 && summary.lastStatus !== "none",
+      detail: JSON.stringify(summary)
+    }
   ];
 }
 

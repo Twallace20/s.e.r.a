@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@sera/kernel": "0.1.0",
-    "@sera/shared": "0.1.0"
+    "@sera/shared": "0.1.0",
+    "@sera/operator-console": "0.1.0"
   }
 }

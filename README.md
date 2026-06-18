@@ -279,3 +279,18 @@ Current certified level after Phase 11:
 ```text
 autonomous-dev-loop-v1
 ```
+
+
+## Phase 12 — Operator Console v1
+
+S.E.R.A. now includes a local operator console that summarizes memory, tasks, knowledge, model-provider boundaries, and autonomous-dev-loop activity without enabling new mutation authority.
+
+```powershell
+npm run sera -- console status
+npm run sera -- console health
+npm run sera -- console report
+npm run sera -- console history
+npm run sera -- console summary
+```
+
+The certified level for this phase is `operator-console-v1`.

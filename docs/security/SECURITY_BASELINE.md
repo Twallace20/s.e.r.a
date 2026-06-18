@@ -62,3 +62,8 @@ Model providers are optional adapters. External providers are blocked by default
 ## Phase 11 Autonomous Dev Loop Safety
 
 The autonomous development loop is bounded and validation-gated. Proposal mode cannot mutate source. Apply mode requires a queued task and validation gate. Failed validation rolls back source changes and blocks the queued task. Successful validation records task completion and autonomy evidence. External model providers remain blocked by default.
+
+
+## Operator Console Boundary
+
+The Operator Console is observational by default. It may write `.sera-console/` evidence artifacts and reports, but it must not mutate source files, enable external model providers, approve lessons, activate regression rules, or run autonomous apply loops.

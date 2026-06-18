@@ -35,6 +35,9 @@
       "path": "packages/autonomy"
     },
     {
+      "path": "packages/operator-console"
+    },
+    {
       "path": "packages/self-improvement"
     },
     {

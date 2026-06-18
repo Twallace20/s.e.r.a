@@ -10,6 +10,9 @@
   ],
   "references": [
     {
+      "path": "../operator-console"
+    },
+    {
       "path": "../shared"
     },
     {

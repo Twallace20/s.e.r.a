@@ -1,0 +1,18 @@
+{
+  "name": "@sera/operator-console",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@sera/autonomy": "0.1.0",
+    "@sera/knowledge": "0.1.0",
+    "@sera/memory": "0.1.0",
+    "@sera/model-provider": "0.1.0",
+    "@sera/planner": "0.1.0",
+    "@sera/shared": "0.1.0"
+  }
+}
