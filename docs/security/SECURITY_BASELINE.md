@@ -9,10 +9,12 @@ The first secure base protects against the highest-risk legacy failure modes.
 - No internet by default.
 - Workspace-only writes.
 - Allowlisted commands only.
+- Shell commands must run inside an approved working directory.
 - Destructive commands require approval.
 - Secrets are redacted before logs/artifacts.
 - Every tool call is audited.
 - Every blocked action is recorded.
+- Developer patches capture backups before mutation and roll back on failed validation.
 
 ## Not yet included
 

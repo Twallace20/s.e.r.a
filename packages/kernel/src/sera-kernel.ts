@@ -1,8 +1,17 @@
 import path from "node:path";
 import { ArtifactStore } from "@sera/artifacts";
 import { SafetyPolicy } from "@sera/safety";
-import { FileTool } from "@sera/tools";
-import { DeveloperEditMode, DeveloperEditResult, DeveloperWorker, DeveloperValidationResult } from "@sera/workers";
+import { FileTool, ShellTool } from "@sera/tools";
+import {
+  DeveloperEditMode,
+  DeveloperEditResult,
+  DeveloperInspectResult,
+  DeveloperPatchMode,
+  DeveloperPatchOperation,
+  DeveloperPatchResult,
+  DeveloperValidationResult,
+  DeveloperWorker
+} from "@sera/workers";
 import { WorkspaceManager } from "@sera/workspace";
 import { createSeraId, isoNow, SeraFinalReport, SeraPlan, SeraResult, SeraRun, SeraStatus, SeraTask } from "@sera/shared";
 
@@ -24,8 +33,39 @@ export interface DeveloperEditTaskInput {
   }) => DeveloperValidationResult;
 }
 
+export interface DeveloperInspectTaskInput {
+  relativePath: string;
+}
+
+export interface DeveloperPatchValidationCommand {
+  command: string;
+  args: string[];
+}
+
+export interface DeveloperPatchTaskInput {
+  relativePath: string;
+  operations: DeveloperPatchOperation[];
+  mode: DeveloperPatchMode;
+  validate?: (context: {
+    projectRoot: string;
+    absolutePath: string;
+    relativePath: string;
+    before: string;
+    after: string;
+  }) => DeveloperValidationResult;
+  validationCommand?: DeveloperPatchValidationCommand;
+}
+
 export interface DeveloperEditTaskResult extends SeraResult {
   developer: DeveloperEditResult;
+}
+
+export interface DeveloperInspectTaskResult extends SeraResult {
+  inspection: DeveloperInspectResult;
+}
+
+export interface DeveloperPatchTaskResult extends SeraResult {
+  patch: DeveloperPatchResult;
 }
 
 export class SeraKernel {
@@ -75,6 +115,45 @@ export class SeraKernel {
     return this.finalizeRun({ artifacts, run, task, status, summary });
   }
 
+  runDeveloperInspectTask(input: DeveloperInspectTaskInput): DeveloperInspectTaskResult {
+    const prompt = `developer inspect ${input.relativePath}`;
+    const task = this.createTask(prompt);
+    const run = this.workspaceManager.createRun({ rootDir: this.options.rootDir, taskId: task.id });
+    const artifacts = new ArtifactStore(run.runDir);
+    const projectRoot = path.resolve(this.options.rootDir);
+    const safety = new SafetyPolicy({ workspaceDir: projectRoot, allowedCommands: ["node", "npm"] });
+    const plan = this.createDeveloperInspectPlan(task.id, input);
+    this.writeRunStartArtifacts(artifacts, task, plan, run, prompt);
+
+    const worker = new DeveloperWorker();
+    const inspection = worker.inspect({
+      runId: run.id,
+      projectRoot,
+      relativePath: input.relativePath,
+      artifacts,
+      safety
+    });
+
+    artifacts.appendJsonl("steps.jsonl", {
+      ts: isoNow(),
+      runId: run.id,
+      step: "developer_inspect_file",
+      status: inspection.status,
+      relativePath: inspection.relativePath,
+      artifactPath: inspection.artifactPath
+    });
+
+    const base = this.finalizeRun({
+      artifacts,
+      run,
+      task,
+      status: inspection.status,
+      summary: inspection.message,
+      extraArtifacts: ["artifacts/inspections"]
+    });
+    return { ...base, inspection };
+  }
+
   runDeveloperEditTask(input: DeveloperEditTaskInput): DeveloperEditTaskResult {
     const prompt = `developer ${input.mode} edit ${input.relativePath}`;
     const task = this.createTask(prompt);
@@ -117,6 +196,79 @@ export class SeraKernel {
       extraArtifacts: ["artifacts/developer-edit-suggestion.json", "artifacts/developer-edit-direct.json", "artifacts/developer-edit-rollback.json"]
     });
     return { ...base, developer };
+  }
+
+  runDeveloperPatchTask(input: DeveloperPatchTaskInput): DeveloperPatchTaskResult {
+    const prompt = `developer ${input.mode} patch ${input.relativePath}`;
+    const task = this.createTask(prompt);
+    const run = this.workspaceManager.createRun({ rootDir: this.options.rootDir, taskId: task.id });
+    const artifacts = new ArtifactStore(run.runDir);
+    const projectRoot = path.resolve(this.options.rootDir);
+    const safety = new SafetyPolicy({ workspaceDir: projectRoot, allowedCommands: ["node", "npm"] });
+    const shellTool = new ShellTool(run.id, safety, artifacts);
+    const plan = this.createDeveloperPatchPlan(task.id, input);
+    this.writeRunStartArtifacts(artifacts, task, plan, run, prompt);
+
+    const validate = input.validationCommand
+      ? () => {
+          const commandResult = shellTool.run(input.validationCommand!.command, input.validationCommand!.args, projectRoot);
+          artifacts.writeJson(path.join("artifacts", "validation-command.json"), {
+            command: input.validationCommand!.command,
+            args: input.validationCommand!.args,
+            ok: commandResult.ok,
+            exitCode: commandResult.exitCode,
+            stdout: commandResult.stdout,
+            stderr: commandResult.stderr,
+            message: commandResult.message
+          });
+          return {
+            ok: commandResult.ok,
+            message: commandResult.ok
+              ? `Validation command passed: ${input.validationCommand!.command} ${input.validationCommand!.args.join(" ")}`.trim()
+              : `Validation command failed: ${input.validationCommand!.command} ${input.validationCommand!.args.join(" ")}`.trim()
+          };
+        }
+      : input.validate;
+
+    const worker = new DeveloperWorker();
+    const patch = worker.patch({
+      runId: run.id,
+      projectRoot,
+      relativePath: input.relativePath,
+      operations: input.operations,
+      mode: input.mode,
+      artifacts,
+      safety,
+      validate
+    });
+
+    artifacts.appendJsonl("steps.jsonl", {
+      ts: isoNow(),
+      runId: run.id,
+      step: input.mode === "suggested" ? "developer_suggest_patch" : "developer_direct_patch",
+      status: patch.status,
+      relativePath: patch.relativePath,
+      changed: patch.changed,
+      totalOccurrences: patch.totalOccurrences,
+      operationCount: patch.operationCount
+    });
+
+    const base = this.finalizeRun({
+      artifacts,
+      run,
+      task,
+      status: patch.status,
+      summary: patch.message,
+      extraArtifacts: [
+        "artifacts/developer-patch-suggestion.json",
+        "artifacts/developer-patch-direct.json",
+        "artifacts/developer-patch-rollback.json",
+        "artifacts/validation-command.json",
+        "artifacts/patches",
+        "artifacts/backups"
+      ]
+    });
+    return { ...base, patch };
   }
 
   private createTask(prompt: string): SeraTask {
@@ -217,6 +369,30 @@ export class SeraKernel {
     };
   }
 
+  private createDeveloperInspectPlan(taskId: string, input: DeveloperInspectTaskInput): SeraPlan {
+    return {
+      id: createSeraId("plan"),
+      taskId,
+      createdAt: isoNow(),
+      steps: [
+        {
+          id: createSeraId("step"),
+          title: `Inspect target file ${input.relativePath}`,
+          tool: "DeveloperWorker",
+          risk: "low",
+          expectedArtifact: "artifacts/inspections"
+        },
+        {
+          id: createSeraId("step"),
+          title: "Write final report and evidence trail",
+          tool: "ArtifactStore",
+          risk: "low",
+          expectedArtifact: "final-report.md"
+        }
+      ]
+    };
+  }
+
   private createDeveloperEditPlan(taskId: string, input: DeveloperEditTaskInput): SeraPlan {
     return {
       id: createSeraId("plan"),
@@ -236,6 +412,44 @@ export class SeraKernel {
           tool: "DeveloperWorker",
           risk: input.mode === "suggested" ? "low" : "medium",
           expectedArtifact: input.mode === "suggested" ? "artifacts/suggestions" : "artifacts/backups"
+        },
+        {
+          id: createSeraId("step"),
+          title: "Write final report and evidence trail",
+          tool: "ArtifactStore",
+          risk: "low",
+          expectedArtifact: "final-report.md"
+        }
+      ]
+    };
+  }
+
+  private createDeveloperPatchPlan(taskId: string, input: DeveloperPatchTaskInput): SeraPlan {
+    return {
+      id: createSeraId("plan"),
+      taskId,
+      createdAt: isoNow(),
+      steps: [
+        {
+          id: createSeraId("step"),
+          title: `Inspect target file ${input.relativePath}`,
+          tool: "DeveloperWorker",
+          risk: "low",
+          expectedArtifact: "tool-events.jsonl"
+        },
+        {
+          id: createSeraId("step"),
+          title: input.mode === "suggested" ? "Render patch proposal artifact" : "Apply patch with backup and rollback path",
+          tool: "DeveloperWorker",
+          risk: input.mode === "suggested" ? "low" : "medium",
+          expectedArtifact: input.mode === "suggested" ? "artifacts/patches" : "artifacts/backups"
+        },
+        {
+          id: createSeraId("step"),
+          title: input.validationCommand ? "Run validation command through ShellTool" : "Evaluate validation callback when supplied",
+          tool: input.validationCommand ? "ShellTool" : "DeveloperWorker",
+          risk: input.validationCommand ? "medium" : "low",
+          expectedArtifact: input.validationCommand ? "artifacts/validation-command.json" : "developer-patch-direct.json"
         },
         {
           id: createSeraId("step"),

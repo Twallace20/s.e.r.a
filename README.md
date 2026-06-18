@@ -8,6 +8,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 - `secure-base`
 - `developer-worker-v1`
+- `developer-worker-v2`
 
 ## What works now
 
@@ -15,20 +16,24 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - npm workspace monorepo
 - secure kernel run lifecycle
 - workspace-only starter task execution
-- project-root-bounded Developer Worker v1
+- project-root-bounded Developer Worker
+- file inspection with fingerprint artifacts
 - suggested edit mode
 - direct edit mode with backup artifacts
-- validation rollback support
+- patch proposal artifacts
+- direct patch application with expected occurrence checks
+- validation command support through the safe shell tool
+- rollback when validation fails
 - protected path blocking
 - JSON/JSONL/Markdown artifact trail
-- starter certification runner
+- certification runner
 - integration tests
 
 ## What is intentionally not here yet
 
 - no LLM dependency in the kernel
 - no Ollama/OpenAI provider requirement
-- no autonomous self-modification
+- no uncontrolled autonomous self-modification
 - no semantic code refactoring
 - no cloud dependency
 - no database requirement
@@ -66,6 +71,32 @@ npm run sera -- dev apply examples/demo.txt "old text" "new text"
 
 Use suggested mode first for important files. Direct mode should stay narrow and reviewable.
 
+## Developer Worker v2
+
+Inspect mode fingerprints a file without changing it:
+
+```bash
+npm run sera -- dev inspect README.md
+```
+
+Patch suggestion mode renders a patch artifact and does not mutate the source file:
+
+```bash
+npm run sera -- dev patch suggest README.md "old text" "new text" 1
+```
+
+Direct patch mode applies a bounded literal patch with an expected occurrence count and backup artifact:
+
+```bash
+npm run sera -- dev patch apply README.md "old text" "new text" 1
+```
+
+Direct patch with build validation applies the patch, runs `npm run build` through `ShellTool`, and rolls back if validation fails:
+
+```bash
+npm run sera -- dev patch apply-build README.md "old text" "new text" 1
+```
+
 ## Core law
 
 Nothing gets called working unless it has:
@@ -83,11 +114,11 @@ Nothing gets called working unless it has:
 - `@sera/workspace` — run/workspace creation
 - `@sera/artifacts` — JSON, JSONL, and Markdown evidence writing
 - `@sera/tools` — controlled tools such as file and shell tools
-- `@sera/workers` — bounded worker modules, starting with Developer Worker v1
+- `@sera/workers` — bounded worker modules, starting with Developer Worker
 - `@sera/kernel` — task/run orchestration
 - `@sera/certs` — certification checks
 - `apps/cli` — local command-line interface
 
 ## Next phase
 
-Phase 3 should add a real validation layer for developer work: syntax checks, test command orchestration through the safe shell tool, and stricter diff artifacts before S.E.R.A. moves toward semantic code editing.
+Phase 4 should add a real self-improvement review loop: S.E.R.A. should generate a proposed code change, inspect its own artifact evidence, run validation, and produce a human-reviewable decision report before any merge-like workflow exists.
