@@ -10,6 +10,8 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - `developer-worker-v1`
 - `developer-worker-v2`
 - `self-improvement-v1`
+- `task-memory-v1`
+- `lesson-review-v1`
 
 ## What works now
 
@@ -31,6 +33,10 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - JSON/JSONL/Markdown artifact trail
 - certification runner
 - integration tests
+- task memory and failure journal
+- inactive lesson candidates
+- lesson candidate inspection
+- approved/rejected lesson review records
 
 ## What is intentionally not here yet
 
@@ -40,6 +46,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - no semantic code refactoring
 - no cloud dependency
 - no database requirement
+- no automatic lesson activation
 
 ## Setup
 
@@ -122,10 +129,6 @@ Nothing gets called working unless it has:
 - `@sera/certs` — certification checks
 - `apps/cli` — local command-line interface
 
-## Next phase
-
-Phase 4 should add a real self-improvement review loop: S.E.R.A. should generate a proposed code change, inspect its own artifact evidence, run validation, and produce a human-reviewable decision report before any merge-like workflow exists.
-
 ## Phase 5: Task Memory + Failure Journal v1
 
 S.E.R.A. now records local run history, blocked/failed runs, and inactive lesson candidates in `.sera-memory/`. This is runtime data and is ignored by Git.
@@ -143,4 +146,25 @@ Current certified level after Phase 5:
 
 ```text
 task-memory-v1
+```
+
+
+## Phase 6: Lesson Review + Approval v1
+
+S.E.R.A. can now list, inspect, approve, and reject lesson candidates. Approved lessons remain inactive and require a later activation phase before they can affect behavior. Rejected lessons are preserved for auditability.
+
+```bash
+npm run sera -- lessons candidates
+npm run sera -- lessons inspect <candidate-id>
+npm run sera -- lessons approve <candidate-id> "Reviewed and valid."
+npm run sera -- lessons reject <candidate-id> "Not reusable."
+npm run sera -- lessons approved
+npm run sera -- lessons rejected
+npm run sera -- lessons decisions
+```
+
+Current certified level after Phase 6:
+
+```text
+lesson-review-v1
 ```

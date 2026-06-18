@@ -13,7 +13,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -29,14 +29,18 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runDeveloperWorkerV2Checks());
   checks.push(...runSelfImprovementV1Checks());
   checks.push(...runTaskMemoryV1Checks());
+  checks.push(...runLessonReviewV1Checks());
 
-  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_")).every((c) => c.pass);
+  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const developerV2ChecksPass = checks.filter((c) => c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const selfImprovementV1ChecksPass = checks.filter((c) => c.id.startsWith("self_improvement_")).every((c) => c.pass);
   const memoryV1ChecksPass = checks.filter((c) => c.id.startsWith("memory_")).every((c) => c.pass);
+  const lessonReviewV1ChecksPass = checks.filter((c) => c.id.startsWith("lesson_review_")).every((c) => c.pass);
   const pass = checks.every((c) => c.pass);
-  const level = pass && memoryV1ChecksPass
+  const level = pass && lessonReviewV1ChecksPass
+    ? "lesson-review-v1"
+    : pass && memoryV1ChecksPass
     ? "task-memory-v1"
     : pass && selfImprovementV1ChecksPass
       ? "self-improvement-v1"
@@ -376,6 +380,87 @@ function runTaskMemoryV1Checks(): CertCheck[] {
       name: "Task Memory summary counts runs, failures, and lesson candidates",
       pass: summary.runCount === 2 && summary.failureCount === 1 && summary.lessonCandidateCount === 1 && summary.approvedLessonCount === 0,
       detail: JSON.stringify(summary)
+    }
+  ];
+}
+
+
+function runLessonReviewV1Checks(): CertCheck[] {
+  const approvedRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-lesson-approval-cert-"));
+  const approvedKernel = new SeraKernel({ rootDir: approvedRoot });
+  const blockedForApproval = approvedKernel.runDeveloperPatchTask({
+    mode: "direct",
+    relativePath: "../outside.txt",
+    operations: [{ kind: "replace", find: "x", replaceWith: "y", expectedOccurrences: 1 }]
+  });
+  const approvedMemory = new MemoryStore(approvedRoot);
+  const approvalCandidate = approvedMemory.listLessonCandidates()[0];
+  const inspected = approvedKernel.inspectLessonCandidate(approvalCandidate.id);
+  const approval = approvedKernel.reviewLessonCandidate({
+    candidateId: approvalCandidate.id,
+    decision: "approved",
+    reviewer: "cert-runner",
+    rationale: "Verified as a reusable guardrail candidate."
+  });
+  const secondApproval = approvedKernel.reviewLessonCandidate({
+    candidateId: approvalCandidate.id,
+    decision: "approved",
+    reviewer: "cert-runner",
+    rationale: "Attempt duplicate approval."
+  });
+  const approvedLessons = approvedMemory.listApprovedLessons();
+  const approvalDecisions = approvedMemory.listLessonDecisions();
+  const approvalSummary = approvedMemory.summarize();
+  const reviewedCandidate = approvedMemory.listLessonCandidates()[0];
+
+  const rejectedRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-lesson-rejection-cert-"));
+  const rejectedKernel = new SeraKernel({ rootDir: rejectedRoot });
+  rejectedKernel.runDeveloperPatchTask({
+    mode: "direct",
+    relativePath: "../outside.txt",
+    operations: [{ kind: "replace", find: "x", replaceWith: "y", expectedOccurrences: 1 }]
+  });
+  const rejectedMemory = new MemoryStore(rejectedRoot);
+  const rejectionCandidate = rejectedMemory.listLessonCandidates()[0];
+  const rejection = rejectedKernel.reviewLessonCandidate({
+    candidateId: rejectionCandidate.id,
+    decision: "rejected",
+    reviewer: "cert-runner",
+    rationale: "Not a generalizable lesson."
+  });
+  const rejectedLessons = rejectedMemory.listRejectedLessons();
+  const rejectedCandidate = rejectedMemory.listLessonCandidates()[0];
+
+  return [
+    {
+      id: "lesson_review_inspects_candidate",
+      name: "Lesson Review can inspect an existing lesson candidate",
+      pass: !blockedForApproval.ok && inspected.ok && inspected.candidate?.id === approvalCandidate.id,
+      detail: inspected.candidatePath ?? inspected.message
+    },
+    {
+      id: "lesson_review_approves_candidate_inactively",
+      name: "Lesson Review approves a candidate without activating it",
+      pass: approval.ok && reviewedCandidate.status === "approved" && approvedLessons.length === 1 && approvedLessons[0].active === false && approvedLessons[0].activation === "manual-activation-required",
+      detail: approval.approvedLessonPath ?? approval.message
+    },
+    {
+      id: "lesson_review_blocks_duplicate_decisions",
+      name: "Lesson Review blocks duplicate approval or rejection decisions",
+      pass: !secondApproval.ok && secondApproval.status === "blocked" && approvedMemory.listApprovedLessons().length === 1,
+      detail: secondApproval.message
+    },
+    {
+      id: "lesson_review_rejects_candidate_with_record",
+      name: "Lesson Review rejects a candidate and writes a rejected lesson record",
+      pass: rejection.ok && rejectedCandidate.status === "rejected" && rejectedLessons.length === 1 && rejectedLessons[0].active === false,
+      detail: rejection.rejectedLessonPath ?? rejection.message
+    },
+    {
+      id: "lesson_review_summary_counts_reviewed_lessons",
+      name: "Lesson Review summary counts candidates and reviewed lessons",
+      pass: approvalSummary.lessonCandidateCount === 0 && approvalSummary.approvedLessonCount === 1 && approvalSummary.rejectedLessonCount === 0 && approvalDecisions.length === 1,
+      detail: JSON.stringify(approvalSummary)
     }
   ];
 }

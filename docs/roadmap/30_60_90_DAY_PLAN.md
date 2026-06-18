@@ -41,3 +41,8 @@ After Developer Worker v2, the next milestone is a conservative self-improvement
 ## Phase 5 update
 
 Task Memory + Failure Journal v1 is the next learning foundation. S.E.R.A. can now preserve run outcomes, failure records, and lesson candidates while keeping all learning manual-review-only.
+
+
+## Phase 6 update
+
+Lesson Review + Approval v1 creates the human governance gate for learning. S.E.R.A. can now turn lesson candidates into approved or rejected records, but approved lessons remain inactive until a future activation/regression phase.

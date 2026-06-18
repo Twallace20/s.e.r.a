@@ -3,6 +3,7 @@ import path from "node:path";
 import { createSeraId, isoNow, redactSecrets, SeraStatus } from "@sera/shared";
 
 export type LessonCandidateStatus = "candidate" | "approved" | "rejected" | "archived";
+export type LessonReviewDecision = "approved" | "rejected";
 
 export interface MemoryRunRecord {
   id: string;
@@ -44,6 +45,70 @@ export interface LessonCandidateRecord {
   evidence: string[];
   proposedAction: string;
   activation: "manual-approval-required";
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewDecision?: LessonReviewDecision;
+  reviewRationale?: string;
+}
+
+export interface ApprovedLessonRecord {
+  id: string;
+  createdAt: string;
+  candidateId: string;
+  sourceFailureId: string;
+  runId: string;
+  taskId: string;
+  title: string;
+  hypothesis: string;
+  evidence: string[];
+  approvedBy: string;
+  rationale: string;
+  proposedAction: string;
+  active: false;
+  activation: "manual-activation-required";
+  source: "lesson-review-v1";
+}
+
+export interface RejectedLessonRecord {
+  id: string;
+  createdAt: string;
+  candidateId: string;
+  sourceFailureId: string;
+  runId: string;
+  taskId: string;
+  title: string;
+  rejectedBy: string;
+  rationale: string;
+  evidence: string[];
+  active: false;
+  source: "lesson-review-v1";
+}
+
+export interface LessonDecisionRecord {
+  id: string;
+  createdAt: string;
+  candidateId: string;
+  decision: LessonReviewDecision;
+  reviewer: string;
+  rationale: string;
+  beforeStatus: LessonCandidateStatus;
+  afterStatus: LessonCandidateStatus;
+  source: "lesson-review-v1";
+}
+
+export interface LessonReviewResult {
+  ok: boolean;
+  status: "completed" | "blocked";
+  message: string;
+  memoryDir: string;
+  candidate?: LessonCandidateRecord;
+  approvedLesson?: ApprovedLessonRecord;
+  rejectedLesson?: RejectedLessonRecord;
+  decision?: LessonDecisionRecord;
+  candidatePath?: string;
+  approvedLessonPath?: string;
+  rejectedLessonPath?: string;
+  decisionPath?: string;
 }
 
 export interface MemorySummary {
@@ -53,6 +118,7 @@ export interface MemorySummary {
   failureCount: number;
   lessonCandidateCount: number;
   approvedLessonCount: number;
+  rejectedLessonCount: number;
 }
 
 export interface RecordRunInput {
@@ -151,6 +217,47 @@ export class MemoryStore {
     return this.readJsonl<LessonCandidateRecord>("lesson-candidates.jsonl");
   }
 
+  listApprovedLessons(): ApprovedLessonRecord[] {
+    return this.readJsonl<ApprovedLessonRecord>("approved-lessons.jsonl");
+  }
+
+  listRejectedLessons(): RejectedLessonRecord[] {
+    return this.readJsonl<RejectedLessonRecord>("rejected-lessons.jsonl");
+  }
+
+  listLessonDecisions(): LessonDecisionRecord[] {
+    return this.readJsonl<LessonDecisionRecord>("lesson-decisions.jsonl");
+  }
+
+  inspectLessonCandidate(candidateId: string): LessonReviewResult {
+    const candidate = this.findLessonCandidate(candidateId);
+    if (!candidate) {
+      return {
+        ok: false,
+        status: "blocked",
+        message: `Lesson candidate not found: ${candidateId}`,
+        memoryDir: this.memoryDir
+      };
+    }
+
+    return {
+      ok: true,
+      status: "completed",
+      message: `Lesson candidate found: ${candidate.id}`,
+      memoryDir: this.memoryDir,
+      candidate,
+      candidatePath: this.path("lesson-candidates.jsonl")
+    };
+  }
+
+  approveLessonCandidate(candidateId: string, reviewer: string, rationale: string): LessonReviewResult {
+    return this.reviewLessonCandidate(candidateId, "approved", reviewer, rationale);
+  }
+
+  rejectLessonCandidate(candidateId: string, reviewer: string, rationale: string): LessonReviewResult {
+    return this.reviewLessonCandidate(candidateId, "rejected", reviewer, rationale);
+  }
+
   summarize(): MemorySummary {
     const lessons = this.listLessonCandidates();
     return {
@@ -159,7 +266,8 @@ export class MemoryStore {
       runCount: this.listRuns().length,
       failureCount: this.listFailures().length,
       lessonCandidateCount: lessons.filter((l) => l.status === "candidate").length,
-      approvedLessonCount: lessons.filter((l) => l.status === "approved").length
+      approvedLessonCount: this.listApprovedLessons().length,
+      rejectedLessonCount: this.listRejectedLessons().length
     };
   }
 
@@ -170,6 +278,134 @@ export class MemoryStore {
 
   path(...segments: string[]): string {
     return path.join(this.memoryDir, ...segments);
+  }
+
+  private reviewLessonCandidate(candidateId: string, decisionType: LessonReviewDecision, reviewer: string, rationale: string): LessonReviewResult {
+    this.ensureMemoryDir();
+    const cleanReviewer = reviewer.trim() || "local-user";
+    const cleanRationale = rationale.trim();
+    if (!cleanRationale) {
+      return {
+        ok: false,
+        status: "blocked",
+        message: "Lesson review requires a rationale.",
+        memoryDir: this.memoryDir
+      };
+    }
+
+    const lessons = this.listLessonCandidates();
+    const index = lessons.findIndex((lesson) => lesson.id === candidateId);
+    if (index < 0) {
+      return {
+        ok: false,
+        status: "blocked",
+        message: `Lesson candidate not found: ${candidateId}`,
+        memoryDir: this.memoryDir
+      };
+    }
+
+    const candidate = lessons[index];
+    if (candidate.status !== "candidate") {
+      return {
+        ok: false,
+        status: "blocked",
+        message: `Lesson candidate is not pending review. Current status: ${candidate.status}.`,
+        memoryDir: this.memoryDir,
+        candidate
+      };
+    }
+
+    const reviewedAt = isoNow();
+    const updatedCandidate: LessonCandidateRecord = {
+      ...candidate,
+      status: decisionType,
+      reviewedAt,
+      reviewedBy: cleanReviewer,
+      reviewDecision: decisionType,
+      reviewRationale: cleanRationale
+    };
+    lessons[index] = updatedCandidate;
+    this.writeJsonl("lesson-candidates.jsonl", lessons);
+
+    const decision: LessonDecisionRecord = {
+      id: createSeraId("lesson_decision"),
+      createdAt: reviewedAt,
+      candidateId: candidate.id,
+      decision: decisionType,
+      reviewer: cleanReviewer,
+      rationale: cleanRationale,
+      beforeStatus: candidate.status,
+      afterStatus: decisionType,
+      source: "lesson-review-v1"
+    };
+    const decisionPath = this.appendJsonl("lesson-decisions.jsonl", decision);
+
+    if (decisionType === "approved") {
+      const approvedLesson: ApprovedLessonRecord = {
+        id: createSeraId("approved_lesson"),
+        createdAt: reviewedAt,
+        candidateId: candidate.id,
+        sourceFailureId: candidate.sourceFailureId,
+        runId: candidate.runId,
+        taskId: candidate.taskId,
+        title: candidate.title,
+        hypothesis: candidate.hypothesis,
+        evidence: candidate.evidence,
+        approvedBy: cleanReviewer,
+        rationale: cleanRationale,
+        proposedAction: candidate.proposedAction,
+        active: false,
+        activation: "manual-activation-required",
+        source: "lesson-review-v1"
+      };
+      const approvedLessonPath = this.appendJsonl("approved-lessons.jsonl", approvedLesson);
+      this.writeSummary();
+      return {
+        ok: true,
+        status: "completed",
+        message: "Lesson candidate approved and stored as an inactive approved lesson.",
+        memoryDir: this.memoryDir,
+        candidate: updatedCandidate,
+        approvedLesson,
+        decision,
+        candidatePath: this.path("lesson-candidates.jsonl"),
+        approvedLessonPath,
+        decisionPath
+      };
+    }
+
+    const rejectedLesson: RejectedLessonRecord = {
+      id: createSeraId("rejected_lesson"),
+      createdAt: reviewedAt,
+      candidateId: candidate.id,
+      sourceFailureId: candidate.sourceFailureId,
+      runId: candidate.runId,
+      taskId: candidate.taskId,
+      title: candidate.title,
+      rejectedBy: cleanReviewer,
+      rationale: cleanRationale,
+      evidence: candidate.evidence,
+      active: false,
+      source: "lesson-review-v1"
+    };
+    const rejectedLessonPath = this.appendJsonl("rejected-lessons.jsonl", rejectedLesson);
+    this.writeSummary();
+    return {
+      ok: true,
+      status: "completed",
+      message: "Lesson candidate rejected and stored in the rejected lesson record.",
+      memoryDir: this.memoryDir,
+      candidate: updatedCandidate,
+      rejectedLesson,
+      decision,
+      candidatePath: this.path("lesson-candidates.jsonl"),
+      rejectedLessonPath,
+      decisionPath
+    };
+  }
+
+  private findLessonCandidate(candidateId: string): LessonCandidateRecord | undefined {
+    return this.listLessonCandidates().find((lesson) => lesson.id === candidateId);
   }
 
   private ensureMemoryDir(): void {
@@ -189,6 +425,15 @@ export class MemoryStore {
     const target = this.path(relativePath);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, redactSecrets(JSON.stringify(value, null, 2)) + "\n", "utf8");
+    return target;
+  }
+
+  private writeJsonl(relativePath: string, values: unknown[]): string {
+    this.ensureMemoryDir();
+    const target = this.path(relativePath);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    const raw = values.map((value) => redactSecrets(JSON.stringify(value))).join("\n");
+    fs.writeFileSync(target, raw ? `${raw}\n` : "", "utf8");
     return target;
   }
 
