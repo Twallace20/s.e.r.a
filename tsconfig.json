@@ -20,6 +20,9 @@
       "path": "packages/workers"
     },
     {
+      "path": "packages/memory"
+    },
+    {
       "path": "packages/self-improvement"
     },
     {

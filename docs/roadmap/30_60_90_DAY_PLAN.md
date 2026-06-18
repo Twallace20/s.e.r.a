@@ -37,3 +37,7 @@ Outcome: S.E.R.A. starts learning from verified work without corrupting the core
 ## Added milestone — Self-Improvement Loop v1
 
 After Developer Worker v2, the next milestone is a conservative self-improvement loop: propose first, apply only through validation, preserve backups, roll back failures, and write an explicit self-improvement record.
+
+## Phase 5 update
+
+Task Memory + Failure Journal v1 is the next learning foundation. S.E.R.A. can now preserve run outcomes, failure records, and lesson candidates while keeping all learning manual-review-only.

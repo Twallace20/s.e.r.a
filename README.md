@@ -125,3 +125,22 @@ Nothing gets called working unless it has:
 ## Next phase
 
 Phase 4 should add a real self-improvement review loop: S.E.R.A. should generate a proposed code change, inspect its own artifact evidence, run validation, and produce a human-reviewable decision report before any merge-like workflow exists.
+
+## Phase 5: Task Memory + Failure Journal v1
+
+S.E.R.A. now records local run history, blocked/failed runs, and inactive lesson candidates in `.sera-memory/`. This is runtime data and is ignored by Git.
+
+Memory is evidence-only in this phase. Lesson candidates require human review and do not activate automatically.
+
+```bash
+npm run sera -- memory summary
+npm run sera -- memory runs
+npm run sera -- memory failures
+npm run sera -- memory lessons
+```
+
+Current certified level after Phase 5:
+
+```text
+task-memory-v1
+```

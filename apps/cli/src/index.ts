@@ -14,6 +14,10 @@ Usage:
   sera dev patch apply-build <relative-file> <find-text> <replace-text> [expected-occurrences]
   sera self propose <relative-file> <find-text> <replace-text> [expected-occurrences]
   sera self apply-cert <relative-file> <find-text> <replace-text> [expected-occurrences]
+  sera memory summary
+  sera memory runs
+  sera memory failures
+  sera memory lessons
 
 NPM examples:
   npm run sera -- run "create hello file"
@@ -24,6 +28,8 @@ NPM examples:
   npm run sera -- dev patch apply-build README.md "old" "new" 1
   npm run sera -- self propose README.md "old" "new" 1
   npm run sera -- self apply-cert README.md "old" "new" 1
+  npm run sera -- memory summary
+  npm run sera -- memory failures
 
 Secure base behavior:
   - runs locally
@@ -35,6 +41,7 @@ Secure base behavior:
   - Developer Worker apply-build validates with npm run build and rolls back on failure
   - Self-improvement proposal mode writes evidence without mutating source
   - Self-improvement apply-cert requires npm run certify to pass or rolls back
+  - Memory records run history, failure journal entries, and lesson candidates without activating lessons
   - does not require an LLM provider
 `);
 }
@@ -197,6 +204,33 @@ async function main(): Promise<void> {
       runDir: result.run.runDir
     }, null, 2));
     process.exit(result.ok ? 0 : 1);
+  }
+
+  if (cmd === "memory") {
+    const [memoryMode] = rest;
+    if (memoryMode === "summary") {
+      const result = kernel.getMemorySummary();
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        memoryDir: result.memoryDir,
+        summary: result.summary
+      }, null, 2));
+      process.exit(0);
+    }
+    if (memoryMode === "runs" || memoryMode === "failures" || memoryMode === "lessons") {
+      const result = kernel.listMemory(memoryMode);
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        memoryDir: result.memoryDir,
+        runs: result.runs,
+        failures: result.failures,
+        lessons: result.lessons
+      }, null, 2));
+      process.exit(0);
+    }
+    throw new Error("Memory command must be 'summary', 'runs', 'failures', or 'lessons'.");
   }
 
   console.error(`Unknown command: ${cmd}`);
