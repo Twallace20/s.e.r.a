@@ -55,3 +55,8 @@ Active Lessons + Regression Rules v1 converts approved lessons into explicit reg
 ## Phase 8 update
 
 Planner + Task Queue v1 gives S.E.R.A. a local operating rhythm. Tasks can be queued, inspected, started, completed, blocked, cancelled, summarized, and audited. This prepares the system for safer orchestration while preserving the no-autonomous-execution boundary.
+
+
+## Phase 9 — Knowledge Ingestion + Local Retrieval v1
+
+Add a local, deterministic knowledge index for project files and evidence retrieval. Keep retrieval read-only and model-free until provider adapters are introduced later.

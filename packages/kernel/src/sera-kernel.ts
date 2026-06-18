@@ -19,6 +19,15 @@ import {
   RegressionRuleRecord
 } from "@sera/memory";
 import {
+  KnowledgeDirectoryIngestResult,
+  KnowledgeIngestResult,
+  KnowledgeInspectResult,
+  KnowledgeListResult,
+  KnowledgeSearchResult,
+  KnowledgeStore,
+  KnowledgeSummaryResult
+} from "@sera/knowledge";
+import {
   CreateQueuedTaskInput,
   QueuedTaskRecord,
   QueuedTaskStatus,
@@ -177,6 +186,29 @@ export interface TaskQueueListTaskResult extends TaskQueueListResult {}
 export interface TaskQueueEventsTaskResult extends TaskQueueEventsResult {}
 
 export interface TaskQueueSummaryTaskResult extends TaskQueueSummaryResult {}
+
+export interface KnowledgeIngestFileTaskInput {
+  relativePath: string;
+  title?: string;
+}
+
+export interface KnowledgeIngestDirectoryTaskInput {
+  relativeDir: string;
+  extensions?: string[];
+  limit?: number;
+}
+
+export interface KnowledgeIngestFileTaskResult extends KnowledgeIngestResult {}
+
+export interface KnowledgeIngestDirectoryTaskResult extends KnowledgeDirectoryIngestResult {}
+
+export interface KnowledgeListTaskResult extends KnowledgeListResult {}
+
+export interface KnowledgeInspectTaskResult extends KnowledgeInspectResult {}
+
+export interface KnowledgeSearchTaskResult extends KnowledgeSearchResult {}
+
+export interface KnowledgeSummaryTaskResult extends KnowledgeSummaryResult {}
 
 export class SeraKernel {
   private readonly workspaceManager = new WorkspaceManager();
@@ -572,6 +604,41 @@ export class SeraKernel {
     const summaryPath = queue.writeSummary();
     const summary = queue.summarize();
     return { ok: true, status: "completed", taskDir: queue.taskDir, summary: { ...summary, taskDir: queue.taskDir } };
+  }
+
+  ingestKnowledgeFile(input: KnowledgeIngestFileTaskInput): KnowledgeIngestFileTaskResult {
+    const knowledge = new KnowledgeStore(this.options.rootDir);
+    return knowledge.ingestFile(input.relativePath, input.title);
+  }
+
+  ingestKnowledgeDirectory(input: KnowledgeIngestDirectoryTaskInput): KnowledgeIngestDirectoryTaskResult {
+    const knowledge = new KnowledgeStore(this.options.rootDir);
+    return knowledge.ingestDirectory(input.relativeDir, { extensions: input.extensions, limit: input.limit });
+  }
+
+  listKnowledge(kind: "documents" | "chunks", documentId?: string): KnowledgeListTaskResult {
+    const knowledge = new KnowledgeStore(this.options.rootDir);
+    if (kind === "documents") {
+      return { ok: true, status: "completed", knowledgeDir: knowledge.knowledgeDir, documents: knowledge.listDocuments() };
+    }
+    return { ok: true, status: "completed", knowledgeDir: knowledge.knowledgeDir, chunks: knowledge.listChunks(documentId) };
+  }
+
+  inspectKnowledgeDocument(documentId: string): KnowledgeInspectTaskResult {
+    const knowledge = new KnowledgeStore(this.options.rootDir);
+    return knowledge.inspectDocument(documentId);
+  }
+
+  searchKnowledge(query: string, limit?: number): KnowledgeSearchTaskResult {
+    const knowledge = new KnowledgeStore(this.options.rootDir);
+    return knowledge.search(query, limit);
+  }
+
+  getKnowledgeSummary(): KnowledgeSummaryTaskResult {
+    const knowledge = new KnowledgeStore(this.options.rootDir);
+    const summaryPath = knowledge.writeSummary();
+    const summary = knowledge.summarize();
+    return { ok: true, status: "completed", knowledgeDir: knowledge.knowledgeDir, summary: { ...summary, knowledgeDir: knowledge.knowledgeDir }, summaryPath };
   }
 
   private createTask(prompt: string): SeraTask {

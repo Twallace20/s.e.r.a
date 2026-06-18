@@ -223,3 +223,17 @@ Current certified level after Phase 8:
 ```text
 planner-task-queue-v1
 ```
+
+
+## Phase 9 — Knowledge Ingestion + Local Retrieval v1
+
+S.E.R.A. can now index local project files into `.sera-knowledge/` and retrieve lexical evidence without using an LLM. Knowledge commands are read-only and do not execute tasks or mutate source files.
+
+Example commands:
+
+```powershell
+npm run sera -- knowledge ingest-file README.md "Project README"
+npm run sera -- knowledge documents
+npm run sera -- knowledge search "planner task queue" 5
+npm run sera -- knowledge summary
+```

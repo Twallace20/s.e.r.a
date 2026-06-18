@@ -49,3 +49,8 @@ Active lesson activation requires an approved lesson and an explicit rationale. 
 ## Phase 8 planner safety
 
 The task queue creates operating rhythm without autonomous execution. Tasks must move through strict lifecycle transitions. Invalid transitions are blocked. Completed and blocked task outcomes can be recorded into memory, but the planner does not activate lessons, run tools by itself, or modify source code.
+
+
+## Phase 9 Knowledge Boundary
+
+Knowledge ingestion is read-only. It only accepts paths inside the project root, ignores runtime/system directories, supports a bounded set of text-like file extensions, blocks path traversal, and performs deterministic lexical search without external services.

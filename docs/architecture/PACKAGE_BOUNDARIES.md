@@ -57,3 +57,8 @@ Active Lessons + Regression Rules v1 extends `@sera/memory` with activation reco
 ## `@sera/planner`
 
 Owns the local task queue, task lifecycle records, task event records, and task queue summaries. It can record completed or blocked task outcomes into memory, but it does not execute tasks autonomously and does not mutate source code.
+
+
+## `@sera/knowledge`
+
+Owns local file ingestion, document records, chunk records, deterministic lexical search, search history, and knowledge summaries under `.sera-knowledge/`. It must not execute tasks, mutate source files, activate lessons, or call LLM providers.
