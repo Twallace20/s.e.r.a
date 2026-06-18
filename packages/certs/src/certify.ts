@@ -12,7 +12,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -25,11 +25,19 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
 
   checks.push(...runSecureBaseChecks(sandboxRoot));
   checks.push(...runDeveloperWorkerV1Checks());
+  checks.push(...runDeveloperWorkerV2Checks());
 
-  const pass = checks.every((c) => c.pass);
-  const developerChecksPass = checks.filter((c) => c.id.startsWith("developer_")).every((c) => c.pass);
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_")).every((c) => c.pass);
-  const level = pass && developerChecksPass ? "developer-worker-v1" : secureChecksPass ? "secure-base" : "none";
+  const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
+  const developerV2ChecksPass = checks.filter((c) => c.id.startsWith("developer_v2_")).every((c) => c.pass);
+  const pass = checks.every((c) => c.pass);
+  const level = pass && developerV2ChecksPass
+    ? "developer-worker-v2"
+    : secureChecksPass && developerV1ChecksPass
+      ? "developer-worker-v1"
+      : secureChecksPass
+        ? "secure-base"
+        : "none";
 
   const report: CertReport = {
     createdAt: new Date().toISOString(),
@@ -139,6 +147,94 @@ function runDeveloperWorkerV1Checks(): CertCheck[] {
       name: "Developer Worker restores source when validation fails",
       pass: !rollback.ok && rollback.status === "failed" && rollback.developer.restored === true && rollbackText === "before\n",
       detail: rollback.message
+    }
+  ];
+}
+
+function runDeveloperWorkerV2Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-dev-v2-cert-"));
+  const kernel = new SeraKernel({ rootDir: root });
+  const filePath = path.join(root, "src", "module.ts");
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, "export const label = 'legacy';\n", "utf8");
+
+  const inspection = kernel.runDeveloperInspectTask({ relativePath: "src/module.ts" });
+
+  const suggestedPatch = kernel.runDeveloperPatchTask({
+    mode: "suggested",
+    relativePath: "src/module.ts",
+    operations: [{ kind: "replace", find: "legacy", replaceWith: "clean-core", expectedOccurrences: 1 }]
+  });
+  const sourceAfterSuggestion = fs.readFileSync(filePath, "utf8");
+
+  const expectedMismatch = kernel.runDeveloperPatchTask({
+    mode: "direct",
+    relativePath: "src/module.ts",
+    operations: [{ kind: "replace", find: "legacy", replaceWith: "unsafe", expectedOccurrences: 2 }]
+  });
+  const sourceAfterMismatch = fs.readFileSync(filePath, "utf8");
+
+  const directPatch = kernel.runDeveloperPatchTask({
+    mode: "direct",
+    relativePath: "src/module.ts",
+    operations: [{ kind: "replace", find: "legacy", replaceWith: "phase3", expectedOccurrences: 1 }],
+    validate: ({ after }) => ({ ok: after.includes("phase3"), message: "phase3 marker exists" })
+  });
+  const sourceAfterDirect = fs.readFileSync(filePath, "utf8");
+
+  fs.writeFileSync(filePath, "export const status = 'bad';\n", "utf8");
+  const validationRollback = kernel.runDeveloperPatchTask({
+    mode: "direct",
+    relativePath: "src/module.ts",
+    operations: [{ kind: "replace", find: "bad", replaceWith: "invalid", expectedOccurrences: 1 }],
+    validationCommand: { command: process.execPath, args: ["-e", "process.exit(1)"] }
+  });
+  const sourceAfterRollback = fs.readFileSync(filePath, "utf8");
+
+  const blockedCommandRollback = kernel.runDeveloperPatchTask({
+    mode: "direct",
+    relativePath: "src/module.ts",
+    operations: [{ kind: "replace", find: "bad", replaceWith: "changed", expectedOccurrences: 1 }],
+    validationCommand: { command: "git", args: ["--version"] }
+  });
+  const sourceAfterBlockedCommand = fs.readFileSync(filePath, "utf8");
+
+  return [
+    {
+      id: "developer_v2_inspect_writes_artifact",
+      name: "Developer Worker v2 inspect writes a source fingerprint artifact",
+      pass: inspection.ok && inspection.inspection.exists && Boolean(inspection.inspection.artifactPath) && Boolean(inspection.inspection.sha256),
+      detail: inspection.inspection.artifactPath ?? inspection.message
+    },
+    {
+      id: "developer_v2_patch_suggestion_no_source_mutation",
+      name: "Developer Worker v2 patch suggestion does not mutate source",
+      pass: suggestedPatch.ok && suggestedPatch.patch.status === "completed" && Boolean(suggestedPatch.patch.patchArtifactPath) && sourceAfterSuggestion === "export const label = 'legacy';\n",
+      detail: suggestedPatch.patch.patchArtifactPath ?? suggestedPatch.message
+    },
+    {
+      id: "developer_v2_expected_occurrence_mismatch_blocks",
+      name: "Developer Worker v2 blocks patches when occurrence expectations do not match",
+      pass: !expectedMismatch.ok && expectedMismatch.status === "blocked" && sourceAfterMismatch === "export const label = 'legacy';\n",
+      detail: expectedMismatch.message
+    },
+    {
+      id: "developer_v2_direct_patch_applies_with_validation",
+      name: "Developer Worker v2 direct patch applies when validation passes",
+      pass: directPatch.ok && directPatch.patch.changed && sourceAfterDirect === "export const label = 'phase3';\n" && Boolean(directPatch.patch.backupPath),
+      detail: directPatch.message
+    },
+    {
+      id: "developer_v2_validation_command_rolls_back",
+      name: "Developer Worker v2 rolls back when validation command fails",
+      pass: !validationRollback.ok && validationRollback.status === "failed" && validationRollback.patch.restored === true && sourceAfterRollback === "export const status = 'bad';\n",
+      detail: validationRollback.message
+    },
+    {
+      id: "developer_v2_blocked_validation_command_rolls_back",
+      name: "Developer Worker v2 rolls back when validation command is not allowlisted",
+      pass: !blockedCommandRollback.ok && blockedCommandRollback.status === "failed" && blockedCommandRollback.patch.restored === true && sourceAfterBlockedCommand === "export const status = 'bad';\n",
+      detail: blockedCommandRollback.message
     }
   ];
 }

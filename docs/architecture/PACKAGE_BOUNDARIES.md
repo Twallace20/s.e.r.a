@@ -18,11 +18,15 @@ JSON, JSONL, Markdown artifact writing.
 
 ## `packages/tools`
 
-Controlled adapters such as FileTool and ShellTool.
+Controlled adapters such as FileTool and ShellTool. Tools are audited and safety-gated.
+
+## `packages/workers`
+
+Bounded worker modules. Through Phase 3, this owns Developer Worker inspect, edit, and patch primitives.
 
 ## `packages/kernel`
 
-Task execution lifecycle. Depends on safety, workspace, artifacts, and tools.
+Task execution lifecycle. Depends on safety, workspace, artifacts, tools, and workers.
 
 ## `packages/certs`
 
@@ -33,6 +37,5 @@ Certification runner and capability checks.
 - `packages/evaluator`
 - `packages/memory`
 - `packages/knowledge`
-- `packages/workers`
 - `apps/local-api`
 - `apps/console`

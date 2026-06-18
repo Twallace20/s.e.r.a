@@ -1,38 +1,34 @@
-# 30 / 60 / 90 Day Plan
+# S.E.R.A. 30 / 60 / 90 Day Plan
 
-## Days 1–30: Secure Local Core
+## Days 1–30 — Secure local foundation
 
-- Clean repo.
-- Kernel lifecycle.
-- Workspace boundaries.
-- Artifact trail.
-- FileTool.
-- ShellTool allowlist.
-- Starter certs.
-- Local CLI.
+- secure local kernel
+- workspace boundaries
+- artifact trail
+- starter certification
+- Developer Worker v1
+- Developer Worker v2
 
-## Days 31–60: Developer Worker
+Outcome: S.E.R.A. can run locally, inspect and edit files through bounded workers, validate changes, and roll back failures.
 
-- Text edits.
-- JS edits.
-- TS edits.
-- Validation.
-- Rollback.
-- Public API preservation.
-- Failure journal.
+## Days 31–60 — Safer self-improvement loop
 
-## Days 61–90: App Builder + Knowledge Foundation
+- multi-file patch transactions
+- stronger validation plans
+- self-review reports
+- human approval checkpoints
+- Git branch/PR preparation support
+- richer cert artifacts
 
-- Small app templates.
-- Project specs.
-- Test generation.
-- Local file/repo ingest.
-- Knowledge search.
-- Source citations.
+Outcome: S.E.R.A. can prepare self-improvement changes safely, but still requires human review to merge.
 
-The goal is not maximum feature count. The goal is a small number of trustworthy capabilities.
+## Days 61–90 — Knowledge and memory base
 
+- local knowledge ingestion
+- source snapshots
+- source-cited retrieval
+- failure journal
+- lesson candidates
+- approved regression tests
 
-## Phase 2 Developer Worker v1
-
-The first worker layer should remain deterministic and LLM-free. It supports bounded text replacement, suggested edit artifacts, direct edit backups, protected path blocking, and validation rollback. This creates the first safe path toward S.E.R.A. eventually improving its own code through certified steps.
+Outcome: S.E.R.A. starts learning from verified work without corrupting the core.

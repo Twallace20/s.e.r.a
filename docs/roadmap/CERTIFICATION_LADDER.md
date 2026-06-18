@@ -1,41 +1,46 @@
-# Certification Ladder
+# S.E.R.A. Certification Ladder
 
-## Level 0 — Clean Repo
+S.E.R.A. only advances when the cert runner proves the current level.
 
-Installs, builds, tests, and certifies from a clean checkout.
+## Level 1 — secure-base
 
-## Level 1 — Secure Base
+S.E.R.A. can:
 
-Can create a task, run, workspace, artifacts, and final report while enforcing workspace boundaries.
+- create a run
+- create an isolated workspace
+- write required artifacts
+- enforce workspace write boundaries
+- block unsafe commands
+- redact obvious secrets
+- report honestly
 
-## Level 2 — Tool Adapter System
+## Level 2 — developer-worker-v1
 
-Every action goes through controlled tools with safety checks and logs.
+S.E.R.A. can:
 
-## Level 3 — Developer Worker v1
+- create suggested edit artifacts without mutating source
+- apply narrow literal edits directly
+- create backup artifacts before direct edits
+- block protected paths and path traversal
+- report honest no-op results
+- roll back direct edits when validation fails
 
-Can safely edit text/JS/TS files and validate results.
+## Level 3 — developer-worker-v2
 
-## Level 4 — App Builder v1
+S.E.R.A. can:
 
-Can create a small working app from a spec with tests and handoff docs.
+- inspect files and write fingerprint artifacts
+- render patch proposals without mutating source
+- enforce expected occurrence counts before mutation
+- apply direct patch operations with backups
+- run validation commands through the safe shell tool
+- roll back source files when validation commands fail
+- prove the above through certs
 
-## Level 5 — Knowledge Worker v1
+## Future levels
 
-Can ingest local knowledge, search it, and answer with sources.
-
-## Level 6 — Memory and Learning
-
-Can propose lessons from verified runs and create regression tests.
-
-## Level 7 — Operator Console
-
-Human can manage tasks, runs, approvals, memory, knowledge, and certs.
-
-## Level 8 — Autonomy
-
-Can run longer workflows safely with approvals and audit trails.
-
-## Level 9 — Cloud/Enterprise
-
-Adds accounts, teams, encrypted secrets, RBAC, audit logs, deployment, and policy controls.
+- `developer-worker-v3`: structured patch sets across multiple files with transaction rollback
+- `knowledge-worker-v1`: local document/repo ingestion with source-cited answers
+- `self-review-v1`: evidence review and human approval report before merge-like actions
+- `learning-v1`: approved lessons and regression creation from verified failures
+- `operator-console-v1`: UI for task runs, approval queue, artifacts, certs, memory, and knowledge
