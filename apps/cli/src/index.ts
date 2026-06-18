@@ -40,6 +40,13 @@ Usage:
   sera tasks cancel <task-id> <reason>
   sera tasks events
   sera tasks summary
+  sera knowledge ingest-file <relative-file> [title]
+  sera knowledge ingest-dir <relative-dir> [extensions] [limit]
+  sera knowledge documents
+  sera knowledge chunks [document-id]
+  sera knowledge inspect <document-id>
+  sera knowledge search <query> [limit]
+  sera knowledge summary
 
 NPM examples:
   npm run sera -- run "create hello file"
@@ -62,6 +69,9 @@ NPM examples:
   npm run sera -- tasks list
   npm run sera -- tasks start queued_task_123 "Begin work."
   npm run sera -- tasks complete queued_task_123 "Finished successfully."
+  npm run sera -- knowledge ingest-file README.md "Project README"
+  npm run sera -- knowledge search "planner task queue" 5
+  npm run sera -- knowledge summary
 
 Secure base behavior:
   - runs locally
@@ -77,6 +87,7 @@ Secure base behavior:
   - Lesson Review approves or rejects candidates while keeping approved lessons inactive
   - Active Lessons converts approved lessons into auditable regression rules without changing runtime behavior
   - Planner creates, queues, transitions, and records task history without autonomous execution
+  - Knowledge ingestion indexes local files and retrieves lexical evidence without an LLM
   - does not require an LLM provider
 `);
 }
@@ -495,6 +506,115 @@ async function main(): Promise<void> {
     }
 
     throw new Error("Tasks command must be 'create', 'list', 'inspect', 'start', 'complete', 'block', 'cancel', 'events', or 'summary'.");
+  }
+
+  if (cmd === "knowledge") {
+    const [knowledgeMode, first, second, third] = rest;
+
+    if (knowledgeMode === "ingest-file") {
+      const result = kernel.ingestKnowledgeFile({
+        relativePath: requireArg(first, "relative file path"),
+        title: second
+      });
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        knowledgeDir: result.knowledgeDir,
+        document: result.document,
+        chunkCount: result.chunks?.length ?? 0,
+        documentPath: result.documentPath,
+        chunkPath: result.chunkPath,
+        summaryPath: result.summaryPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (knowledgeMode === "ingest-dir") {
+      const extensions = second ? second.split(",").map((item) => item.trim()).filter(Boolean) : undefined;
+      const limit = third ? Number(third) : undefined;
+      if (limit !== undefined && (!Number.isInteger(limit) || limit < 1)) {
+        throw new Error("Knowledge ingest-dir limit must be a positive integer when supplied.");
+      }
+      const result = kernel.ingestKnowledgeDirectory({
+        relativeDir: requireArg(first, "relative directory path"),
+        extensions,
+        limit
+      });
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        knowledgeDir: result.knowledgeDir,
+        documentCount: result.documents.length,
+        documents: result.documents,
+        blocked: result.blocked,
+        skipped: result.skipped,
+        documentPath: result.documentPath,
+        chunkPath: result.chunkPath,
+        summaryPath: result.summaryPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (knowledgeMode === "documents" || knowledgeMode === "chunks") {
+      const result = kernel.listKnowledge(knowledgeMode, first);
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        knowledgeDir: result.knowledgeDir,
+        documents: result.documents,
+        chunks: result.chunks
+      }, null, 2));
+      process.exit(0);
+    }
+
+    if (knowledgeMode === "inspect") {
+      const result = kernel.inspectKnowledgeDocument(requireArg(first, "knowledge document id"));
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        knowledgeDir: result.knowledgeDir,
+        document: result.document,
+        chunks: result.chunks
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (knowledgeMode === "search") {
+      const query = requireArg(first, "search query");
+      const limit = second ? Number(second) : undefined;
+      if (limit !== undefined && (!Number.isInteger(limit) || limit < 1)) {
+        throw new Error("Knowledge search limit must be a positive integer when supplied.");
+      }
+      const result = kernel.searchKnowledge(query, limit);
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        knowledgeDir: result.knowledgeDir,
+        query: result.query,
+        hits: result.hits,
+        searchRecord: result.searchRecord,
+        searchPath: result.searchPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (knowledgeMode === "summary") {
+      const result = kernel.getKnowledgeSummary();
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        knowledgeDir: result.knowledgeDir,
+        summary: result.summary,
+        summaryPath: result.summaryPath
+      }, null, 2));
+      process.exit(0);
+    }
+
+    throw new Error("Knowledge command must be 'ingest-file', 'ingest-dir', 'documents', 'chunks', 'inspect', 'search', or 'summary'.");
   }
 
   console.error(`Unknown command: ${cmd}`);

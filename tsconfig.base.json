@@ -35,6 +35,21 @@
       ],
       "@sera/certs": [
         "packages/certs/src/index.ts"
+      ],
+      "@sera/planner": [
+        "packages/planner/src/index.ts"
+      ],
+      "@sera/memory": [
+        "packages/memory/src/index.ts"
+      ],
+      "@sera/workers": [
+        "packages/workers/src/index.ts"
+      ],
+      "@sera/self-improvement": [
+        "packages/self-improvement/src/index.ts"
+      ],
+      "@sera/knowledge": [
+        "packages/knowledge/src/index.ts"
       ]
     }
   }

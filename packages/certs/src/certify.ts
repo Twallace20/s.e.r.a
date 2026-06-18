@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { SeraKernel } from "@sera/kernel";
+import { KnowledgeStore } from "@sera/knowledge";
 import { MemoryStore } from "@sera/memory";
 
 export interface CertCheck {
@@ -13,7 +14,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -32,8 +33,9 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runLessonReviewV1Checks());
   checks.push(...runActiveLessonsV1Checks());
   checks.push(...runTaskQueueV1Checks());
+  checks.push(...runKnowledgeRetrievalV1Checks());
 
-  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_")).every((c) => c.pass);
+  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const developerV2ChecksPass = checks.filter((c) => c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const selfImprovementV1ChecksPass = checks.filter((c) => c.id.startsWith("self_improvement_")).every((c) => c.pass);
@@ -41,8 +43,11 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   const lessonReviewV1ChecksPass = checks.filter((c) => c.id.startsWith("lesson_review_")).every((c) => c.pass);
   const activeLessonsV1ChecksPass = checks.filter((c) => c.id.startsWith("active_lessons_")).every((c) => c.pass);
   const taskQueueV1ChecksPass = checks.filter((c) => c.id.startsWith("task_queue_")).every((c) => c.pass);
+  const knowledgeV1ChecksPass = checks.filter((c) => c.id.startsWith("knowledge_")).every((c) => c.pass);
   const pass = checks.every((c) => c.pass);
-  const level = pass && taskQueueV1ChecksPass
+  const level = pass && knowledgeV1ChecksPass
+    ? "knowledge-retrieval-v1"
+    : pass && taskQueueV1ChecksPass
     ? "planner-task-queue-v1"
     : pass && activeLessonsV1ChecksPass
     ? "active-lessons-v1"
@@ -623,6 +628,68 @@ function runTaskQueueV1Checks(): CertCheck[] {
       id: "task_queue_summary_and_events_track_lifecycle",
       name: "Planner Task Queue summary and event log track lifecycle state",
       pass: cancelled.ok && summary.totalCount === 3 && summary.completedCount === 1 && summary.blockedCount === 1 && summary.cancelledCount === 1 && events.length >= 6,
+      detail: JSON.stringify(summary)
+    }
+  ];
+}
+
+
+function runKnowledgeRetrievalV1Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-knowledge-cert-"));
+  const kernel = new SeraKernel({ rootDir: root });
+  const docsDir = path.join(root, "docs");
+  const srcDir = path.join(root, "src");
+  fs.mkdirSync(docsDir, { recursive: true });
+  fs.mkdirSync(srcDir, { recursive: true });
+  fs.mkdirSync(path.join(root, ".sera-memory"), { recursive: true });
+  fs.writeFileSync(path.join(docsDir, "vision.md"), [
+    "# S.E.R.A. Vision",
+    "S.E.R.A. is a local-first recursive agent.",
+    "Planner tasks should remain queued until a human starts them.",
+    "Knowledge retrieval should cite local evidence without requiring an LLM."
+  ].join("\n") + "\n", "utf8");
+  fs.writeFileSync(path.join(srcDir, "notes.txt"), "The task queue records completed work and blocked work as evidence.\n", "utf8");
+  fs.writeFileSync(path.join(root, ".sera-memory", "ignored.txt"), "runtime memory should not be indexed by directory ingestion.\n", "utf8");
+
+  const ingestFile = kernel.ingestKnowledgeFile({ relativePath: "docs/vision.md", title: "Vision Doc" });
+  const outsideBlocked = kernel.ingestKnowledgeFile({ relativePath: "../outside.md" });
+  const search = kernel.searchKnowledge("recursive planner evidence", 5);
+  const inspected = kernel.inspectKnowledgeDocument(ingestFile.document?.id ?? "missing");
+  const ingestDir = kernel.ingestKnowledgeDirectory({ relativeDir: ".", extensions: [".md", ".txt"], limit: 10 });
+  const knowledge = new KnowledgeStore(root);
+  const documents = knowledge.listDocuments();
+  const chunks = knowledge.listChunks();
+  const summary = kernel.getKnowledgeSummary().summary;
+
+  return [
+    {
+      id: "knowledge_ingests_file_and_chunks",
+      name: "Knowledge ingests a local file and writes chunks",
+      pass: ingestFile.ok && Boolean(ingestFile.document?.sha256) && (ingestFile.chunks?.length ?? 0) >= 1,
+      detail: ingestFile.documentPath ?? ingestFile.message
+    },
+    {
+      id: "knowledge_blocks_outside_path",
+      name: "Knowledge blocks path traversal outside project root",
+      pass: !outsideBlocked.ok && outsideBlocked.status === "blocked",
+      detail: outsideBlocked.message
+    },
+    {
+      id: "knowledge_search_returns_local_hits",
+      name: "Knowledge search returns local lexical evidence",
+      pass: search.ok && search.hits.length >= 1 && search.hits[0].matchedTerms.length >= 1 && Boolean(search.searchPath),
+      detail: search.searchPath ?? search.message
+    },
+    {
+      id: "knowledge_inspects_indexed_document",
+      name: "Knowledge can inspect an indexed document with chunks",
+      pass: inspected.ok && inspected.document?.id === ingestFile.document?.id && (inspected.chunks?.length ?? 0) >= 1,
+      detail: inspected.document?.relativePath ?? inspected.message
+    },
+    {
+      id: "knowledge_directory_ingest_ignores_runtime_dirs",
+      name: "Knowledge directory ingestion ignores runtime directories and summarizes records",
+      pass: ingestDir.ok && documents.some((doc) => doc.relativePath === "docs/vision.md") && documents.every((doc) => !doc.relativePath.startsWith(".sera-memory/")) && chunks.length >= documents.length && summary.documentCount === documents.length && summary.searchCount >= 1,
       detail: JSON.stringify(summary)
     }
   ];

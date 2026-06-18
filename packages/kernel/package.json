@@ -16,6 +16,7 @@
     "@sera/workspace": "0.1.0",
     "@sera/self-improvement": "0.1.0",
     "@sera/memory": "0.1.0",
-    "@sera/planner": "0.1.0"
+    "@sera/planner": "0.1.0",
+    "@sera/knowledge": "0.1.0"
   }
 }

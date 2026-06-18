@@ -67,3 +67,8 @@ The system can activate approved lessons into auditable regression rules, check 
 ## Phase 8 — planner-task-queue-v1
 
 The system can create queued tasks, list and inspect them, enforce strict lifecycle transitions, record task events, summarize queue state, and write completed/blocked task outcomes into memory. Queued tasks do not execute automatically.
+
+
+## Phase 9 — knowledge-retrieval-v1
+
+The system can ingest local files, chunk them into `.sera-knowledge/`, perform deterministic lexical search, inspect indexed documents, ignore runtime folders during directory ingestion, and summarize knowledge records. Retrieval is read-only and does not require an LLM.
