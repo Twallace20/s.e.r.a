@@ -58,3 +58,8 @@ The system records completed runs in local memory, writes blocked/failed runs to
 ## Phase 6 — lesson-review-v1
 
 The system can list, inspect, approve, and reject lesson candidates. Approved lessons remain inactive and require a later activation phase before they can affect behavior. Duplicate reviews, missing candidates, and reviews without rationale are blocked.
+
+
+## Phase 7 — active-lessons-v1
+
+The system can activate approved lessons into auditable regression rules, check those rules for traceability, block duplicate or missing activations, deactivate active lessons, and keep all activations rationale-gated. Active lessons do not silently mutate runtime behavior; they become certified guardrails.

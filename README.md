@@ -12,6 +12,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - `self-improvement-v1`
 - `task-memory-v1`
 - `lesson-review-v1`
+- `active-lessons-v1`
 
 ## What works now
 
@@ -37,6 +38,8 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - inactive lesson candidates
 - lesson candidate inspection
 - approved/rejected lesson review records
+- active lesson records
+- auditable regression rule records
 
 ## What is intentionally not here yet
 
@@ -47,6 +50,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - no cloud dependency
 - no database requirement
 - no automatic lesson activation
+- no silent lesson-driven behavior changes
 
 ## Setup
 
@@ -127,6 +131,7 @@ Nothing gets called working unless it has:
 - `@sera/workers` — bounded worker modules, starting with Developer Worker
 - `@sera/kernel` — task/run orchestration
 - `@sera/certs` — certification checks
+- `@sera/memory` — local run memory, lesson review, activation records, and regression-rule evidence
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1
@@ -167,4 +172,24 @@ Current certified level after Phase 6:
 
 ```text
 lesson-review-v1
+```
+
+
+## Phase 7: Active Lessons + Regression Rules v1
+
+S.E.R.A. can now activate an approved lesson into an auditable regression rule. Activation is explicit, rationale-gated, and reversible. Active lessons still do not silently change runtime behavior; they create traceable guardrails that can be checked by the certification system.
+
+```bash
+npm run sera -- lessons active
+npm run sera -- lessons rules
+npm run sera -- lessons activations
+npm run sera -- lessons activate <approved-lesson-id> "Use as a regression guardrail."
+npm run sera -- lessons deactivate <active-lesson-id> "No longer valid."
+npm run sera -- lessons check-rules
+```
+
+Current certified level after Phase 7:
+
+```text
+active-lessons-v1
 ```

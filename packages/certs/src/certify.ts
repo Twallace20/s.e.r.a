@@ -13,7 +13,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -30,6 +30,7 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runSelfImprovementV1Checks());
   checks.push(...runTaskMemoryV1Checks());
   checks.push(...runLessonReviewV1Checks());
+  checks.push(...runActiveLessonsV1Checks());
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -37,8 +38,11 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   const selfImprovementV1ChecksPass = checks.filter((c) => c.id.startsWith("self_improvement_")).every((c) => c.pass);
   const memoryV1ChecksPass = checks.filter((c) => c.id.startsWith("memory_")).every((c) => c.pass);
   const lessonReviewV1ChecksPass = checks.filter((c) => c.id.startsWith("lesson_review_")).every((c) => c.pass);
+  const activeLessonsV1ChecksPass = checks.filter((c) => c.id.startsWith("active_lessons_")).every((c) => c.pass);
   const pass = checks.every((c) => c.pass);
-  const level = pass && lessonReviewV1ChecksPass
+  const level = pass && activeLessonsV1ChecksPass
+    ? "active-lessons-v1"
+    : pass && lessonReviewV1ChecksPass
     ? "lesson-review-v1"
     : pass && memoryV1ChecksPass
     ? "task-memory-v1"
@@ -461,6 +465,87 @@ function runLessonReviewV1Checks(): CertCheck[] {
       name: "Lesson Review summary counts candidates and reviewed lessons",
       pass: approvalSummary.lessonCandidateCount === 0 && approvalSummary.approvedLessonCount === 1 && approvalSummary.rejectedLessonCount === 0 && approvalDecisions.length === 1,
       detail: JSON.stringify(approvalSummary)
+    }
+  ];
+}
+
+
+function runActiveLessonsV1Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-active-lessons-cert-"));
+  const kernel = new SeraKernel({ rootDir: root });
+  kernel.runDeveloperPatchTask({
+    mode: "direct",
+    relativePath: "../outside.txt",
+    operations: [{ kind: "replace", find: "x", replaceWith: "y", expectedOccurrences: 1 }]
+  });
+  const memory = new MemoryStore(root);
+  const candidate = memory.listLessonCandidates()[0];
+  const approval = kernel.reviewLessonCandidate({
+    candidateId: candidate.id,
+    decision: "approved",
+    reviewer: "cert-runner",
+    rationale: "Approved as a reusable guardrail candidate."
+  });
+  const approvedLesson = memory.listApprovedLessons()[0];
+  const activation = kernel.activateApprovedLesson({
+    approvedLessonId: approvedLesson.id,
+    reviewer: "cert-runner",
+    rationale: "Activate as a regression rule after approval."
+  });
+  const duplicateActivation = kernel.activateApprovedLesson({
+    approvedLessonId: approvedLesson.id,
+    reviewer: "cert-runner",
+    rationale: "Attempt duplicate activation."
+  });
+  const activeLessons = memory.listActiveLessons();
+  const regressionRules = memory.listRegressionRules();
+  const activationDecisions = memory.listLessonActivationDecisions();
+  const checkRules = kernel.checkLessonRegressionRules();
+  const activeSummary = memory.summarize();
+  const deactivation = kernel.deactivateActiveLesson({
+    activeLessonId: activation.activeLesson?.id,
+    reviewer: "cert-runner",
+    rationale: "Deactivate after regression validation."
+  });
+  const deactivatedLessons = memory.listActiveLessons();
+  const deactivatedRules = memory.listRegressionRules();
+  const inactiveSummary = memory.summarize();
+  const missingActivation = kernel.activateApprovedLesson({
+    approvedLessonId: "approved_lesson_missing",
+    reviewer: "cert-runner",
+    rationale: "Should not activate."
+  });
+
+  return [
+    {
+      id: "active_lessons_activate_approved_as_regression_rule",
+      name: "Active Lessons activates an approved lesson as a regression rule",
+      pass: approval.ok && activation.ok && activeLessons.length === 1 && activeLessons[0].active === true && regressionRules.length === 1 && regressionRules[0].status === "active",
+      detail: activation.regressionRulePath ?? activation.message
+    },
+    {
+      id: "active_lessons_block_duplicate_or_missing_activation",
+      name: "Active Lessons blocks duplicate and missing activations",
+      pass: !duplicateActivation.ok && duplicateActivation.status === "blocked" && !missingActivation.ok && missingActivation.status === "blocked",
+      detail: duplicateActivation.message
+    },
+    {
+      id: "active_lessons_regression_rule_check_passes",
+      name: "Active Lessons checks active regression rules for traceability",
+      pass: checkRules.ok && checkRules.activeRuleCount === 1 && checkRules.checks.length === 1 && checkRules.checks[0].pass === true,
+      detail: checkRules.message
+    },
+    {
+      id: "active_lessons_deactivate_marks_rule_inactive",
+      name: "Active Lessons deactivates an active lesson and marks rule inactive",
+      pass: deactivation.ok && deactivatedLessons[0].active === false && deactivatedLessons[0].status === "inactive" && deactivatedRules[0].status === "inactive",
+      detail: deactivation.message
+    },
+    {
+      id: "active_lessons_summary_counts_active_and_inactive_rules",
+      name: "Active Lessons summary and decisions track activation state",
+      pass: activeSummary.activeLessonCount === 1 && activeSummary.regressionRuleCount === 1 && inactiveSummary.activeLessonCount === 0 && inactiveSummary.regressionRuleCount === 0 && activationDecisions.length === 1,
+      detail: JSON.stringify({ activeSummary, inactiveSummary })
     }
   ];
 }
