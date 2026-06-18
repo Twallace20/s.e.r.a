@@ -19,7 +19,7 @@ export interface MemoryRunRecord {
   finishedAt?: string;
   runDir: string;
   artifacts: string[];
-  source: "kernel-finalize";
+  source: "kernel-finalize" | "planner-task-queue-v1";
 }
 
 export interface MemoryFailureRecord {
@@ -32,7 +32,7 @@ export interface MemoryFailureRecord {
   summary: string;
   reason: string;
   runDir: string;
-  source: "kernel-finalize";
+  source: "kernel-finalize" | "planner-task-queue-v1";
 }
 
 export interface LessonCandidateRecord {
@@ -219,6 +219,7 @@ export interface RecordRunInput {
   finishedAt?: string;
   runDir: string;
   artifacts: string[];
+  source?: "kernel-finalize" | "planner-task-queue-v1";
 }
 
 export interface RecordRunResult {
@@ -251,7 +252,7 @@ export class MemoryStore {
       finishedAt: input.finishedAt,
       runDir: input.runDir,
       artifacts: input.artifacts,
-      source: "kernel-finalize"
+      source: input.source ?? "kernel-finalize"
     };
     const runRecordPath = this.appendJsonl("run-history.jsonl", runRecord);
 
@@ -269,7 +270,7 @@ export class MemoryStore {
       summary: input.summary,
       reason: input.summary,
       runDir: input.runDir,
-      source: "kernel-finalize"
+      source: input.source ?? "kernel-finalize"
     };
     const failureRecordPath = this.appendJsonl("failure-journal.jsonl", failureRecord);
     const lessonCandidate = this.createLessonCandidate(failureRecord);

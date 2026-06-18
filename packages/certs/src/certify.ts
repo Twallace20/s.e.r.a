@@ -13,7 +13,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -31,16 +31,20 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runTaskMemoryV1Checks());
   checks.push(...runLessonReviewV1Checks());
   checks.push(...runActiveLessonsV1Checks());
+  checks.push(...runTaskQueueV1Checks());
 
-  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_")).every((c) => c.pass);
+  const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const developerV2ChecksPass = checks.filter((c) => c.id.startsWith("developer_v2_")).every((c) => c.pass);
   const selfImprovementV1ChecksPass = checks.filter((c) => c.id.startsWith("self_improvement_")).every((c) => c.pass);
   const memoryV1ChecksPass = checks.filter((c) => c.id.startsWith("memory_")).every((c) => c.pass);
   const lessonReviewV1ChecksPass = checks.filter((c) => c.id.startsWith("lesson_review_")).every((c) => c.pass);
   const activeLessonsV1ChecksPass = checks.filter((c) => c.id.startsWith("active_lessons_")).every((c) => c.pass);
+  const taskQueueV1ChecksPass = checks.filter((c) => c.id.startsWith("task_queue_")).every((c) => c.pass);
   const pass = checks.every((c) => c.pass);
-  const level = pass && activeLessonsV1ChecksPass
+  const level = pass && taskQueueV1ChecksPass
+    ? "planner-task-queue-v1"
+    : pass && activeLessonsV1ChecksPass
     ? "active-lessons-v1"
     : pass && lessonReviewV1ChecksPass
     ? "lesson-review-v1"
@@ -546,6 +550,80 @@ function runActiveLessonsV1Checks(): CertCheck[] {
       name: "Active Lessons summary and decisions track activation state",
       pass: activeSummary.activeLessonCount === 1 && activeSummary.regressionRuleCount === 1 && inactiveSummary.activeLessonCount === 0 && inactiveSummary.regressionRuleCount === 0 && activationDecisions.length === 1,
       detail: JSON.stringify({ activeSummary, inactiveSummary })
+    }
+  ];
+}
+
+
+function runTaskQueueV1Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-task-queue-cert-"));
+  const kernel = new SeraKernel({ rootDir: root });
+  const memory = new MemoryStore(root);
+
+  const created = kernel.createQueuedTask({
+    title: "Queue certified task",
+    prompt: "Validate task queue creation.",
+    priority: "high",
+    requestedBy: "cert-runner"
+  });
+  const listed = kernel.listQueuedTasks("queued");
+  const inspected = kernel.inspectQueuedTask(created.task?.id ?? "missing");
+
+  const invalidComplete = kernel.completeQueuedTask(created.task?.id ?? "missing", "Attempt to complete before start.", "cert-runner");
+  const afterInvalid = kernel.inspectQueuedTask(created.task?.id ?? "missing");
+
+  const started = kernel.startQueuedTask(created.task?.id ?? "missing", "Start the certified task.", "cert-runner");
+  const completed = kernel.completeQueuedTask(created.task?.id ?? "missing", "Certified task completed.", "cert-runner");
+  const completedMemoryRuns = memory.listRuns();
+
+  const blockedCreated = kernel.createQueuedTask({
+    title: "Blocked certified task",
+    prompt: "Validate blocked task memory.",
+    requestedBy: "cert-runner"
+  });
+  const blocked = kernel.blockQueuedTask(blockedCreated.task?.id ?? "missing", "Blocked during certification.", "cert-runner");
+  const failures = memory.listFailures();
+  const lessonCandidates = memory.listLessonCandidates();
+
+  const cancelledCreated = kernel.createQueuedTask({
+    title: "Cancelled certified task",
+    prompt: "Validate cancellation counts.",
+    requestedBy: "cert-runner"
+  });
+  const cancelled = kernel.cancelQueuedTask(cancelledCreated.task?.id ?? "missing", "Cancelled during certification.", "cert-runner");
+  const summary = kernel.getTaskQueueSummary().summary;
+  const events = kernel.listTaskQueueEvents().events;
+
+  return [
+    {
+      id: "task_queue_creates_lists_and_inspects_task",
+      name: "Planner Task Queue creates, lists, and inspects queued tasks",
+      pass: created.ok && listed.tasks.some((task) => task.id === created.task?.id) && inspected.ok && inspected.task?.priority === "high",
+      detail: created.taskPath ?? created.message
+    },
+    {
+      id: "task_queue_blocks_invalid_transition",
+      name: "Planner Task Queue blocks invalid lifecycle transitions",
+      pass: !invalidComplete.ok && invalidComplete.status === "blocked" && afterInvalid.task?.status === "queued",
+      detail: invalidComplete.message
+    },
+    {
+      id: "task_queue_start_complete_records_memory_history",
+      name: "Planner Task Queue starts and completes tasks while recording memory history",
+      pass: started.ok && completed.ok && completed.task?.status === "completed" && completedMemoryRuns.some((run) => run.taskId === created.task?.id && run.status === "completed"),
+      detail: completed.memoryRunRecordPath ?? completed.message
+    },
+    {
+      id: "task_queue_block_records_failure_and_lesson_candidate",
+      name: "Planner Task Queue records blocked tasks in failure journal and lesson candidates",
+      pass: blocked.ok && blocked.task?.status === "blocked" && failures.some((failure) => failure.taskId === blockedCreated.task?.id) && lessonCandidates.some((lesson) => lesson.taskId === blockedCreated.task?.id),
+      detail: blocked.lessonCandidatePath ?? blocked.message
+    },
+    {
+      id: "task_queue_summary_and_events_track_lifecycle",
+      name: "Planner Task Queue summary and event log track lifecycle state",
+      pass: cancelled.ok && summary.totalCount === 3 && summary.completedCount === 1 && summary.blockedCount === 1 && summary.cancelledCount === 1 && events.length >= 6,
+      detail: JSON.stringify(summary)
     }
   ];
 }

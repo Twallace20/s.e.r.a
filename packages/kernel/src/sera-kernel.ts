@@ -18,6 +18,18 @@ import {
   RegressionRuleCheckResult,
   RegressionRuleRecord
 } from "@sera/memory";
+import {
+  CreateQueuedTaskInput,
+  QueuedTaskRecord,
+  QueuedTaskStatus,
+  TaskQueueEventRecord,
+  TaskQueueEventsResult,
+  TaskQueueListResult,
+  TaskQueueResult,
+  TaskQueueStore,
+  TaskQueueSummary,
+  TaskQueueSummaryResult
+} from "@sera/planner";
 import { FileTool, ShellTool } from "@sera/tools";
 import { SelfImprovementMode, SelfImprovementResult, SelfImprovementWorker } from "@sera/self-improvement";
 import {
@@ -155,6 +167,16 @@ export interface LessonActivationTaskInput {
 export interface LessonActivationTaskResult extends LessonActivationResult {}
 
 export interface RegressionRuleCheckTaskResult extends RegressionRuleCheckResult {}
+
+export interface CreateQueuedTaskTaskInput extends CreateQueuedTaskInput {}
+
+export interface TaskQueueTaskResult extends TaskQueueResult {}
+
+export interface TaskQueueListTaskResult extends TaskQueueListResult {}
+
+export interface TaskQueueEventsTaskResult extends TaskQueueEventsResult {}
+
+export interface TaskQueueSummaryTaskResult extends TaskQueueSummaryResult {}
 
 export class SeraKernel {
   private readonly workspaceManager = new WorkspaceManager();
@@ -502,6 +524,54 @@ export class SeraKernel {
   checkLessonRegressionRules(): RegressionRuleCheckTaskResult {
     const memory = new MemoryStore(this.options.rootDir);
     return memory.checkRegressionRules();
+  }
+
+
+  createQueuedTask(input: CreateQueuedTaskTaskInput): TaskQueueTaskResult {
+    const queue = new TaskQueueStore(this.options.rootDir);
+    return queue.createTask(input);
+  }
+
+  listQueuedTasks(status?: QueuedTaskStatus): TaskQueueListTaskResult {
+    const queue = new TaskQueueStore(this.options.rootDir);
+    return { ok: true, status: "completed", taskDir: queue.taskDir, tasks: queue.listTasks(status) };
+  }
+
+  inspectQueuedTask(taskId: string): TaskQueueTaskResult {
+    const queue = new TaskQueueStore(this.options.rootDir);
+    return queue.inspectTask(taskId);
+  }
+
+  startQueuedTask(taskId: string, rationale: string, actor = "local-user"): TaskQueueTaskResult {
+    const queue = new TaskQueueStore(this.options.rootDir);
+    return queue.startTask(taskId, actor, rationale);
+  }
+
+  completeQueuedTask(taskId: string, summary: string, actor = "local-user"): TaskQueueTaskResult {
+    const queue = new TaskQueueStore(this.options.rootDir);
+    return queue.completeTask(taskId, actor, summary);
+  }
+
+  blockQueuedTask(taskId: string, reason: string, actor = "local-user"): TaskQueueTaskResult {
+    const queue = new TaskQueueStore(this.options.rootDir);
+    return queue.blockTask(taskId, actor, reason);
+  }
+
+  cancelQueuedTask(taskId: string, reason: string, actor = "local-user"): TaskQueueTaskResult {
+    const queue = new TaskQueueStore(this.options.rootDir);
+    return queue.cancelTask(taskId, actor, reason);
+  }
+
+  listTaskQueueEvents(): TaskQueueEventsTaskResult {
+    const queue = new TaskQueueStore(this.options.rootDir);
+    return { ok: true, status: "completed", taskDir: queue.taskDir, events: queue.listEvents() };
+  }
+
+  getTaskQueueSummary(): TaskQueueSummaryTaskResult {
+    const queue = new TaskQueueStore(this.options.rootDir);
+    const summaryPath = queue.writeSummary();
+    const summary = queue.summarize();
+    return { ok: true, status: "completed", taskDir: queue.taskDir, summary: { ...summary, taskDir: queue.taskDir } };
   }
 
   private createTask(prompt: string): SeraTask {

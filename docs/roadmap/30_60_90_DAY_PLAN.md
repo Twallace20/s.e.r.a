@@ -51,3 +51,7 @@ Lesson Review + Approval v1 creates the human governance gate for learning. S.E.
 ## Phase 7 update
 
 Active Lessons + Regression Rules v1 converts approved lessons into explicit regression-rule records. This creates the first controlled bridge from reviewed learning to cert-checkable guardrails while preserving the no-silent-behavior-change rule.
+
+## Phase 8 update
+
+Planner + Task Queue v1 gives S.E.R.A. a local operating rhythm. Tasks can be queued, inspected, started, completed, blocked, cancelled, summarized, and audited. This prepares the system for safer orchestration while preserving the no-autonomous-execution boundary.

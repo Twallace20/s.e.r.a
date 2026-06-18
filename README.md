@@ -13,6 +13,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - `task-memory-v1`
 - `lesson-review-v1`
 - `active-lessons-v1`
+- `planner-task-queue-v1`
 
 ## What works now
 
@@ -40,6 +41,9 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - approved/rejected lesson review records
 - active lesson records
 - auditable regression rule records
+- local planner task queue
+- task lifecycle event records
+- task queue memory integration
 
 ## What is intentionally not here yet
 
@@ -50,6 +54,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - no cloud dependency
 - no database requirement
 - no automatic lesson activation
+- no automatic task execution
 - no silent lesson-driven behavior changes
 
 ## Setup
@@ -132,6 +137,7 @@ Nothing gets called working unless it has:
 - `@sera/kernel` — task/run orchestration
 - `@sera/certs` — certification checks
 - `@sera/memory` — local run memory, lesson review, activation records, and regression-rule evidence
+- `@sera/planner` — local task queue, task lifecycle events, and task memory integration
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1
@@ -192,4 +198,28 @@ Current certified level after Phase 7:
 
 ```text
 active-lessons-v1
+```
+
+## Phase 8: Planner + Task Queue v1
+
+S.E.R.A. can now create and manage a local task queue under `.sera-tasks/`. Tasks can be created, listed, inspected, started, completed, blocked, cancelled, summarized, and audited through event records.
+
+Queued tasks do not execute automatically. This phase creates operating rhythm, not uncontrolled autonomy.
+
+```bash
+npm run sera -- tasks create "Draft first task" "Write a bounded task plan." normal
+npm run sera -- tasks list
+npm run sera -- tasks inspect <task-id>
+npm run sera -- tasks start <task-id> "Begin work."
+npm run sera -- tasks complete <task-id> "Finished successfully."
+npm run sera -- tasks block <task-id> "Blocked by missing information."
+npm run sera -- tasks cancel <task-id> "No longer needed."
+npm run sera -- tasks events
+npm run sera -- tasks summary
+```
+
+Current certified level after Phase 8:
+
+```text
+planner-task-queue-v1
 ```

@@ -45,3 +45,7 @@ Lesson review requires explicit human rationale. Approved lessons are stored wit
 ## Phase 7 active lesson safety
 
 Active lesson activation requires an approved lesson and an explicit rationale. Pending, rejected, missing, or already active lessons cannot be activated. Activation writes audit records and regression-rule evidence only; it does not silently change prompts, tools, code, or runtime behavior. Deactivation is also rationale-gated and marks the linked regression rule inactive.
+
+## Phase 8 planner safety
+
+The task queue creates operating rhythm without autonomous execution. Tasks must move through strict lifecycle transitions. Invalid transitions are blocked. Completed and blocked task outcomes can be recorded into memory, but the planner does not activate lessons, run tools by itself, or modify source code.
