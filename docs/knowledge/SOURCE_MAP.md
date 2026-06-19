@@ -157,3 +157,10 @@ Phase 16 extends the map with the live autonomous happy-path proof so S.E.R.A. c
 - `docs/phases/PHASE_19_RECURSIVE_LEARNING_V1.md` — Phase 19 scope, recursive learning boundaries, and local validation contract.
 - `scripts/run-recursive-learning.mjs` — repeatable local demo proving recursive learning is report-only and preserves human-governed decisions.
 - `tests/integration/recursive-learning.test.ts` — integration proof that recursive learning records cycles without approving, activating, or mutating runtime behavior.
+
+## Phase 20 source map additions
+
+- `packages/workers/src/multi-file-developer-worker.ts` — local/free multi-file developer patching with suggestion, backup, validation, and rollback boundaries.
+- `docs/phases/PHASE_20_MULTI_FILE_DEV_WORKER_V3.md` — Phase 20 scope, guardrails, and validation contract.
+- `scripts/run-multi-file-dev-worker.mjs` — repeatable local demo for multi-file patch apply and rollback proof.
+- `tests/integration/multi-file-dev-worker.test.ts` — integration proof for suggestion, direct apply, and validation rollback.

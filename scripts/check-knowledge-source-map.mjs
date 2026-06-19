@@ -35,7 +35,11 @@ const requiredMappedPaths = [
   "tests/integration/local-model-provider.test.ts",
   "docs/phases/PHASE_19_RECURSIVE_LEARNING_V1.md",
   "scripts/run-recursive-learning.mjs",
-  "tests/integration/recursive-learning.test.ts"
+  "tests/integration/recursive-learning.test.ts",
+  "packages/workers/src/multi-file-developer-worker.ts",
+  "docs/phases/PHASE_20_MULTI_FILE_DEV_WORKER_V3.md",
+  "scripts/run-multi-file-dev-worker.mjs",
+  "tests/integration/multi-file-dev-worker.test.ts"
 ];
 
 function fail(message) {

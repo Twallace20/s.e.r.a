@@ -183,3 +183,7 @@ Phase 19 proves:
 - `real-model-provider-v1`: optional external provider with configuration, redaction, logging, and blocked-by-default safety gates.
 - `recursive-learning-v1`: verified outcome → lesson candidate → review → active rule → regression check loop.
 - `developer-worker-v3`: structured multi-file patch sets with transaction rollback.
+
+## Phase 20 — `phase-20-multi-file-dev-worker-v3`
+
+Phase 20 certifies a bounded multi-file developer-worker surface. It can suggest coordinated file patches without mutation and can apply existing-file patch batches only with backups, validation, and whole-batch rollback. The runtime certification level remains `operator-console-v1` because no new autonomous execution authority is granted.

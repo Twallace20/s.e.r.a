@@ -481,3 +481,15 @@ npm run sera -- lessons recursive-history
 ```
 
 The recursive learning cycle does not approve, reject, activate, deactivate, execute queued work, call paid services, or mutate source files.
+
+## Phase 20 — Multi-File Dev Worker v3
+
+Phase 20 adds a local/free-first multi-file developer worker that can produce coordinated patch suggestions without source mutation or apply coordinated existing-file patches with backups, validation, and whole-batch rollback. It does not grant new autonomous authority; it only expands the safe tool surface available behind existing operator and validation gates.
+
+Commands:
+
+```bash
+npm run phase20:demo
+npm run phase20:verify
+npm run sera -- dev multi-patch suggest multi-patch.json
+```
