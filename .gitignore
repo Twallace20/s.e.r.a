@@ -27,3 +27,5 @@ packages/*/src/*.d.ts
 .sera-autonomy/
 
 .sera-console/
+
+.sera-research/

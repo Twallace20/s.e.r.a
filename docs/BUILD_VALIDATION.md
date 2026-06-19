@@ -272,3 +272,32 @@ Test Files 18 passed (18)
 Tests 75 passed (75)
 S.E.R.A. certify: PASS level=operator-console-v1
 ```
+
+## Phase 21 Research + Knowledge Worker
+
+Phase 21 adds a local research worker that answers, compares, and summarizes only from indexed local knowledge citations. It does not add internet research, paid APIs, external model dependency, source mutation, lesson activation, or autonomous execution.
+
+Required validation:
+
+```bash
+npm run free-core:verify
+npm run knowledge:verify
+npm run phase21:demo
+npm run phase21:verify
+npm run hygiene
+npm run build
+npm test
+npm run certify
+npm run verify
+```
+
+Expected:
+
+```text
+S.E.R.A. free core covenant: PASS through_phase=45
+S.E.R.A. knowledge source map: PASS mapped=38
+S.E.R.A. phase21 research knowledge worker: PASS
+Test Files 19 passed (19)
+Tests 79 passed (79)
+S.E.R.A. certify: PASS level=operator-console-v1
+```

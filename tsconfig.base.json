@@ -59,6 +59,9 @@
       ],
       "@sera/operator-console": [
         "packages/operator-console/src/index.ts"
+      ],
+      "@sera/research": [
+        "packages/research/src/index.ts"
       ]
     }
   }

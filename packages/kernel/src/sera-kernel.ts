@@ -32,6 +32,15 @@ import {
   KnowledgeSummaryResult
 } from "@sera/knowledge";
 import {
+  ResearchHistoryKind,
+  ResearchKnowledgeAnswerResult,
+  ResearchKnowledgeComparisonResult,
+  ResearchKnowledgeHistoryResult,
+  ResearchKnowledgeStoreSummaryResult,
+  ResearchKnowledgeSummaryResult,
+  ResearchKnowledgeWorker
+} from "@sera/research";
+import {
   ModelInvocationInput,
   ModelInvocationResult,
   ModelProviderHistoryResult,
@@ -251,6 +260,11 @@ export interface KnowledgeSearchTaskResult extends KnowledgeSearchResult {}
 
 export interface KnowledgeSummaryTaskResult extends KnowledgeSummaryResult {}
 
+export interface ResearchKnowledgeAnswerTaskResult extends ResearchKnowledgeAnswerResult {}
+export interface ResearchKnowledgeComparisonTaskResult extends ResearchKnowledgeComparisonResult {}
+export interface ResearchKnowledgeSummaryTaskResult extends ResearchKnowledgeSummaryResult {}
+export interface ResearchKnowledgeHistoryTaskResult extends ResearchKnowledgeHistoryResult {}
+export interface ResearchKnowledgeStoreSummaryTaskResult extends ResearchKnowledgeStoreSummaryResult {}
 export interface ModelProviderListTaskResult extends ModelProviderListResult {}
 
 export interface ModelInvocationTaskInput extends ModelInvocationInput {}
@@ -799,6 +813,31 @@ export class SeraKernel {
     const summary = knowledge.summarize();
     return { ok: true, status: "completed", knowledgeDir: knowledge.knowledgeDir, summary: { ...summary, knowledgeDir: knowledge.knowledgeDir }, summaryPath };
   }
+  answerResearchQuestion(query: string, limit?: number): ResearchKnowledgeAnswerTaskResult {
+    const research = new ResearchKnowledgeWorker(this.options.rootDir);
+    return research.answer(query, limit);
+  }
+
+  compareResearchKnowledge(topic: string, limit?: number): ResearchKnowledgeComparisonTaskResult {
+    const research = new ResearchKnowledgeWorker(this.options.rootDir);
+    return research.compare(topic, limit);
+  }
+
+  summarizeResearchKnowledge(query: string, limit?: number): ResearchKnowledgeSummaryTaskResult {
+    const research = new ResearchKnowledgeWorker(this.options.rootDir);
+    return research.summarize(query, limit);
+  }
+
+  listResearchKnowledgeHistory(kind: ResearchHistoryKind): ResearchKnowledgeHistoryTaskResult {
+    const research = new ResearchKnowledgeWorker(this.options.rootDir);
+    return research.listHistory(kind);
+  }
+
+  getResearchKnowledgeSummary(): ResearchKnowledgeStoreSummaryTaskResult {
+    const research = new ResearchKnowledgeWorker(this.options.rootDir);
+    return research.getSummary();
+  }
+
 
 
   listModelProviders(): ModelProviderListTaskResult {
