@@ -88,3 +88,31 @@ Expected runtime result remains:
 ```text
 S.E.R.A. certify: PASS level=operator-console-v1
 ```
+
+## Phase 15 Knowledge Seeding + Source Map
+
+Phase 15 adds a tracked source map and repeatable local knowledge seed command. It is an evidence-governance milestone, not a new mutation-authority level.
+
+Required local validation:
+
+```bash
+npm run knowledge:source-map
+npm run knowledge:verify
+npm run hygiene
+npm run build
+npm test
+npm run certify
+npm run verify
+```
+
+Optional local seed command:
+
+```bash
+npm run knowledge:seed
+```
+
+Expected runtime result remains:
+
+```text
+S.E.R.A. certify: PASS level=operator-console-v1
+```

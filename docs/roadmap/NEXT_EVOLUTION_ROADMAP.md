@@ -16,7 +16,9 @@ This is an operational governance phase, not a new runtime authority phase. The 
 
 ### Phase 15 — Knowledge Seeding + Source Map v1
 
-Ingest repo docs and selected source files into local knowledge, then create source map records so S.E.R.A. can retrieve evidence about itself.
+Create a tracked source map for trusted repo evidence and add repeatable local seeding commands for `.sera-knowledge/`.
+
+This phase makes S.E.R.A.'s existing local knowledge layer easier to rebuild and verify without adding external research, automatic execution, or new mutation authority.
 
 ### Phase 16 — Live Autonomous Dev Happy Path v1
 

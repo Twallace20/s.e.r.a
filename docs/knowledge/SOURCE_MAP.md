@@ -1,0 +1,129 @@
+# S.E.R.A. Knowledge Source Map
+
+Phase 15 establishes the first repo-level source map for S.E.R.A.'s local knowledge layer. The source map tells S.E.R.A. which repo files should be used as trusted local evidence when it needs to explain its own architecture, certification state, roadmap, safety posture, and operating commands.
+
+This file is tracked in Git. Runtime knowledge artifacts generated under `.sera-knowledge/` remain ignored and can be rebuilt locally with `npm run knowledge:seed`.
+
+## Source map rules
+
+- Source map records describe trusted local repo sources; they do not grant new mutation authority.
+- Runtime knowledge records under `.sera-knowledge/` are generated evidence and should not be committed.
+- S.E.R.A. should retrieve evidence from these files before claiming what it can do, what it cannot do, or what phase it is in.
+- External sources remain out of scope for this phase.
+- Source map verification should pass before build, tests, and certification count.
+
+## Seeded evidence groups
+
+| Group | Purpose | Files |
+| --- | --- | --- |
+| Repo overview | Explains the current certified system, current commands, package boundaries, and intentionally absent capabilities. | `README.md` |
+| Validation truth | Defines the local and CI validation commands that keep phases honest. | `docs/BUILD_VALIDATION.md` |
+| Certification truth | Defines current certified level, completed runtime levels, and governance milestones. | `docs/roadmap/CERTIFICATION_LADDER.md` |
+| Roadmap truth | Defines the remaining staged path from foundation to recursive learning. | `docs/roadmap/NEXT_EVOLUTION_ROADMAP.md` |
+| Vision and guardrails | Defines the long-term product vision, non-negotiables, and definition of done. | `docs/vision/SERA_VISION.md`, `docs/vision/NON_NEGOTIABLES.md`, `docs/vision/DEFINITION_OF_DONE.md` |
+| Architecture and safety | Defines package boundaries and local-first security expectations. | `docs/architecture/PACKAGE_BOUNDARIES.md`, `docs/security/SECURITY_BASELINE.md` |
+| Governance milestones | Explains Phase 14 and Phase 15 as non-authority-expanding governance/evidence phases. | `docs/phases/PHASE_14_CI_CERTIFICATION_GATE_V1.md`, `docs/phases/PHASE_15_KNOWLEDGE_SEEDING_SOURCE_MAP_V1.md` |
+| Runtime source evidence | Gives S.E.R.A. traceable source references for kernel orchestration, knowledge indexing, certification, and CLI commands. | `packages/kernel/src/sera-kernel.ts`, `packages/knowledge/src/knowledge-store.ts`, `packages/certs/src/certify.ts`, `apps/cli/src/index.ts` |
+
+## Source records
+
+### `README.md`
+
+- Evidence role: repo overview, current state, package boundaries, and operator-facing command examples.
+- Use when answering: what S.E.R.A. is, what works now, what is intentionally absent, which packages exist, and how to run the core commands.
+- Risk note: README is summary evidence; confirm runtime certification through cert output or certification docs when precision matters.
+
+### `docs/BUILD_VALIDATION.md`
+
+- Evidence role: validation command truth.
+- Use when answering: what commands must pass before a phase counts, what artifacts should stay out of Git, and what the expected certification output is.
+- Risk note: generated runtime folders are excluded from committed source truth.
+
+### `docs/roadmap/CERTIFICATION_LADDER.md`
+
+- Evidence role: certified capability ladder and governance milestones.
+- Use when answering: what certified levels exist, what each level proves, and which phases are governance-only.
+- Risk note: a phase name alone is not proof; certification output and clean Git state still matter.
+
+### `docs/roadmap/NEXT_EVOLUTION_ROADMAP.md`
+
+- Evidence role: staged future plan.
+- Use when answering: what comes next after the current phase and how the responsible recursive-agent path is sequenced.
+- Risk note: roadmap entries are plans, not completed capabilities.
+
+### `docs/vision/SERA_VISION.md`
+
+- Evidence role: product and system north star.
+- Use when answering: what S.E.R.A. is intended to become and why the local-first rebuild exists.
+
+### `docs/vision/NON_NEGOTIABLES.md`
+
+- Evidence role: safety and operating law.
+- Use when answering: what S.E.R.A. must refuse, avoid, or prove before a capability counts.
+
+### `docs/vision/DEFINITION_OF_DONE.md`
+
+- Evidence role: completion standard.
+- Use when answering: what finished means for a S.E.R.A. phase, worker, capability, or repo change.
+
+### `docs/architecture/PACKAGE_BOUNDARIES.md`
+
+- Evidence role: package ownership and boundary map.
+- Use when answering: where code should live and which package owns which responsibility.
+
+### `docs/security/SECURITY_BASELINE.md`
+
+- Evidence role: local safety baseline.
+- Use when answering: what boundaries exist around files, shell commands, runtime artifacts, and external access.
+
+### `docs/phases/PHASE_14_CI_CERTIFICATION_GATE_V1.md`
+
+- Evidence role: CI gate milestone.
+- Use when answering: what Phase 14 added and why it does not change runtime authority.
+
+### `docs/phases/PHASE_15_KNOWLEDGE_SEEDING_SOURCE_MAP_V1.md`
+
+- Evidence role: Phase 15 scope and validation.
+- Use when answering: what the knowledge seed/source map phase adds, what remains generated, and what commands validate it.
+
+### `packages/kernel/src/sera-kernel.ts`
+
+- Evidence role: runtime orchestration source.
+- Use when answering: which subsystem methods the kernel exposes and how the CLI/certs coordinate runtime work.
+
+### `packages/knowledge/src/knowledge-store.ts`
+
+- Evidence role: local knowledge implementation.
+- Use when answering: how ingestion, chunking, search, ignored runtime folders, and summaries work.
+
+### `packages/certs/src/certify.ts`
+
+- Evidence role: certification implementation.
+- Use when answering: what the cert runner actually checks and what level it reports.
+
+### `apps/cli/src/index.ts`
+
+- Evidence role: command surface.
+- Use when answering: what local CLI commands exist and how operators can invoke them.
+
+## Phase 15 validation contract
+
+Phase 15 is valid when all of the following pass:
+
+```bash
+npm run knowledge:source-map
+npm run knowledge:verify
+npm run hygiene
+npm run build
+npm test
+npm run certify
+npm run verify
+```
+
+Expected runtime certification remains:
+
+```text
+S.E.R.A. certify: PASS level=operator-console-v1
+```
+
+Phase 15 creates a stronger evidence layer for S.E.R.A. to understand itself. It does not enable external research, autonomous execution, automatic lesson activation, or uncontrolled self-modification.
