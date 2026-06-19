@@ -1,0 +1,62 @@
+name: S.E.R.A. Certification Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - "phase-*"
+
+permissions:
+  contents: read
+
+jobs:
+  certify:
+    name: build-test-certify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Check source hygiene
+        run: npm run hygiene:source
+
+      - name: Check runtime artifact hygiene
+        run: npm run hygiene:runtime
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      - name: Certify S.E.R.A.
+        run: npm run certify
+
+      - name: Re-check source hygiene after certification
+        run: npm run hygiene:source
+
+      - name: Re-check runtime artifact hygiene after certification
+        run: npm run hygiene:runtime
+
+      - name: Upload certification artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sera-certification-artifacts
+          path: |
+            .sera-cert/**
+          if-no-files-found: ignore

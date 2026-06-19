@@ -11,10 +11,15 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "node scripts/clean.mjs",
+    "hygiene": "npm run hygiene:source && npm run hygiene:runtime",
+    "hygiene:source": "node scripts/check-source-hygiene.mjs",
+    "hygiene:runtime": "node scripts/check-runtime-artifacts.mjs",
     "test": "vitest run",
     "certify": "npm run build && npm test && node packages/certs/dist/certify.js",
     "sera": "npm run build --silent && node apps/cli/dist/index.js",
-    "doctor": "node scripts/doctor.mjs"
+    "doctor": "node scripts/doctor.mjs",
+    "verify": "npm run hygiene && npm run build && npm test && npm run certify",
+    "ci": "npm run verify"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
