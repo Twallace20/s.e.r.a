@@ -142,3 +142,12 @@ Phase 16 extends the map with the live autonomous happy-path proof so S.E.R.A. c
 - `docs/phases/PHASE_17_LESSON_REVIEW_WORKBENCH_V1.md` — Phase 17 scope, safety boundaries, and validation contract.
 - `scripts/run-lesson-review-workbench.mjs` — repeatable local demo proving the workbench writes review packets without automatic approvals or activations.
 - `tests/integration/lesson-review-workbench.test.ts` — integration proof that the workbench is review-only and preserves manual activation boundaries.
+
+## Phase 18 source map additions
+
+- `docs/governance/FREE_CORE_COVENANT.md` — free/local-first certification covenant through Phase 45.
+- `docs/phases/PHASE_18_LOCAL_MODEL_PROVIDER_V1.md` — Phase 18 scope, boundaries, and validation contract.
+- `packages/model-provider/src/model-provider-store.ts` — mock/local/external provider registry and optional local provider readiness.
+- `scripts/check-free-core-covenant.mjs` — validates the Free Core Covenant is present and wired into verify.
+- `scripts/run-local-model-provider.mjs` — repeatable local demo for the Phase 18 provider boundary.
+- `tests/integration/local-model-provider.test.ts` — integration proof for optional local-only provider behavior.

@@ -35,7 +35,9 @@ import {
   ModelProviderHistoryResult,
   ModelProviderListResult,
   ModelProviderStore,
-  ModelProviderSummaryResult
+  ModelProviderSummaryResult,
+  LocalModelInvocationInput,
+  LocalModelProviderReadinessResult
 } from "@sera/model-provider";
 import {
   OperatorConsoleHealthResult,
@@ -238,6 +240,8 @@ export interface ModelInvocationTaskResult extends ModelInvocationResult {}
 export interface ModelProviderHistoryTaskResult extends ModelProviderHistoryResult {}
 
 export interface ModelProviderSummaryTaskResult extends ModelProviderSummaryResult {}
+export interface LocalModelProviderReadinessTaskResult extends LocalModelProviderReadinessResult {}
+export interface LocalModelInvocationTaskInput extends LocalModelInvocationInput {}
 
 export interface AutonomousDevLoopTaskInput extends AutonomousDevLoopInput {
   validationCommand?: DeveloperPatchValidationCommand;
@@ -719,6 +723,16 @@ export class SeraKernel {
     const summaryPath = models.writeSummary();
     const summary = models.summarize();
     return { ok: true, status: "completed", modelDir: models.modelDir, summary: { ...summary, modelDir: models.modelDir }, summaryPath };
+  }
+
+  getLocalModelProviderReadiness(providerId = "ollama-local", model?: string): LocalModelProviderReadinessTaskResult {
+    const models = new ModelProviderStore(this.options.rootDir);
+    return models.getLocalModelProviderReadiness(providerId, model);
+  }
+
+  async invokeLocalModelProvider(input: LocalModelInvocationTaskInput): Promise<ModelInvocationTaskResult> {
+    const models = new ModelProviderStore(this.options.rootDir);
+    return models.invokeLocalModelProvider(input);
   }
 
   runAutonomousDevLoop(input: AutonomousDevLoopTaskInput): AutonomousDevLoopTaskResult {

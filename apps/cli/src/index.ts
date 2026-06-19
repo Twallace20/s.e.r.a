@@ -115,6 +115,7 @@ Secure base behavior:
   - Planner creates, queues, transitions, and records task history without autonomous execution
   - Knowledge ingestion indexes local files and retrieves lexical evidence without an LLM
   - Model Provider Adapter offers a deterministic local mock provider and blocks external providers by default
+  - Local Model Provider v1 registers an optional Ollama local adapter while keeping certification subscription-free
   - Autonomous Dev Loop can propose bounded dev changes and only applies them behind validation gates
   - Operator Console summarizes health, evidence, tasks, knowledge, models, and autonomy from one local command
   - does not require an LLM provider
@@ -683,6 +684,53 @@ async function main(): Promise<void> {
       process.exit(0);
     }
 
+    if (modelMode === "local-status") {
+      const providerId = modelRest[0] ?? "ollama-local";
+      const model = modelRest[1];
+      const result = kernel.getLocalModelProviderReadiness(providerId, model);
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        modelDir: result.modelDir,
+        provider: result.provider,
+        config: result.config,
+        canInvoke: result.canInvoke,
+        localOnly: result.localOnly,
+        subscriptionRequired: result.subscriptionRequired,
+        paidApiKeyRequired: result.paidApiKeyRequired,
+        reportPath: result.reportPath,
+        eventPath: result.eventPath,
+        summaryPath: result.summaryPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
+    if (modelMode === "invoke-ollama") {
+      const [model, ...promptParts] = modelRest;
+      const prompt = promptParts.join(" ").trim();
+      const result = await kernel.invokeLocalModelProvider({
+        providerId: "ollama-local",
+        model: requireArg(model, "local model name"),
+        prompt: requireArg(prompt, "model prompt"),
+        purpose: "local-cli-ollama-invocation"
+      });
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        modelDir: result.modelDir,
+        provider: result.provider,
+        request: result.request,
+        response: result.response,
+        requestPath: result.requestPath,
+        responsePath: result.responsePath,
+        eventPath: result.eventPath,
+        summaryPath: result.summaryPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
     if (modelMode === "invoke-mock") {
       const prompt = modelRest.join(" ").trim();
       const result = kernel.invokeModelProvider({
@@ -731,7 +779,7 @@ async function main(): Promise<void> {
       process.exit(0);
     }
 
-    throw new Error("Models command must be 'providers', 'invoke-mock', 'requests', 'responses', 'events', or 'summary'.");
+    throw new Error("Models command must be 'providers', 'local-status', 'invoke-mock', 'invoke-ollama', 'requests', 'responses', 'events', or 'summary'.");
   }
 
   if (cmd === "auto") {

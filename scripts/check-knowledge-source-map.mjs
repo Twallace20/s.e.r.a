@@ -26,7 +26,13 @@ const requiredMappedPaths = [
   "packages/memory/src/memory-store.ts",
   "docs/phases/PHASE_17_LESSON_REVIEW_WORKBENCH_V1.md",
   "scripts/run-lesson-review-workbench.mjs",
-  "tests/integration/lesson-review-workbench.test.ts"
+  "tests/integration/lesson-review-workbench.test.ts",
+  "docs/governance/FREE_CORE_COVENANT.md",
+  "docs/phases/PHASE_18_LOCAL_MODEL_PROVIDER_V1.md",
+  "packages/model-provider/src/model-provider-store.ts",
+  "scripts/check-free-core-covenant.mjs",
+  "scripts/run-local-model-provider.mjs",
+  "tests/integration/local-model-provider.test.ts"
 ];
 
 function fail(message) {
