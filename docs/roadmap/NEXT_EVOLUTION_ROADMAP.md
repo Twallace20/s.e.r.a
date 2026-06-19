@@ -173,3 +173,7 @@ Add a lesson review workbench so pending lesson candidates, approved inactive le
 ## Phase 18 roadmap note
 
 Phase 18 replaces any paid-provider-first direction with Local Model Provider v1. The default certified path remains deterministic mock local provider plus optional `ollama-local` readiness. OpenAI, Anthropic, hosted search, cloud databases, and paid model providers remain optional future adapters only after the local/free path is certified.
+
+## Phase 19 roadmap note
+
+Add local recursive learning cycles that synthesize memory, failure, lesson, review, activation, and regression-rule evidence into governed next-action recommendations. This prepares S.E.R.A. for deeper self-evolution while keeping approval, activation, execution, and source mutation under explicit operator control.

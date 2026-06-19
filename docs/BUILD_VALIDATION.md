@@ -210,3 +210,40 @@ S.E.R.A. phase18 local model provider: PASS
 69 tests passed
 S.E.R.A. certify: PASS level=operator-console-v1
 ```
+
+## Phase 19 Recursive Learning
+
+Phase 19 adds a local recursive learning cycle that records evidence synthesis and recommendation history without making lesson decisions or changing runtime behavior.
+
+Required local validation:
+
+```bash
+npm run free-core:verify
+npm run knowledge:verify
+npm run phase19:demo
+npm run phase19:verify
+npm run hygiene
+npm run build
+npm test
+npm run certify
+npm run verify
+```
+
+Expected test target:
+
+```text
+17 test files passed
+72 tests passed
+```
+
+Expected source-map target:
+
+```text
+S.E.R.A. knowledge source map: PASS mapped=30
+```
+
+Expected runtime result remains:
+
+```text
+S.E.R.A. certify: PASS level=operator-console-v1
+```

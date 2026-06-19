@@ -256,6 +256,49 @@ export interface LessonReviewWorkbenchResult {
   markdownPath?: string;
 }
 
+export type RecursiveLearningCycleStatus = "stable" | "needs_human_review" | "ready_for_manual_activation" | "insufficient_evidence";
+
+export interface RecursiveLearningRecommendation {
+  action: string;
+  reason: string;
+  requiredHumanDecision: boolean;
+  blockedAutomation: boolean;
+}
+
+export interface RecursiveLearningCycleRecord {
+  id: string;
+  createdAt: string;
+  status: RecursiveLearningCycleStatus;
+  memoryDir: string;
+  runCount: number;
+  failureCount: number;
+  pendingCandidateCount: number;
+  reviewedLessonCount: number;
+  approvedInactiveCount: number;
+  activeLessonCount: number;
+  regressionRuleCount: number;
+  recommendations: RecursiveLearningRecommendation[];
+  guardrails: string[];
+  source: "recursive-learning-v1";
+}
+
+export interface RecursiveLearningResult {
+  ok: true;
+  status: "completed";
+  message: string;
+  memoryDir: string;
+  cycle: RecursiveLearningCycleRecord;
+  cyclePath: string;
+  summaryPath: string;
+}
+
+export interface RecursiveLearningHistoryResult {
+  ok: true;
+  status: "completed";
+  memoryDir: string;
+  cycles: RecursiveLearningCycleRecord[];
+}
+
 export interface MemorySummary {
   createdAt: string;
   memoryDir: string;
@@ -699,6 +742,33 @@ export class MemoryStore {
     };
   }
 
+  runRecursiveLearningCycle(): RecursiveLearningResult {
+    const cycle = this.createRecursiveLearningCycle();
+    const cyclePath = this.appendJsonl("recursive-learning-cycles.jsonl", cycle);
+    const cycles = this.listRecursiveLearningCycles();
+    const summaryPath = this.writeJson("recursive-learning-summary.json", {
+      createdAt: isoNow(),
+      memoryDir: this.memoryDir,
+      cycleCount: cycles.length,
+      latestCycle: cycle,
+      source: "recursive-learning-v1"
+    });
+    this.writeSummary();
+    return {
+      ok: true,
+      status: "completed",
+      message: "Recursive learning cycle recorded from local evidence without changing lesson state.",
+      memoryDir: this.memoryDir,
+      cycle,
+      cyclePath,
+      summaryPath
+    };
+  }
+
+  listRecursiveLearningCycles(): RecursiveLearningCycleRecord[] {
+    return this.readJsonl<RecursiveLearningCycleRecord>("recursive-learning-cycles.jsonl");
+  }
+
   summarize(): MemorySummary {
     const lessons = this.listLessonCandidates();
     return {
@@ -721,6 +791,91 @@ export class MemoryStore {
 
   path(...segments: string[]): string {
     return path.join(this.memoryDir, ...segments);
+  }
+
+  private createRecursiveLearningCycle(): RecursiveLearningCycleRecord {
+    const createdAt = isoNow();
+    const memorySummary = this.summarize();
+    const workbench = this.createLessonReviewWorkbenchReport();
+    const recommendations = this.createRecursiveLearningRecommendations(memorySummary, workbench);
+    return {
+      id: createSeraId("recursive_cycle"),
+      createdAt,
+      status: this.resolveRecursiveLearningCycleStatus(memorySummary, workbench),
+      memoryDir: this.memoryDir,
+      runCount: memorySummary.runCount,
+      failureCount: memorySummary.failureCount,
+      pendingCandidateCount: workbench.summary.pendingCandidateCount,
+      reviewedLessonCount: workbench.summary.reviewedCandidateCount,
+      approvedInactiveCount: workbench.summary.approvedInactiveCount,
+      activeLessonCount: workbench.summary.activeLessonCount,
+      regressionRuleCount: workbench.summary.regressionRuleCount,
+      recommendations,
+      guardrails: [
+        "Recursive learning is report-only: it does not approve, reject, activate, deactivate, execute tasks, or mutate source files.",
+        "Every lesson approval, rejection, activation, or deactivation still requires an explicit human rationale.",
+        "The certified recursive learning path must run without paid APIs, paid subscriptions, hosted databases, hosted model providers, or cloud-only services.",
+        "Local evidence may inform next actions, but authority remains with the operator until a future phase explicitly certifies more automation."
+      ],
+      source: "recursive-learning-v1"
+    };
+  }
+
+  private resolveRecursiveLearningCycleStatus(memorySummary: MemorySummary, workbench: LessonReviewWorkbenchReport): RecursiveLearningCycleStatus {
+    if (workbench.summary.pendingCandidateCount > 0) return "needs_human_review";
+    if (workbench.summary.approvedInactiveCount > 0) return "ready_for_manual_activation";
+    return "stable";
+  }
+
+  private createRecursiveLearningRecommendations(memorySummary: MemorySummary, workbench: LessonReviewWorkbenchReport): RecursiveLearningRecommendation[] {
+    const recommendations: RecursiveLearningRecommendation[] = [];
+    if (workbench.summary.pendingCandidateCount > 0) {
+      recommendations.push({
+        action: "review_pending_candidates",
+        reason: "There are " + workbench.summary.pendingCandidateCount + " pending lesson candidate(s) requiring explicit human approval or rejection.",
+        requiredHumanDecision: true,
+        blockedAutomation: true
+      });
+    }
+    if (workbench.summary.approvedInactiveCount > 0) {
+      recommendations.push({
+        action: "consider_manual_activation",
+        reason: "There are " + workbench.summary.approvedInactiveCount + " approved inactive lesson(s) that may be manually activated as regression rules.",
+        requiredHumanDecision: true,
+        blockedAutomation: true
+      });
+    }
+    if (workbench.summary.activeLessonCount > 0) {
+      recommendations.push({
+        action: "check_active_regression_rules",
+        reason: "There are active lesson regression rules; keep them auditable through the existing rule checker.",
+        requiredHumanDecision: false,
+        blockedAutomation: true
+      });
+    }
+    if (memorySummary.failureCount > 0 && workbench.summary.pendingCandidateCount === 0 && workbench.summary.reviewedCandidateCount === 0) {
+      recommendations.push({
+        action: "inspect_failure_coverage",
+        reason: "Failures exist, but no pending or reviewed lessons are visible. Inspect memory coverage before trusting the learning loop.",
+        requiredHumanDecision: true,
+        blockedAutomation: true
+      });
+    }
+    if (recommendations.length === 0) {
+      recommendations.push({
+        action: "continue_monitoring",
+        reason: "No pending lesson review or manual activation action is required right now.",
+        requiredHumanDecision: false,
+        blockedAutomation: true
+      });
+    }
+    recommendations.push({
+      action: "preserve_free_local_core",
+      reason: "Recursive learning must remain subscription-free and local-first through Phase 45.",
+      requiredHumanDecision: false,
+      blockedAutomation: true
+    });
+    return recommendations;
   }
 
   private reviewLessonCandidate(candidateId: string, decisionType: LessonReviewDecision, reviewer: string, rationale: string): LessonReviewResult {

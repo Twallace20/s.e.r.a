@@ -35,6 +35,8 @@ Phase 17 adds a lesson review workbench: a review-only JSON and Markdown packet 
 
 S.E.R.A. follows a Free Core Covenant: core operation must remain local-first and fully operational without paid subscriptions, paid APIs, paid SaaS tools, hosted databases, hosted model providers, or cloud-only dependencies through Phase 45. Paid services can exist only as optional adapters after the free/local path is certified.
 
+Phase 19 adds recursive learning cycles: local, report-only synthesis records that turn memory, failures, lesson candidates, review decisions, approved inactive lessons, active regression rules, and free-core guardrails into governed next-action recommendations without automatically approving, activating, executing, or mutating anything.
+
 ## What works now
 
 - TypeScript + Node local runtime
@@ -73,6 +75,7 @@ S.E.R.A. follows a Free Core Covenant: core operation must remain local-first an
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
 - review-only lesson workbench packets for human governance of candidates, approvals, activations, and regression rules
 - optional local model provider readiness through `ollama-local`, while certification continues to pass without Ollama, paid APIs, or downloaded models
+- local recursive learning cycles that synthesize evidence into human-governed next actions
 
 ## What is intentionally not here yet
 
@@ -463,3 +466,18 @@ npm run sera -- models invoke-ollama gemma4 "Summarize local evidence only."
 ```
 
 Phase 18 does not require a paid model provider, paid API key, cloud account, Ollama install, or downloaded local model for certification.
+
+## Phase 19 — Recursive Learning v1
+
+Phase 19 introduces local recursive learning cycles. A cycle reads S.E.R.A.'s memory, failure journal, lesson candidates, review history, approved inactive lessons, active regression rules, and free-core guardrails, then writes a report-only recommendation record.
+
+Local commands:
+
+```bash
+npm run phase19:demo
+npm run phase19:verify
+npm run sera -- lessons recursive
+npm run sera -- lessons recursive-history
+```
+
+The recursive learning cycle does not approve, reject, activate, deactivate, execute queued work, call paid services, or mutate source files.
