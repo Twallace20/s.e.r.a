@@ -18,7 +18,9 @@ import {
   RejectedLessonRecord,
   RegressionRuleCheckResult,
   RegressionRuleRecord,
-  LessonReviewWorkbenchResult
+  LessonReviewWorkbenchResult,
+  RecursiveLearningResult,
+  RecursiveLearningHistoryResult
 } from "@sera/memory";
 import {
   KnowledgeDirectoryIngestResult,
@@ -197,6 +199,8 @@ export interface LessonActivationTaskResult extends LessonActivationResult {}
 
 export interface RegressionRuleCheckTaskResult extends RegressionRuleCheckResult {}
 export interface LessonReviewWorkbenchTaskResult extends LessonReviewWorkbenchResult {}
+export interface RecursiveLearningTaskResult extends RecursiveLearningResult {}
+export interface RecursiveLearningHistoryTaskResult extends RecursiveLearningHistoryResult {}
 
 export interface CreateQueuedTaskTaskInput extends CreateQueuedTaskInput {}
 
@@ -612,6 +616,16 @@ export class SeraKernel {
   writeLessonReviewWorkbench(): LessonReviewWorkbenchTaskResult {
     const memory = new MemoryStore(this.options.rootDir);
     return memory.writeLessonReviewWorkbench();
+  }
+
+  runRecursiveLearningCycle(): RecursiveLearningTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    return memory.runRecursiveLearningCycle();
+  }
+
+  listRecursiveLearningCycles(): RecursiveLearningHistoryTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    return { ok: true, status: "completed", memoryDir: memory.memoryDir, cycles: memory.listRecursiveLearningCycles() };
   }
 
   createQueuedTask(input: CreateQueuedTaskTaskInput): TaskQueueTaskResult {

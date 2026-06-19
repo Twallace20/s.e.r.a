@@ -29,7 +29,9 @@
     "phase17:verify": "npm run knowledge:verify && npm run phase17:demo",
     "free-core:verify": "node scripts/check-free-core-covenant.mjs",
     "phase18:demo": "npm run build --silent && node scripts/run-local-model-provider.mjs",
-    "phase18:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase18:demo"
+    "phase18:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase18:demo",
+    "phase19:demo": "npm run build --silent && node scripts/run-recursive-learning.mjs",
+    "phase19:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase19:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

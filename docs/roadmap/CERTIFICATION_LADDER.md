@@ -163,6 +163,20 @@ Phase 18 proves:
 - optional Ollama invocation is blocked unless explicitly enabled and locally configured
 - the runtime certified level remains `operator-console-v1`
 
+## Phase 19 — `phase-19-recursive-learning-v1`
+
+This is a governed learning milestone, not a new autonomous authority level. It proves that S.E.R.A. can synthesize local memory and lesson evidence into recursive next-action recommendations while preserving manual review, manual activation, and the Free Core Covenant.
+
+Phase 19 proves:
+
+- recursive learning cycles run locally
+- cycle history is written under `.sera-memory/`
+- recommendations are generated from local evidence
+- pending candidates remain pending until human review
+- approved lessons remain inactive until human activation
+- no paid API, subscription, SaaS, hosted model, or cloud-only service is required
+- the runtime certified level remains `operator-console-v1`
+
 ## Next runtime certification candidates
 
 - `autonomy-happy-path-demo-v1`: live queued-task demo that proves the autonomous dev loop can complete real repo work behind validation.

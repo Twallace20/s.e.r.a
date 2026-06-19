@@ -32,7 +32,10 @@ const requiredMappedPaths = [
   "packages/model-provider/src/model-provider-store.ts",
   "scripts/check-free-core-covenant.mjs",
   "scripts/run-local-model-provider.mjs",
-  "tests/integration/local-model-provider.test.ts"
+  "tests/integration/local-model-provider.test.ts",
+  "docs/phases/PHASE_19_RECURSIVE_LEARNING_V1.md",
+  "scripts/run-recursive-learning.mjs",
+  "tests/integration/recursive-learning.test.ts"
 ];
 
 function fail(message) {

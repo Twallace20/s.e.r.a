@@ -151,3 +151,9 @@ Phase 16 extends the map with the live autonomous happy-path proof so S.E.R.A. c
 - `scripts/check-free-core-covenant.mjs` — validates the Free Core Covenant is present and wired into verify.
 - `scripts/run-local-model-provider.mjs` — repeatable local demo for the Phase 18 provider boundary.
 - `tests/integration/local-model-provider.test.ts` — integration proof for optional local-only provider behavior.
+
+## Phase 19 source map additions
+
+- `docs/phases/PHASE_19_RECURSIVE_LEARNING_V1.md` — Phase 19 scope, recursive learning boundaries, and local validation contract.
+- `scripts/run-recursive-learning.mjs` — repeatable local demo proving recursive learning is report-only and preserves human-governed decisions.
+- `tests/integration/recursive-learning.test.ts` — integration proof that recursive learning records cycles without approving, activating, or mutating runtime behavior.

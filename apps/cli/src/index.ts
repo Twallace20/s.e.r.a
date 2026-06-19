@@ -112,6 +112,7 @@ Secure base behavior:
   - Lesson Review approves or rejects candidates while keeping approved lessons inactive
   - Active Lessons converts approved lessons into auditable regression rules without changing runtime behavior
   - Lesson Review Workbench writes review-only Markdown and JSON packets without approving or activating lessons
+  - Recursive Learning records local evidence synthesis cycles without making decisions or changing runtime behavior
   - Planner creates, queues, transitions, and records task history without autonomous execution
   - Knowledge ingestion indexes local files and retrieves lexical evidence without an LLM
   - Model Provider Adapter offers a deterministic local mock provider and blocks external providers by default
@@ -350,6 +351,31 @@ async function main(): Promise<void> {
       process.exit(result.ok ? 0 : 1);
     }
 
+    if (lessonMode === "recursive") {
+      const result = kernel.runRecursiveLearningCycle();
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        memoryDir: result.memoryDir,
+        cycle: result.cycle,
+        cyclePath: result.cyclePath,
+        summaryPath: result.summaryPath
+      }, null, 2));
+      process.exit(0);
+    }
+
+    if (lessonMode === "recursive-history") {
+      const result = kernel.listRecursiveLearningCycles();
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        memoryDir: result.memoryDir,
+        cycles: result.cycles
+      }, null, 2));
+      process.exit(0);
+    }
+
     if (lessonMode === "inspect") {
       const result = kernel.inspectLessonCandidate(requireArg(candidateId, "candidate id"));
       console.log(JSON.stringify({
@@ -450,7 +476,7 @@ async function main(): Promise<void> {
       process.exit(result.ok ? 0 : 1);
     }
 
-    throw new Error("Lessons command must be 'candidates', 'inspect', 'approve', 'reject', 'approved', 'rejected', 'decisions', 'active', 'rules', 'activations', 'workbench', 'workbench-write', 'activate', 'deactivate', or 'check-rules'.");
+    throw new Error("Lessons command must be 'candidates', 'inspect', 'approve', 'reject', 'approved', 'rejected', 'decisions', 'active', 'rules', 'activations', 'workbench', 'workbench-write', 'recursive', 'recursive-history', 'activate', 'deactivate', or 'check-rules'.");
   }
 
 
