@@ -145,3 +145,39 @@ Expected runtime result remains:
 ```text
 S.E.R.A. certify: PASS level=operator-console-v1
 ```
+
+## Phase 17 Lesson Review Workbench
+
+Phase 17 adds a review-only workbench for lesson candidates, approved inactive lessons, active regression rules, decisions, activation decisions, and recommended human next actions.
+
+Required local validation:
+
+```bash
+npm run knowledge:verify
+npm run phase17:demo
+npm run phase17:verify
+npm run hygiene
+npm run build
+npm test
+npm run certify
+npm run verify
+```
+
+Expected test target:
+
+```text
+15 test files passed
+66 tests passed
+```
+
+Expected source-map target:
+
+```text
+S.E.R.A. knowledge source map: PASS mapped=21
+```
+
+Expected runtime result remains:
+
+```text
+S.E.R.A. certify: PASS level=operator-console-v1
+```

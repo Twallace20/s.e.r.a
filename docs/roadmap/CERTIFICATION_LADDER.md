@@ -134,6 +134,20 @@ Phase 16 proves:
 - failed validation rolls back and blocks the task instead of counting as success
 - the runtime certified level remains `operator-console-v1`
 
+## Phase 17 — `phase-17-lesson-review-workbench-v1`
+
+This is a governance and operator-review milestone, not a new autonomous authority level. It proves that lesson candidates and lesson decisions can be surfaced in a human-reviewable workbench while keeping approvals and activations explicit.
+
+Phase 17 proves:
+
+- pending lesson candidates are visible in a single workbench packet
+- approved inactive lessons are visible before activation
+- active lesson regression rules remain auditable
+- review and activation decisions are summarized
+- Markdown and JSON reports can be written under `.sera-memory/`
+- the workbench does not approve, reject, activate, deactivate, or change runtime behavior automatically
+- the runtime certified level remains `operator-console-v1`
+
 ## Next runtime certification candidates
 
 - `autonomy-happy-path-demo-v1`: live queued-task demo that proves the autonomous dev loop can complete real repo work behind validation.

@@ -79,6 +79,7 @@ NPM examples:
   npm run sera -- lessons inspect <candidate-id>
   npm run sera -- lessons approve <candidate-id> "Reviewed and valid."
   npm run sera -- lessons reject <candidate-id> "Not actually a reusable lesson."
+  npm run sera -- lessons workbench-write
   npm run sera -- lessons activate <approved-lesson-id> "Use as a regression guardrail."
   npm run sera -- lessons check-rules
   npm run sera -- tasks create "Write first plan" "Draft the first queued task" normal
@@ -110,6 +111,7 @@ Secure base behavior:
   - Memory records run history, failure journal entries, and lesson candidates without activating lessons
   - Lesson Review approves or rejects candidates while keeping approved lessons inactive
   - Active Lessons converts approved lessons into auditable regression rules without changing runtime behavior
+  - Lesson Review Workbench writes review-only Markdown and JSON packets without approving or activating lessons
   - Planner creates, queues, transitions, and records task history without autonomous execution
   - Knowledge ingestion indexes local files and retrieves lexical evidence without an LLM
   - Model Provider Adapter offers a deterministic local mock provider and blocks external providers by default
@@ -325,6 +327,28 @@ async function main(): Promise<void> {
       process.exit(0);
     }
 
+    if (lessonMode === "workbench" || lessonMode === "workbench-write") {
+      const result = lessonMode === "workbench-write" ? kernel.writeLessonReviewWorkbench() : kernel.getLessonReviewWorkbench();
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        memoryDir: result.memoryDir,
+        summary: result.report.summary,
+        pendingCandidates: result.report.pendingCandidates,
+        approvedInactive: result.report.approvedInactive,
+        activeLessons: result.report.activeLessons,
+        regressionRules: result.report.regressionRules,
+        recentDecisions: result.report.recentDecisions,
+        activationDecisions: result.report.activationDecisions,
+        guardrails: result.report.guardrails,
+        nextActions: result.report.nextActions,
+        jsonPath: result.jsonPath,
+        markdownPath: result.markdownPath
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
     if (lessonMode === "inspect") {
       const result = kernel.inspectLessonCandidate(requireArg(candidateId, "candidate id"));
       console.log(JSON.stringify({
@@ -425,7 +449,7 @@ async function main(): Promise<void> {
       process.exit(result.ok ? 0 : 1);
     }
 
-    throw new Error("Lessons command must be 'candidates', 'inspect', 'approve', 'reject', 'approved', 'rejected', 'decisions', 'active', 'rules', 'activations', 'activate', 'deactivate', or 'check-rules'.");
+    throw new Error("Lessons command must be 'candidates', 'inspect', 'approve', 'reject', 'approved', 'rejected', 'decisions', 'active', 'rules', 'activations', 'workbench', 'workbench-write', 'activate', 'deactivate', or 'check-rules'.");
   }
 
 

@@ -161,3 +161,7 @@ S.E.R.A. should not mean “magically knows everything.” The realistic target 
 S.E.R.A. can enter a new domain, ingest trusted sources, build a knowledge model, create practice tasks and evaluations, attempt bounded work, verify outcomes, learn from failures, create tools/workers when necessary, and improve through certified recursive loops.
 
 That is the responsible path to self-evolving, domain-general capability.
+
+## Phase 17 roadmap note
+
+Add a lesson review workbench so pending lesson candidates, approved inactive lessons, active lesson regression rules, decisions, and activation history can be reviewed from a single operator packet. This phase preserves the manual approval and activation boundary and prepares the system for deeper recursive learning in later phases.

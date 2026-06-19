@@ -22,7 +22,11 @@ const requiredMappedPaths = [
   "packages/certs/src/certify.ts",
   "apps/cli/src/index.ts",
   "docs/phases/PHASE_16_LIVE_AUTONOMOUS_DEV_HAPPY_PATH_V1.md",
-  "tests/integration/live-autonomy-happy-path.test.ts"
+  "tests/integration/live-autonomy-happy-path.test.ts",
+  "packages/memory/src/memory-store.ts",
+  "docs/phases/PHASE_17_LESSON_REVIEW_WORKBENCH_V1.md",
+  "scripts/run-lesson-review-workbench.mjs",
+  "tests/integration/lesson-review-workbench.test.ts"
 ];
 
 function fail(message) {
