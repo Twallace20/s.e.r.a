@@ -247,3 +247,28 @@ Expected runtime result remains:
 ```text
 S.E.R.A. certify: PASS level=operator-console-v1
 ```
+
+## Phase 20 Multi-File Dev Worker
+
+Required validation:
+
+```bash
+npm run free-core:verify
+npm run knowledge:verify
+npm run phase20:demo
+npm run phase20:verify
+npm run hygiene
+npm run build
+npm test
+npm run certify
+npm run verify
+```
+
+Expected:
+
+```text
+S.E.R.A. phase20 multi-file dev worker: PASS
+Test Files 18 passed (18)
+Tests 75 passed (75)
+S.E.R.A. certify: PASS level=operator-console-v1
+```

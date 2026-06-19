@@ -71,7 +71,12 @@ import {
   DeveloperPatchOperation,
   DeveloperPatchResult,
   DeveloperValidationResult,
-  DeveloperWorker
+  DeveloperWorker,
+  DeveloperMultiPatchMode,
+  DeveloperMultiPatchResult,
+  DeveloperMultiPatchTarget,
+  DeveloperMultiValidationContext,
+  MultiFileDeveloperWorker
 } from "@sera/workers";
 import { WorkspaceManager } from "@sera/workspace";
 import { createSeraId, isoNow, SeraFinalReport, SeraPlan, SeraResult, SeraRun, SeraStatus, SeraTask } from "@sera/shared";
@@ -101,6 +106,13 @@ export interface DeveloperInspectTaskInput {
 export interface DeveloperPatchValidationCommand {
   command: string;
   args: string[];
+}
+
+export interface DeveloperMultiPatchTaskInput {
+  targets: DeveloperMultiPatchTarget[];
+  mode: DeveloperMultiPatchMode;
+  validate?: (context: DeveloperMultiValidationContext) => DeveloperValidationResult;
+  validationCommand?: DeveloperPatchValidationCommand;
 }
 
 export interface DeveloperPatchTaskInput {
@@ -142,6 +154,10 @@ export interface DeveloperInspectTaskResult extends SeraResult {
 
 export interface DeveloperPatchTaskResult extends SeraResult {
   patch: DeveloperPatchResult;
+}
+
+export interface DeveloperMultiPatchTaskResult extends SeraResult {
+  multiPatch: DeveloperMultiPatchResult;
 }
 
 export interface SelfImprovementTaskResult extends SeraResult {
@@ -387,6 +403,80 @@ export class SeraKernel {
       extraArtifacts: ["artifacts/developer-edit-suggestion.json", "artifacts/developer-edit-direct.json", "artifacts/developer-edit-rollback.json"]
     });
     return { ...base, developer };
+  }
+
+  runDeveloperMultiPatchTask(input: DeveloperMultiPatchTaskInput): DeveloperMultiPatchTaskResult {
+    const prompt = `developer multi-patch ${input.mode} ${input.targets.length} file(s)`;
+    const task = this.createTask(prompt);
+    const run = this.workspaceManager.createRun({ rootDir: this.options.rootDir, taskId: task.id });
+    const artifacts = new ArtifactStore(run.runDir);
+    const projectRoot = path.resolve(this.options.rootDir);
+    const safety = new SafetyPolicy({ workspaceDir: projectRoot, allowedCommands: ["node", "npm"] });
+    const shellTool = new ShellTool(run.id, safety, artifacts);
+    const plan = this.createDeveloperMultiPatchPlan(task.id, input);
+    this.writeRunStartArtifacts(artifacts, task, plan, run, prompt);
+
+    const validate = input.validationCommand
+      ? (context: DeveloperMultiValidationContext) => {
+          void context;
+          const commandResult = shellTool.run(input.validationCommand!.command, input.validationCommand!.args, projectRoot);
+          artifacts.writeJson(path.join("artifacts", "multi-file-validation-command.json"), {
+            command: input.validationCommand!.command,
+            args: input.validationCommand!.args,
+            ok: commandResult.ok,
+            exitCode: commandResult.exitCode,
+            stdout: commandResult.stdout,
+            stderr: commandResult.stderr,
+            message: commandResult.message
+          });
+          return {
+            ok: commandResult.ok,
+            message: commandResult.ok
+              ? `Validation command passed: ${input.validationCommand!.command} ${input.validationCommand!.args.join(" ")}`.trim()
+              : `Validation command failed: ${input.validationCommand!.command} ${input.validationCommand!.args.join(" ")}`.trim()
+          };
+        }
+      : input.validate;
+
+    const worker = new MultiFileDeveloperWorker();
+    const multiPatch = worker.multiPatch({
+      runId: run.id,
+      projectRoot,
+      targets: input.targets,
+      mode: input.mode,
+      artifacts,
+      safety,
+      validate
+    });
+
+    artifacts.appendJsonl("steps.jsonl", {
+      ts: isoNow(),
+      runId: run.id,
+      step: input.mode === "suggested" ? "developer_suggest_multi_patch" : "developer_direct_multi_patch",
+      status: multiPatch.status,
+      changed: multiPatch.changed,
+      fileCount: multiPatch.fileCount,
+      changedFileCount: multiPatch.changedFileCount,
+      totalOccurrences: multiPatch.totalOccurrences,
+      restored: multiPatch.restored ?? false
+    });
+
+    const base = this.finalizeRun({
+      artifacts,
+      run,
+      task,
+      status: multiPatch.status,
+      summary: multiPatch.message,
+      extraArtifacts: [
+        "artifacts/developer-multi-patch-suggestion.json",
+        "artifacts/developer-multi-patch-direct.json",
+        "artifacts/developer-multi-patch-rollback.json",
+        "artifacts/multi-file-validation-command.json",
+        "artifacts/multi-file-patches",
+        "artifacts/multi-file-backups"
+      ]
+    });
+    return { ...base, multiPatch };
   }
 
   runDeveloperPatchTask(input: DeveloperPatchTaskInput): DeveloperPatchTaskResult {
@@ -976,6 +1066,37 @@ export class SeraKernel {
           tool: "ArtifactStore",
           risk: "low",
           expectedArtifact: "final-report.md"
+        }
+      ]
+    };
+  }
+
+  private createDeveloperMultiPatchPlan(taskId: string, input: DeveloperMultiPatchTaskInput): SeraPlan {
+    return {
+      id: createSeraId("plan"),
+      taskId,
+      createdAt: isoNow(),
+      steps: [
+        {
+          id: createSeraId("step"),
+          title: `Validate ${input.targets.length} multi-file patch target(s) against path safety and protected-file rules`,
+          tool: "MultiFileDeveloperWorker",
+          risk: "low",
+          expectedArtifact: "safety-events.jsonl"
+        },
+        {
+          id: createSeraId("step"),
+          title: input.mode === "suggested" ? "Create multi-file patch artifacts without source mutation" : "Apply multi-file patch with backups for every touched file",
+          tool: "MultiFileDeveloperWorker",
+          risk: input.mode === "suggested" ? "low" : "high",
+          expectedArtifact: input.mode === "suggested" ? "artifacts/multi-file-patches" : "artifacts/multi-file-backups"
+        },
+        {
+          id: createSeraId("step"),
+          title: input.mode === "direct" ? "Run validation and rollback all files if validation fails" : "Record suggestion manifest",
+          tool: input.mode === "direct" ? "ShellTool + MultiFileDeveloperWorker" : "ArtifactStore",
+          risk: input.mode === "direct" ? "high" : "low",
+          expectedArtifact: input.mode === "direct" ? "artifacts/developer-multi-patch-direct.json or rollback.json" : "artifacts/developer-multi-patch-suggestion.json"
         }
       ]
     };

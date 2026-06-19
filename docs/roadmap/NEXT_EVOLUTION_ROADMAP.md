@@ -177,3 +177,7 @@ Phase 18 replaces any paid-provider-first direction with Local Model Provider v1
 ## Phase 19 roadmap note
 
 Add local recursive learning cycles that synthesize memory, failure, lesson, review, activation, and regression-rule evidence into governed next-action recommendations. This prepares S.E.R.A. for deeper self-evolution while keeping approval, activation, execution, and source mutation under explicit operator control.
+
+## Phase 20 roadmap note
+
+Add Multi-File Dev Worker v3 so later autonomous and self-improvement phases can operate on coordinated file sets while preserving local/free certification, protected-path rules, backup evidence, validation gates, and rollback behavior.

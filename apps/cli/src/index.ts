@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import fs from "node:fs";
 import { SeraKernel } from "@sera/kernel";
 
 function printHelp(): void {
@@ -12,6 +13,8 @@ Usage:
   sera dev patch suggest <relative-file> <find-text> <replace-text> [expected-occurrences]
   sera dev patch apply <relative-file> <find-text> <replace-text> [expected-occurrences]
   sera dev patch apply-build <relative-file> <find-text> <replace-text> [expected-occurrences]
+  sera dev multi-patch suggest <json-file>
+  sera dev multi-patch apply-build <json-file>
   sera self propose <relative-file> <find-text> <replace-text> [expected-occurrences]
   sera self apply-cert <relative-file> <find-text> <replace-text> [expected-occurrences]
   sera memory summary
@@ -71,6 +74,7 @@ NPM examples:
   npm run sera -- dev apply examples/demo.txt "old" "new"
   npm run sera -- dev patch suggest README.md "old" "new" 1
   npm run sera -- dev patch apply-build README.md "old" "new" 1
+  npm run sera -- dev multi-patch suggest multi-patch.json
   npm run sera -- self propose README.md "old" "new" 1
   npm run sera -- self apply-cert README.md "old" "new" 1
   npm run sera -- memory summary
@@ -105,6 +109,7 @@ Secure base behavior:
   - Developer Worker suggested mode does not modify source files
   - Developer Worker direct mode creates backup artifacts before writing
   - Developer Worker patch mode supports expected occurrence checks
+  - Multi-File Dev Worker applies coordinated file batches only with backups, validation, and rollback
   - Developer Worker apply-build validates with npm run build and rolls back on failure
   - Self-improvement proposal mode writes evidence without mutating source
   - Self-improvement apply-cert requires npm run certify to pass or rolls back
@@ -208,6 +213,36 @@ async function main(): Promise<void> {
       process.exit(result.ok ? 0 : 1);
     }
 
+    if (modeRaw === "multi-patch") {
+      const [multiModeRaw, specPathRaw] = devRest;
+      if (multiModeRaw !== "suggest" && multiModeRaw !== "apply-build") {
+        throw new Error("Developer multi-patch command must be 'suggest' or 'apply-build'.");
+      }
+      const specPath = requireArg(specPathRaw, "multi-patch json file");
+      const specText = fs.readFileSync(specPath, "utf8");
+      const spec = JSON.parse(specText) as { targets?: Array<{ relativePath: string; operations: Array<{ kind: "replace"; find: string; replaceWith: string; expectedOccurrences?: number }> }> };
+      const result = kernel.runDeveloperMultiPatchTask({
+        mode: multiModeRaw === "suggest" ? "suggested" : "direct",
+        targets: spec.targets ?? [],
+        validationCommand: multiModeRaw === "apply-build" ? { command: "npm", args: ["run", "build"] } : undefined
+      });
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        changed: result.multiPatch.changed,
+        fileCount: result.multiPatch.fileCount,
+        changedFileCount: result.multiPatch.changedFileCount,
+        totalOccurrences: result.multiPatch.totalOccurrences,
+        restored: result.multiPatch.restored,
+        manifestPath: result.multiPatch.manifestPath,
+        files: result.multiPatch.files,
+        validation: result.multiPatch.validation,
+        runDir: result.run.runDir
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+
     if (modeRaw === "patch") {
       const [patchModeRaw, relativePath, find, replaceWith, expectedRaw] = devRest;
       if (patchModeRaw !== "suggest" && patchModeRaw !== "apply" && patchModeRaw !== "apply-build") {
@@ -243,7 +278,7 @@ async function main(): Promise<void> {
       process.exit(result.ok ? 0 : 1);
     }
 
-    throw new Error("Developer command must be 'inspect', 'suggest', 'apply', or 'patch'.");
+    throw new Error("Developer command must be 'inspect', 'suggest', 'apply', 'patch', or 'multi-patch'.");
   }
 
 
