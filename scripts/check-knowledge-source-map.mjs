@@ -20,7 +20,9 @@ const requiredMappedPaths = [
   "packages/kernel/src/sera-kernel.ts",
   "packages/knowledge/src/knowledge-store.ts",
   "packages/certs/src/certify.ts",
-  "apps/cli/src/index.ts"
+  "apps/cli/src/index.ts",
+  "docs/phases/PHASE_16_LIVE_AUTONOMOUS_DEV_HAPPY_PATH_V1.md",
+  "tests/integration/live-autonomy-happy-path.test.ts"
 ];
 
 function fail(message) {

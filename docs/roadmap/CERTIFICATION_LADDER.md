@@ -120,6 +120,20 @@ Phase 15 proves:
 - generated knowledge artifacts remain ignored runtime data
 - the runtime certified level remains `operator-console-v1`
 
+## Phase 16a — `phase-16a-live-autonomous-dev-happy-path-v1`
+
+This is a live evidence milestone, not a new runtime authority level. It should be tagged after the live happy-path demo, source-map verification, hygiene, build, tests, certification, and verify pass.
+
+Phase 16 proves:
+
+- a real queued task can be created for an autonomous-dev-loop run
+- proposal mode produces patch evidence without mutating the target
+- apply-cert mode applies only after validation passes
+- successful apply completes the queued task and writes memory evidence
+- autonomy loop/event records and operator reports are written
+- failed validation rolls back and blocks the task instead of counting as success
+- the runtime certified level remains `operator-console-v1`
+
 ## Next runtime certification candidates
 
 - `autonomy-happy-path-demo-v1`: live queued-task demo that proves the autonomous dev loop can complete real repo work behind validation.

@@ -22,7 +22,9 @@ This phase makes S.E.R.A.'s existing local knowledge layer easier to rebuild and
 
 ### Phase 16 — Live Autonomous Dev Happy Path v1
 
-Create a real queued task, propose a bounded repo change, apply it with certification, complete/block the task honestly, and report the result through the operator console.
+Create a repeatable live local happy-path demo that creates a real queued task, proposes a bounded change, applies it only behind validation, completes or blocks the task honestly, and reports the result through the operator console.
+
+This phase proves the path using ignored local runtime targets and evidence artifacts. It does not allow uncontrolled autonomy or autonomous edits to tracked source files.
 
 ### Phase 17 — Lesson Review Workbench v1
 

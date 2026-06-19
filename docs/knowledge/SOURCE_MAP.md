@@ -24,6 +24,7 @@ This file is tracked in Git. Runtime knowledge artifacts generated under `.sera-
 | Architecture and safety | Defines package boundaries and local-first security expectations. | `docs/architecture/PACKAGE_BOUNDARIES.md`, `docs/security/SECURITY_BASELINE.md` |
 | Governance milestones | Explains Phase 14 and Phase 15 as non-authority-expanding governance/evidence phases. | `docs/phases/PHASE_14_CI_CERTIFICATION_GATE_V1.md`, `docs/phases/PHASE_15_KNOWLEDGE_SEEDING_SOURCE_MAP_V1.md` |
 | Runtime source evidence | Gives S.E.R.A. traceable source references for kernel orchestration, knowledge indexing, certification, and CLI commands. | `packages/kernel/src/sera-kernel.ts`, `packages/knowledge/src/knowledge-store.ts`, `packages/certs/src/certify.ts`, `apps/cli/src/index.ts` |
+| Live autonomy proof | Proves the happy path and failed-validation path for queued autonomous dev work. | `tests/integration/live-autonomy-happy-path.test.ts` |
 
 ## Source records
 
@@ -127,3 +128,10 @@ S.E.R.A. certify: PASS level=operator-console-v1
 ```
 
 Phase 15 creates a stronger evidence layer for S.E.R.A. to understand itself. It does not enable external research, autonomous execution, automatic lesson activation, or uncontrolled self-modification.
+
+Phase 16 extends the map with the live autonomous happy-path proof so S.E.R.A. can retrieve evidence about the full local loop from task creation through operator reporting.
+
+## Phase 16 source map additions
+
+- `docs/phases/PHASE_16_LIVE_AUTONOMOUS_DEV_HAPPY_PATH_V1.md` — Phase 16 scope, safety boundaries, and validation contract.
+- `tests/integration/live-autonomy-happy-path.test.ts` — integration proof for proposal mode, validation-gated apply mode, task completion, memory evidence, autonomy evidence, and operator reporting.
