@@ -21,6 +21,8 @@
     "knowledge:seed": "npm run build --silent && node scripts/seed-local-knowledge.mjs --reset",
     "knowledge:source-map": "node scripts/check-knowledge-source-map.mjs",
     "knowledge:verify": "npm run knowledge:source-map",
+    "phase16:demo": "npm run build --silent && node scripts/run-live-autonomy-happy-path.mjs",
+    "phase16:verify": "npm run knowledge:verify && npm run phase16:demo",
     "verify": "npm run hygiene && npm run knowledge:verify && npm run build && npm test && npm run certify",
     "ci": "npm run verify"
   },

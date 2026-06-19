@@ -29,6 +29,8 @@ Phase 14 is an operational CI certification-gate phase. It adds local hygiene co
 
 Phase 15 is a knowledge-seeding and source-map phase. It adds a tracked repo source map and repeatable local knowledge seeding commands, but it does not add runtime authority or change the certified runtime level.
 
+Phase 16 is a live autonomous-dev happy-path phase. It adds a repeatable local demo and tests proving the existing autonomous loop can complete a queued task behind validation, but it does not add new runtime authority or allow autonomous edits to tracked source files.
+
 ## What works now
 
 - TypeScript + Node local runtime
@@ -64,6 +66,7 @@ Phase 15 is a knowledge-seeding and source-map phase. It adds a tracked repo sou
 - local operator console status, health, history, summary, and report commands
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
+- repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
 
 ## What is intentionally not here yet
 
@@ -394,6 +397,29 @@ npm run sera -- knowledge summary
 ```
 
 Runtime knowledge records are generated under `.sera-knowledge/` and remain ignored by Git. Phase 15 does not add external research, automatic task execution, automatic lesson activation, or new mutation authority.
+
+Validation should still pass at:
+
+```text
+operator-console-v1
+```
+
+## Phase 16 — Live Autonomous Dev Happy Path v1
+
+Phase 16 adds a repeatable local demo showing that S.E.R.A.'s existing autonomous dev loop can move through a full happy path without becoming uncontrolled:
+
+```text
+queued task → proposal → validation-gated apply → completed task → memory evidence → autonomy evidence → operator report
+```
+
+Local commands:
+
+```bash
+npm run phase16:demo
+npm run phase16:verify
+```
+
+The demo writes only to ignored local runtime locations such as `.sera-local/`, `.sera-tasks/`, `.sera-memory/`, `.sera-autonomy/`, and `.sera-console/`. It does not edit tracked source files.
 
 Validation should still pass at:
 

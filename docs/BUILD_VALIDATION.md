@@ -116,3 +116,32 @@ Expected runtime result remains:
 ```text
 S.E.R.A. certify: PASS level=operator-console-v1
 ```
+
+## Phase 16 Live Autonomous Dev Happy Path
+
+Phase 16 adds a repeatable local happy-path demo for the existing autonomous-dev-loop system. It is an evidence and operations milestone, not a new mutation-authority level.
+
+Required local validation:
+
+```bash
+npm run phase16:demo
+npm run phase16:verify
+npm run hygiene
+npm run build
+npm test
+npm run certify
+npm run verify
+```
+
+Expected test target:
+
+```text
+14 test files passed
+64 tests passed
+```
+
+Expected runtime result remains:
+
+```text
+S.E.R.A. certify: PASS level=operator-console-v1
+```
