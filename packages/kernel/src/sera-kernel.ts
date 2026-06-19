@@ -17,7 +17,8 @@ import {
   MemorySummary,
   RejectedLessonRecord,
   RegressionRuleCheckResult,
-  RegressionRuleRecord
+  RegressionRuleRecord,
+  LessonReviewWorkbenchResult
 } from "@sera/memory";
 import {
   KnowledgeDirectoryIngestResult,
@@ -193,6 +194,7 @@ export interface LessonActivationTaskInput {
 export interface LessonActivationTaskResult extends LessonActivationResult {}
 
 export interface RegressionRuleCheckTaskResult extends RegressionRuleCheckResult {}
+export interface LessonReviewWorkbenchTaskResult extends LessonReviewWorkbenchResult {}
 
 export interface CreateQueuedTaskTaskInput extends CreateQueuedTaskInput {}
 
@@ -597,6 +599,16 @@ export class SeraKernel {
     return memory.checkRegressionRules();
   }
 
+
+  getLessonReviewWorkbench(): LessonReviewWorkbenchTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    return memory.getLessonReviewWorkbench();
+  }
+
+  writeLessonReviewWorkbench(): LessonReviewWorkbenchTaskResult {
+    const memory = new MemoryStore(this.options.rootDir);
+    return memory.writeLessonReviewWorkbench();
+  }
 
   createQueuedTask(input: CreateQueuedTaskTaskInput): TaskQueueTaskResult {
     const queue = new TaskQueueStore(this.options.rootDir);

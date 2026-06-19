@@ -31,6 +31,8 @@ Phase 15 is a knowledge-seeding and source-map phase. It adds a tracked repo sou
 
 Phase 16 is a live autonomous-dev happy-path phase. It adds a repeatable local demo and tests proving the existing autonomous loop can complete a queued task behind validation, but it does not add new runtime authority or allow autonomous edits to tracked source files.
 
+Phase 17 adds a lesson review workbench: a review-only JSON and Markdown packet that surfaces pending lesson candidates, approved inactive lessons, active regression rules, review decisions, activation decisions, guardrails, and recommended human next actions without automatically approving or activating anything.
+
 ## What works now
 
 - TypeScript + Node local runtime
@@ -67,6 +69,7 @@ Phase 16 is a live autonomous-dev happy-path phase. It adds a repeatable local d
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
+- review-only lesson workbench packets for human governance of candidates, approvals, activations, and regression rules
 
 ## What is intentionally not here yet
 
@@ -426,3 +429,18 @@ Validation should still pass at:
 ```text
 operator-console-v1
 ```
+
+## Phase 17 — Lesson Review Workbench v1
+
+Phase 17 introduces a human-review workbench for the learning loop. It helps operators inspect pending lesson candidates, approved inactive lessons, active lesson regression rules, recent decisions, activation decisions, manual-review guardrails, and recommended next actions.
+
+Local commands:
+
+```bash
+npm run phase17:demo
+npm run phase17:verify
+npm run sera -- lessons workbench
+npm run sera -- lessons workbench-write
+```
+
+The workbench writes review packets under `.sera-memory/`. It does not approve, reject, activate, deactivate, or change runtime behavior.

@@ -135,3 +135,10 @@ Phase 16 extends the map with the live autonomous happy-path proof so S.E.R.A. c
 
 - `docs/phases/PHASE_16_LIVE_AUTONOMOUS_DEV_HAPPY_PATH_V1.md` — Phase 16 scope, safety boundaries, and validation contract.
 - `tests/integration/live-autonomy-happy-path.test.ts` — integration proof for proposal mode, validation-gated apply mode, task completion, memory evidence, autonomy evidence, and operator reporting.
+
+## Phase 17 source map additions
+
+- `packages/memory/src/memory-store.ts` — lesson memory records and the Phase 17 workbench report surface.
+- `docs/phases/PHASE_17_LESSON_REVIEW_WORKBENCH_V1.md` — Phase 17 scope, safety boundaries, and validation contract.
+- `scripts/run-lesson-review-workbench.mjs` — repeatable local demo proving the workbench writes review packets without automatic approvals or activations.
+- `tests/integration/lesson-review-workbench.test.ts` — integration proof that the workbench is review-only and preserves manual activation boundaries.

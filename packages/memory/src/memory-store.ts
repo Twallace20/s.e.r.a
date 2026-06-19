@@ -197,6 +197,65 @@ export interface RegressionRuleCheckResult {
   inactiveRuleCount: number;
 }
 
+export type LessonWorkbenchRecommendation = "review-required" | "approved-inactive" | "active-regression-rule" | "rejected-reviewed";
+
+export interface LessonWorkbenchCandidateItem {
+  candidateId: string;
+  createdAt: string;
+  status: LessonCandidateStatus;
+  sourceFailureId: string;
+  runId: string;
+  taskId: string;
+  title: string;
+  hypothesis: string;
+  evidence: string[];
+  evidenceCount: number;
+  proposedAction: string;
+  recommendation: LessonWorkbenchRecommendation;
+}
+
+export interface LessonReviewWorkbenchSummary {
+  createdAt: string;
+  memoryDir: string;
+  pendingCandidateCount: number;
+  reviewedCandidateCount: number;
+  approvedLessonCount: number;
+  rejectedLessonCount: number;
+  approvedInactiveCount: number;
+  activeLessonCount: number;
+  regressionRuleCount: number;
+  decisionCount: number;
+  activationDecisionCount: number;
+  needsReview: boolean;
+  source: "lesson-review-workbench-v1";
+}
+
+export interface LessonReviewWorkbenchReport {
+  createdAt: string;
+  memoryDir: string;
+  summary: LessonReviewWorkbenchSummary;
+  pendingCandidates: LessonWorkbenchCandidateItem[];
+  approvedInactive: ApprovedLessonRecord[];
+  rejectedLessons: RejectedLessonRecord[];
+  activeLessons: ActiveLessonRecord[];
+  regressionRules: RegressionRuleRecord[];
+  recentDecisions: LessonDecisionRecord[];
+  activationDecisions: LessonActivationDecisionRecord[];
+  guardrails: string[];
+  nextActions: string[];
+  source: "lesson-review-workbench-v1";
+}
+
+export interface LessonReviewWorkbenchResult {
+  ok: true;
+  status: "completed";
+  message: string;
+  memoryDir: string;
+  report: LessonReviewWorkbenchReport;
+  jsonPath?: string;
+  markdownPath?: string;
+}
+
 export interface MemorySummary {
   createdAt: string;
   memoryDir: string;
@@ -612,6 +671,34 @@ export class MemoryStore {
     };
   }
 
+  getLessonReviewWorkbench(): LessonReviewWorkbenchResult {
+    const report = this.createLessonReviewWorkbenchReport();
+    return {
+      ok: true,
+      status: "completed",
+      message: report.summary.needsReview ? "Lesson review workbench has pending human review items." : "Lesson review workbench has no pending lesson candidates.",
+      memoryDir: this.memoryDir,
+      report
+    };
+  }
+
+  writeLessonReviewWorkbench(): LessonReviewWorkbenchResult {
+    const report = this.createLessonReviewWorkbenchReport();
+    const jsonPath = this.writeJson("lesson-review-workbench.json", report);
+    const markdownPath = this.path("lesson-review-workbench.md");
+    fs.mkdirSync(path.dirname(markdownPath), { recursive: true });
+    fs.writeFileSync(markdownPath, redactSecrets(this.renderLessonReviewWorkbenchMarkdown(report)) + "\n", "utf8");
+    return {
+      ok: true,
+      status: "completed",
+      message: report.summary.needsReview ? "Lesson review workbench written with pending human review items." : "Lesson review workbench written with no pending lesson candidates.",
+      memoryDir: this.memoryDir,
+      report,
+      jsonPath,
+      markdownPath
+    };
+  }
+
   summarize(): MemorySummary {
     const lessons = this.listLessonCandidates();
     return {
@@ -758,6 +845,143 @@ export class MemoryStore {
       rejectedLessonPath,
       decisionPath
     };
+  }
+
+  private createLessonReviewWorkbenchReport(): LessonReviewWorkbenchReport {
+    const createdAt = isoNow();
+    const candidates = this.listLessonCandidates();
+    const pendingCandidates = candidates
+      .filter((candidate) => candidate.status === "candidate")
+      .map((candidate) => this.toLessonWorkbenchCandidateItem(candidate, "review-required"));
+    const approved = this.listApprovedLessons();
+    const rejectedLessons = this.listRejectedLessons();
+    const activeLessons = this.listActiveLessons().filter((lesson) => lesson.active && lesson.status === "active");
+    const regressionRules = this.listRegressionRules().filter((rule) => rule.status === "active");
+    const decisions = this.listLessonDecisions();
+    const activationDecisions = this.listLessonActivationDecisions();
+    const approvedInactive = approved.filter((lesson) => !lesson.active || lesson.activation === "manual-activation-required" || lesson.activation === "deactivated");
+    const summary: LessonReviewWorkbenchSummary = {
+      createdAt,
+      memoryDir: this.memoryDir,
+      pendingCandidateCount: pendingCandidates.length,
+      reviewedCandidateCount: candidates.filter((candidate) => candidate.status === "approved" || candidate.status === "rejected").length,
+      approvedLessonCount: approved.length,
+      rejectedLessonCount: rejectedLessons.length,
+      approvedInactiveCount: approvedInactive.length,
+      activeLessonCount: activeLessons.length,
+      regressionRuleCount: regressionRules.length,
+      decisionCount: decisions.length,
+      activationDecisionCount: activationDecisions.length,
+      needsReview: pendingCandidates.length > 0,
+      source: "lesson-review-workbench-v1"
+    };
+    return {
+      createdAt,
+      memoryDir: this.memoryDir,
+      summary,
+      pendingCandidates,
+      approvedInactive,
+      rejectedLessons,
+      activeLessons,
+      regressionRules,
+      recentDecisions: decisions.slice(-10).reverse(),
+      activationDecisions: activationDecisions.slice(-10).reverse(),
+      guardrails: [
+        "The workbench is review-only: it does not approve, reject, activate, or deactivate lessons.",
+        "Every approval or rejection still requires an explicit reviewer and rationale.",
+        "Approved lessons remain inactive until an explicit activation command creates an auditable regression rule.",
+        "Active lesson records document guardrails; they do not silently mutate runtime behavior."
+      ],
+      nextActions: this.createLessonWorkbenchNextActions(summary),
+      source: "lesson-review-workbench-v1"
+    };
+  }
+
+  private toLessonWorkbenchCandidateItem(candidate: LessonCandidateRecord, recommendation: LessonWorkbenchRecommendation): LessonWorkbenchCandidateItem {
+    return {
+      candidateId: candidate.id,
+      createdAt: candidate.createdAt,
+      status: candidate.status,
+      sourceFailureId: candidate.sourceFailureId,
+      runId: candidate.runId,
+      taskId: candidate.taskId,
+      title: candidate.title,
+      hypothesis: candidate.hypothesis,
+      evidence: candidate.evidence,
+      evidenceCount: candidate.evidence.length,
+      proposedAction: candidate.proposedAction,
+      recommendation
+    };
+  }
+
+  private createLessonWorkbenchNextActions(summary: LessonReviewWorkbenchSummary): string[] {
+    const actions: string[] = [];
+    if (summary.pendingCandidateCount > 0) {
+      actions.push(`Review ${summary.pendingCandidateCount} pending lesson candidate(s) with a human rationale before approval or rejection.`);
+    }
+    if (summary.approvedInactiveCount > 0) {
+      actions.push(`Consider whether ${summary.approvedInactiveCount} approved inactive lesson(s) should receive explicit manual activation as regression rules.`);
+    }
+    if (summary.pendingCandidateCount === 0 && summary.approvedInactiveCount === 0) {
+      actions.push("No pending lesson review or manual activation action is required right now.");
+    }
+    actions.push("Keep automatic lesson activation disabled unless a future phase explicitly certifies that authority.");
+    return actions;
+  }
+
+  private renderLessonReviewWorkbenchMarkdown(report: LessonReviewWorkbenchReport): string {
+    const pending = report.pendingCandidates.length === 0
+      ? "- None"
+      : report.pendingCandidates.map((candidate) => [
+          `- ${candidate.candidateId}: ${candidate.title}`,
+          `  - hypothesis: ${candidate.hypothesis}`,
+          `  - evidence count: ${candidate.evidenceCount}`,
+          `  - proposed action: ${candidate.proposedAction}`
+        ].join("\n")).join("\n");
+    const approvedInactive = report.approvedInactive.length === 0
+      ? "- None"
+      : report.approvedInactive.map((lesson) => `- ${lesson.id}: ${lesson.title} (${lesson.activation})`).join("\n");
+    const active = report.activeLessons.length === 0
+      ? "- None"
+      : report.activeLessons.map((lesson) => `- ${lesson.id}: ${lesson.title} -> ${lesson.regressionRuleId}`).join("\n");
+    return [
+      "# S.E.R.A. Lesson Review Workbench",
+      "",
+      `Generated: ${report.createdAt}`,
+      `Memory Directory: ${report.memoryDir}`,
+      "",
+      "## Summary",
+      "",
+      `- Pending candidates: ${report.summary.pendingCandidateCount}`,
+      `- Reviewed candidates: ${report.summary.reviewedCandidateCount}`,
+      `- Approved lessons: ${report.summary.approvedLessonCount}`,
+      `- Approved inactive lessons: ${report.summary.approvedInactiveCount}`,
+      `- Rejected lessons: ${report.summary.rejectedLessonCount}`,
+      `- Active lessons: ${report.summary.activeLessonCount}`,
+      `- Active regression rules: ${report.summary.regressionRuleCount}`,
+      `- Review decisions: ${report.summary.decisionCount}`,
+      `- Activation decisions: ${report.summary.activationDecisionCount}`,
+      "",
+      "## Pending Lesson Candidates",
+      "",
+      pending,
+      "",
+      "## Approved but Inactive Lessons",
+      "",
+      approvedInactive,
+      "",
+      "## Active Lesson Regression Rules",
+      "",
+      active,
+      "",
+      "## Manual Review Guardrails",
+      "",
+      ...report.guardrails.map((guardrail) => `- ${guardrail}`),
+      "",
+      "## Recommended Next Actions",
+      "",
+      ...report.nextActions.map((action) => `- ${action}`)
+    ].join("\n");
   }
 
   private findLessonCandidate(candidateId: string): LessonCandidateRecord | undefined {
