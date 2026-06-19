@@ -148,6 +148,21 @@ Phase 17 proves:
 - the workbench does not approve, reject, activate, deactivate, or change runtime behavior automatically
 - the runtime certified level remains `operator-console-v1`
 
+## Phase 18 — `phase-18-local-model-provider-v1`
+
+This is a free/local-first provider boundary milestone. It does not raise the runtime certification level, and it does not require a paid model provider or even a local model install to certify.
+
+Phase 18 proves:
+
+- the Free Core Covenant is documented and checked
+- `verify` enforces `free-core:verify`
+- `mock-local` remains the deterministic certified provider
+- `ollama-local` is registered as an optional local-only provider
+- `external-disabled` remains blocked
+- local model readiness writes evidence without requiring paid APIs
+- optional Ollama invocation is blocked unless explicitly enabled and locally configured
+- the runtime certified level remains `operator-console-v1`
+
 ## Next runtime certification candidates
 
 - `autonomy-happy-path-demo-v1`: live queued-task demo that proves the autonomous dev loop can complete real repo work behind validation.

@@ -33,6 +33,8 @@ Phase 16 is a live autonomous-dev happy-path phase. It adds a repeatable local d
 
 Phase 17 adds a lesson review workbench: a review-only JSON and Markdown packet that surfaces pending lesson candidates, approved inactive lessons, active regression rules, review decisions, activation decisions, guardrails, and recommended human next actions without automatically approving or activating anything.
 
+S.E.R.A. follows a Free Core Covenant: core operation must remain local-first and fully operational without paid subscriptions, paid APIs, paid SaaS tools, hosted databases, hosted model providers, or cloud-only dependencies through Phase 45. Paid services can exist only as optional adapters after the free/local path is certified.
+
 ## What works now
 
 - TypeScript + Node local runtime
@@ -70,6 +72,7 @@ Phase 17 adds a lesson review workbench: a review-only JSON and Markdown packet 
 - tracked knowledge source map and repeatable local knowledge seed script
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
 - review-only lesson workbench packets for human governance of candidates, approvals, activations, and regression rules
+- optional local model provider readiness through `ollama-local`, while certification continues to pass without Ollama, paid APIs, or downloaded models
 
 ## What is intentionally not here yet
 
@@ -444,3 +447,19 @@ npm run sera -- lessons workbench-write
 ```
 
 The workbench writes review packets under `.sera-memory/`. It does not approve, reject, activate, deactivate, or change runtime behavior.
+
+## Phase 18 — Local Model Provider v1
+
+Phase 18 adds the Free Core Covenant and introduces an optional local model provider boundary. The deterministic mock provider remains the certified default. The `ollama-local` provider is registered as a local-only optional adapter and is disabled unless the operator explicitly opts in.
+
+Local commands:
+
+```bash
+npm run free-core:verify
+npm run phase18:demo
+npm run phase18:verify
+npm run sera -- models local-status
+npm run sera -- models invoke-ollama gemma4 "Summarize local evidence only."
+```
+
+Phase 18 does not require a paid model provider, paid API key, cloud account, Ollama install, or downloaded local model for certification.

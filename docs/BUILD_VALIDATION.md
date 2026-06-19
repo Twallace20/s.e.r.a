@@ -181,3 +181,32 @@ Expected runtime result remains:
 ```text
 S.E.R.A. certify: PASS level=operator-console-v1
 ```
+
+## Phase 18 Local Model Provider
+
+Phase 18 enforces the Free Core Covenant and adds an optional local model provider adapter boundary. Certification must pass without paid subscriptions, paid APIs, cloud-only services, Ollama installation, or downloaded local models.
+
+Required local validation:
+
+```bash
+npm run free-core:verify
+npm run knowledge:verify
+npm run phase18:demo
+npm run phase18:verify
+npm run hygiene
+npm run build
+npm test
+npm run certify
+npm run verify
+```
+
+Expected proof:
+
+```text
+S.E.R.A. free core covenant: PASS through_phase=45
+S.E.R.A. knowledge source map: PASS mapped=26
+S.E.R.A. phase18 local model provider: PASS
+16 test files passed
+69 tests passed
+S.E.R.A. certify: PASS level=operator-console-v1
+```

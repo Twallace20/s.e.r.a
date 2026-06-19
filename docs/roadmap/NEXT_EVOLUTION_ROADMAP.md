@@ -1,3 +1,7 @@
+# Roadmap Rule: Free Core Covenant
+
+S.E.R.A. must remain fully operational without paid subscriptions, paid APIs, paid SaaS tools, hosted databases, hosted model providers, or cloud-only dependencies through Phase 45. Paid services may exist only as optional adapters after the free/local path is certified. In other words, free/local-first is a certification requirement, not a preference.
+
 # S.E.R.A. Next Evolution Roadmap
 
 This roadmap begins after the certified local foundation through Phase 12.
@@ -165,3 +169,7 @@ That is the responsible path to self-evolving, domain-general capability.
 ## Phase 17 roadmap note
 
 Add a lesson review workbench so pending lesson candidates, approved inactive lessons, active lesson regression rules, decisions, and activation history can be reviewed from a single operator packet. This phase preserves the manual approval and activation boundary and prepares the system for deeper recursive learning in later phases.
+
+## Phase 18 roadmap note
+
+Phase 18 replaces any paid-provider-first direction with Local Model Provider v1. The default certified path remains deterministic mock local provider plus optional `ollama-local` readiness. OpenAI, Anthropic, hosted search, cloud databases, and paid model providers remain optional future adapters only after the local/free path is certified.
