@@ -107,9 +107,21 @@ Phase 14 proves:
 - build, tests, and certification remain the required merge gate
 - the runtime certified level remains `operator-console-v1`
 
+## Phase 15 — `phase-15-knowledge-seeding-source-map-v1`
+
+This is a knowledge evidence milestone, not a new mutation-authority level. It should be tagged after source-map verification, hygiene, build, tests, certification, and verify pass.
+
+Phase 15 proves:
+
+- the repo has a tracked source map for trusted S.E.R.A. evidence
+- required mapped files exist in the repo
+- the source map references each required mapped file
+- `.sera-knowledge/` can be rebuilt locally from trusted repo files
+- generated knowledge artifacts remain ignored runtime data
+- the runtime certified level remains `operator-console-v1`
+
 ## Next runtime certification candidates
 
-- `knowledge-source-map-v1`: local knowledge seeding and source mapping over repo docs/source files.
 - `autonomy-happy-path-demo-v1`: live queued-task demo that proves the autonomous dev loop can complete real repo work behind validation.
 - `real-model-provider-v1`: optional external provider with configuration, redaction, logging, and blocked-by-default safety gates.
 - `recursive-learning-v1`: verified outcome → lesson candidate → review → active rule → regression check loop.

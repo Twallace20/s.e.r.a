@@ -27,6 +27,8 @@ Phase 13 is a documentation and repo-truth alignment phase. It does not add runt
 
 Phase 14 is an operational CI certification-gate phase. It adds local hygiene commands and a GitHub Actions workflow, but it does not add runtime authority or change the certified runtime level.
 
+Phase 15 is a knowledge-seeding and source-map phase. It adds a tracked repo source map and repeatable local knowledge seeding commands, but it does not add runtime authority or change the certified runtime level.
+
 ## What works now
 
 - TypeScript + Node local runtime
@@ -61,6 +63,7 @@ Phase 14 is an operational CI certification-gate phase. It adds local hygiene co
 - bounded autonomous dev loop proposal and validation-gated apply modes
 - local operator console status, health, history, summary, and report commands
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
+- tracked knowledge source map and repeatable local knowledge seed script
 
 ## What is intentionally not here yet
 
@@ -86,10 +89,11 @@ npm install
 npm run build
 npm test
 npm run certify
+npm run knowledge:verify
 npm run verify
 ```
 
-Expected current certification result after Phase 12, Phase 13 docs alignment, and Phase 14 CI gate setup:
+Expected current certification result after Phase 12, Phase 13 docs alignment, Phase 14 CI gate setup, and Phase 15 knowledge source mapping:
 
 ```text
 S.E.R.A. certify: PASS level=operator-console-v1
@@ -364,6 +368,34 @@ npm run verify
 The CI gate runs source hygiene, runtime artifact hygiene, build, tests, certification, and post-certification hygiene.
 
 Phase 14 does not add runtime authority. Validation should still pass at:
+
+```text
+operator-console-v1
+```
+
+## Phase 15 — Knowledge Seeding + Source Map v1
+
+Phase 15 adds a tracked knowledge source map and repeatable local knowledge seeding commands so S.E.R.A. can rebuild a local evidence index from trusted repo files.
+
+Tracked source map:
+
+```text
+docs/knowledge/SOURCE_MAP.md
+```
+
+Local commands:
+
+```bash
+npm run knowledge:source-map
+npm run knowledge:verify
+npm run knowledge:seed
+npm run sera -- knowledge search "operator console certification" 5
+npm run sera -- knowledge summary
+```
+
+Runtime knowledge records are generated under `.sera-knowledge/` and remain ignored by Git. Phase 15 does not add external research, automatic task execution, automatic lesson activation, or new mutation authority.
+
+Validation should still pass at:
 
 ```text
 operator-console-v1

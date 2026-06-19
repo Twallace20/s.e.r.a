@@ -18,7 +18,10 @@
     "certify": "npm run build && npm test && node packages/certs/dist/certify.js",
     "sera": "npm run build --silent && node apps/cli/dist/index.js",
     "doctor": "node scripts/doctor.mjs",
-    "verify": "npm run hygiene && npm run build && npm test && npm run certify",
+    "knowledge:seed": "npm run build --silent && node scripts/seed-local-knowledge.mjs --reset",
+    "knowledge:source-map": "node scripts/check-knowledge-source-map.mjs",
+    "knowledge:verify": "npm run knowledge:source-map",
+    "verify": "npm run hygiene && npm run knowledge:verify && npm run build && npm test && npm run certify",
     "ci": "npm run verify"
   },
   "devDependencies": {
