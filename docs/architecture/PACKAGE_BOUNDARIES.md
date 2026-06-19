@@ -1,77 +1,190 @@
 # Package Boundaries
 
-## `packages/shared`
+S.E.R.A. stays safe by keeping authority separated. Packages may coordinate through explicit contracts, but no package should silently take on another package's responsibility.
 
-Shared types and utility functions. No business logic.
+## `@sera/shared` / `packages/shared`
 
-## `packages/safety`
+Shared IDs, paths, redaction helpers, and core types.
 
-Permission checks, redaction, internet policy, command allowlist, approval decisions.
+Boundary rules:
 
-## `packages/workspace`
+- no tool execution
+- no runtime mutation
+- no business logic
+- no model-provider calls
+
+## `@sera/safety` / `packages/safety`
+
+Workspace boundaries, command allowlists, internet default-off policy, path safety, approval decisions, and redaction policy.
+
+Boundary rules:
+
+- owns permission decisions
+- does not execute tools itself
+- does not approve lessons or tasks
+- does not mutate source files
+
+## `@sera/workspace` / `packages/workspace`
 
 Run directory and isolated workspace creation.
 
-## `packages/artifacts`
+Boundary rules:
 
-JSON, JSONL, Markdown artifact writing.
+- creates controlled local workspaces
+- does not decide what work should be done
+- does not execute model or tool logic
 
-## `packages/tools`
+## `@sera/artifacts` / `packages/artifacts`
 
-Controlled adapters such as FileTool and ShellTool. Tools are audited and safety-gated.
+JSON, JSONL, and Markdown evidence writing.
 
-## `packages/workers`
+Boundary rules:
 
-Bounded worker modules. Through Phase 3, this owns Developer Worker inspect, edit, and patch primitives.
+- writes evidence records
+- does not interpret safety decisions
+- does not mutate source files except artifact destinations
 
-## `packages/kernel`
+## `@sera/tools` / `packages/tools`
 
-Task execution lifecycle. Depends on safety, workspace, artifacts, tools, and workers.
+Controlled adapters such as `FileTool` and `ShellTool`.
 
-## `packages/certs`
+Boundary rules:
+
+- tools are the only package layer that acts on the local environment
+- every tool action should be safety-gated and auditable
+- shell commands must stay allowlisted
+- tool adapters must not create hidden autonomy
+
+## `@sera/workers` / `packages/workers`
+
+Bounded worker modules. Through Phase 12, this owns Developer Worker inspect, edit, and patch primitives.
+
+Boundary rules:
+
+- may inspect files inside the project root
+- may propose patches without mutation
+- may apply bounded patches only through allowed modes
+- must capture backups and rollback on failed validation
+- must not choose arbitrary goals autonomously
+
+## `@sera/kernel` / `packages/kernel`
+
+Task execution lifecycle and subsystem coordination.
+
+Boundary rules:
+
+- coordinates certified subsystem actions
+- stays small and stable
+- does not bypass safety gates
+- does not allow direct model-to-tool authority
+
+## `@sera/certs` / `packages/certs`
 
 Certification runner and capability checks.
 
-## Future packages
+Boundary rules:
 
-- `packages/evaluator`
-- `packages/knowledge`
-- `apps/local-api`
-- `apps/console`
+- proves certified behavior with deterministic checks
+- should not depend on external model/network access
+- should fail honestly when a certified behavior regresses
 
+## `@sera/self-improvement` / `packages/self-improvement`
 
-## `@sera/self-improvement`
+Bounded self-improvement coordination: inspection, proposal records, validation-gated application, rollback evidence, and refusal of uncertified self-modification.
 
-Owns bounded self-improvement coordination: inspection, proposal records, validation-gated application, rollback evidence, and refusal of uncertified self-modification. It depends on Developer Worker behavior but does not choose arbitrary files or goals autonomously.
+Boundary rules:
 
-## @sera/memory
+- depends on Developer Worker behavior
+- does not choose arbitrary files or goals autonomously
+- must require validation for apply mode
 
-Owns local run memory, failure journal entries, lesson candidate records, and memory summaries. It must not execute tools, mutate source files, or activate lessons. It stores reviewable runtime data under `.sera-memory/`.
+## `@sera/memory` / `packages/memory`
 
+Local run memory, failure journal entries, lesson candidate records, review decisions, approved/rejected lessons, activation records, active lesson records, regression rule records, and memory summaries.
 
-Lesson Review + Approval v1 extends `@sera/memory`; it does not add an execution package. This keeps learning governance close to the memory evidence trail and prevents reviewed lessons from becoming runtime behavior automatically.
+Boundary rules:
 
+- stores evidence under `.sera-memory/`
+- does not execute tools
+- does not mutate source files
+- does not activate lessons without explicit review/activation calls
+- active lessons are guardrails, not hidden runtime behavior
 
-Active Lessons + Regression Rules v1 extends `@sera/memory` with activation records, active lesson records, regression rule records, and activation decisions. It intentionally does not add a behavior-changing runtime engine; active lessons are certified guardrails, not autonomous policy changes.
+## `@sera/planner` / `packages/planner`
 
-## `@sera/planner`
+Local task queue, task lifecycle records, task event records, and task queue summaries.
 
-Owns the local task queue, task lifecycle records, task event records, and task queue summaries. It can record completed or blocked task outcomes into memory, but it does not execute tasks autonomously and does not mutate source code.
+Boundary rules:
 
+- creates operating rhythm
+- does not execute queued tasks automatically
+- may record completed/blocked outcomes into memory
+- does not mutate source code
 
-## `@sera/knowledge`
+## `@sera/knowledge` / `packages/knowledge`
 
-Owns local file ingestion, document records, chunk records, deterministic lexical search, search history, and knowledge summaries under `.sera-knowledge/`. It must not execute tasks, mutate source files, activate lessons, or call LLM providers.
+Local file ingestion, document records, chunk records, deterministic lexical search, search history, and knowledge summaries under `.sera-knowledge/`.
 
-## @sera/model-provider
+Boundary rules:
 
-Owns optional model-provider adapter records, mock provider invocation, redacted request/response evidence, and provider summaries. It must not execute tools or mutate runtime state outside `.sera-models`.
+- retrieval is read-only
+- does not execute tasks
+- does not mutate source files
+- does not activate lessons
+- does not call LLM providers
 
-## @sera/autonomy
+## `@sera/model-provider` / `packages/model-provider`
 
-Owns the bounded Autonomous Dev Loop. It may coordinate task queue records, local knowledge search, deterministic mock model output, and Developer Worker patching. It must not bypass validation gates, must not use external providers, and must not apply source mutations unless a queued task and validation gate are present.
+Optional model-provider adapter records, mock provider invocation, redacted request/response evidence, provider events, and provider summaries under `.sera-models/`.
 
+Boundary rules:
 
-## @sera/operator-console
+- deterministic mock provider is the only certified provider through Phase 12
+- unknown and external providers are blocked by default
+- model output cannot bypass tools, validation, review, or safety gates
+- does not mutate runtime state outside `.sera-models/`
 
-Owns local operator snapshots, health checks, and reports. It reads certified subsystem summaries and writes `.sera-console/` evidence artifacts. It must not apply patches, approve lessons, activate lessons, enable model providers, or bypass validation gates.
+## `@sera/autonomy` / `packages/autonomy`
+
+Bounded Autonomous Dev Loop orchestration.
+
+Boundary rules:
+
+- may coordinate task queue records, local knowledge search, deterministic mock model output, and Developer Worker patching
+- proposal mode must not mutate source
+- apply mode requires a queued task and validation gate
+- failed validation must roll back source changes
+- external providers remain blocked by default
+
+## `@sera/operator-console` / `packages/operator-console`
+
+Local operator snapshots, health checks, reports, history, and console summaries under `.sera-console/`.
+
+Boundary rules:
+
+- reads certified subsystem summaries
+- writes operator evidence artifacts
+- must not apply patches
+- must not approve, reject, activate, or deactivate lessons
+- must not enable model providers
+- must not bypass validation gates
+
+## `apps/cli`
+
+Local command-line interface.
+
+Boundary rules:
+
+- exposes approved package capabilities
+- should not contain hidden business logic
+- should not become a second kernel
+- should show honest blocked/no-op/failure states
+
+## Future boundary candidates
+
+- `@sera/ci` — local/CI certification helpers and generated-artifact guards
+- `@sera/source-map` — repo source maps for knowledge grounding
+- `@sera/evaluator` — eval suites for learning and skill improvement
+- `@sera/tool-registry` — tool manifests, permissions, and plugin gates
+- `apps/operator-tui` — richer local terminal interface
+- `apps/local-api` — local API only after CLI and safety boundaries remain stable

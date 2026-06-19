@@ -6,6 +6,10 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
+Current runtime certification: `operator-console-v1`.
+
+Certified runtime ladder completed so far:
+
 - `secure-base`
 - `developer-worker-v1`
 - `developer-worker-v2`
@@ -17,6 +21,9 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - `knowledge-retrieval-v1`
 - `model-provider-v1`
 - `autonomous-dev-loop-v1`
+- `operator-console-v1`
+
+Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
 ## What works now
 
@@ -50,19 +57,24 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 - local knowledge ingestion and lexical retrieval
 - deterministic mock model provider adapter
 - bounded autonomous dev loop proposal and validation-gated apply modes
+- local operator console status, health, history, summary, and report commands
 
 ## What is intentionally not here yet
 
 - no LLM dependency in the kernel
 - no Ollama/OpenAI provider requirement
+- no enabled external model provider
 - no uncontrolled autonomous self-modification
 - no autonomous mutation without validation gate
 - no semantic code refactoring
+- no multi-file transaction worker yet
 - no cloud dependency
 - no database requirement
 - no automatic lesson activation
 - no automatic task execution
 - no silent lesson-driven behavior changes
+- no browser or internet research worker yet
+- no GUI or multi-user permission system yet
 
 ## Setup
 
@@ -71,6 +83,12 @@ npm install
 npm run build
 npm test
 npm run certify
+```
+
+Expected current certification result after Phase 12 and Phase 13 docs alignment:
+
+```text
+S.E.R.A. certify: PASS level=operator-console-v1
 ```
 
 ## Starter secure-base run
@@ -141,18 +159,20 @@ Nothing gets called working unless it has:
 - `@sera/artifacts` — JSON, JSONL, and Markdown evidence writing
 - `@sera/tools` — controlled tools such as file and shell tools
 - `@sera/workers` — bounded worker modules, starting with Developer Worker
-- `@sera/kernel` — task/run orchestration
+- `@sera/kernel` — task/run orchestration and subsystem coordination
 - `@sera/certs` — certification checks
+- `@sera/self-improvement` — validation-gated self-improvement proposals and apply records
 - `@sera/memory` — local run memory, lesson review, activation records, and regression-rule evidence
 - `@sera/planner` — local task queue, task lifecycle events, and task memory integration
 - `@sera/knowledge` — local document and chunk ingestion plus lexical retrieval
 - `@sera/model-provider` — optional model adapter records, deterministic mock provider, and redacted model events
 - `@sera/autonomy` — bounded autonomous dev loop orchestration with validation-gated apply
+- `@sera/operator-console` — local status, health, report, history, and summary evidence
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1
 
-S.E.R.A. now records local run history, blocked/failed runs, and inactive lesson candidates in `.sera-memory/`. This is runtime data and is ignored by Git.
+S.E.R.A. records local run history, blocked/failed runs, and inactive lesson candidates in `.sera-memory/`. This is runtime data and is ignored by Git.
 
 Memory is evidence-only in this phase. Lesson candidates require human review and do not activate automatically.
 
@@ -169,10 +189,9 @@ Current certified level after Phase 5:
 task-memory-v1
 ```
 
-
 ## Phase 6: Lesson Review + Approval v1
 
-S.E.R.A. can now list, inspect, approve, and reject lesson candidates. Approved lessons remain inactive and require a later activation phase before they can affect behavior. Rejected lessons are preserved for auditability.
+S.E.R.A. can list, inspect, approve, and reject lesson candidates. Approved lessons remain inactive and require a later activation phase before they can affect behavior. Rejected lessons are preserved for auditability.
 
 ```bash
 npm run sera -- lessons candidates
@@ -190,10 +209,9 @@ Current certified level after Phase 6:
 lesson-review-v1
 ```
 
-
 ## Phase 7: Active Lessons + Regression Rules v1
 
-S.E.R.A. can now activate an approved lesson into an auditable regression rule. Activation is explicit, rationale-gated, and reversible. Active lessons still do not silently change runtime behavior; they create traceable guardrails that can be checked by the certification system.
+S.E.R.A. can activate an approved lesson into an auditable regression rule. Activation is explicit, rationale-gated, and reversible. Active lessons still do not silently change runtime behavior; they create traceable guardrails that can be checked by the certification system.
 
 ```bash
 npm run sera -- lessons active
@@ -212,7 +230,7 @@ active-lessons-v1
 
 ## Phase 8: Planner + Task Queue v1
 
-S.E.R.A. can now create and manage a local task queue under `.sera-tasks/`. Tasks can be created, listed, inspected, started, completed, blocked, cancelled, summarized, and audited through event records.
+S.E.R.A. can create and manage a local task queue under `.sera-tasks/`. Tasks can be created, listed, inspected, started, completed, blocked, cancelled, summarized, and audited through event records.
 
 Queued tasks do not execute automatically. This phase creates operating rhythm, not uncontrolled autonomy.
 
@@ -234,10 +252,9 @@ Current certified level after Phase 8:
 planner-task-queue-v1
 ```
 
-
 ## Phase 9 — Knowledge Ingestion + Local Retrieval v1
 
-S.E.R.A. can now index local project files into `.sera-knowledge/` and retrieve lexical evidence without using an LLM. Knowledge commands are read-only and do not execute tasks or mutate source files.
+S.E.R.A. can index local project files into `.sera-knowledge/` and retrieve lexical evidence without using an LLM. Knowledge commands are read-only and do not execute tasks or mutate source files.
 
 Example commands:
 
@@ -248,13 +265,34 @@ npm run sera -- knowledge search "planner task queue" 5
 npm run sera -- knowledge summary
 ```
 
-### Phase 10: Model Provider Adapter v1
+Current certified level after Phase 9:
+
+```text
+knowledge-retrieval-v1
+```
+
+## Phase 10: Model Provider Adapter v1
 
 S.E.R.A. includes a safe optional model-provider adapter layer. The certified provider is a deterministic local mock provider. External providers remain disabled until explicit configuration and safety gates exist.
 
+```bash
+npm run sera -- models providers
+npm run sera -- models invoke-mock "Summarize local evidence only."
+npm run sera -- models requests
+npm run sera -- models responses
+npm run sera -- models events
+npm run sera -- models summary
+```
+
+Current certified level after Phase 10:
+
+```text
+model-provider-v1
+```
+
 ## Phase 11: Autonomous Dev Loop v1
 
-S.E.R.A. now has a bounded autonomous development loop. It can connect a queued task, local knowledge search, the deterministic mock model provider, and the Developer Worker into one auditable loop.
+S.E.R.A. has a bounded autonomous development loop. It can connect a queued task, local knowledge search, the deterministic mock model provider, and the Developer Worker into one auditable loop.
 
 Autonomy remains safety-gated:
 
@@ -280,10 +318,9 @@ Current certified level after Phase 11:
 autonomous-dev-loop-v1
 ```
 
-
 ## Phase 12 — Operator Console v1
 
-S.E.R.A. now includes a local operator console that summarizes memory, tasks, knowledge, model-provider boundaries, and autonomous-dev-loop activity without enabling new mutation authority.
+S.E.R.A. includes a local operator console that summarizes memory, tasks, knowledge, model-provider boundaries, and autonomous-dev-loop activity without enabling new mutation authority.
 
 ```powershell
 npm run sera -- console status
@@ -293,4 +330,18 @@ npm run sera -- console history
 npm run sera -- console summary
 ```
 
-The certified level for this phase is `operator-console-v1`.
+Current certified level after Phase 12:
+
+```text
+operator-console-v1
+```
+
+## Phase 13 — Documentation + Repo Truth Alignment v1
+
+Phase 13 aligns repo truth after the Phase 12 foundation. It updates the README, certification ladder, architecture docs, validation record, and next-evolution roadmap so the repo reflects what is actually built, what remains intentionally blocked, and what should come next.
+
+Phase 13 does not add runtime authority. Validation should still pass at:
+
+```text
+operator-console-v1
+```
