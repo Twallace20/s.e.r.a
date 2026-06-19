@@ -10,7 +10,9 @@ Align repo docs with the actual `operator-console-v1` system state. This phase d
 
 ### Phase 14 — CI Certification Gate v1
 
-Add GitHub Actions so every push/PR runs install, build, test, certify, and artifact hygiene checks.
+Add GitHub Actions so phase branches, `main`, and pull requests into `main` run install, source hygiene, runtime artifact hygiene, build, tests, and certification before merge.
+
+This is an operational governance phase, not a new runtime authority phase. The runtime certification level remains `operator-console-v1`.
 
 ### Phase 15 — Knowledge Seeding + Source Map v1
 

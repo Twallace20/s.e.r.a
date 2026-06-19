@@ -25,6 +25,8 @@ Certified runtime ladder completed so far:
 
 Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
+Phase 14 is an operational CI certification-gate phase. It adds local hygiene commands and a GitHub Actions workflow, but it does not add runtime authority or change the certified runtime level.
+
 ## What works now
 
 - TypeScript + Node local runtime
@@ -58,6 +60,7 @@ Phase 13 is a documentation and repo-truth alignment phase. It does not add runt
 - deterministic mock model provider adapter
 - bounded autonomous dev loop proposal and validation-gated apply modes
 - local operator console status, health, history, summary, and report commands
+- local and GitHub CI certification gate for hygiene, build, tests, and certification
 
 ## What is intentionally not here yet
 
@@ -83,9 +86,10 @@ npm install
 npm run build
 npm test
 npm run certify
+npm run verify
 ```
 
-Expected current certification result after Phase 12 and Phase 13 docs alignment:
+Expected current certification result after Phase 12, Phase 13 docs alignment, and Phase 14 CI gate setup:
 
 ```text
 S.E.R.A. certify: PASS level=operator-console-v1
@@ -341,6 +345,25 @@ operator-console-v1
 Phase 13 aligns repo truth after the Phase 12 foundation. It updates the README, certification ladder, architecture docs, validation record, and next-evolution roadmap so the repo reflects what is actually built, what remains intentionally blocked, and what should come next.
 
 Phase 13 does not add runtime authority. Validation should still pass at:
+
+```text
+operator-console-v1
+```
+
+## Phase 14 — CI Certification Gate v1
+
+Phase 14 adds local hygiene scripts and a GitHub Actions workflow so phase branches, `main`, and pull requests into `main` run the certification gate before merge.
+
+Local gate commands:
+
+```bash
+npm run hygiene
+npm run verify
+```
+
+The CI gate runs source hygiene, runtime artifact hygiene, build, tests, certification, and post-certification hygiene.
+
+Phase 14 does not add runtime authority. Validation should still pass at:
 
 ```text
 operator-console-v1

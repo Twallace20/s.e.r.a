@@ -7,6 +7,8 @@ S.E.R.A. only gets credit for capabilities that build, test, certify, and leave 
 ```bash
 npm install --ignore-scripts --no-audit --no-fund
 npm run build
+npm run hygiene
+npm run verify
 npm test
 npm run certify
 ```
@@ -61,3 +63,28 @@ The repository should not commit generated build/runtime artifacts, including:
 - `.sera-console/`
 - `*.tsbuildinfo`
 - generated `.js`, `.js.map`, or `.d.ts` files inside TypeScript `src/` folders unless intentionally authored and documented
+
+## Phase 14 CI Certification Gate
+
+Phase 14 moves the same discipline into GitHub Actions. It is an operational governance milestone, not a new runtime cert level.
+
+The GitHub workflow must run on `main`, phase branches, and pull requests into `main`.
+
+Required CI steps:
+
+```bash
+npm ci --ignore-scripts --no-audit --no-fund
+npm run hygiene:source
+npm run hygiene:runtime
+npm run build
+npm test
+npm run certify
+npm run hygiene:source
+npm run hygiene:runtime
+```
+
+Expected runtime result remains:
+
+```text
+S.E.R.A. certify: PASS level=operator-console-v1
+```

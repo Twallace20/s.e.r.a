@@ -95,9 +95,20 @@ Phase 13 proves:
 - build validation reflects the current 12-phase foundation
 - next-phase planning is captured before adding more runtime power
 
+## Phase 14 — `phase-14-ci-certification-gate-v1`
+
+This is an operational governance milestone, not a new runtime capability level. It should be tagged after local validation and GitHub certification-gate setup are complete.
+
+Phase 14 proves:
+
+- GitHub Actions can run the certification gate on phase branches, `main`, and pull requests into `main`
+- source hygiene blocks tracked generated TypeScript outputs
+- runtime hygiene blocks tracked local runtime artifacts
+- build, tests, and certification remain the required merge gate
+- the runtime certified level remains `operator-console-v1`
+
 ## Next runtime certification candidates
 
-- `ci-certification-gate-v1`: GitHub Actions runs install, build, test, certify, and generated-artifact guards on push/PR.
 - `knowledge-source-map-v1`: local knowledge seeding and source mapping over repo docs/source files.
 - `autonomy-happy-path-demo-v1`: live queued-task demo that proves the autonomous dev loop can complete real repo work behind validation.
 - `real-model-provider-v1`: optional external provider with configuration, redaction, logging, and blocked-by-default safety gates.
