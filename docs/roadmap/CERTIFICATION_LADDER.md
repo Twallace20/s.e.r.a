@@ -187,3 +187,17 @@ Phase 19 proves:
 ## Phase 20 — `phase-20-multi-file-dev-worker-v3`
 
 Phase 20 certifies a bounded multi-file developer-worker surface. It can suggest coordinated file patches without mutation and can apply existing-file patch batches only with backups, validation, and whole-batch rollback. The runtime certification level remains `operator-console-v1` because no new autonomous execution authority is granted.
+
+## Phase 21 — `phase-21-research-knowledge-worker-v1`
+
+Phase 21 is an evidence-usefulness milestone, not a new runtime authority level. It proves S.E.R.A. can turn local indexed knowledge into citation-bound answer, comparison, and summary packets while refusing to fabricate answers when evidence is missing.
+
+Phase 21 proves:
+
+- local research answers include citations
+- missing evidence returns `insufficient_evidence` instead of a guessed answer
+- comparisons require multiple local source documents
+- summaries are extractive and limitation-aware
+- research history and summary records are written under ignored `.sera-research/`
+- no web search, paid API, hosted model, cloud service, or source mutation is required
+- the runtime certified level remains `operator-console-v1`

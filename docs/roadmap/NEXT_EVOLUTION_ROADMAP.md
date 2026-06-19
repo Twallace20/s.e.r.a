@@ -181,3 +181,7 @@ Add local recursive learning cycles that synthesize memory, failure, lesson, rev
 ## Phase 20 roadmap note
 
 Add Multi-File Dev Worker v3 so later autonomous and self-improvement phases can operate on coordinated file sets while preserving local/free certification, protected-path rules, backup evidence, validation gates, and rollback behavior.
+
+## Phase 21 roadmap note
+
+Add a local Research + Knowledge Worker so S.E.R.A. can answer, compare, and summarize from indexed local knowledge with citations, confidence labels, explicit limitations, and insufficient-evidence refusal. This remains local/free-first and does not add internet research, paid APIs, hosted model dependency, autonomous execution, or source mutation authority.

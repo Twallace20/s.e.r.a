@@ -164,3 +164,10 @@ Phase 16 extends the map with the live autonomous happy-path proof so S.E.R.A. c
 - `docs/phases/PHASE_20_MULTI_FILE_DEV_WORKER_V3.md` — Phase 20 scope, guardrails, and validation contract.
 - `scripts/run-multi-file-dev-worker.mjs` — repeatable local demo for multi-file patch apply and rollback proof.
 - `tests/integration/multi-file-dev-worker.test.ts` — integration proof for suggestion, direct apply, and validation rollback.
+
+## Phase 21 source map additions
+
+- `packages/research/src/research-knowledge-worker.ts` — local research worker implementation for citation-bound answers, comparisons, summaries, and missing-evidence refusal.
+- `docs/phases/PHASE_21_RESEARCH_KNOWLEDGE_WORKER_V1.md` — Phase 21 scope, safety boundaries, and validation contract.
+- `scripts/run-research-knowledge-worker.mjs` — repeatable local demo proving citation-bound research behavior without web, paid APIs, or model dependency.
+- `tests/integration/research-knowledge-worker.test.ts` — integration proof for local citations, insufficient-evidence refusal, comparisons, summaries, and history records.

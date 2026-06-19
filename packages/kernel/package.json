@@ -20,6 +20,7 @@
     "@sera/knowledge": "0.1.0",
     "@sera/model-provider": "0.1.0",
     "@sera/autonomy": "0.1.0",
-    "@sera/operator-console": "0.1.0"
+    "@sera/operator-console": "0.1.0",
+    "@sera/research": "0.1.0"
   }
 }

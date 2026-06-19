@@ -133,6 +133,19 @@ Boundary rules:
 - does not activate lessons
 - does not call LLM providers
 
+## `@sera/research` / `packages/research`
+
+Local research answer, comparison, and summary packets built from indexed `.sera-knowledge/` evidence.
+
+Boundary rules:
+
+- reads local knowledge records
+- writes research evidence under `.sera-research/`
+- does not call LLM providers
+- does not browse the web
+- does not mutate source files
+- must report insufficient evidence instead of guessing
+
 ## `@sera/model-provider` / `packages/model-provider`
 
 Optional model-provider adapter records, mock provider invocation, redacted request/response evidence, provider events, and provider summaries under `.sera-models/`.

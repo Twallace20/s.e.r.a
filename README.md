@@ -76,6 +76,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - review-only lesson workbench packets for human governance of candidates, approvals, activations, and regression rules
 - optional local model provider readiness through `ollama-local`, while certification continues to pass without Ollama, paid APIs, or downloaded models
 - local recursive learning cycles that synthesize evidence into human-governed next actions
+- local research/knowledge worker answers with citations, comparison packets, summaries, confidence labels, and missing-evidence refusal
 
 ## What is intentionally not here yet
 
@@ -493,3 +494,19 @@ npm run phase20:demo
 npm run phase20:verify
 npm run sera -- dev multi-patch suggest multi-patch.json
 ```
+
+## Phase 21 — Research + Knowledge Worker v1
+
+S.E.R.A. can answer, compare, and summarize from indexed local knowledge evidence. The Phase 21 worker is citation-bound and reports insufficient evidence instead of guessing. It does not use web search, paid APIs, hosted models, or external knowledge.
+
+```bash
+npm run phase21:demo
+npm run phase21:verify
+npm run sera -- research answer "operator console local evidence" 5
+npm run sera -- research compare "research knowledge worker" 8
+npm run sera -- research summarize "local research evidence" 6
+npm run sera -- research history answers
+npm run sera -- research summary
+```
+
+Phase 21 remains a local/free evidence milestone. The runtime certification level remains `operator-console-v1`.

@@ -39,7 +39,11 @@ const requiredMappedPaths = [
   "packages/workers/src/multi-file-developer-worker.ts",
   "docs/phases/PHASE_20_MULTI_FILE_DEV_WORKER_V3.md",
   "scripts/run-multi-file-dev-worker.mjs",
-  "tests/integration/multi-file-dev-worker.test.ts"
+  "tests/integration/multi-file-dev-worker.test.ts",
+  "packages/research/src/research-knowledge-worker.ts",
+  "docs/phases/PHASE_21_RESEARCH_KNOWLEDGE_WORKER_V1.md",
+  "scripts/run-research-knowledge-worker.mjs",
+  "tests/integration/research-knowledge-worker.test.ts"
 ];
 
 function fail(message) {
