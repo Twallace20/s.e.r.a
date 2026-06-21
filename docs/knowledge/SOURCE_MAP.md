@@ -247,3 +247,12 @@ Phase 28 adds a local curriculum builder so S.E.R.A. can convert capability gaps
 - `scripts/lib/curriculum-builder-v1.mjs` — Ranks capability gaps, creates curriculum modules, validates owner-approval boundaries, and writes evidence reports.
 - `scripts/run-curriculum-builder-v1.mjs` — Runs the Phase 28 demo and writes local curriculum evidence reports.
 - `tests/integration/curriculum-builder-v1.test.ts` — Verifies runtime initialization, gap ranking, curriculum creation, safety boundaries, and evidence output.
+
+## Phase 29 — Domain Learning Packs v1
+
+Phase 29 adds local domain learning packs so S.E.R.A. can package curriculum modules into safe, reviewable domain plans before learning activation is trusted.
+
+- `docs/phases/PHASE_29_DOMAIN_LEARNING_PACKS_V1.md` — Defines Phase 29 purpose, domain pack model, safety boundary, and completion criteria.
+- `scripts/lib/domain-learning-packs-v1.mjs` — Creates domain learning pack registries, validates pack objectives, checks boundaries, and writes evidence reports.
+- `scripts/run-domain-learning-packs-v1.mjs` — Runs the Phase 29 demo and writes local domain pack evidence reports.
+- `tests/integration/domain-learning-packs-v1.test.ts` — Verifies runtime initialization, registry creation, pack validation, safety boundaries, and evidence output.

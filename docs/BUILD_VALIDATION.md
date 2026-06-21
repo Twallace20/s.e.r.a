@@ -505,3 +505,25 @@ Expected result:
     S.E.R.A. certify: PASS level=operator-console-v1
 
 Phase 28 builds local curriculum plans only. It does not execute arbitrary code, mutate source, call paid APIs, use hosted model providers, require cloud services, require secrets, or activate learning changes without owner approval.
+
+## Phase 29 — Domain Learning Packs v1
+
+Required validation:
+
+    npm run phase29:demo
+    npm run phase29:verify
+    npm run hygiene
+    npm run build
+    npm test
+    npm run certify
+    npm run verify
+
+Expected result:
+
+    S.E.R.A. phase29 domain learning packs v1: PASS
+    S.E.R.A. knowledge source map: PASS mapped=79
+    Test Files 29 passed
+    Tests 126 passed
+    S.E.R.A. certify: PASS level=operator-console-v1
+
+Phase 29 builds local domain learning pack registries only. It does not execute arbitrary code, mutate source, call paid APIs, use hosted model providers, require cloud services, require secrets, or activate learning packs without owner approval.

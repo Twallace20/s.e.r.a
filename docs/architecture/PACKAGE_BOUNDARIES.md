@@ -320,3 +320,21 @@ Boundary rules:
 - does not call paid APIs or hosted model providers
 - does not require cloud services
 - requires owner approval before curriculum or learning activation changes
+
+## Phase 29 domain learning packs boundary
+
+The Phase 29 domain learning pack registry is implemented by `scripts/lib/domain-learning-packs-v1.mjs` and reports to `.sera-domain-packs/`.
+
+Boundary rules:
+
+- creates local domain pack registries only
+- maps curriculum modules to domain-specific learning packs
+- links packs to regression baselines and evaluation hooks
+- writes local evidence artifacts only
+- does not execute arbitrary code or tools
+- does not mutate source
+- does not commit, push, merge, or delete branches
+- does not require repository secrets
+- does not call paid APIs or hosted model providers
+- does not require cloud services
+- requires owner approval before pack changes or activation
