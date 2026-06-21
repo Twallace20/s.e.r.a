@@ -293,21 +293,25 @@ Phase 33 adds a local branch proposal builder so S.E.R.A. can convert generated 
 - `docs/phases/PHASE_35_REMOTE_PHASE_RUNNER_BLUEPRINT_V1.md` — Defines Phase 35 purpose, branch proposal boundary, validation, and completion criteria.
 - `docs/phases/PHASE_36_OWNER_APPROVAL_QUEUE_V1.md` — Defines Phase 36 purpose, branch proposal boundary, validation, and completion criteria.
 - `docs/phases/PHASE_37_SELF_HOSTED_RUNNER_ADAPTER_V1.md` — Defines Phase 37 purpose, branch proposal boundary, validation, and completion criteria.
+- `docs/phases/PHASE_38_COMMAND_ALLOWLIST_GATE_V1.md` — Defines Phase 38 purpose, branch proposal boundary, validation, and completion criteria.
 - `scripts/lib/branch-proposal-builder-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/branch-readiness-inspector-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/remote-phase-runner-blueprint-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/owner-approval-queue-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/self-hosted-runner-adapter-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
+- `scripts/lib/command-allowlist-gate-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/run-branch-proposal-builder-v1.mjs` — Runs the Phase 33 demo and writes branch proposal reports.
 - `scripts/run-branch-readiness-inspector-v1.mjs` — Runs the Phase 34 demo and writes branch proposal reports.
 - `scripts/run-remote-phase-runner-blueprint-v1.mjs` — Runs the Phase 35 demo and writes branch proposal reports.
 - `scripts/run-owner-approval-queue-v1.mjs` — Runs the Phase 36 demo and writes branch proposal reports.
 - `scripts/run-self-hosted-runner-adapter-v1.mjs` — Runs the Phase 37 demo and writes branch proposal reports.
+- `scripts/run-command-allowlist-gate-v1.mjs` — Runs the Phase 38 demo and writes branch proposal reports.
 - `tests/integration/branch-proposal-builder-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/branch-readiness-inspector-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/remote-phase-runner-blueprint-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/owner-approval-queue-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/self-hosted-runner-adapter-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
+- `tests/integration/command-allowlist-gate-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 
 ## PHASE 34 — BRANCH READINESS INSPECTOR V1
 
@@ -343,3 +347,10 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - scripts/lib/self-hosted-runner-adapter-v1.mjs
 - scripts/run-self-hosted-runner-adapter-v1.mjs
 - tests/integration/self-hosted-runner-adapter-v1.test.ts
+
+## PHASE 38 — COMMAND ALLOWLIST GATE V1
+
+- docs/phases/PHASE_38_COMMAND_ALLOWLIST_GATE_V1.md
+- scripts/lib/command-allowlist-gate-v1.mjs
+- scripts/run-command-allowlist-gate-v1.mjs
+- tests/integration/command-allowlist-gate-v1.test.ts

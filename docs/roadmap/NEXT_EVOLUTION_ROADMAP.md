@@ -352,3 +352,7 @@ Phase 36 follows the remote phase runner blueprint by adding the approval queue 
 ## PHASE 37 — SELF-HOSTED RUNNER ADAPTER V1
 
 Phase 37 follows the owner approval queue by defining the disabled self-hosted runner adapter contract. This is a bridge toward future remote-safe execution, emergency stop, session locks, and owner-controlled runner activation.
+
+## PHASE 38 — COMMAND ALLOWLIST GATE V1
+
+Phase 38 follows the disabled self-hosted runner adapter by defining the command allowlist gate that future runner plans must satisfy before any command can ever be considered for execution.
