@@ -185,3 +185,7 @@ Add Multi-File Dev Worker v3 so later autonomous and self-improvement phases can
 ## Phase 21 roadmap note
 
 Add a local Research + Knowledge Worker so S.E.R.A. can answer, compare, and summarize from indexed local knowledge with citations, confidence labels, explicit limitations, and insufficient-evidence refusal. This remains local/free-first and does not add internet research, paid APIs, hosted model dependency, autonomous execution, or source mutation authority.
+
+## Phase 23 Implementation Note — SQLite Persistence v1
+
+Phase 23 adds a local SQLite persistence foundation at `.sera-sqlite/sera.sqlite`. It stores structured events, key/value records, evidence records, and phase snapshots while preserving existing JSONL runtime evidence. It does not add mutation authority or require paid/cloud services.

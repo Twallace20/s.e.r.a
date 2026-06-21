@@ -45,6 +45,10 @@ const requiredMappedPaths = [
   "scripts/run-research-knowledge-worker.mjs",
   "tests/integration/research-knowledge-worker.test.ts",
   "tests/integration/operator-console-v2.test.ts",
+  "tests/integration/sqlite-persistence-v1.test.ts",
+  "scripts/run-sqlite-persistence-v1.mjs",
+  "scripts/lib/sqlite-persistence-v1.mjs",
+  "docs/phases/PHASE_23_SQLITE_PERSISTENCE_V1.md",
   "scripts/run-operator-console-v2.mjs",
   "scripts/lib/operator-console-v2.mjs",
   "docs/phases/PHASE_22_OPERATOR_CONSOLE_V2_TERMINAL_UI.md"

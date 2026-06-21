@@ -201,3 +201,7 @@ Phase 21 proves:
 - research history and summary records are written under ignored `.sera-research/`
 - no web search, paid API, hosted model, cloud service, or source mutation is required
 - the runtime certified level remains `operator-console-v1`
+
+## Phase 23 — `phase-23-sqlite-persistence-v1`
+
+Phase 23 is a local persistence infrastructure milestone. It adds a SQLite-backed evidence store for structured events, key/value records, evidence records, and phase snapshots. The runtime certification level remains `operator-console-v1` because Phase 23 does not add new mutation authority.
