@@ -378,3 +378,26 @@ Boundary rules:
 - does not call paid APIs or hosted model providers
 - does not require cloud services
 - requires owner approval before execution or closeout
+
+## Phase 32 phase packet generator boundary
+
+The Phase 32 packet generator is implemented by `scripts/lib/phase-packet-generator-v1.mjs` and reports to `.sera-phase-packet-generator/`.
+
+Boundary rules:
+
+- creates local phase packet blueprints only
+- declares files, validation commands, evidence requirements, rollback notes, and owner approval gates
+- writes local evidence artifacts only
+- does not execute generated packets
+- does not execute arbitrary code or tools
+- does not create branches
+- does not apply patches
+- does not mutate source
+- does not commit, push, merge, tag, or delete branches
+- does not approve its own packet
+- does not activate packets
+- does not refresh network sources
+- does not require repository secrets
+- does not call paid APIs or hosted model providers
+- does not require cloud services
+- requires owner approval before packet activation or merge

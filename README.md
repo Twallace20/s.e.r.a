@@ -629,3 +629,12 @@ Run:
 
     npm run phase31:demo
     npm run phase31:verify
+
+## Phase 32 — Phase Packet Generator v1
+
+Phase 32 adds a local phase packet generator. It turns trusted objectives, task decompositions, validation gates, evidence requirements, rollback notes, and owner approval checkpoints into standardized phase packet blueprints while preserving a packet-generation-only boundary.
+
+Run:
+
+    npm run phase32:demo
+    npm run phase32:verify

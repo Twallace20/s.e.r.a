@@ -59,7 +59,9 @@
     "phase30:demo": "npm run build --silent && node scripts/run-knowledge-refresh-source-trust-v1.mjs",
     "phase30:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase30:demo",
     "phase31:demo": "npm run build --silent && node scripts/run-planner-task-decomposer-v2.mjs",
-    "phase31:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase31:demo"
+    "phase31:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase31:demo",
+    "phase32:demo": "npm run build --silent && node scripts/run-phase-packet-generator-v1.mjs",
+    "phase32:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase32:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

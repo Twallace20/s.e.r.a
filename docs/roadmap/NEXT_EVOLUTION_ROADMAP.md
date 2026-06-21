@@ -309,3 +309,18 @@ Acceleration sequence now reads:
 - Phase 30 — Knowledge Refresh + Source Trust v1
 - Phase 31 — Planner / Task Decomposer v2
 - Phase 32 — Phase Packet Generator v1
+
+## Phase 32 implementation note — Phase Packet Generator v1
+
+Phase 32 converts trusted objectives and decomposed task plans into standardized phase packet blueprints with declared files, validation commands, evidence requirements, rollback notes, and owner approval gates. It prepares S.E.R.A. to generate future phase packets without granting execution or mutation authority.
+
+Acceleration sequence now reads:
+
+- Phase 26 — Evaluation Harness v1
+- Phase 27 — Regression Baseline Registry v1
+- Phase 28 — Curriculum Builder v1
+- Phase 29 — Domain Learning Packs v1
+- Phase 30 — Knowledge Refresh + Source Trust v1
+- Phase 31 — Planner / Task Decomposer v2
+- Phase 32 — Phase Packet Generator v1
+- Phase 33 — Branch Proposal Builder v1

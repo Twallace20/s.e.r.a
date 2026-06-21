@@ -274,3 +274,12 @@ Phase 31 adds a local planner v2 and task decomposer so S.E.R.A. can convert tru
 - `scripts/lib/planner-task-decomposer-v2.mjs` — Creates phase plans, validates dependencies and gates, decomposes tasks, and writes evidence reports.
 - `scripts/run-planner-task-decomposer-v2.mjs` — Runs the Phase 31 demo and writes local planner evidence reports.
 - `tests/integration/planner-task-decomposer-v2.test.ts` — Verifies runtime initialization, plan creation, dependency validation, decomposition, and safety boundaries.
+
+## Phase 32 — Phase Packet Generator v1
+
+Phase 32 adds a local phase packet generator so S.E.R.A. can convert trusted objectives, task decompositions, validation gates, evidence requirements, rollback notes, and owner approval checkpoints into standardized phase packet blueprints before implementation or execution.
+
+- `docs/phases/PHASE_32_PHASE_PACKET_GENERATOR_V1.md` — Defines Phase 32 purpose, packet generator boundary, validation, and completion criteria.
+- `scripts/lib/phase-packet-generator-v1.mjs` — Creates, validates, summarizes, and writes local phase packet generator evidence.
+- `scripts/run-phase-packet-generator-v1.mjs` — Runs the Phase 32 demo and writes packet generator reports.
+- `tests/integration/phase-packet-generator-v1.test.ts` — Verifies packet generation, validation, readiness summary, reporting, and safety boundaries.
