@@ -257,3 +257,17 @@ Boundary rules:
 - does not require repository secrets
 - does not call paid APIs or hosted model providers
 - remains optional to the local/free-core runtime
+
+## Phase 25C phase artifact packet boundary
+
+The Phase 25C packet standard is implemented by `scripts/lib/phase-artifact-packet-v1.mjs` and reports to `.sera-phase-packets/`.
+
+Boundary rules:
+
+- creates and validates packet manifests only
+- writes local evidence artifacts only
+- does not execute arbitrary tools
+- does not commit, push, merge, delete branches, or mutate source during inspection
+- does not require repository secrets
+- does not call paid APIs or hosted model providers
+- requires owner approval before apply and merge

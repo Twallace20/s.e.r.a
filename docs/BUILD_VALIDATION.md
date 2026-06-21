@@ -417,3 +417,25 @@ Expected result:
     S.E.R.A. certify: PASS level=operator-console-v1
 
 Phase 25B adds optional remote validation proof. It does not mutate source, commit, push, merge, deploy, use secrets, or become required for local/free-core certification.
+
+## Phase 25C — Phase Artifact Packet v1
+
+Required validation:
+
+    npm run phase25c:demo
+    npm run phase25c:verify
+    npm run hygiene
+    npm run build
+    npm test
+    npm run certify
+    npm run verify
+
+Expected result:
+
+    S.E.R.A. phase25C phase artifact packet v1: PASS
+    S.E.R.A. knowledge source map: PASS mapped=63
+    Test Files 25 passed
+    Tests 106 passed
+    S.E.R.A. certify: PASS level=operator-console-v1
+
+Phase 25C standardizes future phase handoffs and artifact packets. It does not execute arbitrary tools, mutate source during inspection, commit, push, merge, delete branches, require secrets, or require cloud services.

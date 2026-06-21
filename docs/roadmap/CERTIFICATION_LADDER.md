@@ -217,3 +217,7 @@ Phase 25 is a capability-awareness milestone, not a new autonomy level. It prove
 ## Phase 25B — phase-25b-ci-workflow-gate-v1
 
 Phase 25B is a validation-infrastructure milestone, not a new autonomy level. It proves branches can be checked through a read-only remote CI gate while keeping local certification, owner approval, and no-source-mutation boundaries intact.
+
+## Phase 25C — phase-25c-phase-artifact-packet-v1
+
+Phase 25C is a handoff-standardization milestone, not a new autonomy level. It proves phase packets can declare files, commands, boundaries, rollback plans, and approval gates before future remote or overnight execution.

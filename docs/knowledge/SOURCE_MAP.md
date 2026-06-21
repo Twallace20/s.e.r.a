@@ -211,3 +211,12 @@ Phase 25B adds a read-only GitHub Actions verification gate so S.E.R.A. branches
 - `scripts/lib/ci-workflow-gate-v1.mjs` — Inspects the workflow gate and writes local evidence reports.
 - `scripts/run-ci-workflow-gate-v1.mjs` — Runs the Phase 25B demo and writes local CI gate reports.
 - `tests/integration/ci-workflow-gate-v1.test.ts` — Verifies workflow safety checks, mutation blocking, warning detection, and artifact output.
+
+## Phase 25C — Phase Artifact Packet v1
+
+Phase 25C defines the standard artifact packet format for future S.E.R.A. phases, overlays, remote proof, branch handoffs, and overnight work packets.
+
+- `docs/phases/PHASE_25C_PHASE_ARTIFACT_PACKET_V1.md` — Defines Phase 25C purpose, boundary, packet structure, validation, and completion criteria.
+- `scripts/lib/phase-artifact-packet-v1.mjs` — Creates and validates local phase packet manifests and writes evidence reports.
+- `scripts/run-phase-artifact-packet-v1.mjs` — Runs the Phase 25C demo and writes local packet evidence reports.
+- `tests/integration/phase-artifact-packet-v1.test.ts` — Verifies packet initialization, manifest creation, safety checks, and evidence output.

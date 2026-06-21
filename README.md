@@ -554,3 +554,14 @@ Phase 25B commands:
     npm run phase25b:verify
 
 Phase 25B supports remote proof while preserving local/free-core certification and owner-controlled merge decisions.
+
+## Phase 25C — Phase Artifact Packet v1
+
+Phase 25C standardizes future phase packets, overlay handoffs, branch preparation, and remote validation artifacts. It creates a local manifest format that declares expected files, validation commands, safety boundaries, rollback plan, and owner approval requirements.
+
+Phase 25C commands:
+
+    npm run phase25c:demo
+    npm run phase25c:verify
+
+Phase 25C supports faster remote and overnight work preparation without granting autonomous apply, commit, merge, branch deletion, secret, billing, or cloud dependency authority.
