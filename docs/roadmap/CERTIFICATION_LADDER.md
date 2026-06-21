@@ -261,3 +261,7 @@ Certification means S.E.R.A. can inspect a branch proposal for readiness, risk, 
 ## PHASE 35 — REMOTE PHASE RUNNER BLUEPRINT V1
 
 Certification means S.E.R.A. can produce and validate a remote phase runner blueprint for future remote-safe work while keeping remote execution disabled and owner approval mandatory.
+
+## PHASE 36 — OWNER APPROVAL QUEUE V1
+
+Certification means S.E.R.A. can produce and validate a local owner approval queue for future remote-safe work while keeping execution disabled, real owner decisions unrecorded, and owner approval mandatory.

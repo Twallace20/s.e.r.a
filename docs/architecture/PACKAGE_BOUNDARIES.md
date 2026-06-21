@@ -435,3 +435,7 @@ The branch readiness inspector is a local proposal-inspection runtime. It is all
 ## PHASE 35 — REMOTE PHASE RUNNER BLUEPRINT V1
 
 The remote phase runner blueprint is a local planning/runtime artifact. It may write blueprint reports under .sera-remote-phase-runner-blueprints/. It is not allowed to execute remote commands, use cloud runners, use secrets, mutate source, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, or self-approve. Remote execution remains explicitly disabled in Phase 35.
+
+## PHASE 36 — OWNER APPROVAL QUEUE V1
+
+The owner approval queue is a local queue/runtime artifact. It may write queue reports under .sera-owner-approval-queue/. It is not allowed to record real owner decisions, execute remote commands, use cloud runners, use secrets, mutate source, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, or self-approve. Approval queue execution remains explicitly disabled in Phase 36.
