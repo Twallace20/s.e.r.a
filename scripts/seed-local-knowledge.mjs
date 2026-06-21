@@ -29,7 +29,9 @@ const seedSources = [
   ["scripts/run-operator-console-v2.mjs", "Phase 22 Operator Console v2 Demo Script"],
   ["docs/phases/PHASE_22_OPERATOR_CONSOLE_V2_TERMINAL_UI.md", "Phase 22 Documentation"],
   ["scripts/run-sqlite-persistence-v1.mjs", "Phase 23 SQLite Persistence Demo Script"],
-  ["docs/phases/PHASE_23_SQLITE_PERSISTENCE_V1.md", "Phase 23 Documentation"]
+  ["docs/phases/PHASE_23_SQLITE_PERSISTENCE_V1.md", "Phase 23 Documentation"],
+  ["scripts/run-tool-plugin-registry-v1.mjs", "Phase 24 Tool Plugin Registry Demo Script"],
+  ["docs/phases/PHASE_24_TOOL_PLUGIN_REGISTRY_V1.md", "Phase 24 Documentation"]
 ];
 
 const seedSearches = [

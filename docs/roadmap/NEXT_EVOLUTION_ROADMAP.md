@@ -189,3 +189,7 @@ Add a local Research + Knowledge Worker so S.E.R.A. can answer, compare, and sum
 ## Phase 23 Implementation Note — SQLite Persistence v1
 
 Phase 23 adds a local SQLite persistence foundation at `.sera-sqlite/sera.sqlite`. It stores structured events, key/value records, evidence records, and phase snapshots while preserving existing JSONL runtime evidence. It does not add mutation authority or require paid/cloud services.
+
+## Phase 24 Implementation Note — Tool / Plugin Registry v1
+
+Phase 24 adds a local tool/plugin registry at `.sera-tools/`. It records tools, workers, scripts, plugins, and adapters with manifest metadata, permissions, free-core eligibility, risk level, and approval requirements. It does not execute plugins or add mutation authority.

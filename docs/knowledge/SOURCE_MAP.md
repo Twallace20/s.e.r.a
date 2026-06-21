@@ -185,3 +185,10 @@ Phase 16 extends the map with the live autonomous happy-path proof so S.E.R.A. c
 - `scripts/lib/sqlite-persistence-v1.mjs` — Provides the local SQLite persistence store, schema, summaries, and path containment.
 - `scripts/run-sqlite-persistence-v1.mjs` — Runs the Phase 23 SQLite demo and writes local persistence artifacts.
 - `tests/integration/sqlite-persistence-v1.test.ts` — Proves database initialization, record round trips, artifact output, and path containment.
+
+## Phase 24 — Tool / Plugin Registry v1
+
+- `docs/phases/PHASE_24_TOOL_PLUGIN_REGISTRY_V1.md` — Defines the Phase 24 registry purpose, boundary, and validation requirements.
+- `scripts/lib/tool-plugin-registry-v1.mjs` — Provides local tool/plugin manifest storage, risk classification, permission classification, and summary artifacts.
+- `scripts/run-tool-plugin-registry-v1.mjs` — Runs the Phase 24 registry demo and writes local registry artifacts.
+- `tests/integration/tool-plugin-registry-v1.test.ts` — Proves registry initialization, local/free-core classification, approval guarding, external adapter exclusion, artifact output, and path containment.
