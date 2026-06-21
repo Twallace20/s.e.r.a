@@ -283,3 +283,12 @@ Phase 32 adds a local phase packet generator so S.E.R.A. can convert trusted obj
 - `scripts/lib/phase-packet-generator-v1.mjs` — Creates, validates, summarizes, and writes local phase packet generator evidence.
 - `scripts/run-phase-packet-generator-v1.mjs` — Runs the Phase 32 demo and writes packet generator reports.
 - `tests/integration/phase-packet-generator-v1.test.ts` — Verifies packet generation, validation, readiness summary, reporting, and safety boundaries.
+
+## Phase 33 — Branch Proposal Builder v1
+
+Phase 33 adds a local branch proposal builder so S.E.R.A. can convert generated phase packet context into a reviewable branch proposal with declared files, validation commands, evidence requirements, risk checks, and owner approval gates before any branch is created or executed.
+
+- `docs/phases/PHASE_33_BRANCH_PROPOSAL_BUILDER_V1.md` — Defines Phase 33 purpose, branch proposal boundary, validation, and completion criteria.
+- `scripts/lib/branch-proposal-builder-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
+- `scripts/run-branch-proposal-builder-v1.mjs` — Runs the Phase 33 demo and writes branch proposal reports.
+- `tests/integration/branch-proposal-builder-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.

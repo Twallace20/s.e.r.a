@@ -45,3 +45,4 @@ packages/*/src/*.d.ts
 .sera-source-trust/
 .sera-planner-v2/
 .sera-phase-packet-generator/
+.sera-branch-proposals/

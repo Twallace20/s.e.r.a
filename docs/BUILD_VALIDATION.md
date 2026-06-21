@@ -593,3 +593,25 @@ Expected result:
     S.E.R.A. certify: PASS level=operator-console-v1
 
 Phase 32 creates local phase packet blueprints only. It does not execute generated packets, create branches, apply patches, mutate source, commit, push, merge, tag, delete branches, call paid APIs, use hosted model providers, require cloud services, require secrets, or self-approve packet activation.
+
+## Phase 33 — Branch Proposal Builder v1
+
+Required validation:
+
+    npm run phase33:demo
+    npm run phase33:verify
+    npm run hygiene
+    npm run build
+    npm test
+    npm run certify
+    npm run verify
+
+Expected result:
+
+    S.E.R.A. phase33 branch proposal builder v1: PASS
+    S.E.R.A. knowledge source map: PASS mapped=95
+    Test Files 33 passed
+    Tests 146 passed
+    S.E.R.A. certify: PASS level=operator-console-v1
+
+Phase 33 creates local branch proposals only. It does not create branches, switch branches, push branches, open pull requests, execute proposals, apply patches, mutate source, commit, merge, tag, delete branches, call paid APIs, use hosted model providers, require cloud services, require secrets, or self-approve proposal activation.
