@@ -72,6 +72,10 @@ const seedSources = [
   ["scripts/run-phase-packet-generator-v1.mjs", "Phase Packet Generator v1 Demo"],
   ["scripts/lib/phase-packet-generator-v1.mjs", "Phase Packet Generator v1 Source"],
   ["docs/phases/PHASE_32_PHASE_PACKET_GENERATOR_V1.md", "Phase 32 Documentation"],
+  ["tests/integration/branch-proposal-builder-v1.test.ts", "Branch Proposal Builder v1 Tests"],
+  ["scripts/run-branch-proposal-builder-v1.mjs", "Branch Proposal Builder v1 Demo"],
+  ["scripts/lib/branch-proposal-builder-v1.mjs", "Branch Proposal Builder v1 Source"],
+  ["docs/phases/PHASE_33_BRANCH_PROPOSAL_BUILDER_V1.md", "Phase 33 Documentation"],
   [".github/workflows/verify.yml", "CI Workflow Gate Definition"]
 ];
 

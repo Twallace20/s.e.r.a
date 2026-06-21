@@ -401,3 +401,29 @@ Boundary rules:
 - does not call paid APIs or hosted model providers
 - does not require cloud services
 - requires owner approval before packet activation or merge
+
+## Phase 33 branch proposal builder boundary
+
+The Phase 33 branch proposal builder is implemented by `scripts/lib/branch-proposal-builder-v1.mjs` and reports to `.sera-branch-proposals/`.
+
+Boundary rules:
+
+- creates local branch proposals only
+- declares branch name, files, validation commands, evidence requirements, risk checks, and owner approval gates
+- writes local evidence artifacts only
+- does not create branches
+- does not switch branches
+- does not push branches
+- does not open pull requests
+- does not execute proposals
+- does not execute arbitrary code or tools
+- does not apply patches
+- does not mutate source
+- does not commit, merge, tag, or delete branches
+- does not approve its own proposal
+- does not activate proposals
+- does not refresh network sources
+- does not require repository secrets
+- does not call paid APIs or hosted model providers
+- does not require cloud services
+- requires owner approval before branch creation, execution, or merge

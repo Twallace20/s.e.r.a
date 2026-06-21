@@ -324,3 +324,15 @@ Acceleration sequence now reads:
 - Phase 31 — Planner / Task Decomposer v2
 - Phase 32 — Phase Packet Generator v1
 - Phase 33 — Branch Proposal Builder v1
+
+## Phase 33 implementation note — Branch Proposal Builder v1
+
+Phase 33 converts generated phase packet context into reviewable branch proposals with branch naming, declared files, validation commands, evidence requirements, risk checks, and owner approval gates. It prepares S.E.R.A. for future controlled branch work without granting branch creation, push, pull request, patch, or execution authority.
+
+Acceleration sequence now reads:
+
+- Phase 30 — Knowledge Refresh + Source Trust v1
+- Phase 31 — Planner / Task Decomposer v2
+- Phase 32 — Phase Packet Generator v1
+- Phase 33 — Branch Proposal Builder v1
+- Phase 34 — Local Dev Orchestrator v1

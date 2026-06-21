@@ -638,3 +638,12 @@ Run:
 
     npm run phase32:demo
     npm run phase32:verify
+
+## Phase 33 — Branch Proposal Builder v1
+
+Phase 33 adds a local branch proposal builder. It turns generated phase packet context into a reviewable branch proposal with branch naming, declared files, validation gates, evidence requirements, risk checks, and owner approval checkpoints while preserving a proposal-only boundary.
+
+Run:
+
+    npm run phase33:demo
+    npm run phase33:verify

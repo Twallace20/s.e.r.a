@@ -249,3 +249,7 @@ Phase 31 is a planning-quality milestone, not a new autonomy level. It proves S.
 ## Phase 32 — phase-32-phase-packet-generator-v1
 
 Phase 32 is a packet-readiness milestone, not a new autonomy level. It proves S.E.R.A. can generate standardized phase packet blueprints from trusted objectives and task plans without executing packets, mutating source, creating branches, or approving its own activation.
+
+## Phase 33 — phase-33-branch-proposal-builder-v1
+
+Phase 33 is a branch-readiness milestone, not a new autonomy level. It proves S.E.R.A. can produce reviewable branch proposals from generated phase packets without creating branches, pushing branches, opening pull requests, applying patches, mutating source, executing work, or approving its own activation.
