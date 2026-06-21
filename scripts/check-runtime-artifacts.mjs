@@ -15,7 +15,8 @@ const forbiddenPrefixes = [
   ".sera-console/",
   ".sera-operator-tui/",
   ".sera-sqlite/",
-  ".sera-tools/"
+  ".sera-tools/",
+  ".sera-capabilities/"
 ];
 
 function trackedFiles() {

@@ -228,3 +228,18 @@ Boundary rules:
 - does not approve, reject, activate, or deactivate lessons
 - does not run autonomous apply operations
 - does not call paid APIs, hosted model providers, SaaS, or cloud-only services
+
+## Phase 25 capability registry boundary
+
+The Phase 25 capability registry lives in `scripts/lib/capability-registry-skill-graph-v1.mjs` and writes runtime evidence under `.sera-capabilities/`.
+
+Boundary rules:
+
+- records capability metadata only
+- records skill graph edges only
+- writes local reports only
+- does not execute tools
+- does not approve tools or plugins
+- does not mutate source files
+- does not run autonomous apply
+- does not call paid APIs, hosted model providers, SaaS, or cloud services

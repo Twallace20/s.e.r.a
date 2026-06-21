@@ -374,3 +374,24 @@ S.E.R.A. knowledge source map: PASS mapped=50
 Test Files 22 passed
 S.E.R.A. certify: PASS level=operator-console-v1
 ```
+
+## Phase 25 — Capability Registry + Skill Graph v1
+
+Required validation:
+
+    npm run phase25:demo
+    npm run phase25:verify
+    npm run hygiene
+    npm run build
+    npm test
+    npm run certify
+    npm run verify
+
+Expected result:
+
+    S.E.R.A. phase25 capability registry skill graph v1: PASS
+    S.E.R.A. knowledge source map: PASS mapped=54
+    Test Files 23 passed
+    S.E.R.A. certify: PASS level=operator-console-v1
+
+Phase 25 writes local capability artifacts under .sera-capabilities/ and does not execute tools, approve tools, activate plugins, mutate source files, run autonomous apply, call paid APIs, use hosted model providers, require SaaS, or require cloud services.

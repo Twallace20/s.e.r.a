@@ -192,3 +192,12 @@ Phase 16 extends the map with the live autonomous happy-path proof so S.E.R.A. c
 - `scripts/lib/tool-plugin-registry-v1.mjs` — Provides local tool/plugin manifest storage, risk classification, permission classification, and summary artifacts.
 - `scripts/run-tool-plugin-registry-v1.mjs` — Runs the Phase 24 registry demo and writes local registry artifacts.
 - `tests/integration/tool-plugin-registry-v1.test.ts` — Proves registry initialization, local/free-core classification, approval guarding, external adapter exclusion, artifact output, and path containment.
+
+## Phase 25 — Capability Registry + Skill Graph v1
+
+Phase 25 adds a local capability registry and skill graph so S.E.R.A. can track what it can do, what evidence supports each capability, what tools and knowledge each capability depends on, and what needs improvement.
+
+- `docs/phases/PHASE_25_CAPABILITY_REGISTRY_SKILL_GRAPH_V1.md` — Defines Phase 25 purpose, boundary, validation, and completion criteria.
+- `scripts/lib/capability-registry-skill-graph-v1.mjs` — Implements the local capability registry, capability assessment, skill graph, event log, and summary artifacts.
+- `scripts/run-capability-registry-skill-graph-v1.mjs` — Runs the Phase 25 demo and writes local capability reports.
+- `tests/integration/capability-registry-skill-graph-v1.test.ts` — Verifies local registry initialization, capability registration, graph links, external capability exclusion, and report artifacts.

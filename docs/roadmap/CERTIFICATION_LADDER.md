@@ -209,3 +209,7 @@ Phase 23 is a local persistence infrastructure milestone. It adds a SQLite-backe
 ## Phase 24 — `phase-24-tool-plugin-registry-v1`
 
 Phase 24 is a local tool governance milestone. It adds a registry for tools, plugins, scripts, workers, and adapters with permission and risk classification. The runtime certification level remains `operator-console-v1` because Phase 24 does not add new mutation authority.
+
+## Phase 25 — phase-25-capability-registry-skill-graph-v1
+
+Phase 25 is a capability-awareness milestone, not a new autonomy level. It proves S.E.R.A. can locally record capabilities, evidence, limitations, dependencies, certification status, and skill graph relationships while preserving the existing certified level.

@@ -35,3 +35,4 @@ packages/*/src/*.d.ts
 .sera-sqlite/
 
 .sera-tools/
+.sera-capabilities/

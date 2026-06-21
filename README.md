@@ -532,3 +532,14 @@ Run it with:
 npm run phase24:demo
 npm run phase24:verify
 ```
+
+## Phase 25 — Capability Registry + Skill Graph v1
+
+Phase 25 adds a local capability registry and skill graph. S.E.R.A. can now record what it can do, what evidence supports each capability, what it is still learning, what tools and knowledge each capability depends on, and which future capabilities remain outside the free/local core.
+
+Phase 25 commands:
+
+    npm run phase25:demo
+    npm run phase25:verify
+
+Phase 25 remains local/free-first and keeps the runtime certified level at operator-console-v1.

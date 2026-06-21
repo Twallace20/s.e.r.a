@@ -31,7 +31,11 @@ const seedSources = [
   ["scripts/run-sqlite-persistence-v1.mjs", "Phase 23 SQLite Persistence Demo Script"],
   ["docs/phases/PHASE_23_SQLITE_PERSISTENCE_V1.md", "Phase 23 Documentation"],
   ["scripts/run-tool-plugin-registry-v1.mjs", "Phase 24 Tool Plugin Registry Demo Script"],
-  ["docs/phases/PHASE_24_TOOL_PLUGIN_REGISTRY_V1.md", "Phase 24 Documentation"]
+  ["docs/phases/PHASE_24_TOOL_PLUGIN_REGISTRY_V1.md", "Phase 24 Documentation"],
+  ["tests/integration/capability-registry-skill-graph-v1.test.ts", "Capability Registry Skill Graph Tests"],
+  ["scripts/run-capability-registry-skill-graph-v1.mjs", "Capability Registry Skill Graph Demo"],
+  ["scripts/lib/capability-registry-skill-graph-v1.mjs", "Capability Registry Skill Graph Source"],
+  ["docs/phases/PHASE_25_CAPABILITY_REGISTRY_SKILL_GRAPH_V1.md", "Phase 25 Documentation"]
 ];
 
 const seedSearches = [

@@ -193,3 +193,7 @@ Phase 23 adds a local SQLite persistence foundation at `.sera-sqlite/sera.sqlite
 ## Phase 24 Implementation Note — Tool / Plugin Registry v1
 
 Phase 24 adds a local tool/plugin registry at `.sera-tools/`. It records tools, workers, scripts, plugins, and adapters with manifest metadata, permissions, free-core eligibility, risk level, and approval requirements. It does not execute plugins or add mutation authority.
+
+## Phase 25 implementation note — Capability Registry + Skill Graph v1
+
+Phase 25 gives S.E.R.A. a local self-model of capabilities, evidence, limitations, required tools, required knowledge, certification status, last successful run, last failure, and next improvement targets. It prepares future evaluation, curriculum, memory, and self-improvement phases by making capability boundaries explicit and auditable.
