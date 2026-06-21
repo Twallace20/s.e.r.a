@@ -659,3 +659,7 @@ Phase 35 adds a local remote phase runner blueprint. It defines the future remot
 ## PHASE 36 — OWNER APPROVAL QUEUE V1
 
 Phase 36 adds a local owner approval queue. It models pending approval requests and required owner gates for future remote-safe work. It does not record real owner decisions, execute remote work, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, use secrets, or self-approve.
+
+## PHASE 37 — SELF-HOSTED RUNNER ADAPTER V1
+
+Phase 37 adds a disabled local self-hosted runner adapter contract. It defines the future runner identity, workspace preflight, approval queue binding, command allowlist, evidence capture, emergency stop, and session lock requirements. It does not connect to a runner, execute commands, use secrets, create branches, apply patches, open pull requests, merge, tag, delete branches, or self-approve.

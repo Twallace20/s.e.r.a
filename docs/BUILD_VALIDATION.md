@@ -651,3 +651,15 @@ Validation commands:
 - npm test
 - npm run certify
 - npm run verify
+
+## PHASE 37 — SELF-HOSTED RUNNER ADAPTER V1
+
+Validation commands:
+
+- npm run phase37:demo
+- npm run phase37:verify
+- npm run hygiene
+- npm run build
+- npm test
+- npm run certify
+- npm run verify

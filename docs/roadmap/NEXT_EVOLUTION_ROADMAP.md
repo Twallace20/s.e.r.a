@@ -348,3 +348,7 @@ Phase 35 follows branch proposal and branch readiness inspection by defining the
 ## PHASE 36 — OWNER APPROVAL QUEUE V1
 
 Phase 36 follows the remote phase runner blueprint by adding the approval queue layer. This is a queue-only bridge toward safe remote work, emergency stop, session locks, and future runner adapters.
+
+## PHASE 37 — SELF-HOSTED RUNNER ADAPTER V1
+
+Phase 37 follows the owner approval queue by defining the disabled self-hosted runner adapter contract. This is a bridge toward future remote-safe execution, emergency stop, session locks, and owner-controlled runner activation.
