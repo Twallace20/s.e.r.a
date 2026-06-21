@@ -245,3 +245,7 @@ Phase 30 is a source-trust milestone, not a new autonomy level. It proves S.E.R.
 ## Phase 31 — phase-31-planner-task-decomposer-v2
 
 Phase 31 is a planning-quality milestone, not a new autonomy level. It proves S.E.R.A. can decompose a trusted objective into ordered tasks, dependencies, validation gates, evidence requirements, and owner approval checkpoints without executing tasks or approving its own work.
+
+## Phase 32 — phase-32-phase-packet-generator-v1
+
+Phase 32 is a packet-readiness milestone, not a new autonomy level. It proves S.E.R.A. can generate standardized phase packet blueprints from trusted objectives and task plans without executing packets, mutating source, creating branches, or approving its own activation.

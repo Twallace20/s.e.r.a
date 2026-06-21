@@ -68,6 +68,10 @@ const seedSources = [
   ["scripts/run-planner-task-decomposer-v2.mjs", "Planner Task Decomposer v2 Demo"],
   ["scripts/lib/planner-task-decomposer-v2.mjs", "Planner Task Decomposer v2 Source"],
   ["docs/phases/PHASE_31_PLANNER_TASK_DECOMPOSER_V2.md", "Phase 31 Documentation"],
+  ["tests/integration/phase-packet-generator-v1.test.ts", "Phase Packet Generator v1 Tests"],
+  ["scripts/run-phase-packet-generator-v1.mjs", "Phase Packet Generator v1 Demo"],
+  ["scripts/lib/phase-packet-generator-v1.mjs", "Phase Packet Generator v1 Source"],
+  ["docs/phases/PHASE_32_PHASE_PACKET_GENERATOR_V1.md", "Phase 32 Documentation"],
   [".github/workflows/verify.yml", "CI Workflow Gate Definition"]
 ];
 
