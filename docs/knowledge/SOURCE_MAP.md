@@ -178,3 +178,10 @@ Phase 16 extends the map with the live autonomous happy-path proof so S.E.R.A. c
 - `scripts/lib/operator-console-v2.mjs` — Builds and renders the local operator terminal dashboard from existing runtime evidence.
 - `scripts/run-operator-console-v2.mjs` — Runs the Phase 22 dashboard demo and writes local dashboard artifacts.
 - `tests/integration/operator-console-v2.test.ts` — Proves the dashboard builds from local evidence, renders terminal text, and writes local artifacts.
+
+## Phase 23 — SQLite Persistence v1
+
+- `docs/phases/PHASE_23_SQLITE_PERSISTENCE_V1.md` — Defines the Phase 23 local SQLite persistence purpose, boundary, and validation requirements.
+- `scripts/lib/sqlite-persistence-v1.mjs` — Provides the local SQLite persistence store, schema, summaries, and path containment.
+- `scripts/run-sqlite-persistence-v1.mjs` — Runs the Phase 23 SQLite demo and writes local persistence artifacts.
+- `tests/integration/sqlite-persistence-v1.test.ts` — Proves database initialization, record round trips, artifact output, and path containment.

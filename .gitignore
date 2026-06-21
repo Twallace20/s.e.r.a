@@ -31,3 +31,5 @@ packages/*/src/*.d.ts
 .sera-research/
 
 .sera-operator-tui/
+
+.sera-sqlite/

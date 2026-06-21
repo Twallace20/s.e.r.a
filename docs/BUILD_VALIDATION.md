@@ -325,3 +325,27 @@ S.E.R.A. phase22 operator console v2: PASS
 Test Files 20 passed
 S.E.R.A. certify: PASS level=operator-console-v1
 ```
+
+## Phase 23 — SQLite Persistence v1 Validation
+
+Phase 23 is valid only when the local SQLite persistence store initializes, records structured evidence, writes local artifacts, and the full validation gate remains green.
+
+Required validation:
+
+```bash
+npm run phase23:demo
+npm run phase23:verify
+npm run hygiene
+npm run build
+npm test
+npm run certify
+npm run verify
+```
+
+Expected outcome:
+
+```text
+S.E.R.A. phase23 sqlite persistence v1: PASS
+Test Files 21 passed
+S.E.R.A. certify: PASS level=operator-console-v1
+```

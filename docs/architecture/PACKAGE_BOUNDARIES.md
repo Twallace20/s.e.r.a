@@ -201,3 +201,16 @@ Boundary rules:
 - `@sera/tool-registry` — tool manifests, permissions, and plugin gates
 - `apps/operator-tui` — richer local terminal interface
 - `apps/local-api` — local API only after CLI and safety boundaries remain stable
+
+## Phase 23 SQLite Persistence Scripts
+
+`scripts/lib/sqlite-persistence-v1.mjs` and `scripts/run-sqlite-persistence-v1.mjs` provide a local SQLite persistence layer over S.E.R.A. runtime evidence.
+
+Boundary rules:
+
+- writes only `.sera-sqlite/` runtime artifacts
+- keeps database paths inside the project root
+- preserves existing JSONL runtime evidence
+- does not approve, reject, activate, or deactivate lessons
+- does not execute autonomous apply operations
+- does not call paid APIs, hosted model providers, SaaS, or cloud-only services

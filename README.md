@@ -510,3 +510,14 @@ npm run sera -- research summary
 ```
 
 Phase 21 remains a local/free evidence milestone. The runtime certification level remains `operator-console-v1`.
+
+## Phase 23 — SQLite Persistence v1
+
+Phase 23 adds a local SQLite persistence foundation for structured S.E.R.A. evidence while preserving the existing JSONL runtime systems. It creates `.sera-sqlite/sera.sqlite` plus local summary artifacts.
+
+Run it with:
+
+```bash
+npm run phase23:demo
+npm run phase23:verify
+```
