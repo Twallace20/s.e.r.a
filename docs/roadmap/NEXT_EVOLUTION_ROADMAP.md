@@ -279,3 +279,19 @@ Acceleration sequence now reads:
 - Phase 28 — Curriculum Builder v1
 - Phase 29 — Domain Learning Packs v1
 - Phase 30 — Knowledge Refresh + Source Trust v1
+
+## Phase 30 implementation note — Knowledge Refresh + Source Trust v1
+
+Phase 30 protects the knowledge layer before domain learning packs are activated. It separates trusted source-of-truth material from implementation evidence, tests, generated runtime reports, planning notes, and review-required external references.
+
+Acceleration sequence now reads:
+
+- Phase 25 — Capability Registry + Skill Graph v1
+- Phase 25B — CI Workflow Gate v1
+- Phase 25C — Phase Artifact Packet v1
+- Phase 26 — Evaluation Harness v1
+- Phase 27 — Regression Baseline Registry v1
+- Phase 28 — Curriculum Builder v1
+- Phase 29 — Domain Learning Packs v1
+- Phase 30 — Knowledge Refresh + Source Trust v1
+- Phase 31 — Planner / Task Decomposer v2

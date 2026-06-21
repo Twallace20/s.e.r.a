@@ -237,3 +237,7 @@ Phase 28 is a learning-planning milestone, not a new autonomy level. It proves S
 ## Phase 29 — phase-29-domain-learning-packs-v1
 
 Phase 29 is a learning-packaging milestone, not a new autonomy level. It proves S.E.R.A. can create local domain learning packs, connect them to curriculum and baseline evidence, and require owner approval before pack activation.
+
+## Phase 30 — phase-30-knowledge-refresh-source-trust-v1
+
+Phase 30 is a source-trust milestone, not a new autonomy level. It proves S.E.R.A. can classify local knowledge sources by trust and freshness, require evidence before trust upgrades, and block stale or external source use without owner review.

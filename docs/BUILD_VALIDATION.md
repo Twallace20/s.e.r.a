@@ -527,3 +527,25 @@ Expected result:
     S.E.R.A. certify: PASS level=operator-console-v1
 
 Phase 29 builds local domain learning pack registries only. It does not execute arbitrary code, mutate source, call paid APIs, use hosted model providers, require cloud services, require secrets, or activate learning packs without owner approval.
+
+## Phase 30 — Knowledge Refresh + Source Trust v1
+
+Required validation:
+
+    npm run phase30:demo
+    npm run phase30:verify
+    npm run hygiene
+    npm run build
+    npm test
+    npm run certify
+    npm run verify
+
+Expected result:
+
+    S.E.R.A. phase30 knowledge refresh source trust v1: PASS
+    S.E.R.A. knowledge source map: PASS mapped=83
+    Test Files 30 passed
+    Tests 131 passed
+    S.E.R.A. certify: PASS level=operator-console-v1
+
+Phase 30 builds a local source trust registry only. It does not fetch from the network, execute arbitrary code, mutate source, call paid APIs, use hosted model providers, require cloud services, require secrets, or trust stale/external sources without owner approval.

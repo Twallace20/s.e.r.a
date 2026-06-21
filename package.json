@@ -55,7 +55,9 @@
     "phase28:demo": "npm run build --silent && node scripts/run-curriculum-builder-v1.mjs",
     "phase28:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase28:demo",
     "phase29:demo": "npm run build --silent && node scripts/run-domain-learning-packs-v1.mjs",
-    "phase29:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase29:demo"
+    "phase29:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase29:demo",
+    "phase30:demo": "npm run build --silent && node scripts/run-knowledge-refresh-source-trust-v1.mjs",
+    "phase30:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase30:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

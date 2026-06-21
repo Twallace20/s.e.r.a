@@ -609,3 +609,14 @@ Phase 29 commands:
     npm run phase29:verify
 
 Phase 29 preserves the free-core covenant: no paid APIs, no hosted model providers, no cloud requirement, no secrets, no arbitrary code execution, no source mutation, and no pack activation without owner approval.
+
+## Phase 30 — Knowledge Refresh + Source Trust v1
+
+Phase 30 adds a local source trust registry. It separates trusted source-of-truth documents, implementation evidence, tests, runtime reports, planning notes, and review-required external references before future learning or remote work depends on them.
+
+Phase 30 commands:
+
+    npm run phase30:demo
+    npm run phase30:verify
+
+Phase 30 preserves the free-core covenant: no paid APIs, no hosted model providers, no cloud requirement, no secrets, no arbitrary code execution, no source mutation, no network refresh, and no trust upgrade for stale or external sources without owner approval.
