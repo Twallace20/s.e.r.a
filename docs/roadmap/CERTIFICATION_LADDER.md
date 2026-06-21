@@ -269,3 +269,7 @@ Certification means S.E.R.A. can produce and validate a local owner approval que
 ## PHASE 37 — SELF-HOSTED RUNNER ADAPTER V1
 
 Certification means S.E.R.A. can produce and validate a disabled local self-hosted runner adapter contract while keeping runner connectivity, command execution, source mutation, remote execution, and self-approval disabled.
+
+## PHASE 38 — COMMAND ALLOWLIST GATE V1
+
+Certification means S.E.R.A. can produce and validate a local exact-match command allowlist gate while keeping command execution, arbitrary shell access, remote execution, runner connectivity, source mutation, and self-approval disabled.

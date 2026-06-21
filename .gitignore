@@ -54,3 +54,5 @@ packages/*/src/*.d.ts
 .sera-owner-approval-queue/
 
 .sera-self-hosted-runner-adapter/
+
+.sera-command-allowlist-gate/

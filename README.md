@@ -663,3 +663,7 @@ Phase 36 adds a local owner approval queue. It models pending approval requests 
 ## PHASE 37 — SELF-HOSTED RUNNER ADAPTER V1
 
 Phase 37 adds a disabled local self-hosted runner adapter contract. It defines the future runner identity, workspace preflight, approval queue binding, command allowlist, evidence capture, emergency stop, and session lock requirements. It does not connect to a runner, execute commands, use secrets, create branches, apply patches, open pull requests, merge, tag, delete branches, or self-approve.
+
+## PHASE 38 — COMMAND ALLOWLIST GATE V1
+
+Phase 38 adds a local exact-match command allowlist gate. It defines approved validation command shapes for future owner-approved runner plans while rejecting arbitrary shell, VCS, network, interpreter, chaining, and expansion commands. It does not execute commands, connect to a runner, use secrets, create branches, apply patches, open pull requests, merge, tag, delete branches, or self-approve.

@@ -663,3 +663,15 @@ Validation commands:
 - npm test
 - npm run certify
 - npm run verify
+
+## PHASE 38 — COMMAND ALLOWLIST GATE V1
+
+Validation commands:
+
+- npm run phase38:demo
+- npm run phase38:verify
+- npm run hygiene
+- npm run build
+- npm test
+- npm run certify
+- npm run verify

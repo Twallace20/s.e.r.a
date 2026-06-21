@@ -71,7 +71,9 @@
     "phase36:demo": "npm run build --silent && node scripts/run-owner-approval-queue-v1.mjs",
     "phase36:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase36:demo",
     "phase37:demo": "npm run build --silent && node scripts/run-self-hosted-runner-adapter-v1.mjs",
-    "phase37:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase37:demo"
+    "phase37:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase37:demo",
+    "phase38:demo": "npm run build --silent && node scripts/run-command-allowlist-gate-v1.mjs",
+    "phase38:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase38:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
