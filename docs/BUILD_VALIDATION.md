@@ -639,3 +639,15 @@ Validation commands:
 - npm test
 - npm run certify
 - npm run verify
+
+## PHASE 36 — OWNER APPROVAL QUEUE V1
+
+Validation commands:
+
+- npm run phase36:demo
+- npm run phase36:verify
+- npm run hygiene
+- npm run build
+- npm test
+- npm run certify
+- npm run verify

@@ -655,3 +655,7 @@ Phase 34 adds a local branch readiness inspector that checks whether a branch pr
 ## PHASE 35 — REMOTE PHASE RUNNER BLUEPRINT V1
 
 Phase 35 adds a local remote phase runner blueprint. It defines the future remote/overnight phase run contract, evidence requirements, emergency stop expectations, session lock expectations, and owner approval gates. It does not run remote work, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, use secrets, or self-approve.
+
+## PHASE 36 — OWNER APPROVAL QUEUE V1
+
+Phase 36 adds a local owner approval queue. It models pending approval requests and required owner gates for future remote-safe work. It does not record real owner decisions, execute remote work, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, use secrets, or self-approve.

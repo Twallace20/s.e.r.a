@@ -344,3 +344,7 @@ Phase 34 follows the Branch Proposal Builder by verifying whether a proposed bra
 ## PHASE 35 — REMOTE PHASE RUNNER BLUEPRINT V1
 
 Phase 35 follows branch proposal and branch readiness inspection by defining the future remote/overnight phase runner contract. This is a blueprint-only bridge toward self-hosted runner support, emergency stop, session locks, and owner-approved remote development.
+
+## PHASE 36 — OWNER APPROVAL QUEUE V1
+
+Phase 36 follows the remote phase runner blueprint by adding the approval queue layer. This is a queue-only bridge toward safe remote work, emergency stop, session locks, and future runner adapters.

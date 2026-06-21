@@ -67,7 +67,9 @@
     "phase34:demo": "npm run build --silent && node scripts/run-branch-readiness-inspector-v1.mjs",
     "phase34:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase34:demo",
     "phase35:demo": "npm run build --silent && node scripts/run-remote-phase-runner-blueprint-v1.mjs",
-    "phase35:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase35:demo"
+    "phase35:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase35:demo",
+    "phase36:demo": "npm run build --silent && node scripts/run-owner-approval-queue-v1.mjs",
+    "phase36:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase36:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
