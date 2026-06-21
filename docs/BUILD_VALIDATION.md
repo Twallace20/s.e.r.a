@@ -461,3 +461,25 @@ Expected result:
     S.E.R.A. certify: PASS level=operator-console-v1
 
 Phase 26 evaluates deterministic local scorecards only. It does not execute arbitrary code, mutate source, call paid APIs, use hosted model providers, require cloud services, require secrets, or replace owner approval.
+
+## Phase 27 — Regression Baseline Registry v1
+
+Required validation:
+
+    npm run phase27:demo
+    npm run phase27:verify
+    npm run hygiene
+    npm run build
+    npm test
+    npm run certify
+    npm run verify
+
+Expected result:
+
+    S.E.R.A. phase27 regression baseline registry v1: PASS
+    S.E.R.A. knowledge source map: PASS mapped=71
+    Test Files 27 passed
+    Tests 116 passed
+    S.E.R.A. certify: PASS level=operator-console-v1
+
+Phase 27 records and checks deterministic local regression baselines only. It does not execute arbitrary code, mutate source, call paid APIs, use hosted model providers, require cloud services, require secrets, or replace owner approval.

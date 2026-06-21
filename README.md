@@ -576,3 +576,14 @@ Phase 26 commands:
     npm run phase26:verify
 
 Phase 26 supports future recursive improvement by requiring measurable evidence before behavior changes are trusted.
+
+## Phase 27 — Regression Baseline Registry v1
+
+Phase 27 adds a local registry of known-good regression baselines. It captures expected evaluation quality, compares future summaries against those baselines, detects drift, and writes local evidence reports under `.sera-regression-baselines/`.
+
+Phase 27 commands:
+
+    npm run phase27:demo
+    npm run phase27:verify
+
+Phase 27 protects future recursive improvement by making baseline changes explicit and owner-approved.

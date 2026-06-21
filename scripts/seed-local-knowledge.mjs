@@ -48,6 +48,10 @@ const seedSources = [
   ["scripts/run-evaluation-harness-v1.mjs", "Evaluation Harness Demo"],
   ["scripts/lib/evaluation-harness-v1.mjs", "Evaluation Harness Source"],
   ["docs/phases/PHASE_26_EVALUATION_HARNESS_V1.md", "Phase 26 Documentation"],
+  ["tests/integration/regression-baseline-registry-v1.test.ts", "Regression Baseline Registry Tests"],
+  ["scripts/run-regression-baseline-registry-v1.mjs", "Regression Baseline Registry Demo"],
+  ["scripts/lib/regression-baseline-registry-v1.mjs", "Regression Baseline Registry Source"],
+  ["docs/phases/PHASE_27_REGRESSION_BASELINE_REGISTRY_V1.md", "Phase 27 Documentation"],
   [".github/workflows/verify.yml", "CI Workflow Gate Definition"]
 ];
 

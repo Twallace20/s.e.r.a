@@ -235,3 +235,17 @@ Acceleration sequence now reads:
 - Phase 26 — Evaluation Harness v1
 - Phase 27 — Curriculum Builder v1
 - Phase 28 — Domain Learning Packs v1
+
+## Phase 27 implementation note — Regression Baseline Registry v1
+
+Phase 27 turns Phase 26 evaluation output into protected known-good baselines. It gives future branches a local way to detect drift before S.E.R.A. receives more remote or overnight work authority.
+
+Acceleration sequence now reads:
+
+- Phase 25 — Capability Registry + Skill Graph v1
+- Phase 25B — CI Workflow Gate v1
+- Phase 25C — Phase Artifact Packet v1
+- Phase 26 — Evaluation Harness v1
+- Phase 27 — Regression Baseline Registry v1
+- Phase 28 — Curriculum Builder v1
+- Phase 29 — Domain Learning Packs v1
