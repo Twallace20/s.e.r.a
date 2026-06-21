@@ -549,3 +549,25 @@ Expected result:
     S.E.R.A. certify: PASS level=operator-console-v1
 
 Phase 30 builds a local source trust registry only. It does not fetch from the network, execute arbitrary code, mutate source, call paid APIs, use hosted model providers, require cloud services, require secrets, or trust stale/external sources without owner approval.
+
+## Phase 31 — Planner / Task Decomposer v2
+
+Required validation:
+
+    npm run phase31:demo
+    npm run phase31:verify
+    npm run hygiene
+    npm run build
+    npm test
+    npm run certify
+    npm run verify
+
+Expected result:
+
+    S.E.R.A. phase31 planner task decomposer v2: PASS
+    S.E.R.A. knowledge source map: PASS mapped=87
+    Test Files 31 passed
+    Tests 136 passed
+    S.E.R.A. certify: PASS level=operator-console-v1
+
+Phase 31 creates local phase plans only. It does not execute tasks, mutate source, commit, push, merge, tag, delete branches, call paid APIs, use hosted model providers, require cloud services, require secrets, or self-approve plans.

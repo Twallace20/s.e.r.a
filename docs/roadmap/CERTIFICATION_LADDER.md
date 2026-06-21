@@ -241,3 +241,7 @@ Phase 29 is a learning-packaging milestone, not a new autonomy level. It proves 
 ## Phase 30 — phase-30-knowledge-refresh-source-trust-v1
 
 Phase 30 is a source-trust milestone, not a new autonomy level. It proves S.E.R.A. can classify local knowledge sources by trust and freshness, require evidence before trust upgrades, and block stale or external source use without owner review.
+
+## Phase 31 — phase-31-planner-task-decomposer-v2
+
+Phase 31 is a planning-quality milestone, not a new autonomy level. It proves S.E.R.A. can decompose a trusted objective into ordered tasks, dependencies, validation gates, evidence requirements, and owner approval checkpoints without executing tasks or approving its own work.
