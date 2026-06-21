@@ -1,0 +1,72 @@
+name: S.E.R.A. Verify Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      validation_scope:
+        description: "Validation scope to run"
+        required: false
+        default: "verify"
+        type: choice
+        options:
+          - verify
+          - phase25
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - "phase-*"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: sera-verify-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Local/free-core validation gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+      SERA_CI_GATE: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run selected validation
+        run: |
+          if [ "${{ github.event.inputs.validation_scope || 'verify' }}" = "phase25" ]; then
+            npm run phase25:verify
+          else
+            npm run verify
+          fi
+
+      - name: Upload local validation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sera-validation-artifacts
+          if-no-files-found: ignore
+          path: |
+            .sera-*/reports/**
+            .sera-*/**/*.json
+            .sera-*/**/*.jsonl
+            .sera-*/**/*.md

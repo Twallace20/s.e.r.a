@@ -243,3 +243,17 @@ Boundary rules:
 - does not mutate source files
 - does not run autonomous apply
 - does not call paid APIs, hosted model providers, SaaS, or cloud services
+
+## Phase 25B CI workflow boundary
+
+The Phase 25B CI gate lives in `.github/workflows/verify.yml` and is inspected by `scripts/lib/ci-workflow-gate-v1.mjs`.
+
+Boundary rules:
+
+- validates branches only
+- uploads evidence artifacts only
+- uses read-only repository contents permission
+- does not commit, push, merge, deploy, or mutate source
+- does not require repository secrets
+- does not call paid APIs or hosted model providers
+- remains optional to the local/free-core runtime

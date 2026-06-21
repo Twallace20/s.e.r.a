@@ -213,3 +213,7 @@ Phase 24 is a local tool governance milestone. It adds a registry for tools, plu
 ## Phase 25 — phase-25-capability-registry-skill-graph-v1
 
 Phase 25 is a capability-awareness milestone, not a new autonomy level. It proves S.E.R.A. can locally record capabilities, evidence, limitations, dependencies, certification status, and skill graph relationships while preserving the existing certified level.
+
+## Phase 25B — phase-25b-ci-workflow-gate-v1
+
+Phase 25B is a validation-infrastructure milestone, not a new autonomy level. It proves branches can be checked through a read-only remote CI gate while keeping local certification, owner approval, and no-source-mutation boundaries intact.
