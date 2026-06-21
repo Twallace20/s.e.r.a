@@ -253,3 +253,7 @@ Phase 32 is a packet-readiness milestone, not a new autonomy level. It proves S.
 ## Phase 33 — phase-33-branch-proposal-builder-v1
 
 Phase 33 is a branch-readiness milestone, not a new autonomy level. It proves S.E.R.A. can produce reviewable branch proposals from generated phase packets without creating branches, pushing branches, opening pull requests, applying patches, mutating source, executing work, or approving its own activation.
+
+## PHASE 34 — BRANCH READINESS INSPECTOR V1
+
+Certification means S.E.R.A. can inspect a branch proposal for readiness, risk, evidence, and owner approval gates without granting itself mutation, branch, pull request, execution, or merge authority.

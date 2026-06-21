@@ -46,3 +46,5 @@ packages/*/src/*.d.ts
 .sera-planner-v2/
 .sera-phase-packet-generator/
 .sera-branch-proposals/
+
+.sera-branch-readiness/

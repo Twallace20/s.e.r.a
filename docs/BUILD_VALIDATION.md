@@ -615,3 +615,15 @@ Expected result:
     S.E.R.A. certify: PASS level=operator-console-v1
 
 Phase 33 creates local branch proposals only. It does not create branches, switch branches, push branches, open pull requests, execute proposals, apply patches, mutate source, commit, merge, tag, delete branches, call paid APIs, use hosted model providers, require cloud services, require secrets, or self-approve proposal activation.
+
+## PHASE 34 — BRANCH READINESS INSPECTOR V1
+
+Validation commands:
+
+- npm run phase34:demo
+- npm run phase34:verify
+- npm run hygiene
+- npm run build
+- npm test
+- npm run certify
+- npm run verify
