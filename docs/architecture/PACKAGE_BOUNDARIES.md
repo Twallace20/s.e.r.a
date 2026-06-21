@@ -214,3 +214,17 @@ Boundary rules:
 - does not approve, reject, activate, or deactivate lessons
 - does not execute autonomous apply operations
 - does not call paid APIs, hosted model providers, SaaS, or cloud-only services
+
+## Phase 24 Tool / Plugin Registry Scripts
+
+`scripts/lib/tool-plugin-registry-v1.mjs` and `scripts/run-tool-plugin-registry-v1.mjs` provide a local registry over S.E.R.A. tools, plugins, scripts, workers, and adapters.
+
+Boundary rules:
+
+- writes only `.sera-tools/` runtime artifacts
+- keeps registry paths inside the project root
+- records metadata, permissions, risk, and approval requirements
+- does not execute tools or plugins
+- does not approve, reject, activate, or deactivate lessons
+- does not run autonomous apply operations
+- does not call paid APIs, hosted model providers, SaaS, or cloud-only services

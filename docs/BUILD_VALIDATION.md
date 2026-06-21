@@ -349,3 +349,28 @@ S.E.R.A. phase23 sqlite persistence v1: PASS
 Test Files 21 passed
 S.E.R.A. certify: PASS level=operator-console-v1
 ```
+
+## Phase 24 — Tool / Plugin Registry v1 Validation
+
+Phase 24 is valid only when the local tool/plugin registry initializes, classifies permissions and risk, separates free-core-safe local tools from optional external/cloud adapters, writes local artifacts, and the full validation gate remains green.
+
+Required validation:
+
+```bash
+npm run phase24:demo
+npm run phase24:verify
+npm run hygiene
+npm run build
+npm test
+npm run certify
+npm run verify
+```
+
+Expected outcome:
+
+```text
+S.E.R.A. phase24 tool plugin registry v1: PASS
+S.E.R.A. knowledge source map: PASS mapped=50
+Test Files 22 passed
+S.E.R.A. certify: PASS level=operator-console-v1
+```

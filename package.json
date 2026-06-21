@@ -39,7 +39,9 @@
     "phase22:demo": "npm run build --silent && node scripts/run-operator-console-v2.mjs",
     "phase22:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase22:demo",
     "phase23:demo": "npm run build --silent && node scripts/run-sqlite-persistence-v1.mjs",
-    "phase23:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase23:demo"
+    "phase23:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase23:demo",
+    "phase24:demo": "npm run build --silent && node scripts/run-tool-plugin-registry-v1.mjs",
+    "phase24:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase24:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

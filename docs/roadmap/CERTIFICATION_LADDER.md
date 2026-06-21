@@ -205,3 +205,7 @@ Phase 21 proves:
 ## Phase 23 — `phase-23-sqlite-persistence-v1`
 
 Phase 23 is a local persistence infrastructure milestone. It adds a SQLite-backed evidence store for structured events, key/value records, evidence records, and phase snapshots. The runtime certification level remains `operator-console-v1` because Phase 23 does not add new mutation authority.
+
+## Phase 24 — `phase-24-tool-plugin-registry-v1`
+
+Phase 24 is a local tool governance milestone. It adds a registry for tools, plugins, scripts, workers, and adapters with permission and risk classification. The runtime certification level remains `operator-console-v1` because Phase 24 does not add new mutation authority.

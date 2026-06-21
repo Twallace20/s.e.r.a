@@ -521,3 +521,14 @@ Run it with:
 npm run phase23:demo
 npm run phase23:verify
 ```
+
+## Phase 24 — Tool / Plugin Registry v1
+
+Phase 24 adds a local registry for S.E.R.A. tools, plugins, scripts, workers, and adapters. The registry records each capability's permissions, risk level, approval requirement, and free-core eligibility while preserving the local/free boundary.
+
+Run it with:
+
+```bash
+npm run phase24:demo
+npm run phase24:verify
+```
