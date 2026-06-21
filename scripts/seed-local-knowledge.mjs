@@ -40,6 +40,10 @@ const seedSources = [
   ["scripts/run-ci-workflow-gate-v1.mjs", "CI Workflow Gate Demo"],
   ["scripts/lib/ci-workflow-gate-v1.mjs", "CI Workflow Gate Source"],
   ["docs/phases/PHASE_25B_CI_WORKFLOW_GATE_V1.md", "Phase 25B Documentation"],
+  ["tests/integration/phase-artifact-packet-v1.test.ts", "Phase Artifact Packet Tests"],
+  ["scripts/run-phase-artifact-packet-v1.mjs", "Phase Artifact Packet Demo"],
+  ["scripts/lib/phase-artifact-packet-v1.mjs", "Phase Artifact Packet Source"],
+  ["docs/phases/PHASE_25C_PHASE_ARTIFACT_PACKET_V1.md", "Phase 25C Documentation"],
   [".github/workflows/verify.yml", "CI Workflow Gate Definition"]
 ];
 

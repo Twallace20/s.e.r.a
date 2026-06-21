@@ -209,3 +209,16 @@ Remote development roadmap lane:
 - Phase 34 — Local Dev Orchestrator v1
 - Phase 35 — Remote Phase Runner Blueprint v1
 - Later — Self-hosted owner runner, remote approval queue, emergency stop, session lock, and remote owner operations
+
+## Phase 25C implementation note — Phase Artifact Packet v1
+
+Phase 25C adds a standard artifact packet format after the CI Workflow Gate. This supports future overlay zips, branch handoffs, remote validation, and overnight work preparation by requiring a manifest with declared files, validation commands, safety boundaries, rollback plan, and owner approval requirements.
+
+Remote acceleration sequence:
+
+- Phase 25B — CI Workflow Gate v1
+- Phase 25C — Phase Artifact Packet v1
+- Phase 34 — Local Dev Orchestrator v1
+- Phase 35 — Remote Phase Runner Blueprint v1
+- Phase 38 — iPhone Shortcut Companion v1
+- Phase 40 — Overnight Branch Worker v1
