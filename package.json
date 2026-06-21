@@ -43,7 +43,9 @@
     "phase24:demo": "npm run build --silent && node scripts/run-tool-plugin-registry-v1.mjs",
     "phase24:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase24:demo",
     "phase25:demo": "npm run build --silent && node scripts/run-capability-registry-skill-graph-v1.mjs",
-    "phase25:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase25:demo"
+    "phase25:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase25:demo",
+    "phase25b:demo": "npm run build --silent && node scripts/run-ci-workflow-gate-v1.mjs",
+    "phase25b:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase25b:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

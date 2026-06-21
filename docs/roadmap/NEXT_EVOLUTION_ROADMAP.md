@@ -197,3 +197,15 @@ Phase 24 adds a local tool/plugin registry at `.sera-tools/`. It records tools, 
 ## Phase 25 implementation note — Capability Registry + Skill Graph v1
 
 Phase 25 gives S.E.R.A. a local self-model of capabilities, evidence, limitations, required tools, required knowledge, certification status, last successful run, last failure, and next improvement targets. It prepares future evaluation, curriculum, memory, and self-improvement phases by making capability boundaries explicit and auditable.
+
+## Phase 25B implementation note — CI Workflow Gate v1
+
+Phase 25B adds a read-only GitHub Actions verification gate after Phase 25 and before Phase 26. This supports remote proof, validation artifacts, and faster future branch review while preserving local/free-core certification and owner-controlled merge authority.
+
+Remote development roadmap lane:
+
+- Phase 25B — CI Workflow Gate v1
+- Phase 25C — Phase Artifact Packet v1
+- Phase 34 — Local Dev Orchestrator v1
+- Phase 35 — Remote Phase Runner Blueprint v1
+- Later — Self-hosted owner runner, remote approval queue, emergency stop, session lock, and remote owner operations

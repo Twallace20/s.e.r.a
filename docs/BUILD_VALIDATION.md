@@ -395,3 +395,25 @@ Expected result:
     S.E.R.A. certify: PASS level=operator-console-v1
 
 Phase 25 writes local capability artifacts under .sera-capabilities/ and does not execute tools, approve tools, activate plugins, mutate source files, run autonomous apply, call paid APIs, use hosted model providers, require SaaS, or require cloud services.
+
+## Phase 25B — CI Workflow Gate v1
+
+Required validation:
+
+    npm run phase25b:demo
+    npm run phase25b:verify
+    npm run hygiene
+    npm run build
+    npm test
+    npm run certify
+    npm run verify
+
+Expected result:
+
+    S.E.R.A. phase25B CI workflow gate v1: PASS
+    S.E.R.A. knowledge source map: PASS mapped=59
+    Test Files 24 passed
+    Tests 101 passed
+    S.E.R.A. certify: PASS level=operator-console-v1
+
+Phase 25B adds optional remote validation proof. It does not mutate source, commit, push, merge, deploy, use secrets, or become required for local/free-core certification.

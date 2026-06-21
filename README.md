@@ -543,3 +543,14 @@ Phase 25 commands:
     npm run phase25:verify
 
 Phase 25 remains local/free-first and keeps the runtime certified level at operator-console-v1.
+
+## Phase 25B — CI Workflow Gate v1
+
+Phase 25B adds a read-only GitHub Actions validation gate. It lets S.E.R.A. branches produce remote verification evidence without granting autonomous merge authority, source mutation authority, secrets, billing, or deployment access.
+
+Phase 25B commands:
+
+    npm run phase25b:demo
+    npm run phase25b:verify
+
+Phase 25B supports remote proof while preserving local/free-core certification and owner-controlled merge decisions.

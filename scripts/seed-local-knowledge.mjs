@@ -35,7 +35,12 @@ const seedSources = [
   ["tests/integration/capability-registry-skill-graph-v1.test.ts", "Capability Registry Skill Graph Tests"],
   ["scripts/run-capability-registry-skill-graph-v1.mjs", "Capability Registry Skill Graph Demo"],
   ["scripts/lib/capability-registry-skill-graph-v1.mjs", "Capability Registry Skill Graph Source"],
-  ["docs/phases/PHASE_25_CAPABILITY_REGISTRY_SKILL_GRAPH_V1.md", "Phase 25 Documentation"]
+  ["docs/phases/PHASE_25_CAPABILITY_REGISTRY_SKILL_GRAPH_V1.md", "Phase 25 Documentation"],
+  ["tests/integration/ci-workflow-gate-v1.test.ts", "CI Workflow Gate Tests"],
+  ["scripts/run-ci-workflow-gate-v1.mjs", "CI Workflow Gate Demo"],
+  ["scripts/lib/ci-workflow-gate-v1.mjs", "CI Workflow Gate Source"],
+  ["docs/phases/PHASE_25B_CI_WORKFLOW_GATE_V1.md", "Phase 25B Documentation"],
+  [".github/workflows/verify.yml", "CI Workflow Gate Definition"]
 ];
 
 const seedSearches = [

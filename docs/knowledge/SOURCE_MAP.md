@@ -201,3 +201,13 @@ Phase 25 adds a local capability registry and skill graph so S.E.R.A. can track 
 - `scripts/lib/capability-registry-skill-graph-v1.mjs` — Implements the local capability registry, capability assessment, skill graph, event log, and summary artifacts.
 - `scripts/run-capability-registry-skill-graph-v1.mjs` — Runs the Phase 25 demo and writes local capability reports.
 - `tests/integration/capability-registry-skill-graph-v1.test.ts` — Verifies local registry initialization, capability registration, graph links, external capability exclusion, and report artifacts.
+
+## Phase 25B — CI Workflow Gate v1
+
+Phase 25B adds a read-only GitHub Actions verification gate so S.E.R.A. branches can produce remote proof without merge authority, source mutation authority, secret access, paid API dependency, or deployment authority.
+
+- `.github/workflows/verify.yml` — Defines the remote validation gate for push, pull request, and manual workflow_dispatch runs.
+- `docs/phases/PHASE_25B_CI_WORKFLOW_GATE_V1.md` — Defines Phase 25B purpose, boundary, validation, and completion criteria.
+- `scripts/lib/ci-workflow-gate-v1.mjs` — Inspects the workflow gate and writes local evidence reports.
+- `scripts/run-ci-workflow-gate-v1.mjs` — Runs the Phase 25B demo and writes local CI gate reports.
+- `tests/integration/ci-workflow-gate-v1.test.ts` — Verifies workflow safety checks, mutation blocking, warning detection, and artifact output.
