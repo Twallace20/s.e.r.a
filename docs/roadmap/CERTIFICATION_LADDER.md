@@ -233,3 +233,7 @@ Phase 27 is a regression protection milestone, not a new autonomy level. It prov
 ## Phase 28 — phase-28-curriculum-builder-v1
 
 Phase 28 is a learning-planning milestone, not a new autonomy level. It proves S.E.R.A. can rank capability gaps, create local curriculum modules, connect learning plans to regression baselines, and require owner approval before curriculum or learning activation changes.
+
+## Phase 29 — phase-29-domain-learning-packs-v1
+
+Phase 29 is a learning-packaging milestone, not a new autonomy level. It proves S.E.R.A. can create local domain learning packs, connect them to curriculum and baseline evidence, and require owner approval before pack activation.

@@ -264,3 +264,18 @@ Acceleration sequence now reads:
 - Phase 28 — Curriculum Builder v1
 - Phase 29 — Domain Learning Packs v1
 - Phase 30 — Knowledge Refresh + Source Trust v1
+
+## Phase 29 implementation note — Domain Learning Packs v1
+
+Phase 29 turns the Phase 28 curriculum into local domain learning packs. It prepares S.E.R.A. to learn by domain while preserving owner approval, evidence, and free-core boundaries.
+
+Acceleration sequence now reads:
+
+- Phase 25 — Capability Registry + Skill Graph v1
+- Phase 25B — CI Workflow Gate v1
+- Phase 25C — Phase Artifact Packet v1
+- Phase 26 — Evaluation Harness v1
+- Phase 27 — Regression Baseline Registry v1
+- Phase 28 — Curriculum Builder v1
+- Phase 29 — Domain Learning Packs v1
+- Phase 30 — Knowledge Refresh + Source Trust v1

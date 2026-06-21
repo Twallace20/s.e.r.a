@@ -598,3 +598,14 @@ Phase 28 commands:
     npm run phase28:verify
 
 Phase 28 prepares S.E.R.A. to learn deliberately while preserving owner approval and free-core boundaries.
+
+## Phase 29 — Domain Learning Packs v1
+
+Phase 29 adds local domain learning packs. It packages curriculum modules into safe domain registries for local agent engineering, retrieval/source trust, tool governance, client service delivery, and creative studio/worldbuilding.
+
+Phase 29 commands:
+
+    npm run phase29:demo
+    npm run phase29:verify
+
+Phase 29 preserves the free-core covenant: no paid APIs, no hosted model providers, no cloud requirement, no secrets, no arbitrary code execution, no source mutation, and no pack activation without owner approval.

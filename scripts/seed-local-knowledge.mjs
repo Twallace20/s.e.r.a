@@ -56,6 +56,10 @@ const seedSources = [
   ["scripts/run-curriculum-builder-v1.mjs", "Curriculum Builder Demo"],
   ["scripts/lib/curriculum-builder-v1.mjs", "Curriculum Builder Source"],
   ["docs/phases/PHASE_28_CURRICULUM_BUILDER_V1.md", "Phase 28 Documentation"],
+  ["tests/integration/domain-learning-packs-v1.test.ts", "Domain Learning Packs Tests"],
+  ["scripts/run-domain-learning-packs-v1.mjs", "Domain Learning Packs Demo"],
+  ["scripts/lib/domain-learning-packs-v1.mjs", "Domain Learning Packs Source"],
+  ["docs/phases/PHASE_29_DOMAIN_LEARNING_PACKS_V1.md", "Phase 29 Documentation"],
   [".github/workflows/verify.yml", "CI Workflow Gate Definition"]
 ];
 
