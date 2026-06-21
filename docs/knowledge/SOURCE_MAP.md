@@ -220,3 +220,12 @@ Phase 25C defines the standard artifact packet format for future S.E.R.A. phases
 - `scripts/lib/phase-artifact-packet-v1.mjs` — Creates and validates local phase packet manifests and writes evidence reports.
 - `scripts/run-phase-artifact-packet-v1.mjs` — Runs the Phase 25C demo and writes local packet evidence reports.
 - `tests/integration/phase-artifact-packet-v1.test.ts` — Verifies packet initialization, manifest creation, safety checks, and evidence output.
+
+## Phase 26 — Evaluation Harness v1
+
+Phase 26 adds a local deterministic evaluation harness so S.E.R.A. can measure capability quality, safety boundaries, and regressions before future recursive improvement.
+
+- `docs/phases/PHASE_26_EVALUATION_HARNESS_V1.md` — Defines Phase 26 purpose, boundary, evaluation model, and completion criteria.
+- `scripts/lib/evaluation-harness-v1.mjs` — Creates local evaluation suites, runs deterministic cases, scores assertions, and writes evidence reports.
+- `scripts/run-evaluation-harness-v1.mjs` — Runs the Phase 26 demo and writes local evaluation evidence reports.
+- `tests/integration/evaluation-harness-v1.test.ts` — Verifies runtime initialization, suite creation, scoring, blocker detection, and evidence output.

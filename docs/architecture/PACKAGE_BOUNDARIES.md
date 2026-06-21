@@ -271,3 +271,19 @@ Boundary rules:
 - does not require repository secrets
 - does not call paid APIs or hosted model providers
 - requires owner approval before apply and merge
+
+## Phase 26 evaluation harness boundary
+
+The Phase 26 evaluation harness is implemented by `scripts/lib/evaluation-harness-v1.mjs` and reports to `.sera-evals/`.
+
+Boundary rules:
+
+- creates and runs deterministic local evaluation cases only
+- writes local evidence artifacts only
+- does not execute arbitrary code or tools
+- does not mutate source
+- does not commit, push, merge, or delete branches
+- does not require repository secrets
+- does not call paid APIs or hosted model providers
+- does not require cloud services
+- requires owner approval before changing regression expectations

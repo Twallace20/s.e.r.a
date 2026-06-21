@@ -439,3 +439,25 @@ Expected result:
     S.E.R.A. certify: PASS level=operator-console-v1
 
 Phase 25C standardizes future phase handoffs and artifact packets. It does not execute arbitrary tools, mutate source during inspection, commit, push, merge, delete branches, require secrets, or require cloud services.
+
+## Phase 26 — Evaluation Harness v1
+
+Required validation:
+
+    npm run phase26:demo
+    npm run phase26:verify
+    npm run hygiene
+    npm run build
+    npm test
+    npm run certify
+    npm run verify
+
+Expected result:
+
+    S.E.R.A. phase26 evaluation harness v1: PASS
+    S.E.R.A. knowledge source map: PASS mapped=67
+    Test Files 26 passed
+    Tests 111 passed
+    S.E.R.A. certify: PASS level=operator-console-v1
+
+Phase 26 evaluates deterministic local scorecards only. It does not execute arbitrary code, mutate source, call paid APIs, use hosted model providers, require cloud services, require secrets, or replace owner approval.

@@ -44,6 +44,10 @@ const seedSources = [
   ["scripts/run-phase-artifact-packet-v1.mjs", "Phase Artifact Packet Demo"],
   ["scripts/lib/phase-artifact-packet-v1.mjs", "Phase Artifact Packet Source"],
   ["docs/phases/PHASE_25C_PHASE_ARTIFACT_PACKET_V1.md", "Phase 25C Documentation"],
+  ["tests/integration/evaluation-harness-v1.test.ts", "Evaluation Harness Tests"],
+  ["scripts/run-evaluation-harness-v1.mjs", "Evaluation Harness Demo"],
+  ["scripts/lib/evaluation-harness-v1.mjs", "Evaluation Harness Source"],
+  ["docs/phases/PHASE_26_EVALUATION_HARNESS_V1.md", "Phase 26 Documentation"],
   [".github/workflows/verify.yml", "CI Workflow Gate Definition"]
 ];
 

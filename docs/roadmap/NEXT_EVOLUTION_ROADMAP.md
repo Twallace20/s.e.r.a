@@ -222,3 +222,16 @@ Remote acceleration sequence:
 - Phase 35 — Remote Phase Runner Blueprint v1
 - Phase 38 — iPhone Shortcut Companion v1
 - Phase 40 — Overnight Branch Worker v1
+
+## Phase 26 implementation note — Evaluation Harness v1
+
+Phase 26 adds the first formal local scorecard layer after the capability registry, CI workflow gate, and phase artifact packet standard. It measures coding, retrieval, planning/phase handoff, tool governance, and safety cases with deterministic assertions and evidence reports.
+
+Acceleration sequence now reads:
+
+- Phase 25 — Capability Registry + Skill Graph v1
+- Phase 25B — CI Workflow Gate v1
+- Phase 25C — Phase Artifact Packet v1
+- Phase 26 — Evaluation Harness v1
+- Phase 27 — Curriculum Builder v1
+- Phase 28 — Domain Learning Packs v1

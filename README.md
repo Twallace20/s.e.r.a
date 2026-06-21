@@ -565,3 +565,14 @@ Phase 25C commands:
     npm run phase25c:verify
 
 Phase 25C supports faster remote and overnight work preparation without granting autonomous apply, commit, merge, branch deletion, secret, billing, or cloud dependency authority.
+
+## Phase 26 — Evaluation Harness v1
+
+Phase 26 adds local deterministic evaluation scorecards for S.E.R.A. capabilities, boundaries, and regressions. It creates suites, runs cases, scores assertions, detects blockers, and writes local evidence reports under `.sera-evals/`.
+
+Phase 26 commands:
+
+    npm run phase26:demo
+    npm run phase26:verify
+
+Phase 26 supports future recursive improvement by requiring measurable evidence before behavior changes are trusted.
