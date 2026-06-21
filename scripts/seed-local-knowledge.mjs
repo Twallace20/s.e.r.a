@@ -64,6 +64,10 @@ const seedSources = [
   ["scripts/run-knowledge-refresh-source-trust-v1.mjs", "Knowledge Refresh Source Trust Demo"],
   ["scripts/lib/knowledge-refresh-source-trust-v1.mjs", "Knowledge Refresh Source Trust Source"],
   ["docs/phases/PHASE_30_KNOWLEDGE_REFRESH_SOURCE_TRUST_V1.md", "Phase 30 Documentation"],
+  ["tests/integration/planner-task-decomposer-v2.test.ts", "Planner Task Decomposer v2 Tests"],
+  ["scripts/run-planner-task-decomposer-v2.mjs", "Planner Task Decomposer v2 Demo"],
+  ["scripts/lib/planner-task-decomposer-v2.mjs", "Planner Task Decomposer v2 Source"],
+  ["docs/phases/PHASE_31_PLANNER_TASK_DECOMPOSER_V2.md", "Phase 31 Documentation"],
   [".github/workflows/verify.yml", "CI Workflow Gate Definition"]
 ];
 

@@ -357,3 +357,24 @@ Boundary rules:
 - does not require cloud services
 - requires owner approval before source trust changes or external source trust upgrades
 - blocks stale source use without review
+
+## Phase 31 planner and task decomposition boundary
+
+The Phase 31 planner v2 is implemented by `scripts/lib/planner-task-decomposer-v2.mjs` and reports to `.sera-planner-v2/`.
+
+Boundary rules:
+
+- creates local phase plans only
+- decomposes objectives into ordered tasks, dependencies, gates, evidence, and approval checkpoints
+- writes local evidence artifacts only
+- does not execute tasks
+- does not execute arbitrary code or tools
+- does not mutate source
+- does not commit, push, merge, tag, or delete branches
+- does not approve its own plan
+- does not activate learning packs
+- does not refresh network sources
+- does not require repository secrets
+- does not call paid APIs or hosted model providers
+- does not require cloud services
+- requires owner approval before execution or closeout

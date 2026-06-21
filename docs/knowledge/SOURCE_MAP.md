@@ -265,3 +265,12 @@ Phase 30 adds a local source trust registry so S.E.R.A. can separate source-of-t
 - `scripts/lib/knowledge-refresh-source-trust-v1.mjs` — Creates source trust registries, validates freshness/trust boundaries, blocks network refresh, and writes evidence reports.
 - `scripts/run-knowledge-refresh-source-trust-v1.mjs` — Runs the Phase 30 demo and writes local source trust evidence reports.
 - `tests/integration/knowledge-refresh-source-trust-v1.test.ts` — Verifies runtime initialization, registry creation, trust validation, safety boundaries, and evidence output.
+
+## Phase 31 — Planner / Task Decomposer v2
+
+Phase 31 adds a local planner v2 and task decomposer so S.E.R.A. can convert trusted phase objectives into ordered tasks, dependencies, validation gates, evidence requirements, and owner approval checkpoints before orchestration or remote work attempts to act.
+
+- `docs/phases/PHASE_31_PLANNER_TASK_DECOMPOSER_V2.md` — Defines Phase 31 purpose, planner model, boundary rules, and completion criteria.
+- `scripts/lib/planner-task-decomposer-v2.mjs` — Creates phase plans, validates dependencies and gates, decomposes tasks, and writes evidence reports.
+- `scripts/run-planner-task-decomposer-v2.mjs` — Runs the Phase 31 demo and writes local planner evidence reports.
+- `tests/integration/planner-task-decomposer-v2.test.ts` — Verifies runtime initialization, plan creation, dependency validation, decomposition, and safety boundaries.

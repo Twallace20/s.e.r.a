@@ -620,3 +620,12 @@ Phase 30 commands:
     npm run phase30:verify
 
 Phase 30 preserves the free-core covenant: no paid APIs, no hosted model providers, no cloud requirement, no secrets, no arbitrary code execution, no source mutation, no network refresh, and no trust upgrade for stale or external sources without owner approval.
+
+## Phase 31 — Planner / Task Decomposer v2
+
+Phase 31 adds a local planner v2 and task decomposer. It turns trusted phase objectives into ordered tasks, dependencies, validation gates, evidence requirements, and owner approval checkpoints while preserving a plan-only boundary.
+
+Run:
+
+    npm run phase31:demo
+    npm run phase31:verify

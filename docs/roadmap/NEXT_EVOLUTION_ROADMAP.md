@@ -295,3 +295,17 @@ Acceleration sequence now reads:
 - Phase 29 — Domain Learning Packs v1
 - Phase 30 — Knowledge Refresh + Source Trust v1
 - Phase 31 — Planner / Task Decomposer v2
+
+## Phase 31 implementation note — Planner / Task Decomposer v2
+
+Phase 31 turns trusted objectives into ordered phase tasks with dependencies, validation gates, evidence requirements, and owner approval checkpoints. This prepares S.E.R.A. for stronger local orchestration without granting execution or merge authority.
+
+Acceleration sequence now reads:
+
+- Phase 26 — Evaluation Harness v1
+- Phase 27 — Regression Baseline Registry v1
+- Phase 28 — Curriculum Builder v1
+- Phase 29 — Domain Learning Packs v1
+- Phase 30 — Knowledge Refresh + Source Trust v1
+- Phase 31 — Planner / Task Decomposer v2
+- Phase 32 — Phase Packet Generator v1
