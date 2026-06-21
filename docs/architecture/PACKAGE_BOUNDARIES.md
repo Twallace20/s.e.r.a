@@ -439,3 +439,7 @@ The remote phase runner blueprint is a local planning/runtime artifact. It may w
 ## PHASE 36 — OWNER APPROVAL QUEUE V1
 
 The owner approval queue is a local queue/runtime artifact. It may write queue reports under .sera-owner-approval-queue/. It is not allowed to record real owner decisions, execute remote commands, use cloud runners, use secrets, mutate source, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, or self-approve. Approval queue execution remains explicitly disabled in Phase 36.
+
+## PHASE 37 — SELF-HOSTED RUNNER ADAPTER V1
+
+The self-hosted runner adapter is a local disabled adapter contract/runtime artifact. It may write adapter reports under .sera-self-hosted-runner-adapter/. It is not allowed to connect to runners, execute commands, use cloud runners, use self-hosted runners, use secrets, mutate source, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, record owner decisions, or self-approve. Runner activation remains explicitly disabled in Phase 37.

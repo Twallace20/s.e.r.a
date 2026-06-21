@@ -81,3 +81,5 @@ console.log("S.E.R.A. runtime artifact hygiene: PASS");
 // phase35-runtime-hygiene-note: .sera-remote-phase-runner-blueprints is a local runtime artifact directory.
 
 // phase36-runtime-hygiene-note: .sera-owner-approval-queue is a local runtime artifact directory.
+
+// phase37-runtime-hygiene-note: .sera-self-hosted-runner-adapter is a local runtime artifact directory.

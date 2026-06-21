@@ -265,3 +265,7 @@ Certification means S.E.R.A. can produce and validate a remote phase runner blue
 ## PHASE 36 — OWNER APPROVAL QUEUE V1
 
 Certification means S.E.R.A. can produce and validate a local owner approval queue for future remote-safe work while keeping execution disabled, real owner decisions unrecorded, and owner approval mandatory.
+
+## PHASE 37 — SELF-HOSTED RUNNER ADAPTER V1
+
+Certification means S.E.R.A. can produce and validate a disabled local self-hosted runner adapter contract while keeping runner connectivity, command execution, source mutation, remote execution, and self-approval disabled.

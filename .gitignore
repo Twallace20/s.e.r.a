@@ -52,3 +52,5 @@ packages/*/src/*.d.ts
 .sera-remote-phase-runner-blueprints/
 
 .sera-owner-approval-queue/
+
+.sera-self-hosted-runner-adapter/
