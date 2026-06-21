@@ -63,7 +63,9 @@
     "phase32:demo": "npm run build --silent && node scripts/run-phase-packet-generator-v1.mjs",
     "phase32:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase32:demo",
     "phase33:demo": "npm run build --silent && node scripts/run-branch-proposal-builder-v1.mjs",
-    "phase33:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase33:demo"
+    "phase33:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase33:demo",
+    "phase34:demo": "npm run build --silent && node scripts/run-branch-readiness-inspector-v1.mjs",
+    "phase34:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase34:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

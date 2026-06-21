@@ -427,3 +427,7 @@ Boundary rules:
 - does not call paid APIs or hosted model providers
 - does not require cloud services
 - requires owner approval before branch creation, execution, or merge
+
+## PHASE 34 — BRANCH READINESS INSPECTOR V1
+
+The branch readiness inspector is a local proposal-inspection runtime. It is allowed to read declared branch proposal metadata and write local readiness reports under .sera-branch-readiness/. It is not allowed to mutate source, create branches, switch branches, push branches, open pull requests, apply patches, execute proposals, use secrets, require paid providers, or self-approve.

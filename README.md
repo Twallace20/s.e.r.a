@@ -647,3 +647,7 @@ Run:
 
     npm run phase33:demo
     npm run phase33:verify
+
+## PHASE 34 — BRANCH READINESS INSPECTOR V1
+
+Phase 34 adds a local branch readiness inspector that checks whether a branch proposal is complete, bounded, and safe enough for owner approval. It does not create branches, switch branches, push branches, open pull requests, apply patches, execute proposals, or self-approve.

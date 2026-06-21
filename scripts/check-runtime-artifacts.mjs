@@ -75,3 +75,5 @@ if (violations.length > 0) {
 }
 
 console.log("S.E.R.A. runtime artifact hygiene: PASS");
+
+// phase34-runtime-hygiene-note: .sera-branch-readiness is a local runtime artifact directory.
