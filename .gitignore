@@ -29,3 +29,5 @@ packages/*/src/*.d.ts
 .sera-console/
 
 .sera-research/
+
+.sera-operator-tui/

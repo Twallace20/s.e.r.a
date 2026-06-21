@@ -43,7 +43,11 @@ const requiredMappedPaths = [
   "packages/research/src/research-knowledge-worker.ts",
   "docs/phases/PHASE_21_RESEARCH_KNOWLEDGE_WORKER_V1.md",
   "scripts/run-research-knowledge-worker.mjs",
-  "tests/integration/research-knowledge-worker.test.ts"
+  "tests/integration/research-knowledge-worker.test.ts",
+  "tests/integration/operator-console-v2.test.ts",
+  "scripts/run-operator-console-v2.mjs",
+  "scripts/lib/operator-console-v2.mjs",
+  "docs/phases/PHASE_22_OPERATOR_CONSOLE_V2_TERMINAL_UI.md"
 ];
 
 function fail(message) {

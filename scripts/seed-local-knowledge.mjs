@@ -25,7 +25,9 @@ const seedSources = [
   ["packages/kernel/src/sera-kernel.ts", "Kernel Source"],
   ["packages/knowledge/src/knowledge-store.ts", "Knowledge Store Source"],
   ["packages/certs/src/certify.ts", "Certification Source"],
-  ["apps/cli/src/index.ts", "CLI Source"]
+  ["apps/cli/src/index.ts", "CLI Source"],
+  ["scripts/run-operator-console-v2.mjs", "Phase 22 Operator Console v2 Demo Script"],
+  ["docs/phases/PHASE_22_OPERATOR_CONSOLE_V2_TERMINAL_UI.md", "Phase 22 Documentation"]
 ];
 
 const seedSearches = [

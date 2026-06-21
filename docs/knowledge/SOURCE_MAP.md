@@ -171,3 +171,10 @@ Phase 16 extends the map with the live autonomous happy-path proof so S.E.R.A. c
 - `docs/phases/PHASE_21_RESEARCH_KNOWLEDGE_WORKER_V1.md` — Phase 21 scope, safety boundaries, and validation contract.
 - `scripts/run-research-knowledge-worker.mjs` — repeatable local demo proving citation-bound research behavior without web, paid APIs, or model dependency.
 - `tests/integration/research-knowledge-worker.test.ts` — integration proof for local citations, insufficient-evidence refusal, comparisons, summaries, and history records.
+
+## Phase 22 — Operator Console v2 / Terminal UI
+
+- `docs/phases/PHASE_22_OPERATOR_CONSOLE_V2_TERMINAL_UI.md` — Defines the Phase 22 terminal dashboard purpose, boundary, and validation requirements.
+- `scripts/lib/operator-console-v2.mjs` — Builds and renders the local operator terminal dashboard from existing runtime evidence.
+- `scripts/run-operator-console-v2.mjs` — Runs the Phase 22 dashboard demo and writes local dashboard artifacts.
+- `tests/integration/operator-console-v2.test.ts` — Proves the dashboard builds from local evidence, renders terminal text, and writes local artifacts.
