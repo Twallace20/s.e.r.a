@@ -249,3 +249,18 @@ Acceleration sequence now reads:
 - Phase 27 — Regression Baseline Registry v1
 - Phase 28 — Curriculum Builder v1
 - Phase 29 — Domain Learning Packs v1
+
+## Phase 28 implementation note — Curriculum Builder v1
+
+Phase 28 turns capability gaps and regression baselines into a local learning plan. It prepares S.E.R.A. to learn deliberately before she receives broader recursive or remote work authority.
+
+Acceleration sequence now reads:
+
+- Phase 25 — Capability Registry + Skill Graph v1
+- Phase 25B — CI Workflow Gate v1
+- Phase 25C — Phase Artifact Packet v1
+- Phase 26 — Evaluation Harness v1
+- Phase 27 — Regression Baseline Registry v1
+- Phase 28 — Curriculum Builder v1
+- Phase 29 — Domain Learning Packs v1
+- Phase 30 — Knowledge Refresh + Source Trust v1

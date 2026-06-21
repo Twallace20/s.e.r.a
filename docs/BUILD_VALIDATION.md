@@ -483,3 +483,25 @@ Expected result:
     S.E.R.A. certify: PASS level=operator-console-v1
 
 Phase 27 records and checks deterministic local regression baselines only. It does not execute arbitrary code, mutate source, call paid APIs, use hosted model providers, require cloud services, require secrets, or replace owner approval.
+
+## Phase 28 — Curriculum Builder v1
+
+Required validation:
+
+    npm run phase28:demo
+    npm run phase28:verify
+    npm run hygiene
+    npm run build
+    npm test
+    npm run certify
+    npm run verify
+
+Expected result:
+
+    S.E.R.A. phase28 curriculum builder v1: PASS
+    S.E.R.A. knowledge source map: PASS mapped=75
+    Test Files 28 passed
+    Tests 121 passed
+    S.E.R.A. certify: PASS level=operator-console-v1
+
+Phase 28 builds local curriculum plans only. It does not execute arbitrary code, mutate source, call paid APIs, use hosted model providers, require cloud services, require secrets, or activate learning changes without owner approval.

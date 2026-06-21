@@ -229,3 +229,7 @@ Phase 26 is an evaluation milestone, not a new autonomy level. It proves S.E.R.A
 ## Phase 27 — phase-27-regression-baseline-registry-v1
 
 Phase 27 is a regression protection milestone, not a new autonomy level. It proves S.E.R.A. can preserve local known-good evaluation expectations, compare future scores against baselines, and require owner approval before baseline changes.
+
+## Phase 28 — phase-28-curriculum-builder-v1
+
+Phase 28 is a learning-planning milestone, not a new autonomy level. It proves S.E.R.A. can rank capability gaps, create local curriculum modules, connect learning plans to regression baselines, and require owner approval before curriculum or learning activation changes.
