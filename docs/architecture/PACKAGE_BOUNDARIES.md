@@ -338,3 +338,22 @@ Boundary rules:
 - does not call paid APIs or hosted model providers
 - does not require cloud services
 - requires owner approval before pack changes or activation
+
+## Phase 30 knowledge refresh and source trust boundary
+
+The Phase 30 source trust registry is implemented by `scripts/lib/knowledge-refresh-source-trust-v1.mjs` and reports to `.sera-source-trust/`.
+
+Boundary rules:
+
+- creates local source trust registries only
+- separates source-of-truth, implementation evidence, test evidence, runtime evidence, planning notes, and review-required external references
+- writes local evidence artifacts only
+- does not fetch from the network
+- does not execute arbitrary code or tools
+- does not mutate source
+- does not commit, push, merge, tag, or delete branches
+- does not require repository secrets
+- does not call paid APIs or hosted model providers
+- does not require cloud services
+- requires owner approval before source trust changes or external source trust upgrades
+- blocks stale source use without review

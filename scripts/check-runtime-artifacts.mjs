@@ -22,7 +22,8 @@ const forbiddenPrefixes = [
   ".sera-evals/",
   ".sera-regression-baselines/",
   ".sera-curriculum/",
-  ".sera-domain-packs/"
+  ".sera-domain-packs/",
+  ".sera-source-trust/"
 ];
 
 function trackedFiles() {

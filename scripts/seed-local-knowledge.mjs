@@ -60,6 +60,10 @@ const seedSources = [
   ["scripts/run-domain-learning-packs-v1.mjs", "Domain Learning Packs Demo"],
   ["scripts/lib/domain-learning-packs-v1.mjs", "Domain Learning Packs Source"],
   ["docs/phases/PHASE_29_DOMAIN_LEARNING_PACKS_V1.md", "Phase 29 Documentation"],
+  ["tests/integration/knowledge-refresh-source-trust-v1.test.ts", "Knowledge Refresh Source Trust Tests"],
+  ["scripts/run-knowledge-refresh-source-trust-v1.mjs", "Knowledge Refresh Source Trust Demo"],
+  ["scripts/lib/knowledge-refresh-source-trust-v1.mjs", "Knowledge Refresh Source Trust Source"],
+  ["docs/phases/PHASE_30_KNOWLEDGE_REFRESH_SOURCE_TRUST_V1.md", "Phase 30 Documentation"],
   [".github/workflows/verify.yml", "CI Workflow Gate Definition"]
 ];
 

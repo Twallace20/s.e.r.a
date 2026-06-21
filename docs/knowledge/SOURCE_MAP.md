@@ -256,3 +256,12 @@ Phase 29 adds local domain learning packs so S.E.R.A. can package curriculum mod
 - `scripts/lib/domain-learning-packs-v1.mjs` — Creates domain learning pack registries, validates pack objectives, checks boundaries, and writes evidence reports.
 - `scripts/run-domain-learning-packs-v1.mjs` — Runs the Phase 29 demo and writes local domain pack evidence reports.
 - `tests/integration/domain-learning-packs-v1.test.ts` — Verifies runtime initialization, registry creation, pack validation, safety boundaries, and evidence output.
+
+## Phase 30 — Knowledge Refresh + Source Trust v1
+
+Phase 30 adds a local source trust registry so S.E.R.A. can separate source-of-truth documents, implementation evidence, test evidence, generated runtime evidence, planning notes, and review-required external references before learning activation or remote work relies on them.
+
+- `docs/phases/PHASE_30_KNOWLEDGE_REFRESH_SOURCE_TRUST_V1.md` — Defines Phase 30 purpose, source trust model, refresh policy boundary, and completion criteria.
+- `scripts/lib/knowledge-refresh-source-trust-v1.mjs` — Creates source trust registries, validates freshness/trust boundaries, blocks network refresh, and writes evidence reports.
+- `scripts/run-knowledge-refresh-source-trust-v1.mjs` — Runs the Phase 30 demo and writes local source trust evidence reports.
+- `tests/integration/knowledge-refresh-source-trust-v1.test.ts` — Verifies runtime initialization, registry creation, trust validation, safety boundaries, and evidence output.
