@@ -627,3 +627,15 @@ Validation commands:
 - npm test
 - npm run certify
 - npm run verify
+
+## PHASE 35 — REMOTE PHASE RUNNER BLUEPRINT V1
+
+Validation commands:
+
+- npm run phase35:demo
+- npm run phase35:verify
+- npm run hygiene
+- npm run build
+- npm test
+- npm run certify
+- npm run verify

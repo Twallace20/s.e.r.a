@@ -651,3 +651,7 @@ Run:
 ## PHASE 34 — BRANCH READINESS INSPECTOR V1
 
 Phase 34 adds a local branch readiness inspector that checks whether a branch proposal is complete, bounded, and safe enough for owner approval. It does not create branches, switch branches, push branches, open pull requests, apply patches, execute proposals, or self-approve.
+
+## PHASE 35 — REMOTE PHASE RUNNER BLUEPRINT V1
+
+Phase 35 adds a local remote phase runner blueprint. It defines the future remote/overnight phase run contract, evidence requirements, emergency stop expectations, session lock expectations, and owner approval gates. It does not run remote work, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, use secrets, or self-approve.

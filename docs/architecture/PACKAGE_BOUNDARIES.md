@@ -431,3 +431,7 @@ Boundary rules:
 ## PHASE 34 — BRANCH READINESS INSPECTOR V1
 
 The branch readiness inspector is a local proposal-inspection runtime. It is allowed to read declared branch proposal metadata and write local readiness reports under .sera-branch-readiness/. It is not allowed to mutate source, create branches, switch branches, push branches, open pull requests, apply patches, execute proposals, use secrets, require paid providers, or self-approve.
+
+## PHASE 35 — REMOTE PHASE RUNNER BLUEPRINT V1
+
+The remote phase runner blueprint is a local planning/runtime artifact. It may write blueprint reports under .sera-remote-phase-runner-blueprints/. It is not allowed to execute remote commands, use cloud runners, use secrets, mutate source, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, or self-approve. Remote execution remains explicitly disabled in Phase 35.

@@ -340,3 +340,7 @@ Acceleration sequence now reads:
 ## PHASE 34 — BRANCH READINESS INSPECTOR V1
 
 Phase 34 follows the Branch Proposal Builder by verifying whether a proposed branch is ready for owner review. It is a required bridge toward remote-safe and overnight branch preparation.
+
+## PHASE 35 — REMOTE PHASE RUNNER BLUEPRINT V1
+
+Phase 35 follows branch proposal and branch readiness inspection by defining the future remote/overnight phase runner contract. This is a blueprint-only bridge toward self-hosted runner support, emergency stop, session locks, and owner-approved remote development.

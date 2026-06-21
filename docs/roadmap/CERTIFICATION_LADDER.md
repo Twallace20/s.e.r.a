@@ -257,3 +257,7 @@ Phase 33 is a branch-readiness milestone, not a new autonomy level. It proves S.
 ## PHASE 34 — BRANCH READINESS INSPECTOR V1
 
 Certification means S.E.R.A. can inspect a branch proposal for readiness, risk, evidence, and owner approval gates without granting itself mutation, branch, pull request, execution, or merge authority.
+
+## PHASE 35 — REMOTE PHASE RUNNER BLUEPRINT V1
+
+Certification means S.E.R.A. can produce and validate a remote phase runner blueprint for future remote-safe work while keeping remote execution disabled and owner approval mandatory.
