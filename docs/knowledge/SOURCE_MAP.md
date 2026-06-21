@@ -229,3 +229,12 @@ Phase 26 adds a local deterministic evaluation harness so S.E.R.A. can measure c
 - `scripts/lib/evaluation-harness-v1.mjs` — Creates local evaluation suites, runs deterministic cases, scores assertions, and writes evidence reports.
 - `scripts/run-evaluation-harness-v1.mjs` — Runs the Phase 26 demo and writes local evaluation evidence reports.
 - `tests/integration/evaluation-harness-v1.test.ts` — Verifies runtime initialization, suite creation, scoring, blocker detection, and evidence output.
+
+## Phase 27 — Regression Baseline Registry v1
+
+Phase 27 adds a local regression baseline registry so S.E.R.A. can preserve known-good evaluation expectations and detect drift before future autonomous or overnight development work is trusted.
+
+- `docs/phases/PHASE_27_REGRESSION_BASELINE_REGISTRY_V1.md` — Defines Phase 27 purpose, baseline model, safety boundary, and completion criteria.
+- `scripts/lib/regression-baseline-registry-v1.mjs` — Creates baseline records, validates protected expectations, compares evaluation summaries, and writes evidence reports.
+- `scripts/run-regression-baseline-registry-v1.mjs` — Runs the Phase 27 demo and writes local regression baseline evidence reports.
+- `tests/integration/regression-baseline-registry-v1.test.ts` — Verifies runtime initialization, default baseline creation, validation, regression detection, and evidence output.

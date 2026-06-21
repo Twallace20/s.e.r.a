@@ -49,7 +49,9 @@
     "phase25c:demo": "npm run build --silent && node scripts/run-phase-artifact-packet-v1.mjs",
     "phase25c:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase25c:demo",
     "phase26:demo": "npm run build --silent && node scripts/run-evaluation-harness-v1.mjs",
-    "phase26:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase26:demo"
+    "phase26:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase26:demo",
+    "phase27:demo": "npm run build --silent && node scripts/run-regression-baseline-registry-v1.mjs",
+    "phase27:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase27:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

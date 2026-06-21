@@ -287,3 +287,19 @@ Boundary rules:
 - does not call paid APIs or hosted model providers
 - does not require cloud services
 - requires owner approval before changing regression expectations
+
+## Phase 27 regression baseline registry boundary
+
+The Phase 27 regression baseline registry is implemented by `scripts/lib/regression-baseline-registry-v1.mjs` and reports to `.sera-regression-baselines/`.
+
+Boundary rules:
+
+- creates and checks deterministic local regression baselines only
+- writes local evidence artifacts only
+- does not execute arbitrary code or tools
+- does not mutate source
+- does not commit, push, merge, or delete branches
+- does not require repository secrets
+- does not call paid APIs or hosted model providers
+- does not require cloud services
+- requires owner approval before baseline changes

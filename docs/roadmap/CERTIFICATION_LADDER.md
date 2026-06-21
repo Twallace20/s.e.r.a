@@ -225,3 +225,7 @@ Phase 25C is a handoff-standardization milestone, not a new autonomy level. It p
 ## Phase 26 — phase-26-evaluation-harness-v1
 
 Phase 26 is an evaluation milestone, not a new autonomy level. It proves S.E.R.A. can run local deterministic scorecards, record evidence, detect regressions, and preserve free-core boundaries before future recursive improvement.
+
+## Phase 27 — phase-27-regression-baseline-registry-v1
+
+Phase 27 is a regression protection milestone, not a new autonomy level. It proves S.E.R.A. can preserve local known-good evaluation expectations, compare future scores against baselines, and require owner approval before baseline changes.
