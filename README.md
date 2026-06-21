@@ -587,3 +587,14 @@ Phase 27 commands:
     npm run phase27:verify
 
 Phase 27 protects future recursive improvement by making baseline changes explicit and owner-approved.
+
+## Phase 28 — Curriculum Builder v1
+
+Phase 28 adds a local curriculum builder. It ranks capability gaps, generates learning modules, connects them to evaluation and regression baseline evidence, and writes local reports under `.sera-curriculum/`.
+
+Phase 28 commands:
+
+    npm run phase28:demo
+    npm run phase28:verify
+
+Phase 28 prepares S.E.R.A. to learn deliberately while preserving owner approval and free-core boundaries.

@@ -40,3 +40,4 @@ packages/*/src/*.d.ts
 .sera-phase-packets/
 .sera-evals/
 .sera-regression-baselines/
+.sera-curriculum/

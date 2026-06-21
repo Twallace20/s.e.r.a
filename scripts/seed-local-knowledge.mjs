@@ -52,6 +52,10 @@ const seedSources = [
   ["scripts/run-regression-baseline-registry-v1.mjs", "Regression Baseline Registry Demo"],
   ["scripts/lib/regression-baseline-registry-v1.mjs", "Regression Baseline Registry Source"],
   ["docs/phases/PHASE_27_REGRESSION_BASELINE_REGISTRY_V1.md", "Phase 27 Documentation"],
+  ["tests/integration/curriculum-builder-v1.test.ts", "Curriculum Builder Tests"],
+  ["scripts/run-curriculum-builder-v1.mjs", "Curriculum Builder Demo"],
+  ["scripts/lib/curriculum-builder-v1.mjs", "Curriculum Builder Source"],
+  ["docs/phases/PHASE_28_CURRICULUM_BUILDER_V1.md", "Phase 28 Documentation"],
   [".github/workflows/verify.yml", "CI Workflow Gate Definition"]
 ];
 

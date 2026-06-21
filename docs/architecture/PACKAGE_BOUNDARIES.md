@@ -303,3 +303,20 @@ Boundary rules:
 - does not call paid APIs or hosted model providers
 - does not require cloud services
 - requires owner approval before baseline changes
+
+## Phase 28 curriculum builder boundary
+
+The Phase 28 curriculum builder is implemented by `scripts/lib/curriculum-builder-v1.mjs` and reports to `.sera-curriculum/`.
+
+Boundary rules:
+
+- creates local curriculum plans only
+- ranks capability gaps and maps learning modules to evaluation hooks
+- writes local evidence artifacts only
+- does not execute arbitrary code or tools
+- does not mutate source
+- does not commit, push, merge, or delete branches
+- does not require repository secrets
+- does not call paid APIs or hosted model providers
+- does not require cloud services
+- requires owner approval before curriculum or learning activation changes

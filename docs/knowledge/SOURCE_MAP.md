@@ -238,3 +238,12 @@ Phase 27 adds a local regression baseline registry so S.E.R.A. can preserve know
 - `scripts/lib/regression-baseline-registry-v1.mjs` — Creates baseline records, validates protected expectations, compares evaluation summaries, and writes evidence reports.
 - `scripts/run-regression-baseline-registry-v1.mjs` — Runs the Phase 27 demo and writes local regression baseline evidence reports.
 - `tests/integration/regression-baseline-registry-v1.test.ts` — Verifies runtime initialization, default baseline creation, validation, regression detection, and evidence output.
+
+## Phase 28 — Curriculum Builder v1
+
+Phase 28 adds a local curriculum builder so S.E.R.A. can convert capability gaps, regression baselines, and roadmap goals into a sequenced learning plan before more autonomy is trusted.
+
+- `docs/phases/PHASE_28_CURRICULUM_BUILDER_V1.md` — Defines Phase 28 purpose, curriculum model, safety boundary, and completion criteria.
+- `scripts/lib/curriculum-builder-v1.mjs` — Ranks capability gaps, creates curriculum modules, validates owner-approval boundaries, and writes evidence reports.
+- `scripts/run-curriculum-builder-v1.mjs` — Runs the Phase 28 demo and writes local curriculum evidence reports.
+- `tests/integration/curriculum-builder-v1.test.ts` — Verifies runtime initialization, gap ranking, curriculum creation, safety boundaries, and evidence output.
