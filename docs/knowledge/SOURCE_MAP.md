@@ -290,12 +290,16 @@ Phase 33 adds a local branch proposal builder so S.E.R.A. can convert generated 
 
 - `docs/phases/PHASE_33_BRANCH_PROPOSAL_BUILDER_V1.md` — Defines Phase 33 purpose, branch proposal boundary, validation, and completion criteria.
 - `docs/phases/PHASE_34_BRANCH_READINESS_INSPECTOR_V1.md` — Defines Phase 34 purpose, branch proposal boundary, validation, and completion criteria.
+- `docs/phases/PHASE_35_REMOTE_PHASE_RUNNER_BLUEPRINT_V1.md` — Defines Phase 35 purpose, branch proposal boundary, validation, and completion criteria.
 - `scripts/lib/branch-proposal-builder-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/branch-readiness-inspector-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
+- `scripts/lib/remote-phase-runner-blueprint-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/run-branch-proposal-builder-v1.mjs` — Runs the Phase 33 demo and writes branch proposal reports.
 - `scripts/run-branch-readiness-inspector-v1.mjs` — Runs the Phase 34 demo and writes branch proposal reports.
+- `scripts/run-remote-phase-runner-blueprint-v1.mjs` — Runs the Phase 35 demo and writes branch proposal reports.
 - `tests/integration/branch-proposal-builder-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/branch-readiness-inspector-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
+- `tests/integration/remote-phase-runner-blueprint-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 
 ## PHASE 34 — BRANCH READINESS INSPECTOR V1
 
@@ -310,3 +314,10 @@ docs/phases/PHASE_34_BRANCH_READINESS_INSPECTOR_V1.md
 scripts/lib/branch-readiness-inspector-v1.mjs
 scripts/run-branch-readiness-inspector-v1.mjs
 tests/integration/branch-readiness-inspector-v1.test.ts
+
+## PHASE 35 — REMOTE PHASE RUNNER BLUEPRINT V1
+
+- docs/phases/PHASE_35_REMOTE_PHASE_RUNNER_BLUEPRINT_V1.md
+- scripts/lib/remote-phase-runner-blueprint-v1.mjs
+- scripts/run-remote-phase-runner-blueprint-v1.mjs
+- tests/integration/remote-phase-runner-blueprint-v1.test.ts
