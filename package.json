@@ -47,7 +47,9 @@
     "phase25b:demo": "npm run build --silent && node scripts/run-ci-workflow-gate-v1.mjs",
     "phase25b:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase25b:demo",
     "phase25c:demo": "npm run build --silent && node scripts/run-phase-artifact-packet-v1.mjs",
-    "phase25c:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase25c:demo"
+    "phase25c:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase25c:demo",
+    "phase26:demo": "npm run build --silent && node scripts/run-evaluation-harness-v1.mjs",
+    "phase26:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase26:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

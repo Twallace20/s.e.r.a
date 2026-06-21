@@ -38,3 +38,4 @@ packages/*/src/*.d.ts
 .sera-capabilities/
 .sera-ci-gate/
 .sera-phase-packets/
+.sera-evals/

@@ -221,3 +221,7 @@ Phase 25B is a validation-infrastructure milestone, not a new autonomy level. It
 ## Phase 25C — phase-25c-phase-artifact-packet-v1
 
 Phase 25C is a handoff-standardization milestone, not a new autonomy level. It proves phase packets can declare files, commands, boundaries, rollback plans, and approval gates before future remote or overnight execution.
+
+## Phase 26 — phase-26-evaluation-harness-v1
+
+Phase 26 is an evaluation milestone, not a new autonomy level. It proves S.E.R.A. can run local deterministic scorecards, record evidence, detect regressions, and preserve free-core boundaries before future recursive improvement.
