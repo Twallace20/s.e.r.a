@@ -94,7 +94,9 @@
     "phase46:demo": "node scripts/run-private-operator-app-shell-v1.mjs",
     "phase46:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase46:demo",
     "phase47:demo": "node scripts/run-operator-app-runtime-reader-v1.mjs",
-    "phase47:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase47:demo"
+    "phase47:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase47:demo",
+    "phase48:demo": "node scripts/run-request-intake-v1.mjs",
+    "phase48:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase47:verify && npm run phase48:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

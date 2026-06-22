@@ -1,4 +1,5 @@
 import { operatorRuntimeStatus } from "./runtime-status";
+import { requestIntakeDraft, requestIntakeSafetyGates } from "./request-intake";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -31,6 +32,7 @@ const navigation = [
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
   { label: "Desktop worker", value: operatorRuntimeStatus.status.desktopWorker, tone: "online" },
   { label: "Local runtime", value: operatorRuntimeStatus.status.localRuntime, tone: "ready" },
+  { label: "Request intake", value: requestIntakeDraft.intakeStatus, tone: "review" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -40,10 +42,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 47 runtime reader plan",
-    branch: "phase-47-operator-app-runtime-reader-v1",
+    title: "Phase 48 request intake review",
+    branch: "phase-48-request-intake-v1",
     risk: "Low",
-    workflow: "Read-only runtime packet",
+    workflow: "Capture-only request intake",
     status: "Queued",
   },
   {
@@ -63,6 +65,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...requestIntakeSafetyGates,
   "Read-only runtime status packet",
   "Allowed commands only",
   "Branch-only work",
@@ -152,20 +155,20 @@ export function App() {
               </div>
             </Card>
 
-            <Card title="Create Request" eyebrow="sample intake shell">
+            <Card title="Create Request" eyebrow="capture-only request intake">
               <form className="request-form">
                 <label>
                   Request title
-                  <input value="Build next S.E.R.A. phase" readOnly />
+                  <input value={requestIntakeDraft.title} readOnly />
                 </label>
                 <label>
                   Request details
-                  <textarea value="Create a branch-ready plan, validation contract, and evidence requirements before source mutation." readOnly />
+                  <textarea value={requestIntakeDraft.details} readOnly />
                 </label>
                 <div className="form-row">
                   <label>
                     Priority
-                    <select defaultValue="High">
+                    <select value={requestIntakeDraft.priority} disabled>
                       <option>High</option>
                       <option>Medium</option>
                       <option>Low</option>
@@ -173,17 +176,26 @@ export function App() {
                   </label>
                   <label>
                     Workflow type
-                    <select defaultValue="Phase build">
+                    <select value={requestIntakeDraft.workflowType} disabled>
                       <option>Phase build</option>
                       <option>Validation review</option>
                       <option>Evidence packet</option>
+                      <option>Research brief</option>
+                      <option>App improvement</option>
                     </select>
                   </label>
                 </div>
-                <div className="button-row">
-                  <button type="button" className="secondary">Attach files</button>
-                  <button type="button">Submit to queue</button>
+                <div className="packet-list">
+                  <span>Requested by: {requestIntakeDraft.requestedBy}</span>
+                  <span>Suggested queue: {requestIntakeDraft.routing.suggestedQueue}</span>
+                  <span>Safety class: {requestIntakeDraft.safetyClassification}</span>
+                  <span>Execution allowed: {requestIntakeDraft.boundaries.commandExecutionAllowed ? "yes" : "no"}</span>
                 </div>
+                <div className="button-row">
+                  <button type="button" className="secondary" disabled>Attach files in Phase 49</button>
+                  <button type="button" disabled>Capture draft only</button>
+                </div>
+                <p className="muted">Phase 48 captures and classifies requests for owner review. It does not submit, route, execute, or connect to a runner.</p>
               </form>
             </Card>
 
@@ -217,6 +229,17 @@ export function App() {
               <ul className="gate-list">
                 {gates.map((gate) => <li key={gate}>{gate}</li>)}
               </ul>
+            </Card>
+
+            <Card title="Request Intake Review" eyebrow="owner-gated">
+              <div className="packet-list">
+                <span>Phase: {requestIntakeDraft.phase.label}</span>
+                <span>Status: {requestIntakeDraft.intakeStatus}</span>
+                <span>Suggested queue: {requestIntakeDraft.routing.suggestedQueue}</span>
+                <span>Owner review required: {requestIntakeDraft.routing.reviewRequired ? "yes" : "no"}</span>
+                <span>Runner connection: {requestIntakeDraft.routing.runnerConnectionAllowed ? "allowed" : "blocked"}</span>
+                <span>Auto-route: {requestIntakeDraft.boundaries.autoRouteAllowed ? "allowed" : "blocked"}</span>
+              </div>
             </Card>
 
             <Card title="Morning Review Packet" eyebrow="preview">
