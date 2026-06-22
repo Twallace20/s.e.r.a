@@ -766,3 +766,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for health panel fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 56 blocks health polling, live heartbeat, process inspection, worker spawn, command execution, runner connectivity, task execution, final approval, auto-route, auto-merge, and self-approval.
+
+| Local worker dry-run harness | Defines the simulation-only dry-run practice lane for the future local desktop worker in Phase 57. | `docs/phases/PHASE_57_LOCAL_WORKER_DRY_RUN_HARNESS_V1.md`, `apps/operator-console/src/local-worker-dry-run-harness.ts`, `scripts/lib/local-worker-dry-run-harness-v1.mjs`, `scripts/run-local-worker-dry-run-harness-v1.mjs`, `tests/integration/local-worker-dry-run-harness-v1.test.ts` |
+
+### `docs/phases/PHASE_57_LOCAL_WORKER_DRY_RUN_HARNESS_V1.md`
+
+- Evidence role: Phase 57 local worker dry-run harness contract and validation instructions.
+- Use when answering: what Phase 57 adds, what it blocks, and why worker behavior remains simulation-only.
+
+### `apps/operator-console/src/local-worker-dry-run-harness.ts`
+
+- Evidence role: typed frontend-consumable dry-run harness packet, steps, evidence requirements, and safety gates.
+- Use when answering: how future worker behavior appears in the private operator app before any live worker execution.
+
+### `scripts/lib/local-worker-dry-run-harness-v1.mjs`
+
+- Evidence role: Phase 57 verification contract and dry-run boundary checks.
+- Use when answering: how the dry-run harness is validated as simulated-only, evidence-only, non-executing, and non-mutating.
+
+### `scripts/run-local-worker-dry-run-harness-v1.mjs`
+
+- Evidence role: Phase 57 demo runner.
+- Use when answering: how to prove the local worker dry-run harness is ready.
+
+### `tests/integration/local-worker-dry-run-harness-v1.test.ts`
+
+- Evidence role: test proof for dry-run fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 57 blocks worker spawn, task execution, command execution, shell execution, runner connectivity, polling, process inspection, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.

@@ -112,7 +112,9 @@
     "phase55:demo": "node scripts/run-local-desktop-worker-blueprint-v1.mjs",
     "phase55:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase54:verify && npm run phase55:demo",
     "phase56:demo": "node scripts/run-local-worker-health-panel-v1.mjs",
-    "phase56:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase55:verify && npm run phase56:demo"
+    "phase56:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase55:verify && npm run phase56:demo",
+    "phase57:demo": "node scripts/run-local-worker-dry-run-harness-v1.mjs",
+    "phase57:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase56:verify && npm run phase57:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
