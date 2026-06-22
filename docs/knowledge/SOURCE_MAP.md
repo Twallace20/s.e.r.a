@@ -459,3 +459,40 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for app surfaces, build docs, evidence writing, and authority boundaries.
 - Use when answering: whether Phase 46 is tested.
+
+## Phase 46 Private Operator App Shell v1 app-shell source records
+
+### `scripts/run-private-operator-app-shell-v1.mjs`
+
+- Evidence role: Phase 46 demo runner for the private operator app shell.
+- Use when answering: how to run the app-shell proof command and confirm the Phase 46 PASS result.
+
+### `apps/operator-console/package.json`
+
+- Evidence role: private operator console app package boundary, local scripts, and frontend dependencies.
+- Use when answering: how the private app shell is installed, previewed, and built locally.
+
+### `apps/operator-console/index.html`
+
+- Evidence role: Vite HTML entrypoint for the private operator console.
+- Use when answering: where the private app shell mounts in the browser.
+
+### `apps/operator-console/vite.config.ts`
+
+- Evidence role: Vite configuration for the private operator console app.
+- Use when answering: how the local frontend build and preview tooling is configured.
+
+### `apps/operator-console/tsconfig.json`
+
+- Evidence role: TypeScript configuration for the private operator console app.
+- Use when answering: how the app shell TypeScript surface is checked separately from core runtime packages.
+
+### `apps/operator-console/src/main.tsx`
+
+- Evidence role: React entrypoint for the private operator console.
+- Use when answering: how the app shell is mounted into the Vite frontend.
+
+### `apps/operator-console/src/styles.css`
+
+- Evidence role: private operator console design system, layout styling, and dark-mode shell presentation.
+- Use when answering: how the Phase 46 visual direction is implemented without backend logic.
