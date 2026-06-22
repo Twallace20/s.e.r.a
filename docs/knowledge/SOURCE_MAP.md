@@ -300,6 +300,7 @@ Phase 33 adds a local branch proposal builder so S.E.R.A. can convert generated 
 - `docs/phases/PHASE_42_APPROVAL_GATED_ACTION_PLAN_V1.md` — Defines Phase 42 purpose, branch proposal boundary, validation, and completion criteria.
 - `docs/phases/PHASE_43_SESSION_LOCK_GUARD_V1.md` — Defines Phase 43 purpose, branch proposal boundary, validation, and completion criteria.
 - `docs/phases/PHASE_44_EMERGENCY_STOP_GUARD_V1.md` — Defines Phase 44 purpose, branch proposal boundary, validation, and completion criteria.
+- `docs/phases/PHASE_45_FREE_CORE_COVENANT_CHECKPOINT_V1.md` — Defines Phase 45 purpose, branch proposal boundary, validation, and completion criteria.
 - `scripts/lib/branch-proposal-builder-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/branch-readiness-inspector-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/remote-phase-runner-blueprint-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
@@ -312,6 +313,7 @@ Phase 33 adds a local branch proposal builder so S.E.R.A. can convert generated 
 - `scripts/lib/approval-gated-action-plan-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/session-lock-guard-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/emergency-stop-guard-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
+- `scripts/lib/free-core-covenant-checkpoint-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/run-branch-proposal-builder-v1.mjs` — Runs the Phase 33 demo and writes branch proposal reports.
 - `scripts/run-branch-readiness-inspector-v1.mjs` — Runs the Phase 34 demo and writes branch proposal reports.
 - `scripts/run-remote-phase-runner-blueprint-v1.mjs` — Runs the Phase 35 demo and writes branch proposal reports.
@@ -324,6 +326,7 @@ Phase 33 adds a local branch proposal builder so S.E.R.A. can convert generated 
 - `scripts/run-approval-gated-action-plan-v1.mjs` — Runs the Phase 42 demo and writes branch proposal reports.
 - `scripts/run-session-lock-guard-v1.mjs` — Runs the Phase 43 demo and writes branch proposal reports.
 - `scripts/run-emergency-stop-guard-v1.mjs` — Runs the Phase 44 demo and writes branch proposal reports.
+- `scripts/run-free-core-covenant-checkpoint-v1.mjs` — Runs the Phase 45 demo and writes branch proposal reports.
 - `tests/integration/branch-proposal-builder-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/branch-readiness-inspector-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/remote-phase-runner-blueprint-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
@@ -336,6 +339,7 @@ Phase 33 adds a local branch proposal builder so S.E.R.A. can convert generated 
 - `tests/integration/approval-gated-action-plan-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/session-lock-guard-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/emergency-stop-guard-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
+- `tests/integration/free-core-covenant-checkpoint-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 
 ## PHASE 34 — BRANCH READINESS INSPECTOR V1
 
@@ -420,3 +424,10 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - scripts/lib/emergency-stop-guard-v1.mjs
 - scripts/run-emergency-stop-guard-v1.mjs
 - tests/integration/emergency-stop-guard-v1.test.ts
+
+## PHASE 45 — FREE CORE COVENANT CHECKPOINT V1
+
+- docs/phases/PHASE_45_FREE_CORE_COVENANT_CHECKPOINT_V1.md
+- scripts/lib/free-core-covenant-checkpoint-v1.mjs
+- scripts/run-free-core-covenant-checkpoint-v1.mjs
+- tests/integration/free-core-covenant-checkpoint-v1.test.ts

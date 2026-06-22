@@ -471,3 +471,7 @@ The session lock guard is local-only and planning-only. It may write reports und
 ## Phase 44 package boundary
 
 The emergency stop guard is local-only and planning-only. It may write reports under `.sera-emergency-stop-guard/` but must not activate live stops, release live stops, execute commands, connect to runners, mutate source, create branches, apply patches, merge, tag, delete, use secrets, record owner decisions, or self-approve.
+
+## Phase 45 package boundary
+
+The free-core covenant checkpoint is local-only and planning-only. It may write reports under `.sera-free-core-covenant-checkpoint/` but must not require paid providers, cloud services, secrets, runner connectivity, command execution, remote execution, source mutation, branch operations, patches, merges, tags, deletion, owner-decision recording, commercial activation, or self-approval.
