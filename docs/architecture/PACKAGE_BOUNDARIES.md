@@ -459,3 +459,7 @@ The overnight branch worker is a local worker contract/runtime artifact. It may 
 ## PHASE 41 — OWNER DECISION RECORDER V1
 
 The owner decision recorder is a local recorder-only runtime artifact. It may write reports under .sera-owner-decision-recorder/. It may record structured owner decisions, but those records cannot authorize execution, command execution, remote execution, runner connectivity, source mutation, branch actions, pull requests, patches, merges, tags, deletion, secrets, evidence self-acceptance, or self-approval.
+
+## Phase 42 package boundary
+
+The approval-gated action plan is local-only and planning-only. It may write reports under `.sera-approval-gated-action-plan/` but must not execute commands, connect to runners, mutate source, create branches, apply patches, merge, tag, delete, use secrets, or self-approve.

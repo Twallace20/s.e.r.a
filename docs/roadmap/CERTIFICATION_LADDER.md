@@ -285,3 +285,7 @@ Certification means S.E.R.A. can produce and validate a local overnight branch w
 ## PHASE 41 — OWNER DECISION RECORDER V1
 
 Certification means S.E.R.A. can record local owner decisions with evidence and audit requirements while keeping execution authority disabled after recorded decisions.
+
+## Phase 42 certification
+
+Phase 42 certifies the approval-gated action plan contract at `operator-console-v1` level while preserving the free-core covenant and all non-execution boundaries.

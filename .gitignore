@@ -62,3 +62,5 @@ packages/*/src/*.d.ts
 .sera-overnight-branch-worker/
 
 .sera-owner-decision-recorder/
+
+.sera-approval-gated-action-plan/

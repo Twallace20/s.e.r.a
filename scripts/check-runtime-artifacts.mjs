@@ -91,3 +91,5 @@ console.log("S.E.R.A. runtime artifact hygiene: PASS");
 // phase40-runtime-hygiene-note: .sera-overnight-branch-worker is a local runtime artifact directory.
 
 // phase41-runtime-hygiene-note: .sera-owner-decision-recorder is a local runtime artifact directory.
+
+// phase42-runtime-hygiene-note: .sera-approval-gated-action-plan is a local runtime artifact directory.

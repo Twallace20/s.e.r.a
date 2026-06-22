@@ -679,3 +679,7 @@ Phase 40 adds a local overnight branch worker contract/runtime. It defines requi
 ## PHASE 41 — OWNER DECISION RECORDER V1
 
 Phase 41 adds a local owner decision recorder. It records explicit owner decisions with owner identity, reason, approval queue binding, evidence bundle binding, redaction review, and immutable audit requirements while keeping execution after approval, command execution, runner connectivity, branch actions, source mutation, and self-approval disabled.
+
+## Phase 42 — Approval-Gated Action Plan v1
+
+Phase 42 adds a local approval-gated action plan layer. It maps recorded owner decisions into future action-plan status while keeping execution, runner connectivity, branch operations, source mutation, patches, merges, tags, deletion, secrets, and self-approval disabled.
