@@ -1,3 +1,5 @@
+import { operatorRuntimeStatus } from "./runtime-status";
+
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
 type QueueItem = {
@@ -27,19 +29,21 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
-  { label: "Desktop worker", value: "Online", tone: "online" },
-  { label: "Local runtime", value: "Ready", tone: "ready" },
-  { label: "GitHub bridge", value: "Not connected yet", tone: "pending" },
-  { label: "Tailscale access", value: "Planned", tone: "planned" },
-  { label: "Last check-in", value: "Today · local sample", tone: "ready" },
+  { label: "Desktop worker", value: operatorRuntimeStatus.status.desktopWorker, tone: "online" },
+  { label: "Local runtime", value: operatorRuntimeStatus.status.localRuntime, tone: "ready" },
+  { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
+  { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
+  { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
+  { label: "Certified level", value: operatorRuntimeStatus.certification.runtimeLevel, tone: "ready" },
+  { label: "Free Core", value: operatorRuntimeStatus.certification.freeCore, tone: "ready" },
 ];
 
 const queueItems: QueueItem[] = [
   {
     title: "Phase 47 runtime reader plan",
-    branch: "phase-47-runtime-reader-v1",
+    branch: "phase-47-operator-app-runtime-reader-v1",
     risk: "Low",
-    workflow: "Read-only artifact inspection",
+    workflow: "Read-only runtime packet",
     status: "Queued",
   },
   {
@@ -59,6 +63,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  "Read-only runtime status packet",
   "Allowed commands only",
   "Branch-only work",
   "No auto-merge",
@@ -125,12 +130,12 @@ export function App() {
       <section className="workspace">
         <header className="topbar">
           <div>
-            <p className="eyebrow">Phase 46 · Private Operator App Shell v1</p>
+            <p className="eyebrow">{operatorRuntimeStatus.phase.label}</p>
             <h1>Command Center</h1>
           </div>
           <div className="topbar-actions">
-            <Badge tone="online">Desktop worker: Online</Badge>
-            <Badge tone="pending">GitHub bridge: planned</Badge>
+            <Badge tone="online">Desktop worker: {operatorRuntimeStatus.status.desktopWorker}</Badge>
+            <Badge tone="pending">GitHub bridge: {operatorRuntimeStatus.status.githubBridge}</Badge>
           </div>
         </header>
 
@@ -216,11 +221,12 @@ export function App() {
 
             <Card title="Morning Review Packet" eyebrow="preview">
               <div className="packet-list">
-                <span>Summary: Phase shell generated</span>
-                <span>Changed files: pending local apply</span>
+                <span>Summary: {operatorRuntimeStatus.phase.milestone}</span>
+                <span>Changed files: runtime status packet wired</span>
                 <span>Test results: owner must verify</span>
-                <span>Evidence bundle: required</span>
+                <span>Evidence bundle: Phase 47 runtime-reader report required</span>
               </div>
+              <p className="muted">{operatorRuntimeStatus.nextRecommendedAction}</p>
               <div className="button-row stacked">
                 <button type="button">Approve</button>
                 <button type="button" className="secondary">Request changes</button>

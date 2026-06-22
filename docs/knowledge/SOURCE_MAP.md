@@ -496,3 +496,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: private operator console design system, layout styling, and dark-mode shell presentation.
 - Use when answering: how the Phase 46 visual direction is implemented without backend logic.
+
+| Operator app runtime reader | Defines the read-only status packet that connects the private operator app shell to current S.E.R.A. repo/runtime truth without adding backend execution. | `docs/phases/PHASE_47_OPERATOR_APP_RUNTIME_READER_V1.md`, `apps/operator-console/src/runtime-status.ts`, `scripts/lib/operator-app-runtime-reader-v1.mjs`, `scripts/run-operator-app-runtime-reader-v1.mjs`, `tests/integration/operator-app-runtime-reader-v1.test.ts` |
+
+### `docs/phases/PHASE_47_OPERATOR_APP_RUNTIME_READER_V1.md`
+
+- Evidence role: Phase 47 runtime-reader contract and validation instructions.
+- Use when answering: what Phase 47 wires into the private app and what authority it still blocks.
+
+### `apps/operator-console/src/runtime-status.ts`
+
+- Evidence role: typed frontend-consumable S.E.R.A. status packet.
+- Use when answering: what status fields the private operator app reads in Phase 47.
+
+### `scripts/lib/operator-app-runtime-reader-v1.mjs`
+
+- Evidence role: Phase 47 verification contract and runtime-reader safety boundaries.
+- Use when answering: how the runtime-reader surface is checked.
+
+### `scripts/run-operator-app-runtime-reader-v1.mjs`
+
+- Evidence role: Phase 47 demo runner.
+- Use when answering: how to prove the runtime reader is ready.
+
+### `tests/integration/operator-app-runtime-reader-v1.test.ts`
+
+- Evidence role: test proof for runtime-reader fields, app binding, report writing, and blocked unsafe boundaries.
+- Use when answering: how Phase 47 remains read-only and private-app-only.

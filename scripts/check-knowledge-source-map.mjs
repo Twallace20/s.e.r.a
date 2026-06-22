@@ -160,7 +160,12 @@ const requiredMappedPaths = [
   "apps/operator-console/tsconfig.json",
   "apps/operator-console/src/main.tsx",
   "apps/operator-console/src/App.tsx",
-  "apps/operator-console/src/styles.css"
+  "apps/operator-console/src/styles.css",
+  "docs/phases/PHASE_47_OPERATOR_APP_RUNTIME_READER_V1.md",
+  "scripts/lib/operator-app-runtime-reader-v1.mjs",
+  "scripts/run-operator-app-runtime-reader-v1.mjs",
+  "tests/integration/operator-app-runtime-reader-v1.test.ts",
+  "apps/operator-console/src/runtime-status.ts"
 ];
 
 function fail(message) {
