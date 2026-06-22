@@ -712,3 +712,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for record fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 54 blocks command execution, runner connectivity, record persistence, task creation, final approval, auto-approval, auto-route, auto-merge, and self-approval.
+
+| Local desktop worker blueprint | Defines the blueprint-only local desktop worker contract for Phase 55. | `docs/phases/PHASE_55_LOCAL_DESKTOP_WORKER_BLUEPRINT_V1.md`, `apps/operator-console/src/local-desktop-worker-blueprint.ts`, `scripts/lib/local-desktop-worker-blueprint-v1.mjs`, `scripts/run-local-desktop-worker-blueprint-v1.mjs`, `tests/integration/local-desktop-worker-blueprint-v1.test.ts` |
+
+### `docs/phases/PHASE_55_LOCAL_DESKTOP_WORKER_BLUEPRINT_V1.md`
+
+- Evidence role: Phase 55 local desktop worker blueprint contract and validation instructions.
+- Use when answering: what Phase 55 adds, what it blocks, and why it remains blueprint-only.
+
+### `apps/operator-console/src/local-desktop-worker-blueprint.ts`
+
+- Evidence role: typed frontend-consumable local desktop worker blueprint packet and safety gates.
+- Use when answering: how the future local worker contract appears in the private operator app.
+
+### `scripts/lib/local-desktop-worker-blueprint-v1.mjs`
+
+- Evidence role: Phase 55 verification contract and local desktop worker blueprint safety boundary checks.
+- Use when answering: how the worker blueprint is validated as non-executable and contract-only.
+
+### `scripts/run-local-desktop-worker-blueprint-v1.mjs`
+
+- Evidence role: Phase 55 demo runner.
+- Use when answering: how to prove the local desktop worker blueprint is ready.
+
+### `tests/integration/local-desktop-worker-blueprint-v1.test.ts`
+
+- Evidence role: test proof for worker blueprint fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 55 blocks command execution, runner connectivity, worker spawn, task execution, record persistence, final approval, auto-route, auto-merge, and self-approval.

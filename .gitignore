@@ -87,3 +87,5 @@ packages/*/src/*.d.ts
 .sera-owner-review-decision-draft/
 
 .sera-owner-decision-record-surface/
+
+.sera-local-desktop-worker-blueprint/
