@@ -658,3 +658,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for review items, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 52 blocks command execution, runner connectivity, file mutation, auto-approval, auto-processing, auto-routing, auto-merge, and self-approval.
+
+| Owner review decision draft | Defines the draft-only Tyler decision surface for Phase 53. | `docs/phases/PHASE_53_OWNER_REVIEW_DECISION_DRAFT_V1.md`, `apps/operator-console/src/owner-review-decision-draft.ts`, `scripts/lib/owner-review-decision-draft-v1.mjs`, `scripts/run-owner-review-decision-draft-v1.mjs`, `tests/integration/owner-review-decision-draft-v1.test.ts` |
+
+### `docs/phases/PHASE_53_OWNER_REVIEW_DECISION_DRAFT_V1.md`
+
+- Evidence role: Phase 53 decision-draft contract and validation instructions.
+- Use when answering: what Phase 53 adds, what it blocks, and why it remains draft-only.
+
+### `apps/operator-console/src/owner-review-decision-draft.ts`
+
+- Evidence role: typed frontend-consumable owner decision draft packet and safety gates.
+- Use when answering: which decision options Tyler can review in the private operator app.
+
+### `scripts/lib/owner-review-decision-draft-v1.mjs`
+
+- Evidence role: Phase 53 verification contract and owner decision draft safety boundary checks.
+- Use when answering: how the owner decision draft surface is validated as draft-only.
+
+### `scripts/run-owner-review-decision-draft-v1.mjs`
+
+- Evidence role: Phase 53 demo runner.
+- Use when answering: how to prove owner review decision drafts are ready.
+
+### `tests/integration/owner-review-decision-draft-v1.test.ts`
+
+- Evidence role: test proof for decision fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 53 blocks command execution, runner connectivity, task creation, final approval, auto-approval, auto-route, auto-merge, and self-approval.

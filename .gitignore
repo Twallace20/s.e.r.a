@@ -83,3 +83,5 @@ packages/*/src/*.d.ts
 .sera-workflow-composer/
 
 .sera-plan-review-queue/
+
+.sera-owner-review-decision-draft/

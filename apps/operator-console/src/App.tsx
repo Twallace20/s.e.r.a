@@ -4,6 +4,7 @@ import { fileIntakePacket, fileIntakeSafetyGates } from "./file-intake";
 import { workflowLibraryPacket, workflowLibrarySafetyGates } from "./workflow-library";
 import { workflowComposerPacket, workflowComposerSafetyGates } from "./workflow-composer";
 import { planReviewQueuePacket, planReviewQueueSafetyGates } from "./plan-review-queue";
+import { ownerReviewDecisionPacket, ownerReviewDecisionSafetyGates } from "./owner-review-decision-draft";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -41,6 +42,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Workflow library", value: workflowLibraryPacket.workflowLibraryStatus, tone: "ready" },
   { label: "Workflow composer", value: workflowComposerPacket.workflowComposerStatus, tone: "review" },
   { label: "Plan review queue", value: planReviewQueuePacket.planReviewQueueStatus, tone: "review" },
+  { label: "Owner decision drafts", value: ownerReviewDecisionPacket.decisionDraftStatus, tone: "review" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -50,10 +52,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 52 local plan review queue",
-    branch: "phase-52-local-plan-review-queue-v1",
+    title: "Phase 53 owner review decision drafts",
+    branch: "phase-53-owner-review-decision-draft-v1",
     risk: "Low",
-    workflow: "Local plan review queue",
+    workflow: "Owner decision draft",
     status: "Queued",
   },
   {
@@ -73,6 +75,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...ownerReviewDecisionSafetyGates,
   ...planReviewQueueSafetyGates,
   ...workflowComposerSafetyGates,
   ...workflowLibrarySafetyGates,
@@ -336,6 +339,39 @@ export function App() {
                 <button type="button" disabled>Review queue only</button>
               </div>
               <p className="muted">Phase 52 represents composed plan previews as local review queue items for Tyler. It does not approve, route, execute, connect to a runner, mutate files, or mutate source.</p>
+            </Card>
+
+            <Card title="Owner Review Decision Draft" eyebrow="draft-only owner decision flow">
+              <div className="packet-list">
+                <span>Phase: {ownerReviewDecisionPacket.phase.label}</span>
+                <span>Status: {ownerReviewDecisionPacket.decisionDraftStatus}</span>
+                <span>Mode: {ownerReviewDecisionPacket.decisionMode}</span>
+                <span>Owner: {ownerReviewDecisionPacket.decisionSummary.owner}</span>
+                <span>Source queue: {ownerReviewDecisionPacket.decisionSummary.sourceQueue}</span>
+                <span>Decision options: {ownerReviewDecisionPacket.decisionOptions.length}</span>
+                <span>Active review item: {ownerReviewDecisionPacket.activeReviewItem.title}</span>
+                <span>Suggested queue: {ownerReviewDecisionPacket.routing.suggestedQueue}</span>
+                <span>Task creation: {ownerReviewDecisionPacket.boundaries.taskCreationAllowed ? "allowed" : "blocked"}</span>
+                <span>Final approval: {ownerReviewDecisionPacket.boundaries.finalApprovalAllowed ? "allowed" : "blocked"}</span>
+                <span>Command execution: {ownerReviewDecisionPacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+              </div>
+              <div className="queue-list compact">
+                {ownerReviewDecisionPacket.decisionOptions.map((option) => (
+                  <article className="queue-item" key={option.id}>
+                    <div>
+                      <strong>{option.label}</strong>
+                      <p>{option.allowedNextState}</p>
+                    </div>
+                    <span>{option.requiresRationale ? "rationale required" : "no rationale"}</span>
+                    <Badge tone="review">draft only</Badge>
+                  </article>
+                ))}
+              </div>
+              <div className="button-row">
+                <button type="button" className="secondary" disabled>Record decision in future phase</button>
+                <button type="button" disabled>Draft only</button>
+              </div>
+              <p className="muted">Phase 53 displays Tyler's possible decision paths. It does not record final approval, create tasks, execute commands, route work, connect to a runner, or mutate source.</p>
             </Card>
 
             <Card title="Morning Review Packet" eyebrow="preview">
