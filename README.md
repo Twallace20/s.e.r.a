@@ -683,3 +683,7 @@ Phase 41 adds a local owner decision recorder. It records explicit owner decisio
 ## Phase 42 — Approval-Gated Action Plan v1
 
 Phase 42 adds a local approval-gated action plan layer. It maps recorded owner decisions into future action-plan status while keeping execution, runner connectivity, branch operations, source mutation, patches, merges, tags, deletion, secrets, and self-approval disabled.
+
+## Phase 43 — Session Lock Guard v1
+
+Phase 43 adds a local session lock guard layer. It defines stale-lock blocking, overlapping-session blocking, heartbeat planning, and owner-release requirements while keeping execution, runner connectivity, branch operations, source mutation, patches, merges, tags, deletion, secrets, owner-decision recording, and self-approval disabled.

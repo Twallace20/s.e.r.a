@@ -81,7 +81,9 @@
     "phase41:demo": "npm run build --silent && node scripts/run-owner-decision-recorder-v1.mjs",
     "phase41:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase41:demo",
     "phase42:demo": "npm run build --silent && node scripts/run-approval-gated-action-plan-v1.mjs",
-    "phase42:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase42:demo"
+    "phase42:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase42:demo",
+    "phase43:demo": "npm run build --silent && node scripts/run-session-lock-guard-v1.mjs",
+    "phase43:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase43:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

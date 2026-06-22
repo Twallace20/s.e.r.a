@@ -289,3 +289,7 @@ Certification means S.E.R.A. can record local owner decisions with evidence and 
 ## Phase 42 certification
 
 Phase 42 certifies the approval-gated action plan contract at `operator-console-v1` level while preserving the free-core covenant and all non-execution boundaries.
+
+## Phase 43 certification
+
+Phase 43 certifies the session lock guard contract at `operator-console-v1` level while preserving the free-core covenant and all non-execution boundaries.
