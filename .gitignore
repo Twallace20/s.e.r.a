@@ -66,3 +66,5 @@ packages/*/src/*.d.ts
 .sera-approval-gated-action-plan/
 
 .sera-session-lock-guard/
+
+.sera-emergency-stop-guard/

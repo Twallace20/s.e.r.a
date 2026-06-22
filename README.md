@@ -687,3 +687,7 @@ Phase 42 adds a local approval-gated action plan layer. It maps recorded owner d
 ## Phase 43 — Session Lock Guard v1
 
 Phase 43 adds a local session lock guard layer. It defines stale-lock blocking, overlapping-session blocking, heartbeat planning, and owner-release requirements while keeping execution, runner connectivity, branch operations, source mutation, patches, merges, tags, deletion, secrets, owner-decision recording, and self-approval disabled.
+
+## Phase 44 — Emergency Stop Guard v1
+
+Phase 44 adds a local emergency stop guard layer. It defines stop signal checks, stop state latch planning, blocked-action handoff, restart preflight, session lock binding, and owner-release requirements while keeping execution, runner connectivity, branch operations, source mutation, patches, merges, tags, deletion, secrets, owner-decision recording, and self-approval disabled.
