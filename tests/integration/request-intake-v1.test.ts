@@ -14,7 +14,7 @@ function writeFixture(rootDir: string) {
         "  phase: { label: 'Phase 48 · Request Intake v1' },",
         "  title: 'Prepare Phase 49 file intake',",
         "  details: 'Capture-only draft',",
-        "  requestedBy: 'Driana',",
+        "  requestedBy: 'Tyler',",
         "  priority: 'High',",
         "  workflowType: 'Phase build',",
         "  intakeStatus: 'Captured for owner review',",
