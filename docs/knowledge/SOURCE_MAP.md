@@ -296,6 +296,7 @@ Phase 33 adds a local branch proposal builder so S.E.R.A. can convert generated 
 - `docs/phases/PHASE_38_COMMAND_ALLOWLIST_GATE_V1.md` — Defines Phase 38 purpose, branch proposal boundary, validation, and completion criteria.
 - `docs/phases/PHASE_39_EVIDENCE_CAPTURE_BUNDLE_V1.md` — Defines Phase 39 purpose, branch proposal boundary, validation, and completion criteria.
 - `docs/phases/PHASE_40_OVERNIGHT_BRANCH_WORKER_V1.md` — Defines Phase 40 purpose, branch proposal boundary, validation, and completion criteria.
+- `docs/phases/PHASE_41_OWNER_DECISION_RECORDER_V1.md` — Defines Phase 41 purpose, branch proposal boundary, validation, and completion criteria.
 - `scripts/lib/branch-proposal-builder-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/branch-readiness-inspector-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/remote-phase-runner-blueprint-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
@@ -304,6 +305,7 @@ Phase 33 adds a local branch proposal builder so S.E.R.A. can convert generated 
 - `scripts/lib/command-allowlist-gate-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/evidence-capture-bundle-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/lib/overnight-branch-worker-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
+- `scripts/lib/owner-decision-recorder-v1.mjs` — Creates, validates, summarizes, and writes local branch proposal evidence.
 - `scripts/run-branch-proposal-builder-v1.mjs` — Runs the Phase 33 demo and writes branch proposal reports.
 - `scripts/run-branch-readiness-inspector-v1.mjs` — Runs the Phase 34 demo and writes branch proposal reports.
 - `scripts/run-remote-phase-runner-blueprint-v1.mjs` — Runs the Phase 35 demo and writes branch proposal reports.
@@ -312,6 +314,7 @@ Phase 33 adds a local branch proposal builder so S.E.R.A. can convert generated 
 - `scripts/run-command-allowlist-gate-v1.mjs` — Runs the Phase 38 demo and writes branch proposal reports.
 - `scripts/run-evidence-capture-bundle-v1.mjs` — Runs the Phase 39 demo and writes branch proposal reports.
 - `scripts/run-overnight-branch-worker-v1.mjs` — Runs the Phase 40 demo and writes branch proposal reports.
+- `scripts/run-owner-decision-recorder-v1.mjs` — Runs the Phase 41 demo and writes branch proposal reports.
 - `tests/integration/branch-proposal-builder-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/branch-readiness-inspector-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/remote-phase-runner-blueprint-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
@@ -320,6 +323,7 @@ Phase 33 adds a local branch proposal builder so S.E.R.A. can convert generated 
 - `tests/integration/command-allowlist-gate-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/evidence-capture-bundle-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 - `tests/integration/overnight-branch-worker-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
+- `tests/integration/owner-decision-recorder-v1.test.ts` — Verifies branch proposal creation, validation, reporting, and safety boundaries.
 
 ## PHASE 34 — BRANCH READINESS INSPECTOR V1
 
@@ -376,3 +380,10 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - scripts/lib/overnight-branch-worker-v1.mjs
 - scripts/run-overnight-branch-worker-v1.mjs
 - tests/integration/overnight-branch-worker-v1.test.ts
+
+## PHASE 41 — OWNER DECISION RECORDER V1
+
+- docs/phases/PHASE_41_OWNER_DECISION_RECORDER_V1.md
+- scripts/lib/owner-decision-recorder-v1.mjs
+- scripts/run-owner-decision-recorder-v1.mjs
+- tests/integration/owner-decision-recorder-v1.test.ts

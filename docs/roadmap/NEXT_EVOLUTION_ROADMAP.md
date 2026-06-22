@@ -364,3 +364,7 @@ Phase 39 follows the command allowlist gate by defining the evidence bundle futu
 ## PHASE 40 — OVERNIGHT BRANCH WORKER V1
 
 Phase 40 follows the evidence capture bundle by defining the first overnight branch worker contract. The worker remains dry-run-only until later phases add explicit owner-approved execution mechanics.
+
+## PHASE 41 — OWNER DECISION RECORDER V1
+
+Phase 41 follows the dry-run overnight branch worker by adding local owner-decision recording. Later phases can bind execution planning to recorded approvals, but this phase does not activate execution.

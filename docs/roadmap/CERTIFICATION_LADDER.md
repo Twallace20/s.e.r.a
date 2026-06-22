@@ -281,3 +281,7 @@ Certification means S.E.R.A. can produce and validate a local evidence capture b
 ## PHASE 40 — OVERNIGHT BRANCH WORKER V1
 
 Certification means S.E.R.A. can produce and validate a local overnight branch worker plan while keeping overnight execution, command execution, runner connectivity, branch actions, source mutation, owner-decision recording, and self-approval disabled.
+
+## PHASE 41 — OWNER DECISION RECORDER V1
+
+Certification means S.E.R.A. can record local owner decisions with evidence and audit requirements while keeping execution authority disabled after recorded decisions.

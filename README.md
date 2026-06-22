@@ -675,3 +675,7 @@ Phase 39 adds a local evidence capture bundle contract/runtime. It defines requi
 ## PHASE 40 — OVERNIGHT BRANCH WORKER V1
 
 Phase 40 adds a local overnight branch worker contract/runtime. It defines required worker stages and safety bindings for future owner-reviewed overnight branch work while keeping overnight execution, command execution, runner connectivity, source mutation, branch actions, owner-decision recording, and self-approval disabled.
+
+## PHASE 41 — OWNER DECISION RECORDER V1
+
+Phase 41 adds a local owner decision recorder. It records explicit owner decisions with owner identity, reason, approval queue binding, evidence bundle binding, redaction review, and immutable audit requirements while keeping execution after approval, command execution, runner connectivity, branch actions, source mutation, and self-approval disabled.

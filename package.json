@@ -77,7 +77,9 @@
     "phase39:demo": "npm run build --silent && node scripts/run-evidence-capture-bundle-v1.mjs",
     "phase39:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase39:demo",
     "phase40:demo": "npm run build --silent && node scripts/run-overnight-branch-worker-v1.mjs",
-    "phase40:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase40:demo"
+    "phase40:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase40:demo",
+    "phase41:demo": "npm run build --silent && node scripts/run-owner-decision-recorder-v1.mjs",
+    "phase41:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase41:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
