@@ -73,3 +73,5 @@ packages/*/src/*.d.ts
 
 .sera-private-operator-app-shell/
 .sera-operator-runtime-reader/
+
+.sera-request-intake/

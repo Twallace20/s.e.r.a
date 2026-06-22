@@ -523,3 +523,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for runtime-reader fields, app binding, report writing, and blocked unsafe boundaries.
 - Use when answering: how Phase 47 remains read-only and private-app-only.
+
+| Request intake | Defines the capture-only private operator request intake surface for Phase 48. | `docs/phases/PHASE_48_REQUEST_INTAKE_V1.md`, `apps/operator-console/src/request-intake.ts`, `scripts/lib/request-intake-v1.mjs`, `scripts/run-request-intake-v1.mjs`, `tests/integration/request-intake-v1.test.ts` |
+
+### `docs/phases/PHASE_48_REQUEST_INTAKE_V1.md`
+
+- Evidence role: Phase 48 request-intake contract and validation instructions.
+- Use when answering: what Phase 48 adds, what it blocks, and why it remains capture-only.
+
+### `apps/operator-console/src/request-intake.ts`
+
+- Evidence role: typed frontend-consumable request draft packet and request-intake safety gates.
+- Use when answering: what fields the private operator app can display for request intake.
+
+### `scripts/lib/request-intake-v1.mjs`
+
+- Evidence role: Phase 48 verification contract and request-intake safety boundary checks.
+- Use when answering: how the request-intake surface is validated as capture-only.
+
+### `scripts/run-request-intake-v1.mjs`
+
+- Evidence role: Phase 48 demo runner.
+- Use when answering: how to prove request intake is ready.
+
+### `tests/integration/request-intake-v1.test.ts`
+
+- Evidence role: test proof for request fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 48 blocks command execution, runner connectivity, auto-submit, auto-route, auto-merge, and self-approval.

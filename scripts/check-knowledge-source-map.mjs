@@ -165,7 +165,12 @@ const requiredMappedPaths = [
   "scripts/lib/operator-app-runtime-reader-v1.mjs",
   "scripts/run-operator-app-runtime-reader-v1.mjs",
   "tests/integration/operator-app-runtime-reader-v1.test.ts",
-  "apps/operator-console/src/runtime-status.ts"
+  "apps/operator-console/src/runtime-status.ts",
+  "docs/phases/PHASE_48_REQUEST_INTAKE_V1.md",
+  "scripts/lib/request-intake-v1.mjs",
+  "scripts/run-request-intake-v1.mjs",
+  "tests/integration/request-intake-v1.test.ts",
+  "apps/operator-console/src/request-intake.ts",
 ];
 
 function fail(message) {
