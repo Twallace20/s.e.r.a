@@ -1,5 +1,6 @@
 import { operatorRuntimeStatus } from "./runtime-status";
 import { requestIntakeDraft, requestIntakeSafetyGates } from "./request-intake";
+import { fileIntakePacket, fileIntakeSafetyGates } from "./file-intake";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -33,6 +34,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Desktop worker", value: operatorRuntimeStatus.status.desktopWorker, tone: "online" },
   { label: "Local runtime", value: operatorRuntimeStatus.status.localRuntime, tone: "ready" },
   { label: "Request intake", value: requestIntakeDraft.intakeStatus, tone: "review" },
+  { label: "File intake", value: fileIntakePacket.fileIntakeStatus, tone: "review" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -42,10 +44,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 48 request intake review",
-    branch: "phase-48-request-intake-v1",
+    title: "Phase 49 file intake review",
+    branch: "phase-49-file-intake-v1",
     risk: "Low",
-    workflow: "Capture-only request intake",
+    workflow: "Metadata-only file intake",
     status: "Queued",
   },
   {
@@ -65,6 +67,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...fileIntakeSafetyGates,
   ...requestIntakeSafetyGates,
   "Read-only runtime status packet",
   "Allowed commands only",
@@ -240,6 +243,26 @@ export function App() {
                 <span>Runner connection: {requestIntakeDraft.routing.runnerConnectionAllowed ? "allowed" : "blocked"}</span>
                 <span>Auto-route: {requestIntakeDraft.boundaries.autoRouteAllowed ? "allowed" : "blocked"}</span>
               </div>
+            </Card>
+
+            <Card title="File Intake Review" eyebrow="metadata-only">
+              <div className="packet-list">
+                <span>Phase: {fileIntakePacket.phase.label}</span>
+                <span>Status: {fileIntakePacket.fileIntakeStatus}</span>
+                <span>Primary file: {fileIntakePacket.primaryFile.name}</span>
+                <span>Extension: {fileIntakePacket.primaryFile.extension}</span>
+                <span>Category: {fileIntakePacket.primaryFile.category}</span>
+                <span>Classification: {fileIntakePacket.primaryFile.classification}</span>
+                <span>Suggested queue: {fileIntakePacket.routing.suggestedQueue}</span>
+                <span>File execution: {fileIntakePacket.boundaries.fileExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>File mutation: {fileIntakePacket.boundaries.fileMutationAllowed ? "allowed" : "blocked"}</span>
+                <span>Auto-processing: {fileIntakePacket.boundaries.autoProcessingAllowed ? "allowed" : "blocked"}</span>
+              </div>
+              <div className="button-row">
+                <button type="button" className="secondary" disabled>Choose local file in future phase</button>
+                <button type="button" disabled>Capture metadata only</button>
+              </div>
+              <p className="muted">Phase 49 records file metadata for owner review. It does not read arbitrary files, execute files, mutate files, process contents, or connect to a runner.</p>
             </Card>
 
             <Card title="Morning Review Packet" eyebrow="preview">

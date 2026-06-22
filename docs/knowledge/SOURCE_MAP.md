@@ -550,3 +550,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for request fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 48 blocks command execution, runner connectivity, auto-submit, auto-route, auto-merge, and self-approval.
+
+| File intake | Defines the metadata-only private operator file intake surface for Phase 49. | `docs/phases/PHASE_49_FILE_INTAKE_V1.md`, `apps/operator-console/src/file-intake.ts`, `scripts/lib/file-intake-v1.mjs`, `scripts/run-file-intake-v1.mjs`, `tests/integration/file-intake-v1.test.ts` |
+
+### `docs/phases/PHASE_49_FILE_INTAKE_V1.md`
+
+- Evidence role: Phase 49 file-intake contract and validation instructions.
+- Use when answering: what Phase 49 adds, what it blocks, and why it remains metadata-only.
+
+### `apps/operator-console/src/file-intake.ts`
+
+- Evidence role: typed frontend-consumable file metadata packet and file-intake safety gates.
+- Use when answering: what file metadata the private operator app can display for intake review.
+
+### `scripts/lib/file-intake-v1.mjs`
+
+- Evidence role: Phase 49 verification contract and file-intake safety boundary checks.
+- Use when answering: how the file-intake surface is validated as metadata-only.
+
+### `scripts/run-file-intake-v1.mjs`
+
+- Evidence role: Phase 49 demo runner.
+- Use when answering: how to prove file intake is ready.
+
+### `tests/integration/file-intake-v1.test.ts`
+
+- Evidence role: test proof for file metadata fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 49 blocks arbitrary file access, file execution, file mutation, runner connectivity, auto-processing, auto-routing, auto-merge, and self-approval.
