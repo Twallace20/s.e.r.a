@@ -2,6 +2,7 @@ import { operatorRuntimeStatus } from "./runtime-status";
 import { requestIntakeDraft, requestIntakeSafetyGates } from "./request-intake";
 import { fileIntakePacket, fileIntakeSafetyGates } from "./file-intake";
 import { workflowLibraryPacket, workflowLibrarySafetyGates } from "./workflow-library";
+import { workflowComposerPacket, workflowComposerSafetyGates } from "./workflow-composer";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -37,6 +38,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Request intake", value: requestIntakeDraft.intakeStatus, tone: "review" },
   { label: "File intake", value: fileIntakePacket.fileIntakeStatus, tone: "review" },
   { label: "Workflow library", value: workflowLibraryPacket.workflowLibraryStatus, tone: "ready" },
+  { label: "Workflow composer", value: workflowComposerPacket.workflowComposerStatus, tone: "review" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -46,10 +48,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 50 workflow library review",
-    branch: "phase-50-workflow-library-v1",
+    title: "Phase 51 workflow composer review",
+    branch: "phase-51-workflow-composer-v1",
     risk: "Low",
-    workflow: "Catalog-only workflow library",
+    workflow: "Request + file + workflow composition preview",
     status: "Queued",
   },
   {
@@ -69,6 +71,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...workflowComposerSafetyGates,
   ...workflowLibrarySafetyGates,
   ...fileIntakeSafetyGates,
   ...requestIntakeSafetyGates,
@@ -286,6 +289,28 @@ export function App() {
                 <button type="button" disabled>Review catalog only</button>
               </div>
               <p className="muted">Phase 50 gives S.E.R.A. a private workflow catalog. It does not execute workflows, route requests, connect to runners, or mutate source.</p>
+            </Card>
+
+            <Card title="Workflow Composer Review" eyebrow="composition-only">
+              <div className="packet-list">
+                <span>Phase: {workflowComposerPacket.phase.label}</span>
+                <span>Status: {workflowComposerPacket.workflowComposerStatus}</span>
+                <span>Composition mode: {workflowComposerPacket.compositionMode}</span>
+                <span>Request signal: {workflowComposerPacket.requestSignal.label}</span>
+                <span>File signal: {workflowComposerPacket.fileSignal.label}</span>
+                <span>Workflow signal: {workflowComposerPacket.workflowSignal.label}</span>
+                <span>Plan preview: {workflowComposerPacket.composedPlan.title}</span>
+                <span>Suggested queue: {workflowComposerPacket.routing.suggestedQueue}</span>
+                <span>Plan steps: {workflowComposerPacket.composedPlan.steps.length}</span>
+                <span>Evidence requirements: {workflowComposerPacket.composedPlan.evidenceRequirements.length}</span>
+                <span>Command execution: {workflowComposerPacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Auto-route: {workflowComposerPacket.boundaries.autoRouteAllowed ? "allowed" : "blocked"}</span>
+              </div>
+              <div className="button-row">
+                <button type="button" className="secondary" disabled>Create tasks in Phase 52</button>
+                <button type="button" disabled>Review plan preview only</button>
+              </div>
+              <p className="muted">Phase 51 composes request, file, and workflow signals into a Tyler-reviewable plan preview. It does not create tasks, execute commands, connect to a runner, or mutate source.</p>
             </Card>
 
             <Card title="Morning Review Packet" eyebrow="preview">

@@ -604,3 +604,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for workflow fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 50 blocks command execution, runner connectivity, auto-processing, auto-routing, auto-merge, and self-approval.
+
+| Workflow composer | Defines the composition-only private operator workflow composer surface for Phase 51. | `docs/phases/PHASE_51_WORKFLOW_COMPOSER_V1.md`, `apps/operator-console/src/workflow-composer.ts`, `scripts/lib/workflow-composer-v1.mjs`, `scripts/run-workflow-composer-v1.mjs`, `tests/integration/workflow-composer-v1.test.ts` |
+
+### `docs/phases/PHASE_51_WORKFLOW_COMPOSER_V1.md`
+
+- Evidence role: Phase 51 workflow-composer contract and validation instructions.
+- Use when answering: what Phase 51 adds, what it blocks, and why it remains composition-only.
+
+### `apps/operator-console/src/workflow-composer.ts`
+
+- Evidence role: typed frontend-consumable plan preview packet and workflow-composer safety gates.
+- Use when answering: how request, file, and workflow signals become a plan preview for Tyler review.
+
+### `scripts/lib/workflow-composer-v1.mjs`
+
+- Evidence role: Phase 51 verification contract and workflow-composer safety boundary checks.
+- Use when answering: how the workflow-composer surface is validated as preview-only.
+
+### `scripts/run-workflow-composer-v1.mjs`
+
+- Evidence role: Phase 51 demo runner.
+- Use when answering: how to prove workflow composer is ready.
+
+### `tests/integration/workflow-composer-v1.test.ts`
+
+- Evidence role: test proof for composition fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 51 blocks command execution, runner connectivity, file mutation, auto-processing, auto-routing, auto-merge, and self-approval.
