@@ -77,3 +77,5 @@ packages/*/src/*.d.ts
 .sera-request-intake/
 
 .sera-file-intake/
+
+.sera-workflow-library/

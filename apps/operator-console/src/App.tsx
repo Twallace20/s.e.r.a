@@ -1,6 +1,7 @@
 import { operatorRuntimeStatus } from "./runtime-status";
 import { requestIntakeDraft, requestIntakeSafetyGates } from "./request-intake";
 import { fileIntakePacket, fileIntakeSafetyGates } from "./file-intake";
+import { workflowLibraryPacket, workflowLibrarySafetyGates } from "./workflow-library";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -35,6 +36,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Local runtime", value: operatorRuntimeStatus.status.localRuntime, tone: "ready" },
   { label: "Request intake", value: requestIntakeDraft.intakeStatus, tone: "review" },
   { label: "File intake", value: fileIntakePacket.fileIntakeStatus, tone: "review" },
+  { label: "Workflow library", value: workflowLibraryPacket.workflowLibraryStatus, tone: "ready" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -44,10 +46,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 49 file intake review",
-    branch: "phase-49-file-intake-v1",
+    title: "Phase 50 workflow library review",
+    branch: "phase-50-workflow-library-v1",
     risk: "Low",
-    workflow: "Metadata-only file intake",
+    workflow: "Catalog-only workflow library",
     status: "Queued",
   },
   {
@@ -67,6 +69,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...workflowLibrarySafetyGates,
   ...fileIntakeSafetyGates,
   ...requestIntakeSafetyGates,
   "Read-only runtime status packet",
@@ -263,6 +266,26 @@ export function App() {
                 <button type="button" disabled>Capture metadata only</button>
               </div>
               <p className="muted">Phase 49 records file metadata for owner review. It does not read arbitrary files, execute files, mutate files, process contents, or connect to a runner.</p>
+            </Card>
+
+            <Card title="Workflow Library Review" eyebrow="catalog-only">
+              <div className="packet-list">
+                <span>Phase: {workflowLibraryPacket.phase.label}</span>
+                <span>Status: {workflowLibraryPacket.workflowLibraryStatus}</span>
+                <span>Catalog mode: {workflowLibraryPacket.catalogMode}</span>
+                <span>Workflow count: {workflowLibraryPacket.workflows.length}</span>
+                <span>Primary workflow: {workflowLibraryPacket.primaryWorkflow.name}</span>
+                <span>Category: {workflowLibraryPacket.primaryWorkflow.category}</span>
+                <span>Output mode: {workflowLibraryPacket.primaryWorkflow.outputMode}</span>
+                <span>Suggested queue: {workflowLibraryPacket.routing.suggestedQueue}</span>
+                <span>Command execution: {workflowLibraryPacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Auto-route: {workflowLibraryPacket.boundaries.autoRouteAllowed ? "allowed" : "blocked"}</span>
+              </div>
+              <div className="button-row">
+                <button type="button" className="secondary" disabled>Compose workflow in Phase 51</button>
+                <button type="button" disabled>Review catalog only</button>
+              </div>
+              <p className="muted">Phase 50 gives S.E.R.A. a private workflow catalog. It does not execute workflows, route requests, connect to runners, or mutate source.</p>
             </Card>
 
             <Card title="Morning Review Packet" eyebrow="preview">
