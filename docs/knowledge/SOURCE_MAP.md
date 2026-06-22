@@ -685,3 +685,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for decision fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 53 blocks command execution, runner connectivity, task creation, final approval, auto-approval, auto-route, auto-merge, and self-approval.
+
+| Operator owner decision record surface | Defines the record-preview-only Tyler decision record surface for Phase 54. | `docs/phases/PHASE_54_OPERATOR_OWNER_DECISION_RECORD_SURFACE_V1.md`, `apps/operator-console/src/owner-decision-record-surface.ts`, `scripts/lib/operator-owner-decision-record-surface-v1.mjs`, `scripts/run-operator-owner-decision-record-surface-v1.mjs`, `tests/integration/operator-owner-decision-record-surface-v1.test.ts` |
+
+### `docs/phases/PHASE_54_OPERATOR_OWNER_DECISION_RECORD_SURFACE_V1.md`
+
+- Evidence role: Phase 54 decision-record surface contract and validation instructions.
+- Use when answering: what Phase 54 adds, what it blocks, and why it remains record-preview-only.
+
+### `apps/operator-console/src/owner-decision-record-surface.ts`
+
+- Evidence role: typed frontend-consumable owner decision record surface packet and safety gates.
+- Use when answering: how Tyler-owned decision record previews appear in the private operator app.
+
+### `scripts/lib/operator-owner-decision-record-surface-v1.mjs`
+
+- Evidence role: Phase 54 verification contract and owner decision record surface safety boundary checks.
+- Use when answering: how the record surface is validated as preview-only and non-executable.
+
+### `scripts/run-operator-owner-decision-record-surface-v1.mjs`
+
+- Evidence role: Phase 54 demo runner.
+- Use when answering: how to prove owner decision record surfaces are ready.
+
+### `tests/integration/operator-owner-decision-record-surface-v1.test.ts`
+
+- Evidence role: test proof for record fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 54 blocks command execution, runner connectivity, record persistence, task creation, final approval, auto-approval, auto-route, auto-merge, and self-approval.

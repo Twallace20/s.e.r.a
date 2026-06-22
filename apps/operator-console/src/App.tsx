@@ -5,6 +5,7 @@ import { workflowLibraryPacket, workflowLibrarySafetyGates } from "./workflow-li
 import { workflowComposerPacket, workflowComposerSafetyGates } from "./workflow-composer";
 import { planReviewQueuePacket, planReviewQueueSafetyGates } from "./plan-review-queue";
 import { ownerReviewDecisionPacket, ownerReviewDecisionSafetyGates } from "./owner-review-decision-draft";
+import { ownerDecisionRecordSurfacePacket, ownerDecisionRecordSurfaceSafetyGates } from "./owner-decision-record-surface";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -43,6 +44,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Workflow composer", value: workflowComposerPacket.workflowComposerStatus, tone: "review" },
   { label: "Plan review queue", value: planReviewQueuePacket.planReviewQueueStatus, tone: "review" },
   { label: "Owner decision drafts", value: ownerReviewDecisionPacket.decisionDraftStatus, tone: "review" },
+  { label: "Owner decision record surface", value: ownerDecisionRecordSurfacePacket.recordSurfaceStatus, tone: "review" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -52,10 +54,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 53 owner review decision drafts",
-    branch: "phase-53-owner-review-decision-draft-v1",
+    title: "Phase 54 owner decision record surface",
+    branch: "phase-54-operator-owner-decision-record-surface-v1",
     risk: "Low",
-    workflow: "Owner decision draft",
+    workflow: "Owner decision record surface",
     status: "Queued",
   },
   {
@@ -75,6 +77,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...ownerDecisionRecordSurfaceSafetyGates,
   ...ownerReviewDecisionSafetyGates,
   ...planReviewQueueSafetyGates,
   ...workflowComposerSafetyGates,
@@ -372,6 +375,42 @@ export function App() {
                 <button type="button" disabled>Draft only</button>
               </div>
               <p className="muted">Phase 53 displays Tyler's possible decision paths. It does not record final approval, create tasks, execute commands, route work, connect to a runner, or mutate source.</p>
+            </Card>
+
+            <Card title="Owner Decision Record Surface" eyebrow="record-preview-only">
+              <div className="packet-list">
+                <span>Phase: {ownerDecisionRecordSurfacePacket.phase.label}</span>
+                <span>Status: {ownerDecisionRecordSurfacePacket.recordSurfaceStatus}</span>
+                <span>Mode: {ownerDecisionRecordSurfacePacket.recordMode}</span>
+                <span>Owner: {ownerDecisionRecordSurfacePacket.recordSummary.owner}</span>
+                <span>Source decision set: {ownerDecisionRecordSurfacePacket.recordSummary.sourceDecisionSet}</span>
+                <span>Record actions: {ownerDecisionRecordSurfacePacket.recordActions.length}</span>
+                <span>Selected decision: {ownerDecisionRecordSurfacePacket.selectedDecision.label}</span>
+                <span>Record draft: {ownerDecisionRecordSurfacePacket.recordDraft.recordId}</span>
+                <span>Rationale status: {ownerDecisionRecordSurfacePacket.recordDraft.rationaleStatus}</span>
+                <span>Suggested queue: {ownerDecisionRecordSurfacePacket.routing.suggestedQueue}</span>
+                <span>Record persistence: {ownerDecisionRecordSurfacePacket.boundaries.recordPersistenceAllowed ? "allowed" : "blocked"}</span>
+                <span>Task creation: {ownerDecisionRecordSurfacePacket.boundaries.taskCreationAllowed ? "allowed" : "blocked"}</span>
+                <span>Final approval: {ownerDecisionRecordSurfacePacket.boundaries.finalApprovalAllowed ? "allowed" : "blocked"}</span>
+                <span>Command execution: {ownerDecisionRecordSurfacePacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+              </div>
+              <div className="queue-list compact">
+                {ownerDecisionRecordSurfacePacket.recordActions.map((action) => (
+                  <article className="queue-item" key={action.id}>
+                    <div>
+                      <strong>{action.label}</strong>
+                      <p>{action.allowedRecordState}</p>
+                    </div>
+                    <span>{action.requiresOwnerRationale ? "rationale required" : "no rationale"}</span>
+                    <Badge tone="review">not persisted</Badge>
+                  </article>
+                ))}
+              </div>
+              <div className="button-row">
+                <button type="button" className="secondary" disabled>Persist record in future phase</button>
+                <button type="button" disabled>Record preview only</button>
+              </div>
+              <p className="muted">Phase 54 shows how Tyler's selected decision would be represented as a governed record preview. It does not persist records, create tasks, execute commands, route work, connect to a runner, or treat recorded intent as final approval.</p>
             </Card>
 
             <Card title="Morning Review Packet" eyebrow="preview">

@@ -85,3 +85,5 @@ packages/*/src/*.d.ts
 .sera-plan-review-queue/
 
 .sera-owner-review-decision-draft/
+
+.sera-owner-decision-record-surface/
