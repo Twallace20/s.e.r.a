@@ -467,3 +467,7 @@ The approval-gated action plan is local-only and planning-only. It may write rep
 ## Phase 43 package boundary
 
 The session lock guard is local-only and planning-only. It may write reports under `.sera-session-lock-guard/` but must not acquire live execution locks, release live execution locks, execute commands, connect to runners, mutate source, create branches, apply patches, merge, tag, delete, use secrets, record owner decisions, or self-approve.
+
+## Phase 44 package boundary
+
+The emergency stop guard is local-only and planning-only. It may write reports under `.sera-emergency-stop-guard/` but must not activate live stops, release live stops, execute commands, connect to runners, mutate source, create branches, apply patches, merge, tag, delete, use secrets, record owner decisions, or self-approve.

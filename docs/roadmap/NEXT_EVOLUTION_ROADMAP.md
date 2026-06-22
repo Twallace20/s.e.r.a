@@ -376,3 +376,7 @@ Phase 42 converts recorded owner decisions into a local action plan. The next sa
 ## Phase 43 roadmap
 
 Phase 43 introduces the local session lock guard so future runner-style work has a stale-lock and overlapping-session safety contract before any execution path is considered.
+
+## Phase 44 roadmap
+
+Phase 44 introduces the local emergency stop guard so future runner-style work has a hard stop-state safety contract before any execution path is considered.

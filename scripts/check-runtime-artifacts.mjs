@@ -95,3 +95,5 @@ console.log("S.E.R.A. runtime artifact hygiene: PASS");
 // phase42-runtime-hygiene-note: .sera-approval-gated-action-plan is a local runtime artifact directory.
 
 // phase43-runtime-hygiene-note: .sera-session-lock-guard is a local runtime artifact directory.
+
+// phase44-runtime-hygiene-note: .sera-emergency-stop-guard is a local runtime artifact directory.
