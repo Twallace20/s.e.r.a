@@ -301,3 +301,15 @@ Phase 44 certifies the emergency stop guard contract at `operator-console-v1` le
 ## Phase 45 certification
 
 Phase 45 certifies the free-core covenant checkpoint at `operator-console-v1` level while preserving the free-core covenant through Phase 45.
+
+## Phase 46 — `phase-46-private-operator-app-shell-v1`
+
+Phase 46 is a private app shell milestone, not a new runtime authority level. It adds a Vite/React/TypeScript operator dashboard under `apps/operator-console/` while preserving the current runtime certification level `operator-console-v1`.
+
+Phase 46 proves:
+
+- the repo has a private operator app shell
+- the app exposes Command Center, Requests, Overnight Queue, Workflows, Files, Evidence, Safety Gates, Branches, and Settings surfaces
+- the app remains frontend-only and local/private
+- no backend logic, authentication, command execution, runner connectivity, source mutation, auto-merge, or self-approval is introduced
+- Phase 47 can wire real runtime artifact data into the shell

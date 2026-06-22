@@ -475,3 +475,9 @@ The emergency stop guard is local-only and planning-only. It may write reports u
 ## Phase 45 package boundary
 
 The free-core covenant checkpoint is local-only and planning-only. It may write reports under `.sera-free-core-covenant-checkpoint/` but must not require paid providers, cloud services, secrets, runner connectivity, command execution, remote execution, source mutation, branch operations, patches, merges, tags, deletion, owner-decision recording, commercial activation, or self-approval.
+
+## Phase 46 App Boundary — `apps/operator-console/`
+
+`apps/operator-console/` owns the private operator web app shell. In Phase 46 it is frontend-only and may contain sample data, local UI state, navigation, cards, forms, and preview panels.
+
+It must not own backend execution, command running, runner connectivity, authentication, branch mutation, source mutation, auto-merge, secrets, or cloud-only behavior. Those capabilities require later certified phases and explicit safety gates.

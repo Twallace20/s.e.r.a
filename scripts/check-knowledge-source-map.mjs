@@ -148,7 +148,19 @@ const requiredMappedPaths = [
   "docs/phases/PHASE_23_SQLITE_PERSISTENCE_V1.md",
   "scripts/run-operator-console-v2.mjs",
   "scripts/lib/operator-console-v2.mjs",
-  "docs/phases/PHASE_22_OPERATOR_CONSOLE_V2_TERMINAL_UI.md"
+  "docs/phases/PHASE_22_OPERATOR_CONSOLE_V2_TERMINAL_UI.md",
+  "docs/phases/PHASE_46_PRIVATE_OPERATOR_APP_SHELL_V1.md",
+  "scripts/lib/private-operator-app-shell-v1.mjs",
+  "scripts/run-private-operator-app-shell-v1.mjs",
+  "tests/integration/private-operator-app-shell-v1.test.ts",
+  "apps/operator-console/README.md",
+  "apps/operator-console/package.json",
+  "apps/operator-console/index.html",
+  "apps/operator-console/vite.config.ts",
+  "apps/operator-console/tsconfig.json",
+  "apps/operator-console/src/main.tsx",
+  "apps/operator-console/src/App.tsx",
+  "apps/operator-console/src/styles.css"
 ];
 
 function fail(message) {

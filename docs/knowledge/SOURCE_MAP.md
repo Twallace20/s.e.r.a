@@ -431,3 +431,31 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - scripts/lib/free-core-covenant-checkpoint-v1.mjs
 - scripts/run-free-core-covenant-checkpoint-v1.mjs
 - tests/integration/free-core-covenant-checkpoint-v1.test.ts
+
+| Private operator app shell | Defines the first private web app shell, app boundaries, build commands, verification script, and next Phase 47–50 sequence. | `docs/phases/PHASE_46_PRIVATE_OPERATOR_APP_SHELL_V1.md`, `apps/operator-console/README.md`, `apps/operator-console/src/App.tsx`, `scripts/lib/private-operator-app-shell-v1.mjs`, `tests/integration/private-operator-app-shell-v1.test.ts` |
+
+### `docs/phases/PHASE_46_PRIVATE_OPERATOR_APP_SHELL_V1.md`
+
+- Evidence role: Phase 46 private app shell contract and build instructions.
+- Use when answering: how to apply, build, preview, validate, merge, tag, and close Phase 46.
+- Risk note: Phase 46 is a frontend/private shell milestone and does not grant new backend, command execution, runner, mutation, or auto-merge authority.
+
+### `apps/operator-console/README.md`
+
+- Evidence role: local operator app usage, build, and preview commands.
+- Use when answering: how to run the private app locally.
+
+### `apps/operator-console/src/App.tsx`
+
+- Evidence role: implemented dashboard surfaces and sample UI structure.
+- Use when answering: which private app modules are visible in Phase 46.
+
+### `scripts/lib/private-operator-app-shell-v1.mjs`
+
+- Evidence role: Phase 46 verification contract and safety boundaries.
+- Use when answering: what Phase 46 proves and blocks.
+
+### `tests/integration/private-operator-app-shell-v1.test.ts`
+
+- Evidence role: test proof for app surfaces, build docs, evidence writing, and authority boundaries.
+- Use when answering: whether Phase 46 is tested.

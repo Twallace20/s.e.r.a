@@ -384,3 +384,25 @@ Phase 44 introduces the local emergency stop guard so future runner-style work h
 ## Phase 45 roadmap
 
 Phase 45 closes the free-core covenant checkpoint before future runner-style phases move closer to controlled execution planning.
+
+### Phase 46 — Private Operator App Shell v1
+
+Add the first private web app shell under `apps/operator-console/`. The app is a local command center for supervising S.E.R.A. requests, files, evidence, safety gates, branches, overnight work concepts, and morning review packets.
+
+This phase is design-assisted and repo-owned. It does not add backend execution, authentication, runner connectivity, branch mutation, auto-merge, cloud hosting, or source mutation.
+
+### Phase 47 — Runtime Reader / Real S.E.R.A. Data v1
+
+Wire the private app to read real local S.E.R.A. runtime artifact summaries.
+
+### Phase 48 — Request + File Intake v1
+
+Add local request records and safe file intake records for logs, zips, screenshots, markdown files, and project folders.
+
+### Phase 49 — Workflow Library v1
+
+Add reusable workflow definitions for phase creation, validation review, evidence packets, UI shell work, branch preparation, and development handoffs.
+
+### Phase 50 — Development Workflow Composer v1
+
+Turn an owner request into a structured plan with risks, likely files, validation commands, evidence requirements, and approval gates.

@@ -87,7 +87,12 @@
     "phase44:demo": "npm run build --silent && node scripts/run-emergency-stop-guard-v1.mjs",
     "phase44:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase44:demo",
     "phase45:demo": "npm run build --silent && node scripts/run-free-core-covenant-checkpoint-v1.mjs",
-    "phase45:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase45:demo"
+    "phase45:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase45:demo",
+    "operator:dev": "npm --workspace @sera/operator-console-app run dev",
+    "operator:build": "npm --workspace @sera/operator-console-app run build",
+    "operator:preview": "npm --workspace @sera/operator-console-app run preview",
+    "phase46:demo": "node scripts/run-private-operator-app-shell-v1.mjs",
+    "phase46:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase46:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
