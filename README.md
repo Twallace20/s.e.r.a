@@ -695,3 +695,28 @@ Phase 44 adds a local emergency stop guard layer. It defines stop signal checks,
 ## Phase 45 — Free Core Covenant Checkpoint v1
 
 Phase 45 adds the local free-core covenant checkpoint. It confirms the free/local boundary through Phase 45 while keeping paid providers, cloud runners, secrets, runner connectivity, command execution, source mutation, branch operations, patches, merges, tags, deletion, owner-decision recording, commercial activation, and self-approval disabled.
+
+## Phase 46 Private Operator App Shell v1
+
+Phase 46 adds the first private web app shell under `apps/operator-console/`. It is a local/private operator dashboard for supervising S.E.R.A. development workflows, requests, overnight queue concepts, files, evidence, safety gates, branches, and morning review packets.
+
+This phase does not add backend logic, authentication, command execution, runner connectivity, source mutation, branch operations, auto-merge, cloud hosting, secrets, or iOS/native delivery.
+
+Preview locally after install:
+
+```bash
+npm run operator:dev
+```
+
+Build the app shell:
+
+```bash
+npm run operator:build
+```
+
+Validate Phase 46:
+
+```bash
+npm run phase46:verify
+npm run verify
+```

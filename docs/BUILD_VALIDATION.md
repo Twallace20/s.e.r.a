@@ -727,3 +727,33 @@ Phase 44 is validated with `npm run phase44:demo`, `npm run phase44:verify`, sou
 ## Phase 45 validation
 
 Phase 45 is validated with `npm run phase45:demo`, `npm run phase45:verify`, source/runtime hygiene, build, tests, certify, and full verify. Expected suite count after this phase is 45 test files and 206 tests.
+
+## Phase 46 Private Operator App Shell v1
+
+Phase 46 adds the private app shell and must pass:
+
+```bash
+npm install --ignore-scripts --no-audit --no-fund
+npm run knowledge:verify
+npm run phase46:demo
+npm run phase46:verify
+npm run hygiene
+npm run build
+npm test
+npm run certify
+npm run verify
+```
+
+The operator app can be previewed locally after validation:
+
+```bash
+npm run operator:dev
+```
+
+The operator app production build check is:
+
+```bash
+npm run operator:build
+```
+
+Phase 46 must remain frontend-only, local-only, private-app-only, and free-core compatible.

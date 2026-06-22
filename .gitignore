@@ -70,3 +70,5 @@ packages/*/src/*.d.ts
 .sera-emergency-stop-guard/
 
 .sera-free-core-covenant-checkpoint/
+
+.sera-private-operator-app-shell/
