@@ -206,6 +206,11 @@ const requiredMappedPaths = [
   "scripts/run-local-desktop-worker-blueprint-v1.mjs",
   "tests/integration/local-desktop-worker-blueprint-v1.test.ts",
   "apps/operator-console/src/local-desktop-worker-blueprint.ts",
+  "docs/phases/PHASE_56_LOCAL_WORKER_HEALTH_PANEL_V1.md",
+  "scripts/lib/local-worker-health-panel-v1.mjs",
+  "scripts/run-local-worker-health-panel-v1.mjs",
+  "tests/integration/local-worker-health-panel-v1.test.ts",
+  "apps/operator-console/src/local-worker-health-panel.ts",
 ];
 
 function fail(message) {

@@ -7,6 +7,7 @@ import { planReviewQueuePacket, planReviewQueueSafetyGates } from "./plan-review
 import { ownerReviewDecisionPacket, ownerReviewDecisionSafetyGates } from "./owner-review-decision-draft";
 import { ownerDecisionRecordSurfacePacket, ownerDecisionRecordSurfaceSafetyGates } from "./owner-decision-record-surface";
 import { localDesktopWorkerBlueprintPacket, localDesktopWorkerBlueprintSafetyGates } from "./local-desktop-worker-blueprint";
+import { localWorkerHealthPanelPacket, localWorkerHealthPanelSafetyGates } from "./local-worker-health-panel";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -47,6 +48,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Owner decision drafts", value: ownerReviewDecisionPacket.decisionDraftStatus, tone: "review" },
   { label: "Owner decision record surface", value: ownerDecisionRecordSurfacePacket.recordSurfaceStatus, tone: "review" },
   { label: "Desktop worker blueprint", value: localDesktopWorkerBlueprintPacket.workerBlueprintStatus, tone: "planned" },
+  { label: "Local worker health", value: localWorkerHealthPanelPacket.healthPanelStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -56,10 +58,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 55 local desktop worker blueprint",
-    branch: "phase-55-local-desktop-worker-blueprint-v1",
+    title: "Phase 56 local worker health panel",
+    branch: "phase-56-local-worker-health-panel-v1",
     risk: "Low",
-    workflow: "Local desktop worker blueprint",
+    workflow: "Local worker health panel",
     status: "Queued",
   },
   {
@@ -79,6 +81,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerHealthPanelSafetyGates,
   ...localDesktopWorkerBlueprintSafetyGates,
   ...ownerDecisionRecordSurfaceSafetyGates,
   ...ownerReviewDecisionSafetyGates,
@@ -450,6 +453,43 @@ export function App() {
                 <button type="button" disabled>Blueprint only</button>
               </div>
               <p className="muted">Phase 55 defines the future local desktop worker contract. It does not install a worker, start a worker, execute commands, execute tasks, connect to a runner, persist records, route work, mutate files, or mutate source.</p>
+            </Card>
+
+            <Card title="Local Worker Health Panel" eyebrow="declarative health surface">
+              <div className="packet-list">
+                <span>Phase: {localWorkerHealthPanelPacket.phase.label}</span>
+                <span>Status: {localWorkerHealthPanelPacket.healthPanelStatus}</span>
+                <span>Mode: {localWorkerHealthPanelPacket.healthPanelMode}</span>
+                <span>Owner: {localWorkerHealthPanelPacket.healthSummary.owner}</span>
+                <span>Source phase: {localWorkerHealthPanelPacket.healthSummary.sourcePhase}</span>
+                <span>Safe state: {localWorkerHealthPanelPacket.healthSummary.safeState}</span>
+                <span>Health signals: {localWorkerHealthPanelPacket.healthSignals.length}</span>
+                <span>Worker installed: {localWorkerHealthPanelPacket.healthSummary.workerInstalled ? "yes" : "no"}</span>
+                <span>Worker connected: {localWorkerHealthPanelPacket.healthSummary.workerConnected ? "yes" : "no"}</span>
+                <span>Heartbeat: {localWorkerHealthPanelPacket.healthSummary.heartbeatStatus}</span>
+                <span>Suggested queue: {localWorkerHealthPanelPacket.routing.suggestedQueue}</span>
+                <span>Health polling: {localWorkerHealthPanelPacket.boundaries.healthPollingAllowed ? "allowed" : "blocked"}</span>
+                <span>Worker spawn: {localWorkerHealthPanelPacket.boundaries.workerSpawnAllowed ? "allowed" : "blocked"}</span>
+                <span>Task execution: {localWorkerHealthPanelPacket.boundaries.taskExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Command execution: {localWorkerHealthPanelPacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+              </div>
+              <div className="queue-list compact">
+                {localWorkerHealthPanelPacket.healthSignals.map((signal) => (
+                  <article className="queue-item" key={signal.id}>
+                    <div>
+                      <strong>{signal.label}</strong>
+                      <p>{signal.value}</p>
+                    </div>
+                    <span>{signal.state}</span>
+                    <Badge tone="planned">health surface</Badge>
+                  </article>
+                ))}
+              </div>
+              <div className="button-row">
+                <button type="button" className="secondary" disabled>Poll health in future phase</button>
+                <button type="button" disabled>Display only</button>
+              </div>
+              <p className="muted">Phase 56 displays declarative local worker health readiness. It does not install a worker, start a worker, poll health, inspect processes, execute commands, execute tasks, connect to a runner, persist records, route work, mutate files, or mutate source.</p>
             </Card>
 
             <Card title="Morning Review Packet" eyebrow="preview">

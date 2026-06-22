@@ -89,3 +89,5 @@ packages/*/src/*.d.ts
 .sera-owner-decision-record-surface/
 
 .sera-local-desktop-worker-blueprint/
+
+.sera-local-worker-health-panel/
