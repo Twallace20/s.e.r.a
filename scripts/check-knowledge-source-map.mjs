@@ -216,6 +216,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-dry-run-harness-v1.mjs",
   "tests/integration/local-worker-dry-run-harness-v1.test.ts",
   "apps/operator-console/src/local-worker-dry-run-harness.ts",
+  "docs/phases/PHASE_58_WINDOWS_TASK_SCHEDULER_STATUS_CHECK_V1.md",
+  "scripts/lib/windows-task-scheduler-status-check-v1.mjs",
+  "scripts/run-windows-task-scheduler-status-check-v1.mjs",
+  "tests/integration/windows-task-scheduler-status-check-v1.test.ts",
+  "apps/operator-console/src/windows-task-scheduler-status-check.ts",
 ];
 
 function fail(message) {

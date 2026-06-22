@@ -114,7 +114,9 @@
     "phase56:demo": "node scripts/run-local-worker-health-panel-v1.mjs",
     "phase56:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase55:verify && npm run phase56:demo",
     "phase57:demo": "node scripts/run-local-worker-dry-run-harness-v1.mjs",
-    "phase57:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase56:verify && npm run phase57:demo"
+    "phase57:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase56:verify && npm run phase57:demo",
+    "phase58:demo": "node scripts/run-windows-task-scheduler-status-check-v1.mjs",
+    "phase58:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase57:verify && npm run phase58:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

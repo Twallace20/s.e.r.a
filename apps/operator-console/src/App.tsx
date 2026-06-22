@@ -9,6 +9,7 @@ import { ownerDecisionRecordSurfacePacket, ownerDecisionRecordSurfaceSafetyGates
 import { localDesktopWorkerBlueprintPacket, localDesktopWorkerBlueprintSafetyGates } from "./local-desktop-worker-blueprint";
 import { localWorkerHealthPanelPacket, localWorkerHealthPanelSafetyGates } from "./local-worker-health-panel";
 import { localWorkerDryRunHarnessPacket, localWorkerDryRunHarnessSafetyGates } from "./local-worker-dry-run-harness";
+import { windowsTaskSchedulerStatusCheckPacket, windowsTaskSchedulerStatusCheckSafetyGates } from "./windows-task-scheduler-status-check";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -51,6 +52,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Desktop worker blueprint", value: localDesktopWorkerBlueprintPacket.workerBlueprintStatus, tone: "planned" },
   { label: "Local worker health", value: localWorkerHealthPanelPacket.healthPanelStatus, tone: "planned" },
   { label: "Worker dry-run harness", value: localWorkerDryRunHarnessPacket.dryRunHarnessStatus, tone: "planned" },
+  { label: "Windows scheduler", value: windowsTaskSchedulerStatusCheckPacket.schedulerStatusCheckStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -60,10 +62,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 57 local worker dry-run harness",
-    branch: "phase-57-local-worker-dry-run-harness-v1",
+    title: "Phase 58 Windows Task Scheduler status check",
+    branch: "phase-58-windows-task-scheduler-status-check-v1",
     risk: "Low",
-    workflow: "Local worker dry-run harness",
+    workflow: "Windows scheduler status check",
     status: "Queued",
   },
   {
@@ -83,6 +85,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...windowsTaskSchedulerStatusCheckSafetyGates,
   ...localWorkerDryRunHarnessSafetyGates,
   ...localWorkerHealthPanelSafetyGates,
   ...localDesktopWorkerBlueprintSafetyGates,
@@ -557,6 +560,43 @@ export function App() {
                 <button type="button" disabled>Simulate only</button>
               </div>
               <p className="muted">Phase 57 simulates future local worker behavior and produces dry-run evidence only. It does not install a worker, start a worker, poll health, inspect processes, execute commands, execute tasks, connect to a runner, persist records, route work, mutate files, or mutate source.</p>
+            </Card>
+
+            <Card title="Windows Task Scheduler Status Check" eyebrow="declarative scheduling readiness">
+              <div className="packet-list">
+                <span>Phase: {windowsTaskSchedulerStatusCheckPacket.phase.label}</span>
+                <span>Status: {windowsTaskSchedulerStatusCheckPacket.schedulerStatusCheckStatus}</span>
+                <span>Mode: {windowsTaskSchedulerStatusCheckPacket.schedulerStatusCheckMode}</span>
+                <span>Owner: {windowsTaskSchedulerStatusCheckPacket.schedulerSummary.owner}</span>
+                <span>Source phase: {windowsTaskSchedulerStatusCheckPacket.schedulerSummary.sourcePhase}</span>
+                <span>Safe state: {windowsTaskSchedulerStatusCheckPacket.schedulerSummary.safeState}</span>
+                <span>Scheduler indicators: {windowsTaskSchedulerStatusCheckPacket.schedulerReadinessIndicators.length}</span>
+                <span>Evidence requirements: {windowsTaskSchedulerStatusCheckPacket.evidenceRequirements.length}</span>
+                <span>Windows scheduler configured: {windowsTaskSchedulerStatusCheckPacket.schedulerSummary.windowsSchedulerConfigured ? "yes" : "no"}</span>
+                <span>Scheduled execution: {windowsTaskSchedulerStatusCheckPacket.boundaries.scheduledExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Scheduler creation: {windowsTaskSchedulerStatusCheckPacket.boundaries.schedulerCreationAllowed ? "allowed" : "blocked"}</span>
+                <span>Scheduler query: {windowsTaskSchedulerStatusCheckPacket.boundaries.schedulerQueryAllowed ? "allowed" : "blocked"}</span>
+                <span>PowerShell execution: {windowsTaskSchedulerStatusCheckPacket.boundaries.powershellExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>schtasks execution: {windowsTaskSchedulerStatusCheckPacket.boundaries.schtasksExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Suggested queue: {windowsTaskSchedulerStatusCheckPacket.routing.suggestedQueue}</span>
+              </div>
+              <div className="queue-list compact">
+                {windowsTaskSchedulerStatusCheckPacket.schedulerReadinessIndicators.map((indicator) => (
+                  <article className="queue-item" key={indicator.id}>
+                    <div>
+                      <strong>{indicator.label}</strong>
+                      <p>{indicator.evidence}</p>
+                    </div>
+                    <span>{indicator.state}</span>
+                    <Badge tone="planned">status only</Badge>
+                  </article>
+                ))}
+              </div>
+              <div className="button-row">
+                <button type="button" className="secondary" disabled>Create scheduled task in future phase</button>
+                <button type="button" disabled>Status check only</button>
+              </div>
+              <p className="muted">Phase 58 represents Windows Task Scheduler readiness without creating, querying, modifying, enabling, disabling, or running scheduled tasks. It does not execute PowerShell, schtasks, commands, shell operations, worker actions, tasks, runner connections, file mutations, or source mutations.</p>
             </Card>
           </aside>
         </div>
