@@ -201,6 +201,11 @@ const requiredMappedPaths = [
   "scripts/run-operator-owner-decision-record-surface-v1.mjs",
   "tests/integration/operator-owner-decision-record-surface-v1.test.ts",
   "apps/operator-console/src/owner-decision-record-surface.ts",
+  "docs/phases/PHASE_55_LOCAL_DESKTOP_WORKER_BLUEPRINT_V1.md",
+  "scripts/lib/local-desktop-worker-blueprint-v1.mjs",
+  "scripts/run-local-desktop-worker-blueprint-v1.mjs",
+  "tests/integration/local-desktop-worker-blueprint-v1.test.ts",
+  "apps/operator-console/src/local-desktop-worker-blueprint.ts",
 ];
 
 function fail(message) {

@@ -6,6 +6,7 @@ import { workflowComposerPacket, workflowComposerSafetyGates } from "./workflow-
 import { planReviewQueuePacket, planReviewQueueSafetyGates } from "./plan-review-queue";
 import { ownerReviewDecisionPacket, ownerReviewDecisionSafetyGates } from "./owner-review-decision-draft";
 import { ownerDecisionRecordSurfacePacket, ownerDecisionRecordSurfaceSafetyGates } from "./owner-decision-record-surface";
+import { localDesktopWorkerBlueprintPacket, localDesktopWorkerBlueprintSafetyGates } from "./local-desktop-worker-blueprint";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -45,6 +46,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Plan review queue", value: planReviewQueuePacket.planReviewQueueStatus, tone: "review" },
   { label: "Owner decision drafts", value: ownerReviewDecisionPacket.decisionDraftStatus, tone: "review" },
   { label: "Owner decision record surface", value: ownerDecisionRecordSurfacePacket.recordSurfaceStatus, tone: "review" },
+  { label: "Desktop worker blueprint", value: localDesktopWorkerBlueprintPacket.workerBlueprintStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -54,10 +56,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 54 owner decision record surface",
-    branch: "phase-54-operator-owner-decision-record-surface-v1",
+    title: "Phase 55 local desktop worker blueprint",
+    branch: "phase-55-local-desktop-worker-blueprint-v1",
     risk: "Low",
-    workflow: "Owner decision record surface",
+    workflow: "Local desktop worker blueprint",
     status: "Queued",
   },
   {
@@ -77,6 +79,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localDesktopWorkerBlueprintSafetyGates,
   ...ownerDecisionRecordSurfaceSafetyGates,
   ...ownerReviewDecisionSafetyGates,
   ...planReviewQueueSafetyGates,
@@ -411,6 +414,42 @@ export function App() {
                 <button type="button" disabled>Record preview only</button>
               </div>
               <p className="muted">Phase 54 shows how Tyler's selected decision would be represented as a governed record preview. It does not persist records, create tasks, execute commands, route work, connect to a runner, or treat recorded intent as final approval.</p>
+            </Card>
+
+            <Card title="Local Desktop Worker Blueprint" eyebrow="worker-contract-only">
+              <div className="packet-list">
+                <span>Phase: {localDesktopWorkerBlueprintPacket.phase.label}</span>
+                <span>Status: {localDesktopWorkerBlueprintPacket.workerBlueprintStatus}</span>
+                <span>Mode: {localDesktopWorkerBlueprintPacket.blueprintMode}</span>
+                <span>Owner: {localDesktopWorkerBlueprintPacket.workerSummary.owner}</span>
+                <span>Target runtime: {localDesktopWorkerBlueprintPacket.workerSummary.targetRuntime}</span>
+                <span>Worker roles: {localDesktopWorkerBlueprintPacket.workerRoles.length}</span>
+                <span>Enabled workers: {localDesktopWorkerBlueprintPacket.workerSummary.enabledWorkerCount}</span>
+                <span>Connected workers: {localDesktopWorkerBlueprintPacket.workerSummary.connectedWorkerCount}</span>
+                <span>Executable tasks: {localDesktopWorkerBlueprintPacket.workerSummary.executableTaskCount}</span>
+                <span>Suggested queue: {localDesktopWorkerBlueprintPacket.routing.suggestedQueue}</span>
+                <span>Worker spawn: {localDesktopWorkerBlueprintPacket.boundaries.workerSpawnAllowed ? "allowed" : "blocked"}</span>
+                <span>Task execution: {localDesktopWorkerBlueprintPacket.boundaries.taskExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Command execution: {localDesktopWorkerBlueprintPacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Runner connection: {localDesktopWorkerBlueprintPacket.boundaries.runnerConnectivityAllowed ? "allowed" : "blocked"}</span>
+              </div>
+              <div className="queue-list compact">
+                {localDesktopWorkerBlueprintPacket.workerRoles.map((role) => (
+                  <article className="queue-item" key={role.id}>
+                    <div>
+                      <strong>{role.label}</strong>
+                      <p>{role.responsibility}</p>
+                    </div>
+                    <span>{role.authority}</span>
+                    <Badge tone="planned">blueprint</Badge>
+                  </article>
+                ))}
+              </div>
+              <div className="button-row">
+                <button type="button" className="secondary" disabled>Connect worker in future phase</button>
+                <button type="button" disabled>Blueprint only</button>
+              </div>
+              <p className="muted">Phase 55 defines the future local desktop worker contract. It does not install a worker, start a worker, execute commands, execute tasks, connect to a runner, persist records, route work, mutate files, or mutate source.</p>
             </Card>
 
             <Card title="Morning Review Packet" eyebrow="preview">
