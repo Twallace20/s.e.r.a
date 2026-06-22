@@ -191,6 +191,11 @@ const requiredMappedPaths = [
   "scripts/run-local-plan-review-queue-v1.mjs",
   "tests/integration/local-plan-review-queue-v1.test.ts",
   "apps/operator-console/src/plan-review-queue.ts",
+  "docs/phases/PHASE_53_OWNER_REVIEW_DECISION_DRAFT_V1.md",
+  "scripts/lib/owner-review-decision-draft-v1.mjs",
+  "scripts/run-owner-review-decision-draft-v1.mjs",
+  "tests/integration/owner-review-decision-draft-v1.test.ts",
+  "apps/operator-console/src/owner-review-decision-draft.ts",
 ];
 
 function fail(message) {
