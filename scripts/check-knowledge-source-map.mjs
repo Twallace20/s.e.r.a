@@ -181,6 +181,11 @@ const requiredMappedPaths = [
   "scripts/run-workflow-library-v1.mjs",
   "tests/integration/workflow-library-v1.test.ts",
   "apps/operator-console/src/workflow-library.ts",
+  "docs/phases/PHASE_51_WORKFLOW_COMPOSER_V1.md",
+  "scripts/lib/workflow-composer-v1.mjs",
+  "scripts/run-workflow-composer-v1.mjs",
+  "tests/integration/workflow-composer-v1.test.ts",
+  "apps/operator-console/src/workflow-composer.ts",
 ];
 
 function fail(message) {

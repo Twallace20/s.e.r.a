@@ -79,3 +79,5 @@ packages/*/src/*.d.ts
 .sera-file-intake/
 
 .sera-workflow-library/
+
+.sera-workflow-composer/
