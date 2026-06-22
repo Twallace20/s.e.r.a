@@ -380,3 +380,7 @@ Phase 43 introduces the local session lock guard so future runner-style work has
 ## Phase 44 roadmap
 
 Phase 44 introduces the local emergency stop guard so future runner-style work has a hard stop-state safety contract before any execution path is considered.
+
+## Phase 45 roadmap
+
+Phase 45 closes the free-core covenant checkpoint before future runner-style phases move closer to controlled execution planning.

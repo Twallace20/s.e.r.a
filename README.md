@@ -691,3 +691,7 @@ Phase 43 adds a local session lock guard layer. It defines stale-lock blocking, 
 ## Phase 44 — Emergency Stop Guard v1
 
 Phase 44 adds a local emergency stop guard layer. It defines stop signal checks, stop state latch planning, blocked-action handoff, restart preflight, session lock binding, and owner-release requirements while keeping execution, runner connectivity, branch operations, source mutation, patches, merges, tags, deletion, secrets, owner-decision recording, and self-approval disabled.
+
+## Phase 45 — Free Core Covenant Checkpoint v1
+
+Phase 45 adds the local free-core covenant checkpoint. It confirms the free/local boundary through Phase 45 while keeping paid providers, cloud runners, secrets, runner connectivity, command execution, source mutation, branch operations, patches, merges, tags, deletion, owner-decision recording, commercial activation, and self-approval disabled.

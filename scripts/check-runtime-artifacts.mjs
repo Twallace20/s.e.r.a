@@ -97,3 +97,5 @@ console.log("S.E.R.A. runtime artifact hygiene: PASS");
 // phase43-runtime-hygiene-note: .sera-session-lock-guard is a local runtime artifact directory.
 
 // phase44-runtime-hygiene-note: .sera-emergency-stop-guard is a local runtime artifact directory.
+
+// phase45-runtime-hygiene-note: .sera-free-core-covenant-checkpoint is a local runtime artifact directory.

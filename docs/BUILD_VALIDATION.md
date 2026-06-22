@@ -723,3 +723,7 @@ Phase 43 is validated with `npm run phase43:demo`, `npm run phase43:verify`, sou
 ## Phase 44 validation
 
 Phase 44 is validated with `npm run phase44:demo`, `npm run phase44:verify`, source/runtime hygiene, build, tests, certify, and full verify. Expected suite count after this phase is 44 test files and 201 tests.
+
+## Phase 45 validation
+
+Phase 45 is validated with `npm run phase45:demo`, `npm run phase45:verify`, source/runtime hygiene, build, tests, certify, and full verify. Expected suite count after this phase is 45 test files and 206 tests.

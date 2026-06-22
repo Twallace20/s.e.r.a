@@ -297,3 +297,7 @@ Phase 43 certifies the session lock guard contract at `operator-console-v1` leve
 ## Phase 44 certification
 
 Phase 44 certifies the emergency stop guard contract at `operator-console-v1` level while preserving the free-core covenant and all non-execution boundaries.
+
+## Phase 45 certification
+
+Phase 45 certifies the free-core covenant checkpoint at `operator-console-v1` level while preserving the free-core covenant through Phase 45.

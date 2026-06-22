@@ -68,3 +68,5 @@ packages/*/src/*.d.ts
 .sera-session-lock-guard/
 
 .sera-emergency-stop-guard/
+
+.sera-free-core-covenant-checkpoint/
