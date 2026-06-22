@@ -451,3 +451,7 @@ The command allowlist gate is a local exact-match allowlist contract/runtime art
 ## PHASE 39 — EVIDENCE CAPTURE BUNDLE V1
 
 The evidence capture bundle is a local proof-bundle contract/runtime artifact. It may write evidence reports under .sera-evidence-capture-bundle/. It is not allowed to execute commands, connect to runners, use cloud runners, use self-hosted runners, use secrets, mutate source, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, record owner decisions, accept evidence as owner approved, or self-approve.
+
+## PHASE 40 — OVERNIGHT BRANCH WORKER V1
+
+The overnight branch worker is a local worker contract/runtime artifact. It may write reports under .sera-overnight-branch-worker/. It is not allowed to activate overnight execution, execute commands, connect to runners, use cloud runners, use self-hosted runners, use secrets, mutate source, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, record owner decisions, accept evidence as owner approved, or self-approve.
