@@ -687,3 +687,15 @@ Validation commands:
 - npm test
 - npm run certify
 - npm run verify
+
+## PHASE 40 — OVERNIGHT BRANCH WORKER V1
+
+Validation commands:
+
+- npm run phase40:demo
+- npm run phase40:verify
+- npm run hygiene
+- npm run build
+- npm test
+- npm run certify
+- npm run verify

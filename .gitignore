@@ -58,3 +58,5 @@ packages/*/src/*.d.ts
 .sera-command-allowlist-gate/
 
 .sera-evidence-capture-bundle/
+
+.sera-overnight-branch-worker/

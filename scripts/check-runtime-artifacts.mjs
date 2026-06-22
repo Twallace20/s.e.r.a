@@ -87,3 +87,5 @@ console.log("S.E.R.A. runtime artifact hygiene: PASS");
 // phase38-runtime-hygiene-note: .sera-command-allowlist-gate is a local runtime artifact directory.
 
 // phase39-runtime-hygiene-note: .sera-evidence-capture-bundle is a local runtime artifact directory.
+
+// phase40-runtime-hygiene-note: .sera-overnight-branch-worker is a local runtime artifact directory.

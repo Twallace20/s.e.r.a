@@ -360,3 +360,7 @@ Phase 38 follows the disabled self-hosted runner adapter by defining the command
 ## PHASE 39 — EVIDENCE CAPTURE BUNDLE V1
 
 Phase 39 follows the command allowlist gate by defining the evidence bundle future runner work must produce for owner review before any execution authority is introduced.
+
+## PHASE 40 — OVERNIGHT BRANCH WORKER V1
+
+Phase 40 follows the evidence capture bundle by defining the first overnight branch worker contract. The worker remains dry-run-only until later phases add explicit owner-approved execution mechanics.

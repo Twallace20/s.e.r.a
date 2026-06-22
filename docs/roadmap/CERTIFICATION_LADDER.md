@@ -277,3 +277,7 @@ Certification means S.E.R.A. can produce and validate a local exact-match comman
 ## PHASE 39 — EVIDENCE CAPTURE BUNDLE V1
 
 Certification means S.E.R.A. can produce and validate a local evidence capture bundle while keeping command execution, runner connectivity, source mutation, owner-decision recording, evidence acceptance, and self-approval disabled.
+
+## PHASE 40 — OVERNIGHT BRANCH WORKER V1
+
+Certification means S.E.R.A. can produce and validate a local overnight branch worker plan while keeping overnight execution, command execution, runner connectivity, branch actions, source mutation, owner-decision recording, and self-approval disabled.

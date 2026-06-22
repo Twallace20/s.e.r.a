@@ -671,3 +671,7 @@ Phase 38 adds a local exact-match command allowlist gate. It defines approved va
 ## PHASE 39 — EVIDENCE CAPTURE BUNDLE V1
 
 Phase 39 adds a local evidence capture bundle contract/runtime. It defines required proof artifacts for future owner-reviewed runner work while keeping command execution, runner connectivity, source mutation, owner-decision recording, evidence acceptance, and self-approval disabled.
+
+## PHASE 40 — OVERNIGHT BRANCH WORKER V1
+
+Phase 40 adds a local overnight branch worker contract/runtime. It defines required worker stages and safety bindings for future owner-reviewed overnight branch work while keeping overnight execution, command execution, runner connectivity, source mutation, branch actions, owner-decision recording, and self-approval disabled.
