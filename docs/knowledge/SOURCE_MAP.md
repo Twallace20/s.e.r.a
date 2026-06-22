@@ -631,3 +631,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for composition fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 51 blocks command execution, runner connectivity, file mutation, auto-processing, auto-routing, auto-merge, and self-approval.
+
+| Local plan review queue | Defines the review-queue-only private operator plan review surface for Phase 52. | `docs/phases/PHASE_52_LOCAL_PLAN_REVIEW_QUEUE_V1.md`, `apps/operator-console/src/plan-review-queue.ts`, `scripts/lib/local-plan-review-queue-v1.mjs`, `scripts/run-local-plan-review-queue-v1.mjs`, `tests/integration/local-plan-review-queue-v1.test.ts` |
+
+### `docs/phases/PHASE_52_LOCAL_PLAN_REVIEW_QUEUE_V1.md`
+
+- Evidence role: Phase 52 local plan review queue contract and validation instructions.
+- Use when answering: what Phase 52 adds, what it blocks, and why it remains review-queue-only.
+
+### `apps/operator-console/src/plan-review-queue.ts`
+
+- Evidence role: typed frontend-consumable local plan review queue packet and safety gates.
+- Use when answering: how composed plan previews become Tyler-reviewable queue items.
+
+### `scripts/lib/local-plan-review-queue-v1.mjs`
+
+- Evidence role: Phase 52 verification contract and review queue safety boundary checks.
+- Use when answering: how the plan review queue surface is validated as review-only.
+
+### `scripts/run-local-plan-review-queue-v1.mjs`
+
+- Evidence role: Phase 52 demo runner.
+- Use when answering: how to prove local plan review queue is ready.
+
+### `tests/integration/local-plan-review-queue-v1.test.ts`
+
+- Evidence role: test proof for review items, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 52 blocks command execution, runner connectivity, file mutation, auto-approval, auto-processing, auto-routing, auto-merge, and self-approval.

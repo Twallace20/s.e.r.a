@@ -81,3 +81,5 @@ packages/*/src/*.d.ts
 .sera-workflow-library/
 
 .sera-workflow-composer/
+
+.sera-plan-review-queue/

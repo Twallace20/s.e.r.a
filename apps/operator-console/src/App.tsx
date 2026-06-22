@@ -3,6 +3,7 @@ import { requestIntakeDraft, requestIntakeSafetyGates } from "./request-intake";
 import { fileIntakePacket, fileIntakeSafetyGates } from "./file-intake";
 import { workflowLibraryPacket, workflowLibrarySafetyGates } from "./workflow-library";
 import { workflowComposerPacket, workflowComposerSafetyGates } from "./workflow-composer";
+import { planReviewQueuePacket, planReviewQueueSafetyGates } from "./plan-review-queue";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -39,6 +40,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "File intake", value: fileIntakePacket.fileIntakeStatus, tone: "review" },
   { label: "Workflow library", value: workflowLibraryPacket.workflowLibraryStatus, tone: "ready" },
   { label: "Workflow composer", value: workflowComposerPacket.workflowComposerStatus, tone: "review" },
+  { label: "Plan review queue", value: planReviewQueuePacket.planReviewQueueStatus, tone: "review" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -48,10 +50,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 51 workflow composer review",
-    branch: "phase-51-workflow-composer-v1",
+    title: "Phase 52 local plan review queue",
+    branch: "phase-52-local-plan-review-queue-v1",
     risk: "Low",
-    workflow: "Request + file + workflow composition preview",
+    workflow: "Local plan review queue",
     status: "Queued",
   },
   {
@@ -71,6 +73,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...planReviewQueueSafetyGates,
   ...workflowComposerSafetyGates,
   ...workflowLibrarySafetyGates,
   ...fileIntakeSafetyGates,
@@ -311,6 +314,28 @@ export function App() {
                 <button type="button" disabled>Review plan preview only</button>
               </div>
               <p className="muted">Phase 51 composes request, file, and workflow signals into a Tyler-reviewable plan preview. It does not create tasks, execute commands, connect to a runner, or mutate source.</p>
+            </Card>
+
+            <Card title="Local Plan Review Queue" eyebrow="review-queue-only">
+              <div className="packet-list">
+                <span>Phase: {planReviewQueuePacket.phase.label}</span>
+                <span>Status: {planReviewQueuePacket.planReviewQueueStatus}</span>
+                <span>Queue mode: {planReviewQueuePacket.queueMode}</span>
+                <span>Queue: {planReviewQueuePacket.queueSummary.queueName}</span>
+                <span>Owner: {planReviewQueuePacket.queueSummary.owner}</span>
+                <span>Source: {planReviewQueuePacket.queueSummary.sourcePhase}</span>
+                <span>Review items: {planReviewQueuePacket.reviewItems.length}</span>
+                <span>Pending review: {planReviewQueuePacket.queueSummary.pendingReviewCount}</span>
+                <span>Suggested queue: {planReviewQueuePacket.routing.suggestedQueue}</span>
+                <span>Owner decision required: {planReviewQueuePacket.routing.ownerDecisionRequired ? "yes" : "no"}</span>
+                <span>Command execution: {planReviewQueuePacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Auto-approval: {planReviewQueuePacket.boundaries.autoApprovalAllowed ? "allowed" : "blocked"}</span>
+              </div>
+              <div className="button-row">
+                <button type="button" className="secondary" disabled>Create tasks in Phase 53</button>
+                <button type="button" disabled>Review queue only</button>
+              </div>
+              <p className="muted">Phase 52 represents composed plan previews as local review queue items for Tyler. It does not approve, route, execute, connect to a runner, mutate files, or mutate source.</p>
             </Card>
 
             <Card title="Morning Review Packet" eyebrow="preview">

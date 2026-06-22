@@ -102,7 +102,9 @@
     "phase50:demo": "node scripts/run-workflow-library-v1.mjs",
     "phase50:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase49:verify && npm run phase50:demo",
     "phase51:demo": "node scripts/run-workflow-composer-v1.mjs",
-    "phase51:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase50:verify && npm run phase51:demo"
+    "phase51:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase50:verify && npm run phase51:demo",
+    "phase52:demo": "node scripts/run-local-plan-review-queue-v1.mjs",
+    "phase52:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase51:verify && npm run phase52:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

@@ -186,6 +186,11 @@ const requiredMappedPaths = [
   "scripts/run-workflow-composer-v1.mjs",
   "tests/integration/workflow-composer-v1.test.ts",
   "apps/operator-console/src/workflow-composer.ts",
+  "docs/phases/PHASE_52_LOCAL_PLAN_REVIEW_QUEUE_V1.md",
+  "scripts/lib/local-plan-review-queue-v1.mjs",
+  "scripts/run-local-plan-review-queue-v1.mjs",
+  "tests/integration/local-plan-review-queue-v1.test.ts",
+  "apps/operator-console/src/plan-review-queue.ts",
 ];
 
 function fail(message) {
