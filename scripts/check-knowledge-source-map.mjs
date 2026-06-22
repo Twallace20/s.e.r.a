@@ -211,6 +211,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-health-panel-v1.mjs",
   "tests/integration/local-worker-health-panel-v1.test.ts",
   "apps/operator-console/src/local-worker-health-panel.ts",
+  "docs/phases/PHASE_57_LOCAL_WORKER_DRY_RUN_HARNESS_V1.md",
+  "scripts/lib/local-worker-dry-run-harness-v1.mjs",
+  "scripts/run-local-worker-dry-run-harness-v1.mjs",
+  "tests/integration/local-worker-dry-run-harness-v1.test.ts",
+  "apps/operator-console/src/local-worker-dry-run-harness.ts",
 ];
 
 function fail(message) {

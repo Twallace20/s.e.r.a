@@ -8,6 +8,7 @@ import { ownerReviewDecisionPacket, ownerReviewDecisionSafetyGates } from "./own
 import { ownerDecisionRecordSurfacePacket, ownerDecisionRecordSurfaceSafetyGates } from "./owner-decision-record-surface";
 import { localDesktopWorkerBlueprintPacket, localDesktopWorkerBlueprintSafetyGates } from "./local-desktop-worker-blueprint";
 import { localWorkerHealthPanelPacket, localWorkerHealthPanelSafetyGates } from "./local-worker-health-panel";
+import { localWorkerDryRunHarnessPacket, localWorkerDryRunHarnessSafetyGates } from "./local-worker-dry-run-harness";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -49,6 +50,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Owner decision record surface", value: ownerDecisionRecordSurfacePacket.recordSurfaceStatus, tone: "review" },
   { label: "Desktop worker blueprint", value: localDesktopWorkerBlueprintPacket.workerBlueprintStatus, tone: "planned" },
   { label: "Local worker health", value: localWorkerHealthPanelPacket.healthPanelStatus, tone: "planned" },
+  { label: "Worker dry-run harness", value: localWorkerDryRunHarnessPacket.dryRunHarnessStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -58,10 +60,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 56 local worker health panel",
-    branch: "phase-56-local-worker-health-panel-v1",
+    title: "Phase 57 local worker dry-run harness",
+    branch: "phase-57-local-worker-dry-run-harness-v1",
     risk: "Low",
-    workflow: "Local worker health panel",
+    workflow: "Local worker dry-run harness",
     status: "Queued",
   },
   {
@@ -81,6 +83,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerDryRunHarnessSafetyGates,
   ...localWorkerHealthPanelSafetyGates,
   ...localDesktopWorkerBlueprintSafetyGates,
   ...ownerDecisionRecordSurfaceSafetyGates,
@@ -517,6 +520,43 @@ export function App() {
                   </article>
                 ))}
               </div>
+            </Card>
+
+            <Card title="Local Worker Dry-Run Harness" eyebrow="simulation-only worker practice lane">
+              <div className="packet-list">
+                <span>Phase: {localWorkerDryRunHarnessPacket.phase.label}</span>
+                <span>Status: {localWorkerDryRunHarnessPacket.dryRunHarnessStatus}</span>
+                <span>Mode: {localWorkerDryRunHarnessPacket.dryRunHarnessMode}</span>
+                <span>Owner: {localWorkerDryRunHarnessPacket.dryRunSummary.owner}</span>
+                <span>Source phase: {localWorkerDryRunHarnessPacket.dryRunSummary.sourcePhase}</span>
+                <span>Safe state: {localWorkerDryRunHarnessPacket.dryRunSummary.safeState}</span>
+                <span>Dry-run steps: {localWorkerDryRunHarnessPacket.dryRunSteps.length}</span>
+                <span>Evidence requirements: {localWorkerDryRunHarnessPacket.evidenceRequirements.length}</span>
+                <span>Worker installed: {localWorkerDryRunHarnessPacket.dryRunSummary.workerInstalled ? "yes" : "no"}</span>
+                <span>Worker connected: {localWorkerDryRunHarnessPacket.dryRunSummary.workerConnected ? "yes" : "no"}</span>
+                <span>Executable tasks: {localWorkerDryRunHarnessPacket.dryRunSummary.executableTaskCount}</span>
+                <span>Suggested queue: {localWorkerDryRunHarnessPacket.routing.suggestedQueue}</span>
+                <span>Task execution: {localWorkerDryRunHarnessPacket.boundaries.taskExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Command execution: {localWorkerDryRunHarnessPacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Runner connectivity: {localWorkerDryRunHarnessPacket.boundaries.runnerConnectivityAllowed ? "allowed" : "blocked"}</span>
+              </div>
+              <div className="queue-list compact">
+                {localWorkerDryRunHarnessPacket.dryRunSteps.map((step) => (
+                  <article className="queue-item" key={step.id}>
+                    <div>
+                      <strong>{step.label}</strong>
+                      <p>{step.evidence}</p>
+                    </div>
+                    <span>{step.state}</span>
+                    <Badge tone="planned">dry-run only</Badge>
+                  </article>
+                ))}
+              </div>
+              <div className="button-row">
+                <button type="button" className="secondary" disabled>Execute in future phase</button>
+                <button type="button" disabled>Simulate only</button>
+              </div>
+              <p className="muted">Phase 57 simulates future local worker behavior and produces dry-run evidence only. It does not install a worker, start a worker, poll health, inspect processes, execute commands, execute tasks, connect to a runner, persist records, route work, mutate files, or mutate source.</p>
             </Card>
           </aside>
         </div>

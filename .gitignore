@@ -91,3 +91,4 @@ packages/*/src/*.d.ts
 .sera-local-desktop-worker-blueprint/
 
 .sera-local-worker-health-panel/
+.sera-local-worker-dry-run-harness/
