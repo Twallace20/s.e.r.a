@@ -711,3 +711,7 @@ Validation commands:
 - npm test
 - npm run certify
 - npm run verify
+
+## Phase 42 validation
+
+Phase 42 is validated with `npm run phase42:demo`, `npm run phase42:verify`, source/runtime hygiene, build, tests, certify, and full verify. Expected suite count after this phase is 42 test files and 191 tests.

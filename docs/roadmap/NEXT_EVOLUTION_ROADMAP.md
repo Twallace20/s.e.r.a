@@ -368,3 +368,7 @@ Phase 40 follows the evidence capture bundle by defining the first overnight bra
 ## PHASE 41 — OWNER DECISION RECORDER V1
 
 Phase 41 follows the dry-run overnight branch worker by adding local owner-decision recording. Later phases can bind execution planning to recorded approvals, but this phase does not activate execution.
+
+## Phase 42 roadmap
+
+Phase 42 converts recorded owner decisions into a local action plan. The next safe layer can introduce an action-plan readiness inspector or a session lock guard before any execution path is considered.
