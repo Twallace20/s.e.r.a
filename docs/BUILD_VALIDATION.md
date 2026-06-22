@@ -699,3 +699,15 @@ Validation commands:
 - npm test
 - npm run certify
 - npm run verify
+
+## PHASE 41 — OWNER DECISION RECORDER V1
+
+Validation commands:
+
+- npm run phase41:demo
+- npm run phase41:verify
+- npm run hygiene
+- npm run build
+- npm test
+- npm run certify
+- npm run verify
