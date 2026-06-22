@@ -793,3 +793,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for dry-run fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 57 blocks worker spawn, task execution, command execution, shell execution, runner connectivity, polling, process inspection, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
+
+| Windows Task Scheduler status check | Defines the declarative scheduling-readiness surface for the future local desktop worker in Phase 58. | `docs/phases/PHASE_58_WINDOWS_TASK_SCHEDULER_STATUS_CHECK_V1.md`, `apps/operator-console/src/windows-task-scheduler-status-check.ts`, `scripts/lib/windows-task-scheduler-status-check-v1.mjs`, `scripts/run-windows-task-scheduler-status-check-v1.mjs`, `tests/integration/windows-task-scheduler-status-check-v1.test.ts` |
+
+### `docs/phases/PHASE_58_WINDOWS_TASK_SCHEDULER_STATUS_CHECK_V1.md`
+
+- Evidence role: Phase 58 Windows Task Scheduler status check contract and validation instructions.
+- Use when answering: what Phase 58 adds, what it blocks, and why scheduling remains declarative-only.
+
+### `apps/operator-console/src/windows-task-scheduler-status-check.ts`
+
+- Evidence role: typed frontend-consumable Windows scheduler readiness packet, indicators, evidence requirements, and safety gates.
+- Use when answering: how future scheduling readiness appears in the private operator app before any scheduled execution exists.
+
+### `scripts/lib/windows-task-scheduler-status-check-v1.mjs`
+
+- Evidence role: Phase 58 verification contract and scheduling boundary checks.
+- Use when answering: how the scheduler readiness surface is validated as declarative-only, non-querying, non-executing, and non-mutating.
+
+### `scripts/run-windows-task-scheduler-status-check-v1.mjs`
+
+- Evidence role: Phase 58 demo runner.
+- Use when answering: how to prove the Windows Task Scheduler status check is ready.
+
+### `tests/integration/windows-task-scheduler-status-check-v1.test.ts`
+
+- Evidence role: test proof for scheduler fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 58 blocks scheduled task creation, query, mutation, deletion, enable/disable, scheduled execution, PowerShell, schtasks, command execution, worker spawn, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
