@@ -739,3 +739,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for worker blueprint fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 55 blocks command execution, runner connectivity, worker spawn, task execution, record persistence, final approval, auto-route, auto-merge, and self-approval.
+
+| Local worker health panel | Defines the declarative health surface for the future local desktop worker in Phase 56. | `docs/phases/PHASE_56_LOCAL_WORKER_HEALTH_PANEL_V1.md`, `apps/operator-console/src/local-worker-health-panel.ts`, `scripts/lib/local-worker-health-panel-v1.mjs`, `scripts/run-local-worker-health-panel-v1.mjs`, `tests/integration/local-worker-health-panel-v1.test.ts` |
+
+### `docs/phases/PHASE_56_LOCAL_WORKER_HEALTH_PANEL_V1.md`
+
+- Evidence role: Phase 56 local worker health panel contract and validation instructions.
+- Use when answering: what Phase 56 adds, what it blocks, and why the worker remains offline by design.
+
+### `apps/operator-console/src/local-worker-health-panel.ts`
+
+- Evidence role: typed frontend-consumable local worker health panel packet and safety gates.
+- Use when answering: how future worker health appears in the private operator app before any live connection.
+
+### `scripts/lib/local-worker-health-panel-v1.mjs`
+
+- Evidence role: Phase 56 verification contract and local worker health panel boundary checks.
+- Use when answering: how the health panel is validated as non-polling, non-executing, and declarative only.
+
+### `scripts/run-local-worker-health-panel-v1.mjs`
+
+- Evidence role: Phase 56 demo runner.
+- Use when answering: how to prove the local worker health panel is ready.
+
+### `tests/integration/local-worker-health-panel-v1.test.ts`
+
+- Evidence role: test proof for health panel fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 56 blocks health polling, live heartbeat, process inspection, worker spawn, command execution, runner connectivity, task execution, final approval, auto-route, auto-merge, and self-approval.
