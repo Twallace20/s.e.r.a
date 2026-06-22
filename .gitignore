@@ -56,3 +56,5 @@ packages/*/src/*.d.ts
 .sera-self-hosted-runner-adapter/
 
 .sera-command-allowlist-gate/
+
+.sera-evidence-capture-bundle/

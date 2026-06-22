@@ -273,3 +273,7 @@ Certification means S.E.R.A. can produce and validate a disabled local self-host
 ## PHASE 38 — COMMAND ALLOWLIST GATE V1
 
 Certification means S.E.R.A. can produce and validate a local exact-match command allowlist gate while keeping command execution, arbitrary shell access, remote execution, runner connectivity, source mutation, and self-approval disabled.
+
+## PHASE 39 — EVIDENCE CAPTURE BUNDLE V1
+
+Certification means S.E.R.A. can produce and validate a local evidence capture bundle while keeping command execution, runner connectivity, source mutation, owner-decision recording, evidence acceptance, and self-approval disabled.

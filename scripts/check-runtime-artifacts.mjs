@@ -85,3 +85,5 @@ console.log("S.E.R.A. runtime artifact hygiene: PASS");
 // phase37-runtime-hygiene-note: .sera-self-hosted-runner-adapter is a local runtime artifact directory.
 
 // phase38-runtime-hygiene-note: .sera-command-allowlist-gate is a local runtime artifact directory.
+
+// phase39-runtime-hygiene-note: .sera-evidence-capture-bundle is a local runtime artifact directory.

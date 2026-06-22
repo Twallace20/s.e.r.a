@@ -667,3 +667,7 @@ Phase 37 adds a disabled local self-hosted runner adapter contract. It defines t
 ## PHASE 38 — COMMAND ALLOWLIST GATE V1
 
 Phase 38 adds a local exact-match command allowlist gate. It defines approved validation command shapes for future owner-approved runner plans while rejecting arbitrary shell, VCS, network, interpreter, chaining, and expansion commands. It does not execute commands, connect to a runner, use secrets, create branches, apply patches, open pull requests, merge, tag, delete branches, or self-approve.
+
+## PHASE 39 — EVIDENCE CAPTURE BUNDLE V1
+
+Phase 39 adds a local evidence capture bundle contract/runtime. It defines required proof artifacts for future owner-reviewed runner work while keeping command execution, runner connectivity, source mutation, owner-decision recording, evidence acceptance, and self-approval disabled.
