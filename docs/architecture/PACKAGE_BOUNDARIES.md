@@ -447,3 +447,7 @@ The self-hosted runner adapter is a local disabled adapter contract/runtime arti
 ## PHASE 38 — COMMAND ALLOWLIST GATE V1
 
 The command allowlist gate is a local exact-match allowlist contract/runtime artifact. It may write allowlist reports under .sera-command-allowlist-gate/. It is not allowed to execute commands, allow arbitrary shell commands, allow shell chaining, allow shell expansion, connect to runners, use cloud runners, use self-hosted runners, use secrets, mutate source, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, record owner decisions, or self-approve.
+
+## PHASE 39 — EVIDENCE CAPTURE BUNDLE V1
+
+The evidence capture bundle is a local proof-bundle contract/runtime artifact. It may write evidence reports under .sera-evidence-capture-bundle/. It is not allowed to execute commands, connect to runners, use cloud runners, use self-hosted runners, use secrets, mutate source, create branches, switch branches, push branches, open pull requests, apply patches, merge, tag, delete branches, record owner decisions, accept evidence as owner approved, or self-approve.

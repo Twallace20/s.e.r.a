@@ -675,3 +675,15 @@ Validation commands:
 - npm test
 - npm run certify
 - npm run verify
+
+## PHASE 39 — EVIDENCE CAPTURE BUNDLE V1
+
+Validation commands:
+
+- npm run phase39:demo
+- npm run phase39:verify
+- npm run hygiene
+- npm run build
+- npm test
+- npm run certify
+- npm run verify

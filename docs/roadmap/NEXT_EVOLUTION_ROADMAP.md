@@ -356,3 +356,7 @@ Phase 37 follows the owner approval queue by defining the disabled self-hosted r
 ## PHASE 38 — COMMAND ALLOWLIST GATE V1
 
 Phase 38 follows the disabled self-hosted runner adapter by defining the command allowlist gate that future runner plans must satisfy before any command can ever be considered for execution.
+
+## PHASE 39 — EVIDENCE CAPTURE BUNDLE V1
+
+Phase 39 follows the command allowlist gate by defining the evidence bundle future runner work must produce for owner review before any execution authority is introduced.
