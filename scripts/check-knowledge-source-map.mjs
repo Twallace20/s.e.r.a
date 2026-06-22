@@ -196,6 +196,11 @@ const requiredMappedPaths = [
   "scripts/run-owner-review-decision-draft-v1.mjs",
   "tests/integration/owner-review-decision-draft-v1.test.ts",
   "apps/operator-console/src/owner-review-decision-draft.ts",
+  "docs/phases/PHASE_54_OPERATOR_OWNER_DECISION_RECORD_SURFACE_V1.md",
+  "scripts/lib/operator-owner-decision-record-surface-v1.mjs",
+  "scripts/run-operator-owner-decision-record-surface-v1.mjs",
+  "tests/integration/operator-owner-decision-record-surface-v1.test.ts",
+  "apps/operator-console/src/owner-decision-record-surface.ts",
 ];
 
 function fail(message) {
