@@ -171,6 +171,11 @@ const requiredMappedPaths = [
   "scripts/run-request-intake-v1.mjs",
   "tests/integration/request-intake-v1.test.ts",
   "apps/operator-console/src/request-intake.ts",
+  "docs/phases/PHASE_49_FILE_INTAKE_V1.md",
+  "scripts/lib/file-intake-v1.mjs",
+  "scripts/run-file-intake-v1.mjs",
+  "tests/integration/file-intake-v1.test.ts",
+  "apps/operator-console/src/file-intake.ts",
 ];
 
 function fail(message) {

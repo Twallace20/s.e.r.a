@@ -75,3 +75,5 @@ packages/*/src/*.d.ts
 .sera-operator-runtime-reader/
 
 .sera-request-intake/
+
+.sera-file-intake/
