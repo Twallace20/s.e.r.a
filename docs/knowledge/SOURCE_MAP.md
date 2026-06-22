@@ -577,3 +577,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for file metadata fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 49 blocks arbitrary file access, file execution, file mutation, runner connectivity, auto-processing, auto-routing, auto-merge, and self-approval.
+
+| Workflow library | Defines the catalog-only private operator workflow library surface for Phase 50. | `docs/phases/PHASE_50_WORKFLOW_LIBRARY_V1.md`, `apps/operator-console/src/workflow-library.ts`, `scripts/lib/workflow-library-v1.mjs`, `scripts/run-workflow-library-v1.mjs`, `tests/integration/workflow-library-v1.test.ts` |
+
+### `docs/phases/PHASE_50_WORKFLOW_LIBRARY_V1.md`
+
+- Evidence role: Phase 50 workflow-library contract and validation instructions.
+- Use when answering: what Phase 50 adds, what it blocks, and why it remains catalog-only.
+
+### `apps/operator-console/src/workflow-library.ts`
+
+- Evidence role: typed frontend-consumable workflow catalog packet and workflow-library safety gates.
+- Use when answering: what workflow definitions the private operator app can display for owner review.
+
+### `scripts/lib/workflow-library-v1.mjs`
+
+- Evidence role: Phase 50 verification contract and workflow-library safety boundary checks.
+- Use when answering: how the workflow-library surface is validated as catalog-only.
+
+### `scripts/run-workflow-library-v1.mjs`
+
+- Evidence role: Phase 50 demo runner.
+- Use when answering: how to prove workflow library is ready.
+
+### `tests/integration/workflow-library-v1.test.ts`
+
+- Evidence role: test proof for workflow fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 50 blocks command execution, runner connectivity, auto-processing, auto-routing, auto-merge, and self-approval.

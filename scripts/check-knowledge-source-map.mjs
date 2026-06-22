@@ -176,6 +176,11 @@ const requiredMappedPaths = [
   "scripts/run-file-intake-v1.mjs",
   "tests/integration/file-intake-v1.test.ts",
   "apps/operator-console/src/file-intake.ts",
+  "docs/phases/PHASE_50_WORKFLOW_LIBRARY_V1.md",
+  "scripts/lib/workflow-library-v1.mjs",
+  "scripts/run-workflow-library-v1.mjs",
+  "tests/integration/workflow-library-v1.test.ts",
+  "apps/operator-console/src/workflow-library.ts",
 ];
 
 function fail(message) {
