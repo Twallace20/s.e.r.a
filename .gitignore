@@ -64,3 +64,5 @@ packages/*/src/*.d.ts
 .sera-owner-decision-recorder/
 
 .sera-approval-gated-action-plan/
+
+.sera-session-lock-guard/

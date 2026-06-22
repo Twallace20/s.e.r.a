@@ -372,3 +372,7 @@ Phase 41 follows the dry-run overnight branch worker by adding local owner-decis
 ## Phase 42 roadmap
 
 Phase 42 converts recorded owner decisions into a local action plan. The next safe layer can introduce an action-plan readiness inspector or a session lock guard before any execution path is considered.
+
+## Phase 43 roadmap
+
+Phase 43 introduces the local session lock guard so future runner-style work has a stale-lock and overlapping-session safety contract before any execution path is considered.

@@ -463,3 +463,7 @@ The owner decision recorder is a local recorder-only runtime artifact. It may wr
 ## Phase 42 package boundary
 
 The approval-gated action plan is local-only and planning-only. It may write reports under `.sera-approval-gated-action-plan/` but must not execute commands, connect to runners, mutate source, create branches, apply patches, merge, tag, delete, use secrets, or self-approve.
+
+## Phase 43 package boundary
+
+The session lock guard is local-only and planning-only. It may write reports under `.sera-session-lock-guard/` but must not acquire live execution locks, release live execution locks, execute commands, connect to runners, mutate source, create branches, apply patches, merge, tag, delete, use secrets, record owner decisions, or self-approve.
