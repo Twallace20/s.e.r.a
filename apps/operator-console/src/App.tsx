@@ -23,6 +23,7 @@ import { localWorkerInstallDryRunPacket, localWorkerInstallDryRunSafetyGates } f
 import { localWorkerInstallEvidencePacket, localWorkerInstallEvidencePacketSafetyGates } from "./local-worker-install-evidence-packet";
 import { localWorkerManualInstallGate, localWorkerManualInstallGateSafetyGates } from "./local-worker-manual-install-gate";
 import { localWorkerPostInstallHealthRecord, localWorkerPostInstallHealthRecordSafetyGates } from "./local-worker-post-install-health-record";
+import { localWorkerHealthPollingApprovalPlan, localWorkerHealthPollingApprovalPlanSafetyGates } from "./local-worker-health-polling-approval-plan";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -79,6 +80,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker install evidence packet", value: localWorkerInstallEvidencePacket.localWorkerInstallEvidencePacketStatus, tone: "planned" },
   { label: "Worker manual install gate", value: localWorkerManualInstallGate.localWorkerManualInstallGateStatus, tone: "planned" },
   { label: "Worker post-install health record", value: localWorkerPostInstallHealthRecord.localWorkerPostInstallHealthRecordStatus, tone: "planned" },
+  { label: "Worker health polling approval plan", value: localWorkerHealthPollingApprovalPlan.localWorkerHealthPollingApprovalPlanStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -111,6 +113,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerHealthPollingApprovalPlanSafetyGates,
   ...localWorkerPostInstallHealthRecordSafetyGates,
   ...localWorkerManualInstallGateSafetyGates,
   ...localWorkerInstallEvidencePacketSafetyGates,
@@ -1162,6 +1165,46 @@ export function App() {
     <button type="button" disabled>Review health record only</button>
   </div>
   <p className="muted">Phase 71 creates an owner-review post-install health record structure for any future local worker installation. It does not approve installation, sign approval, execute installers, download dependencies, run package managers, mutate files, connect to a worker, schedule work, execute commands, persist health record records, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Health Polling Approval Plan" eyebrow="owner-review health polling approval plan">
+  <div className="packet-list">
+    <span>Phase: {localWorkerHealthPollingApprovalPlan.phase.label}</span>
+    <span>Status: {localWorkerHealthPollingApprovalPlan.localWorkerHealthPollingApprovalPlanStatus}</span>
+    <span>Mode: {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanMode}</span>
+    <span>Owner: {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanSummary.owner}</span>
+    <span>Source phase: {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanSummary.safeState}</span>
+    <span>Requirements: {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerHealthPollingApprovalPlan.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Health polling command boundary required: {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanSummary.healthPollingCommandBoundaryRequired ? "yes" : "no"}</span>
+    <span>Polling cadence boundary required: {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanSummary.pollingCadenceBoundaryRequired ? "yes" : "no"}</span>
+    <span>Health polling approval plan locked: {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanSummary.healthPollingApprovalPlanLocked ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanSummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Worker installed: {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanSummary.workerInstalled ? "yes" : "no"}</span>
+    <span>Worker install: {localWorkerHealthPollingApprovalPlan.boundaries.workerInstallAllowed ? "allowed" : "blocked"}</span>
+    <span>Manual install execution: {localWorkerHealthPollingApprovalPlan.boundaries.manualInstallExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Installer execution: {localWorkerHealthPollingApprovalPlan.boundaries.installerExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerHealthPollingApprovalPlan.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerHealthPollingApprovalPlan.healthPollingApprovalPlanRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">polling approval only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock polling approval plan in future phase</button>
+    <button type="button" disabled>Review polling plan only</button>
+  </div>
+  <p className="muted">Phase 72 creates an owner-review health polling approval plan structure for any future local worker installation. It does not approve installation, sign approval, execute installers, download dependencies, run package managers, mutate files, connect to a worker, schedule work, execute commands, persist health polling approval records, route work, or approve execution.</p>
 </Card>
 
 </section>
