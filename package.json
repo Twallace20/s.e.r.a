@@ -128,7 +128,9 @@
     "phase63:demo": "node scripts/run-local-worker-install-approval-record-v1.mjs",
     "phase63:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase62:demo && npm run phase63:demo",
     "phase64:demo": "node scripts/run-local-worker-install-scope-lock-v1.mjs",
-    "phase64:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase63:demo && npm run phase64:demo"
+    "phase64:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase63:demo && npm run phase64:demo",
+    "phase65:demo": "node scripts/run-local-worker-workspace-boundary-v1.mjs",
+    "phase65:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase64:demo && npm run phase65:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

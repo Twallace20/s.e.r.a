@@ -16,6 +16,7 @@ import { localWorkerUnlockProposalPacket, localWorkerUnlockProposalPacketSafetyG
 import { localWorkerInstallPlanPacket, localWorkerInstallPlanSafetyGates } from "./local-worker-install-plan";
 import { localWorkerInstallApprovalRecordPacket, localWorkerInstallApprovalRecordSafetyGates } from "./local-worker-install-approval-record";
 import { localWorkerInstallScopeLockPacket, localWorkerInstallScopeLockSafetyGates } from "./local-worker-install-scope-lock";
+import { localWorkerWorkspaceBoundaryPacket, localWorkerWorkspaceBoundarySafetyGates } from "./local-worker-workspace-boundary";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -65,6 +66,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker install plan", value: localWorkerInstallPlanPacket.localWorkerInstallPlanStatus, tone: "planned" },
   { label: "Worker install approval", value: localWorkerInstallApprovalRecordPacket.localWorkerInstallApprovalRecordStatus, tone: "planned" },
   { label: "Worker install scope lock", value: localWorkerInstallScopeLockPacket.localWorkerInstallScopeLockStatus, tone: "planned" },
+  { label: "Worker workspace boundary", value: localWorkerWorkspaceBoundaryPacket.localWorkerWorkspaceBoundaryStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -74,10 +76,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 64 local worker install scope lock",
-    branch: "phase-64-local-worker-install-scope-lock-v1",
+    title: "Phase 65 local worker workspace boundary",
+    branch: "phase-65-local-worker-workspace-boundary-v1",
     risk: "Low",
-    workflow: "Local worker install scope lock",
+    workflow: "Local worker workspace boundary",
     status: "Queued",
   },
   {
@@ -97,6 +99,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerWorkspaceBoundarySafetyGates,
   ...localWorkerInstallScopeLockSafetyGates,
   ...localWorkerInstallApprovalRecordSafetyGates,
   ...localWorkerInstallPlanSafetyGates,
@@ -851,6 +854,48 @@ export function App() {
     <button type="button" disabled>Review scope lock only</button>
   </div>
   <p className="muted">Phase 64 creates an owner-review scope lock structure for future local worker installation. It does not lock scope as approved, sign approval, approve installation, install a worker, download dependencies, execute installers, connect to a worker, schedule work, execute commands, execute tasks, persist scope records, mutate files, mutate source, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Workspace Boundary" eyebrow="owner-review workspace boundary">
+  <div className="packet-list">
+    <span>Phase: {localWorkerWorkspaceBoundaryPacket.phase.label}</span>
+    <span>Status: {localWorkerWorkspaceBoundaryPacket.localWorkerWorkspaceBoundaryStatus}</span>
+    <span>Mode: {localWorkerWorkspaceBoundaryPacket.workspaceBoundaryMode}</span>
+    <span>Owner: {localWorkerWorkspaceBoundaryPacket.workspaceBoundarySummary.owner}</span>
+    <span>Source phase: {localWorkerWorkspaceBoundaryPacket.workspaceBoundarySummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerWorkspaceBoundaryPacket.workspaceBoundarySummary.safeState}</span>
+    <span>Requirements: {localWorkerWorkspaceBoundaryPacket.workspaceBoundaryRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerWorkspaceBoundaryPacket.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerWorkspaceBoundaryPacket.workspaceBoundarySummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Exact workspace root required: {localWorkerWorkspaceBoundaryPacket.workspaceBoundarySummary.exactWorkspaceRootRequired ? "yes" : "no"}</span>
+    <span>Allowed path inventory required: {localWorkerWorkspaceBoundaryPacket.workspaceBoundarySummary.allowedPathInventoryRequired ? "yes" : "no"}</span>
+    <span>Blocked path inventory required: {localWorkerWorkspaceBoundaryPacket.workspaceBoundarySummary.blockedPathInventoryRequired ? "yes" : "no"}</span>
+    <span>Workspace boundary locked: {localWorkerWorkspaceBoundaryPacket.workspaceBoundarySummary.workspaceBoundaryLocked ? "yes" : "no"}</span>
+    <span>Scope locked: {localWorkerWorkspaceBoundaryPacket.workspaceBoundarySummary.installScopeLocked ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerWorkspaceBoundaryPacket.workspaceBoundarySummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Worker installed: {localWorkerWorkspaceBoundaryPacket.workspaceBoundarySummary.workerInstalled ? "yes" : "no"}</span>
+    <span>Worker install: {localWorkerWorkspaceBoundaryPacket.boundaries.workerInstallAllowed ? "allowed" : "blocked"}</span>
+    <span>Workspace probing: {localWorkerWorkspaceBoundaryPacket.boundaries.workspaceProbeAllowed ? "allowed" : "blocked"}</span>
+    <span>Filesystem scan: {localWorkerWorkspaceBoundaryPacket.boundaries.filesystemScanAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerWorkspaceBoundaryPacket.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerWorkspaceBoundaryPacket.workspaceBoundaryRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">boundary only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock workspace in future phase</button>
+    <button type="button" disabled>Review boundary only</button>
+  </div>
+  <p className="muted">Phase 65 creates an owner-review workspace boundary structure for future local worker installation. It does not lock the workspace as approved, sign approval, approve installation, install a worker, download dependencies, execute installers, scan or probe the filesystem, connect to a worker, schedule work, execute commands, execute tasks, persist workspace records, mutate files, mutate source, route work, or approve execution.</p>
 </Card>
 
 </section>
