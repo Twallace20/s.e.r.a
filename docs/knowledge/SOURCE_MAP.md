@@ -956,3 +956,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for approval record fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 63 blocks approval signing, install approval, dependency download, installer execution, worker install/connection/spawn, scheduler actions, command execution, shell execution, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
+
+| Local worker install scope lock | Defines the owner-review scope lock structure for any future local worker installation path in Phase 64. | `docs/phases/PHASE_64_LOCAL_WORKER_INSTALL_SCOPE_LOCK_V1.md`, `apps/operator-console/src/local-worker-install-scope-lock.ts`, `scripts/lib/local-worker-install-scope-lock-v1.mjs`, `scripts/run-local-worker-install-scope-lock-v1.mjs`, `tests/integration/local-worker-install-scope-lock-v1.test.ts` |
+
+### `docs/phases/PHASE_64_LOCAL_WORKER_INSTALL_SCOPE_LOCK_V1.md`
+
+- Evidence role: Phase 64 local worker install scope lock contract and validation instructions.
+- Use when answering: what Phase 64 adds, what it blocks, and why a scope lock structure does not equal approval or installation.
+
+### `apps/operator-console/src/local-worker-install-scope-lock.ts`
+
+- Evidence role: typed frontend-consumable scope lock packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: how the private operator app represents a future worker installation scope lock while keeping approval signing, scope locking, and installation blocked.
+
+### `scripts/lib/local-worker-install-scope-lock-v1.mjs`
+
+- Evidence role: Phase 64 verification contract and scope lock boundary checks.
+- Use when answering: how the scope lock is validated as declarative-only, owner-review-only, non-signing, non-locking, non-approving, non-installing, non-downloading, non-executing, non-persisting, and non-mutating.
+
+### `scripts/run-local-worker-install-scope-lock-v1.mjs`
+
+- Evidence role: Phase 64 demo runner.
+- Use when answering: how to prove the local worker install scope lock is ready.
+
+### `tests/integration/local-worker-install-scope-lock-v1.test.ts`
+
+- Evidence role: test proof for scope lock fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 64 blocks scope signing, scope lock approval, install approval, dependency download, installer execution, worker install/connection/spawn, scheduler actions, command execution, shell execution, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
