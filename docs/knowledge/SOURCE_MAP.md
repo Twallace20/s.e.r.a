@@ -1280,3 +1280,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the command allowlist draft surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 75 remains command-allowlist-draft-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, scheduler access, filesystem mutation, persistence, routing, and self-approval behavior.
+
+| Local worker command argument boundary draft | Defines the owner-review command argument boundary draft structure for any future local worker command execution path in Phase 76. | `docs/phases/PHASE_76_LOCAL_WORKER_COMMAND_ARGUMENT_BOUNDARY_DRAFT_V1.md`, `apps/operator-console/src/local-worker-command-argument-boundary-draft.ts`, `scripts/lib/local-worker-command-argument-boundary-draft-v1.mjs`, `scripts/run-local-worker-command-argument-boundary-draft-v1.mjs`, `tests/integration/local-worker-command-argument-boundary-draft-v1.test.ts` |
+
+### `docs/phases/PHASE_76_LOCAL_WORKER_COMMAND_ARGUMENT_BOUNDARY_DRAFT_V1.md`
+
+- Evidence role: Phase 76 local worker command argument boundary draft contract and validation instructions.
+- Use when answering: what Phase 76 adds, what it blocks, and why argument boundaries do not equal command execution.
+
+### `apps/operator-console/src/local-worker-command-argument-boundary-draft.ts`
+
+- Evidence role: typed frontend-consumable command argument boundary draft packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review command argument boundary draft status, argument pattern inventory requirements, blocked argument pattern requirements, and blocked scheduler/command/worker/filesystem flags.
+
+### `scripts/lib/local-worker-command-argument-boundary-draft-v1.mjs`
+
+- Evidence role: Phase 76 command argument boundary draft validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-command-argument-boundary-draft-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 76 command argument boundary draft report.
+- Use when answering: how to run the command argument boundary draft proof.
+
+### `tests/integration/local-worker-command-argument-boundary-draft-v1.test.ts`
+
+- Evidence role: integration tests proving the command argument boundary draft surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 76 remains command-argument-boundary-draft-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, scheduler access, filesystem mutation, persistence, routing, and self-approval behavior.
