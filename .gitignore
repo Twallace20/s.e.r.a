@@ -129,3 +129,5 @@ packages/*/src/*.d.ts
 .sera-local-worker-command-allowlist-draft/
 
 .sera-local-worker-command-argument-boundary-draft/
+
+.sera-local-worker-command-working-directory-boundary-draft/
