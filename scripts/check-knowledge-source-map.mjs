@@ -261,6 +261,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-rollback-plan-v1.mjs",
   "tests/integration/local-worker-rollback-plan-v1.test.ts",
   "apps/operator-console/src/local-worker-rollback-plan.ts",
+  "docs/phases/PHASE_67_LOCAL_WORKER_DEPENDENCY_ALLOWLIST_V1.md",
+  "scripts/lib/local-worker-dependency-allowlist-v1.mjs",
+  "scripts/run-local-worker-dependency-allowlist-v1.mjs",
+  "tests/integration/local-worker-dependency-allowlist-v1.test.ts",
+  "apps/operator-console/src/local-worker-dependency-allowlist.ts",
 ];
 
 function fail(message) {

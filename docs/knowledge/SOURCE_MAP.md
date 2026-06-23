@@ -1037,3 +1037,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for rollback plan fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 66 blocks rollback signing, rollback execution, state restore, backup creation, install approval, dependency download, installer execution, worker install/connection/spawn, scheduler actions, command execution, shell execution, task execution, runner connectivity, workspace probing, filesystem scanning, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
+
+| Local worker dependency allowlist | Defines the owner-review dependency allowlist structure for any future local worker installation path in Phase 67. | `docs/phases/PHASE_67_LOCAL_WORKER_DEPENDENCY_ALLOWLIST_V1.md`, `apps/operator-console/src/local-worker-dependency-allowlist.ts`, `scripts/lib/local-worker-dependency-allowlist-v1.mjs`, `scripts/run-local-worker-dependency-allowlist-v1.mjs`, `tests/integration/local-worker-dependency-allowlist-v1.test.ts` |
+
+### `docs/phases/PHASE_67_LOCAL_WORKER_DEPENDENCY_ALLOWLIST_V1.md`
+
+- Evidence role: Phase 67 local worker dependency allowlist contract and validation instructions.
+- Use when answering: what Phase 67 adds, what it blocks, and why a dependency allowlist structure does not equal approval, dependency download, package install, package manager execution, mutation, or installation.
+
+### `apps/operator-console/src/local-worker-dependency-allowlist.ts`
+
+- Evidence role: typed frontend-consumable dependency allowlist packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review dependency allowlist status, dependency inventory requirements, package manager boundaries, version pinning requirements, provenance evidence, and blocked install/execution/dependency mutation flags.
+
+### `scripts/lib/local-worker-dependency-allowlist-v1.mjs`
+
+- Evidence role: Phase 67 dependency allowlist validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-dependency-allowlist-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 67 dependency allowlist report.
+- Use when answering: how to run the dependency allowlist proof.
+
+### `tests/integration/local-worker-dependency-allowlist-v1.test.ts`
+
+- Evidence role: integration tests proving the dependency allowlist surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 67 remains dependency-allowlist-only and blocks dependency download, package install, package manager execution, manifest mutation, lockfile mutation, install, scheduler, command, filesystem, persistence, routing, and self-approval behavior.

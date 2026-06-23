@@ -18,6 +18,7 @@ import { localWorkerInstallApprovalRecordPacket, localWorkerInstallApprovalRecor
 import { localWorkerInstallScopeLockPacket, localWorkerInstallScopeLockSafetyGates } from "./local-worker-install-scope-lock";
 import { localWorkerWorkspaceBoundaryPacket, localWorkerWorkspaceBoundarySafetyGates } from "./local-worker-workspace-boundary";
 import { localWorkerRollbackPlanPacket, localWorkerRollbackPlanSafetyGates } from "./local-worker-rollback-plan";
+import { localWorkerDependencyAllowlistPacket, localWorkerDependencyAllowlistSafetyGates } from "./local-worker-dependency-allowlist";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -69,6 +70,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker install scope lock", value: localWorkerInstallScopeLockPacket.localWorkerInstallScopeLockStatus, tone: "planned" },
   { label: "Worker workspace boundary", value: localWorkerWorkspaceBoundaryPacket.localWorkerWorkspaceBoundaryStatus, tone: "planned" },
   { label: "Worker rollback plan", value: localWorkerRollbackPlanPacket.localWorkerRollbackPlanStatus, tone: "planned" },
+  { label: "Worker dependency allowlist", value: localWorkerDependencyAllowlistPacket.localWorkerDependencyAllowlistStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -78,10 +80,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 66 local worker rollback plan",
-    branch: "phase-66-local-worker-rollback-plan-v1",
+    title: "Phase 67 local worker dependency allowlist",
+    branch: "phase-67-local-worker-dependency-allowlist-v1",
     risk: "Low",
-    workflow: "Local worker rollback plan",
+    workflow: "Local worker dependency allowlist",
     status: "Queued",
   },
   {
@@ -101,6 +103,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerDependencyAllowlistSafetyGates,
   ...localWorkerRollbackPlanSafetyGates,
   ...localWorkerWorkspaceBoundarySafetyGates,
   ...localWorkerInstallScopeLockSafetyGates,
@@ -941,6 +944,48 @@ export function App() {
     <button type="button" disabled>Review rollback only</button>
   </div>
   <p className="muted">Phase 66 creates an owner-review rollback plan structure for future local worker installation. It does not lock rollback as approved, sign approval, execute rollback, restore state, create backups, approve installation, install a worker, download dependencies, execute installers, scan or probe the filesystem, connect to a worker, schedule work, execute commands, execute tasks, persist rollback records, mutate files, mutate source, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Dependency Allowlist" eyebrow="owner-review dependency allowlist">
+  <div className="packet-list">
+    <span>Phase: {localWorkerDependencyAllowlistPacket.phase.label}</span>
+    <span>Status: {localWorkerDependencyAllowlistPacket.localWorkerDependencyAllowlistStatus}</span>
+    <span>Mode: {localWorkerDependencyAllowlistPacket.dependencyAllowlistMode}</span>
+    <span>Owner: {localWorkerDependencyAllowlistPacket.dependencyAllowlistSummary.owner}</span>
+    <span>Source phase: {localWorkerDependencyAllowlistPacket.dependencyAllowlistSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerDependencyAllowlistPacket.dependencyAllowlistSummary.safeState}</span>
+    <span>Requirements: {localWorkerDependencyAllowlistPacket.dependencyAllowlistRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerDependencyAllowlistPacket.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerDependencyAllowlistPacket.dependencyAllowlistSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Dependency inventory required: {localWorkerDependencyAllowlistPacket.dependencyAllowlistSummary.dependencyInventoryRequired ? "yes" : "no"}</span>
+    <span>Package manager boundary required: {localWorkerDependencyAllowlistPacket.dependencyAllowlistSummary.packageManagerBoundaryRequired ? "yes" : "no"}</span>
+    <span>Version pinning required: {localWorkerDependencyAllowlistPacket.dependencyAllowlistSummary.versionPinningRequired ? "yes" : "no"}</span>
+    <span>Dependency allowlist locked: {localWorkerDependencyAllowlistPacket.dependencyAllowlistSummary.dependencyAllowlistLocked ? "yes" : "no"}</span>
+    <span>Rollback plan locked: {localWorkerDependencyAllowlistPacket.dependencyAllowlistSummary.rollbackPlanLocked ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerDependencyAllowlistPacket.dependencyAllowlistSummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Worker installed: {localWorkerDependencyAllowlistPacket.dependencyAllowlistSummary.workerInstalled ? "yes" : "no"}</span>
+    <span>Worker install: {localWorkerDependencyAllowlistPacket.boundaries.workerInstallAllowed ? "allowed" : "blocked"}</span>
+    <span>Dependency download: {localWorkerDependencyAllowlistPacket.boundaries.dependencyDownloadAllowed ? "allowed" : "blocked"}</span>
+    <span>Package manager execution: {localWorkerDependencyAllowlistPacket.boundaries.packageManagerExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerDependencyAllowlistPacket.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerDependencyAllowlistPacket.dependencyAllowlistRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">dependency only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock dependencies in future phase</button>
+    <button type="button" disabled>Review allowlist only</button>
+  </div>
+  <p className="muted">Phase 67 creates an owner-review dependency allowlist structure for future local worker installation. It does not lock dependencies as approved, sign approval, download dependencies, install packages, run package managers, mutate dependency manifests, create lockfiles, approve installation, install a worker, execute installers, scan or probe the filesystem, connect to a worker, schedule work, execute commands, execute tasks, persist dependency allowlist records, mutate files, mutate source, route work, or approve execution.</p>
 </Card>
 
 </section>

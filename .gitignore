@@ -109,3 +109,5 @@ packages/*/src/*.d.ts
 .sera-local-worker-workspace-boundary/
 
 .sera-local-worker-rollback-plan/
+
+.sera-local-worker-dependency-allowlist/
