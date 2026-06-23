@@ -95,3 +95,4 @@ packages/*/src/*.d.ts
 .sera-windows-task-scheduler-status-check/
 
 .sera-morning-status-packet/
+.sera-local-worker-readiness-gate/
