@@ -115,3 +115,5 @@ packages/*/src/*.d.ts
 .sera-local-worker-install-dry-run/
 
 .sera-local-worker-install-evidence-packet/
+
+.sera-local-worker-manual-install-gate/

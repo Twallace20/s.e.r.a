@@ -1118,3 +1118,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the install evidence packet surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 69 remains install-evidence-packet-only and blocks actual evidence-packet execution, smoke tests, network access, dependency download, package install, package manager execution, manifest mutation, lockfile mutation, install, scheduler, command, filesystem, persistence, routing, and self-approval behavior.
+
+| Local worker manual install gate | Defines the owner-review manual install gate structure for any future local worker installation path in Phase 70. | `docs/phases/PHASE_70_LOCAL_WORKER_MANUAL_INSTALL_GATE_V1.md`, `apps/operator-console/src/local-worker-manual-install-gate.ts`, `scripts/lib/local-worker-manual-install-gate-v1.mjs`, `scripts/run-local-worker-manual-install-gate-v1.mjs`, `tests/integration/local-worker-manual-install-gate-v1.test.ts` |
+
+### `docs/phases/PHASE_70_LOCAL_WORKER_MANUAL_INSTALL_GATE_V1.md`
+
+- Evidence role: Phase 70 local worker manual install gate contract and validation instructions.
+- Use when answering: what Phase 70 adds, what it blocks, and why a manual install gate structure does not equal actual installation, dependency download, package install, package manager execution, mutation, or worker connection.
+
+### `apps/operator-console/src/local-worker-manual-install-gate.ts`
+
+- Evidence role: typed frontend-consumable manual install gate packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review manual install gate status, command plan requirements, final preinstall checklist requirements, and blocked install/execution/dependency/network/filesystem flags.
+
+### `scripts/lib/local-worker-manual-install-gate-v1.mjs`
+
+- Evidence role: Phase 70 manual install gate validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-manual-install-gate-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 70 manual install gate report.
+- Use when answering: how to run the manual install gate proof.
+
+### `tests/integration/local-worker-manual-install-gate-v1.test.ts`
+
+- Evidence role: integration tests proving the manual install gate surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 70 remains manual-install-gate-only and blocks actual installation, installer execution, dependency download, package install, package manager execution, command execution, filesystem mutation, persistence, routing, and self-approval behavior.

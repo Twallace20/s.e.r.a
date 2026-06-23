@@ -21,6 +21,7 @@ import { localWorkerRollbackPlanPacket, localWorkerRollbackPlanSafetyGates } fro
 import { localWorkerDependencyAllowlistPacket, localWorkerDependencyAllowlistSafetyGates } from "./local-worker-dependency-allowlist";
 import { localWorkerInstallDryRunPacket, localWorkerInstallDryRunSafetyGates } from "./local-worker-install-dry-run";
 import { localWorkerInstallEvidencePacket, localWorkerInstallEvidencePacketSafetyGates } from "./local-worker-install-evidence-packet";
+import { localWorkerManualInstallGate, localWorkerManualInstallGateSafetyGates } from "./local-worker-manual-install-gate";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -75,6 +76,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker dependency allowlist", value: localWorkerDependencyAllowlistPacket.localWorkerDependencyAllowlistStatus, tone: "planned" },
   { label: "Worker install dry-run", value: localWorkerInstallDryRunPacket.localWorkerInstallDryRunStatus, tone: "planned" },
   { label: "Worker install evidence packet", value: localWorkerInstallEvidencePacket.localWorkerInstallEvidencePacketStatus, tone: "planned" },
+  { label: "Worker manual install gate", value: localWorkerManualInstallGate.localWorkerManualInstallGateStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -84,10 +86,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 69 local worker install evidence packet",
-    branch: "phase-69-local-worker-install-evidence-packet-v1",
+    title: "Phase 70 local worker manual install gate",
+    branch: "phase-70-local-worker-manual-install-gate-v1",
     risk: "Low",
-    workflow: "Local worker install evidence packet",
+    workflow: "Local worker manual install gate",
     status: "Queued",
   },
   {
@@ -107,6 +109,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerManualInstallGateSafetyGates,
   ...localWorkerInstallEvidencePacketSafetyGates,
   ...localWorkerInstallDryRunSafetyGates,
   ...localWorkerDependencyAllowlistSafetyGates,
@@ -1076,6 +1079,46 @@ export function App() {
     <button type="button" disabled>Review evidence-packet only</button>
   </div>
   <p className="muted">Phase 69 creates an owner-review install evidence packet structure for future local worker installation. It does not execute a evidence-packet, run smoke tests, access the network, download dependencies, install packages, run package managers, mutate dependency manifests, create lockfiles, approve installation, install a worker, execute installers, scan or probe the filesystem, connect to a worker, schedule work, execute commands, execute tasks, persist install evidence packet records, mutate files, mutate source, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Manual Install Gate" eyebrow="owner-review manual install gate">
+  <div className="packet-list">
+    <span>Phase: {localWorkerManualInstallGate.phase.label}</span>
+    <span>Status: {localWorkerManualInstallGate.localWorkerManualInstallGateStatus}</span>
+    <span>Mode: {localWorkerManualInstallGate.manualInstallGateMode}</span>
+    <span>Owner: {localWorkerManualInstallGate.manualInstallGateSummary.owner}</span>
+    <span>Source phase: {localWorkerManualInstallGate.manualInstallGateSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerManualInstallGate.manualInstallGateSummary.safeState}</span>
+    <span>Requirements: {localWorkerManualInstallGate.manualInstallGateRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerManualInstallGate.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerManualInstallGate.manualInstallGateSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Manual install command plan required: {localWorkerManualInstallGate.manualInstallGateSummary.manualInstallCommandPlanRequired ? "yes" : "no"}</span>
+    <span>Final preinstall checklist required: {localWorkerManualInstallGate.manualInstallGateSummary.finalPreinstallChecklistRequired ? "yes" : "no"}</span>
+    <span>Manual install gate locked: {localWorkerManualInstallGate.manualInstallGateSummary.manualInstallGateLocked ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerManualInstallGate.manualInstallGateSummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Worker installed: {localWorkerManualInstallGate.manualInstallGateSummary.workerInstalled ? "yes" : "no"}</span>
+    <span>Worker install: {localWorkerManualInstallGate.boundaries.workerInstallAllowed ? "allowed" : "blocked"}</span>
+    <span>Manual install execution: {localWorkerManualInstallGate.boundaries.manualInstallExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Installer execution: {localWorkerManualInstallGate.boundaries.installerExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerManualInstallGate.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerManualInstallGate.manualInstallGateRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">manual gate only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock manual gate in future phase</button>
+    <button type="button" disabled>Review manual gate only</button>
+  </div>
+  <p className="muted">Phase 70 creates an owner-review manual install gate structure for future local worker installation. It does not approve installation, sign approval, execute installers, download dependencies, run package managers, mutate files, connect to a worker, schedule work, execute commands, persist manual gate records, route work, or approve execution.</p>
 </Card>
 
 </section>
