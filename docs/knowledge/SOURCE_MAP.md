@@ -874,3 +874,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for readiness gate fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 60 blocks execution unlock, overnight execution, live run reports, scheduler actions, worker actions, command execution, shell execution, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
+
+| Local worker unlock proposal packet | Defines the owner-review proposal packet for any future local worker unlock path in Phase 61. | `docs/phases/PHASE_61_LOCAL_WORKER_UNLOCK_PROPOSAL_PACKET_V1.md`, `apps/operator-console/src/local-worker-unlock-proposal-packet.ts`, `scripts/lib/local-worker-unlock-proposal-packet-v1.mjs`, `scripts/run-local-worker-unlock-proposal-packet-v1.mjs`, `tests/integration/local-worker-unlock-proposal-packet-v1.test.ts` |
+
+### `docs/phases/PHASE_61_LOCAL_WORKER_UNLOCK_PROPOSAL_PACKET_V1.md`
+
+- Evidence role: Phase 61 local worker unlock proposal packet contract and validation instructions.
+- Use when answering: what Phase 61 adds, what it blocks, and why an unlock proposal does not equal approval or execution.
+
+### `apps/operator-console/src/local-worker-unlock-proposal-packet.ts`
+
+- Evidence role: typed frontend-consumable unlock proposal packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: how the private operator app represents a future unlock proposal while keeping execution blocked.
+
+### `scripts/lib/local-worker-unlock-proposal-packet-v1.mjs`
+
+- Evidence role: Phase 61 verification contract and unlock proposal boundary checks.
+- Use when answering: how the unlock proposal is validated as declarative-only, owner-review-only, non-installing, non-connecting, non-executing, non-persisting, and non-mutating.
+
+### `scripts/run-local-worker-unlock-proposal-packet-v1.mjs`
+
+- Evidence role: Phase 61 demo runner.
+- Use when answering: how to prove the local worker unlock proposal packet is ready.
+
+### `tests/integration/local-worker-unlock-proposal-packet-v1.test.ts`
+
+- Evidence role: test proof for unlock proposal fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 61 blocks proposal approval, execution unlock, overnight execution, worker install/connection/spawn, scheduler actions, command execution, shell execution, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
