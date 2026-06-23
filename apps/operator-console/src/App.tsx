@@ -20,6 +20,7 @@ import { localWorkerWorkspaceBoundaryPacket, localWorkerWorkspaceBoundarySafetyG
 import { localWorkerRollbackPlanPacket, localWorkerRollbackPlanSafetyGates } from "./local-worker-rollback-plan";
 import { localWorkerDependencyAllowlistPacket, localWorkerDependencyAllowlistSafetyGates } from "./local-worker-dependency-allowlist";
 import { localWorkerInstallDryRunPacket, localWorkerInstallDryRunSafetyGates } from "./local-worker-install-dry-run";
+import { localWorkerInstallEvidencePacket, localWorkerInstallEvidencePacketSafetyGates } from "./local-worker-install-evidence-packet";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -73,6 +74,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker rollback plan", value: localWorkerRollbackPlanPacket.localWorkerRollbackPlanStatus, tone: "planned" },
   { label: "Worker dependency allowlist", value: localWorkerDependencyAllowlistPacket.localWorkerDependencyAllowlistStatus, tone: "planned" },
   { label: "Worker install dry-run", value: localWorkerInstallDryRunPacket.localWorkerInstallDryRunStatus, tone: "planned" },
+  { label: "Worker install evidence packet", value: localWorkerInstallEvidencePacket.localWorkerInstallEvidencePacketStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -82,10 +84,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 68 local worker install dry-run",
-    branch: "phase-68-local-worker-install-dry-run-v1",
+    title: "Phase 69 local worker install evidence packet",
+    branch: "phase-69-local-worker-install-evidence-packet-v1",
     risk: "Low",
-    workflow: "Local worker install dry-run",
+    workflow: "Local worker install evidence packet",
     status: "Queued",
   },
   {
@@ -105,6 +107,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerInstallEvidencePacketSafetyGates,
   ...localWorkerInstallDryRunSafetyGates,
   ...localWorkerDependencyAllowlistSafetyGates,
   ...localWorkerRollbackPlanSafetyGates,
@@ -1031,6 +1034,48 @@ export function App() {
     <button type="button" disabled>Review dry-run only</button>
   </div>
   <p className="muted">Phase 68 creates an owner-review install dry-run structure for future local worker installation. It does not execute a dry-run, run smoke tests, access the network, download dependencies, install packages, run package managers, mutate dependency manifests, create lockfiles, approve installation, install a worker, execute installers, scan or probe the filesystem, connect to a worker, schedule work, execute commands, execute tasks, persist install dry-run records, mutate files, mutate source, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Install Evidence Packet" eyebrow="owner-review install evidence packet">
+  <div className="packet-list">
+    <span>Phase: {localWorkerInstallEvidencePacket.phase.label}</span>
+    <span>Status: {localWorkerInstallEvidencePacket.localWorkerInstallEvidencePacketStatus}</span>
+    <span>Mode: {localWorkerInstallEvidencePacket.installEvidencePacketMode}</span>
+    <span>Owner: {localWorkerInstallEvidencePacket.installEvidencePacketSummary.owner}</span>
+    <span>Source phase: {localWorkerInstallEvidencePacket.installEvidencePacketSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerInstallEvidencePacket.installEvidencePacketSummary.safeState}</span>
+    <span>Requirements: {localWorkerInstallEvidencePacket.installEvidencePacketRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerInstallEvidencePacket.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerInstallEvidencePacket.installEvidencePacketSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Evidence source inventory required: {localWorkerInstallEvidencePacket.installEvidencePacketSummary.evidenceSourceInventoryRequired ? "yes" : "no"}</span>
+    <span>Evidence bundle manifest required: {localWorkerInstallEvidencePacket.installEvidencePacketSummary.evidenceBundleManifestRequired ? "yes" : "no"}</span>
+    <span>Validation evidence required: {localWorkerInstallEvidencePacket.installEvidencePacketSummary.validationEvidenceRequired ? "yes" : "no"}</span>
+    <span>Install evidence packet locked: {localWorkerInstallEvidencePacket.installEvidencePacketSummary.installEvidencePacketLocked ? "yes" : "no"}</span>
+    <span>Dependency allowlist locked: {localWorkerInstallEvidencePacket.installEvidencePacketSummary.dependencyAllowlistLocked ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerInstallEvidencePacket.installEvidencePacketSummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Worker installed: {localWorkerInstallEvidencePacket.installEvidencePacketSummary.workerInstalled ? "yes" : "no"}</span>
+    <span>Worker install: {localWorkerInstallEvidencePacket.boundaries.workerInstallAllowed ? "allowed" : "blocked"}</span>
+    <span>Evidence packet execution: {localWorkerInstallEvidencePacket.boundaries.evidencePacketExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Network access: {localWorkerInstallEvidencePacket.boundaries.networkAccessAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerInstallEvidencePacket.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerInstallEvidencePacket.installEvidencePacketRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">evidence-packet only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock evidence-packet in future phase</button>
+    <button type="button" disabled>Review evidence-packet only</button>
+  </div>
+  <p className="muted">Phase 69 creates an owner-review install evidence packet structure for future local worker installation. It does not execute a evidence-packet, run smoke tests, access the network, download dependencies, install packages, run package managers, mutate dependency manifests, create lockfiles, approve installation, install a worker, execute installers, scan or probe the filesystem, connect to a worker, schedule work, execute commands, execute tasks, persist install evidence packet records, mutate files, mutate source, route work, or approve execution.</p>
 </Card>
 
 </section>

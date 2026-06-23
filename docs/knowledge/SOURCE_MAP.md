@@ -1091,3 +1091,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the install dry-run surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 68 remains install-dry-run-only and blocks actual dry-run execution, smoke tests, network access, dependency download, package install, package manager execution, manifest mutation, lockfile mutation, install, scheduler, command, filesystem, persistence, routing, and self-approval behavior.
+
+| Local worker install evidence packet | Defines the owner-review install evidence packet structure for any future local worker installation path in Phase 69. | `docs/phases/PHASE_69_LOCAL_WORKER_INSTALL_EVIDENCE_PACKET_V1.md`, `apps/operator-console/src/local-worker-install-evidence-packet.ts`, `scripts/lib/local-worker-install-evidence-packet-v1.mjs`, `scripts/run-local-worker-install-evidence-packet-v1.mjs`, `tests/integration/local-worker-install-evidence-packet-v1.test.ts` |
+
+### `docs/phases/PHASE_69_LOCAL_WORKER_INSTALL_EVIDENCE_PACKET_V1.md`
+
+- Evidence role: Phase 69 local worker install evidence packet contract and validation instructions.
+- Use when answering: what Phase 69 adds, what it blocks, and why an install evidence packet structure does not equal actual evidence-packet execution, dependency download, package install, package manager execution, mutation, or installation.
+
+### `apps/operator-console/src/local-worker-install-evidence-packet.ts`
+
+- Evidence role: typed frontend-consumable install evidence packet packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review install evidence packet status, evidence-packet script requirements, evidence-packet input requirements, evidence-packet output evidence requirements, and blocked install/execution/dependency/network/filesystem flags.
+
+### `scripts/lib/local-worker-install-evidence-packet-v1.mjs`
+
+- Evidence role: Phase 69 install evidence packet validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-install-evidence-packet-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 69 install evidence packet report.
+- Use when answering: how to run the install evidence packet proof.
+
+### `tests/integration/local-worker-install-evidence-packet-v1.test.ts`
+
+- Evidence role: integration tests proving the install evidence packet surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 69 remains install-evidence-packet-only and blocks actual evidence-packet execution, smoke tests, network access, dependency download, package install, package manager execution, manifest mutation, lockfile mutation, install, scheduler, command, filesystem, persistence, routing, and self-approval behavior.
