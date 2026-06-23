@@ -26,6 +26,7 @@ import { localWorkerPostInstallHealthRecord, localWorkerPostInstallHealthRecordS
 import { localWorkerHealthPollingApprovalPlan, localWorkerHealthPollingApprovalPlanSafetyGates } from "./local-worker-health-polling-approval-plan";
 import { localWorkerSchedulerApprovalPlan, localWorkerSchedulerApprovalPlanSafetyGates } from "./local-worker-scheduler-approval-plan";
 import { localWorkerCommandExecutionApprovalPlan, localWorkerCommandExecutionApprovalPlanSafetyGates } from "./local-worker-command-execution-approval-plan";
+import { localWorkerCommandAllowlistDraft, localWorkerCommandAllowlistDraftSafetyGates } from "./local-worker-command-allowlist-draft";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -85,6 +86,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker health polling approval plan", value: localWorkerHealthPollingApprovalPlan.localWorkerHealthPollingApprovalPlanStatus, tone: "planned" },
   { label: "Worker scheduler approval plan", value: localWorkerSchedulerApprovalPlan.localWorkerSchedulerApprovalPlanStatus, tone: "planned" },
   { label: "Worker command execution approval plan", value: localWorkerCommandExecutionApprovalPlan.localWorkerCommandExecutionApprovalPlanStatus, tone: "planned" },
+  { label: "Worker command allowlist draft", value: localWorkerCommandAllowlistDraft.localWorkerCommandAllowlistDraftStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -117,6 +119,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerCommandAllowlistDraftSafetyGates,
   ...localWorkerCommandExecutionApprovalPlanSafetyGates,
   ...localWorkerSchedulerApprovalPlanSafetyGates,
   ...localWorkerHealthPollingApprovalPlanSafetyGates,
@@ -1289,6 +1292,44 @@ export function App() {
     <button type="button" disabled>Review command execution plan only</button>
   </div>
   <p className="muted">Phase 74 creates an owner-review command execution approval plan structure for future local worker command execution. It does not create tasks, query Windows Task Scheduler, mutate tasks, execute PowerShell, execute schtasks, connect to a worker, poll health, persist command execution approval records, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Command Allowlist Draft" eyebrow="owner-review command allowlist draft">
+  <div className="packet-list">
+    <span>Phase: {localWorkerCommandAllowlistDraft.phase.label}</span>
+    <span>Status: {localWorkerCommandAllowlistDraft.localWorkerCommandAllowlistDraftStatus}</span>
+    <span>Mode: {localWorkerCommandAllowlistDraft.commandAllowlistDraftMode}</span>
+    <span>Owner: {localWorkerCommandAllowlistDraft.commandAllowlistDraftSummary.owner}</span>
+    <span>Source phase: {localWorkerCommandAllowlistDraft.commandAllowlistDraftSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerCommandAllowlistDraft.commandAllowlistDraftSummary.safeState}</span>
+    <span>Requirements: {localWorkerCommandAllowlistDraft.commandAllowlistDraftRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerCommandAllowlistDraft.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerCommandAllowlistDraft.commandAllowlistDraftSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Command allowlist inventory required: {localWorkerCommandAllowlistDraft.commandAllowlistDraftSummary.commandAllowlistInventoryRequired ? "yes" : "no"}</span>
+    <span>Command denylist boundary required: {localWorkerCommandAllowlistDraft.commandAllowlistDraftSummary.commandDenylistBoundaryRequired ? "yes" : "no"}</span>
+    <span>Command allowlist draft locked: {localWorkerCommandAllowlistDraft.commandAllowlistDraftSummary.commandAllowlistDraftLocked ? "yes" : "no"}</span>
+    <span>Command execution: {localWorkerCommandAllowlistDraft.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>PowerShell execution: {localWorkerCommandAllowlistDraft.boundaries.powershellExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>schtasks execution: {localWorkerCommandAllowlistDraft.boundaries.schtasksExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerCommandAllowlistDraft.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerCommandAllowlistDraft.commandAllowlistDraftRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">allowlist draft only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock command allowlist in future phase</button>
+    <button type="button" disabled>Review draft only</button>
+  </div>
+  <p className="muted">Phase 75 creates an owner-review command allowlist draft for future local worker command execution. It does not execute PowerShell, execute schtasks, execute shell commands, query or mutate Windows Task Scheduler, connect to a worker, poll health, persist command approval records, route work, or approve execution.</p>
 </Card>
 
 </section>

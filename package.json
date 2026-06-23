@@ -148,7 +148,9 @@
     "phase73:demo": "node scripts/run-local-worker-scheduler-approval-plan-v1.mjs",
     "phase73:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase72:demo && npm run phase73:demo",
     "phase74:demo": "node scripts/run-local-worker-command-execution-approval-plan-v1.mjs",
-    "phase74:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase73:demo && npm run phase74:demo"
+    "phase74:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase73:demo && npm run phase74:demo",
+    "phase75:demo": "node scripts/run-local-worker-command-allowlist-draft-v1.mjs",
+    "phase75:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase74:demo && npm run phase75:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
