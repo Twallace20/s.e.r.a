@@ -105,3 +105,5 @@ packages/*/src/*.d.ts
 .sera-local-worker-install-approval-record/
 
 .sera-local-worker-install-scope-lock/
+
+.sera-local-worker-workspace-boundary/

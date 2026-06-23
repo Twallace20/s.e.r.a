@@ -983,3 +983,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for scope lock fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 64 blocks scope signing, scope lock approval, install approval, dependency download, installer execution, worker install/connection/spawn, scheduler actions, command execution, shell execution, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
+
+| Local worker workspace boundary | Defines the owner-review workspace boundary structure for any future local worker installation path in Phase 65. | `docs/phases/PHASE_65_LOCAL_WORKER_WORKSPACE_BOUNDARY_V1.md`, `apps/operator-console/src/local-worker-workspace-boundary.ts`, `scripts/lib/local-worker-workspace-boundary-v1.mjs`, `scripts/run-local-worker-workspace-boundary-v1.mjs`, `tests/integration/local-worker-workspace-boundary-v1.test.ts` |
+
+### `docs/phases/PHASE_65_LOCAL_WORKER_WORKSPACE_BOUNDARY_V1.md`
+
+- Evidence role: Phase 65 local worker workspace boundary contract and validation instructions.
+- Use when answering: what Phase 65 adds, what it blocks, and why a workspace boundary structure does not equal approval, scanning, mutation, or installation.
+
+### `apps/operator-console/src/local-worker-workspace-boundary.ts`
+
+- Evidence role: typed frontend-consumable workspace boundary packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: how the private operator app represents a future worker workspace boundary while keeping approval signing, workspace locking, scanning, and installation blocked.
+
+### `scripts/lib/local-worker-workspace-boundary-v1.mjs`
+
+- Evidence role: Phase 65 verification contract and workspace boundary checks.
+- Use when answering: how the workspace boundary is validated as declarative-only, owner-review-only, non-signing, non-locking, non-approving, non-installing, non-scanning, non-persisting, and non-mutating.
+
+### `scripts/run-local-worker-workspace-boundary-v1.mjs`
+
+- Evidence role: Phase 65 demo runner.
+- Use when answering: how to prove the local worker workspace boundary is ready.
+
+### `tests/integration/local-worker-workspace-boundary-v1.test.ts`
+
+- Evidence role: test proof for workspace boundary fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 65 blocks workspace signing, install approval, dependency download, installer execution, worker install/connection/spawn, scheduler actions, command execution, shell execution, task execution, runner connectivity, workspace probing, filesystem scanning, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.

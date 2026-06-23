@@ -251,6 +251,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-install-scope-lock-v1.mjs",
   "tests/integration/local-worker-install-scope-lock-v1.test.ts",
   "apps/operator-console/src/local-worker-install-scope-lock.ts",
+  "docs/phases/PHASE_65_LOCAL_WORKER_WORKSPACE_BOUNDARY_V1.md",
+  "scripts/lib/local-worker-workspace-boundary-v1.mjs",
+  "scripts/run-local-worker-workspace-boundary-v1.mjs",
+  "tests/integration/local-worker-workspace-boundary-v1.test.ts",
+  "apps/operator-console/src/local-worker-workspace-boundary.ts",
 ];
 
 function fail(message) {
