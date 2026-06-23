@@ -98,3 +98,5 @@ packages/*/src/*.d.ts
 .sera-local-worker-readiness-gate/
 
 .sera-local-worker-unlock-proposal-packet/
+
+.sera-local-worker-install-plan/

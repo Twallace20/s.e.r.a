@@ -122,7 +122,9 @@
     "phase60:demo": "node scripts/run-local-worker-readiness-gate-v1.mjs",
     "phase60:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase59:verify && npm run phase60:demo",
     "phase61:demo": "node scripts/run-local-worker-unlock-proposal-packet-v1.mjs",
-    "phase61:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase60:demo && npm run phase61:demo"
+    "phase61:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase60:demo && npm run phase61:demo",
+    "phase62:demo": "node scripts/run-local-worker-install-plan-v1.mjs",
+    "phase62:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase61:demo && npm run phase62:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
