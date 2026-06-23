@@ -27,6 +27,7 @@ import { localWorkerHealthPollingApprovalPlan, localWorkerHealthPollingApprovalP
 import { localWorkerSchedulerApprovalPlan, localWorkerSchedulerApprovalPlanSafetyGates } from "./local-worker-scheduler-approval-plan";
 import { localWorkerCommandExecutionApprovalPlan, localWorkerCommandExecutionApprovalPlanSafetyGates } from "./local-worker-command-execution-approval-plan";
 import { localWorkerCommandAllowlistDraft, localWorkerCommandAllowlistDraftSafetyGates } from "./local-worker-command-allowlist-draft";
+import { localWorkerCommandArgumentBoundaryDraft, localWorkerCommandArgumentBoundaryDraftSafetyGates } from "./local-worker-command-argument-boundary-draft";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -87,6 +88,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker scheduler approval plan", value: localWorkerSchedulerApprovalPlan.localWorkerSchedulerApprovalPlanStatus, tone: "planned" },
   { label: "Worker command execution approval plan", value: localWorkerCommandExecutionApprovalPlan.localWorkerCommandExecutionApprovalPlanStatus, tone: "planned" },
   { label: "Worker command allowlist draft", value: localWorkerCommandAllowlistDraft.localWorkerCommandAllowlistDraftStatus, tone: "planned" },
+  { label: "Worker command argument boundary draft", value: localWorkerCommandArgumentBoundaryDraft.localWorkerCommandArgumentBoundaryDraftStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -119,6 +121,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerCommandArgumentBoundaryDraftSafetyGates,
   ...localWorkerCommandAllowlistDraftSafetyGates,
   ...localWorkerCommandExecutionApprovalPlanSafetyGates,
   ...localWorkerSchedulerApprovalPlanSafetyGates,
@@ -1330,6 +1333,44 @@ export function App() {
     <button type="button" disabled>Review draft only</button>
   </div>
   <p className="muted">Phase 75 creates an owner-review command allowlist draft for future local worker command execution. It does not execute PowerShell, execute schtasks, execute shell commands, query or mutate Windows Task Scheduler, connect to a worker, poll health, persist command approval records, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Command Argument Boundary Draft" eyebrow="owner-review command argument boundary draft">
+  <div className="packet-list">
+    <span>Phase: {localWorkerCommandArgumentBoundaryDraft.phase.label}</span>
+    <span>Status: {localWorkerCommandArgumentBoundaryDraft.localWorkerCommandArgumentBoundaryDraftStatus}</span>
+    <span>Mode: {localWorkerCommandArgumentBoundaryDraft.commandArgumentBoundaryDraftMode}</span>
+    <span>Owner: {localWorkerCommandArgumentBoundaryDraft.commandArgumentBoundaryDraftSummary.owner}</span>
+    <span>Source phase: {localWorkerCommandArgumentBoundaryDraft.commandArgumentBoundaryDraftSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerCommandArgumentBoundaryDraft.commandArgumentBoundaryDraftSummary.safeState}</span>
+    <span>Requirements: {localWorkerCommandArgumentBoundaryDraft.commandArgumentBoundaryDraftRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerCommandArgumentBoundaryDraft.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerCommandArgumentBoundaryDraft.commandArgumentBoundaryDraftSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Argument pattern inventory required: {localWorkerCommandArgumentBoundaryDraft.commandArgumentBoundaryDraftSummary.commandArgumentPatternInventoryRequired ? "yes" : "no"}</span>
+    <span>Blocked argument pattern boundary required: {localWorkerCommandArgumentBoundaryDraft.commandArgumentBoundaryDraftSummary.blockedArgumentPatternBoundaryRequired ? "yes" : "no"}</span>
+    <span>Argument boundary draft locked: {localWorkerCommandArgumentBoundaryDraft.commandArgumentBoundaryDraftSummary.commandArgumentBoundaryDraftLocked ? "yes" : "no"}</span>
+    <span>Command execution: {localWorkerCommandArgumentBoundaryDraft.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>PowerShell execution: {localWorkerCommandArgumentBoundaryDraft.boundaries.powershellExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>schtasks execution: {localWorkerCommandArgumentBoundaryDraft.boundaries.schtasksExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerCommandArgumentBoundaryDraft.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerCommandArgumentBoundaryDraft.commandArgumentBoundaryDraftRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">argument boundary draft only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock argument boundary in future phase</button>
+    <button type="button" disabled>Review draft only</button>
+  </div>
+  <p className="muted">Phase 76 creates an owner-review command argument boundary draft for future local worker command execution. It does not execute PowerShell, execute schtasks, execute shell commands, query or mutate Windows Task Scheduler, connect to a worker, poll health, persist command approval records, route work, or approve execution.</p>
 </Card>
 
 </section>

@@ -127,3 +127,5 @@ packages/*/src/*.d.ts
 .sera-local-worker-command-execution-approval-plan/
 
 .sera-local-worker-command-allowlist-draft/
+
+.sera-local-worker-command-argument-boundary-draft/
