@@ -1010,3 +1010,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for workspace boundary fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 65 blocks workspace signing, install approval, dependency download, installer execution, worker install/connection/spawn, scheduler actions, command execution, shell execution, task execution, runner connectivity, workspace probing, filesystem scanning, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
+
+| Local worker rollback plan | Defines the owner-review rollback plan structure for any future local worker installation path in Phase 66. | `docs/phases/PHASE_66_LOCAL_WORKER_ROLLBACK_PLAN_V1.md`, `apps/operator-console/src/local-worker-rollback-plan.ts`, `scripts/lib/local-worker-rollback-plan-v1.mjs`, `scripts/run-local-worker-rollback-plan-v1.mjs`, `tests/integration/local-worker-rollback-plan-v1.test.ts` |
+
+### `docs/phases/PHASE_66_LOCAL_WORKER_ROLLBACK_PLAN_V1.md`
+
+- Evidence role: Phase 66 local worker rollback plan contract and validation instructions.
+- Use when answering: what Phase 66 adds, what it blocks, and why a rollback plan structure does not equal approval, rollback execution, restore, backup creation, mutation, or installation.
+
+### `apps/operator-console/src/local-worker-rollback-plan.ts`
+
+- Evidence role: typed frontend-consumable rollback plan packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: how the private operator app represents a future worker rollback plan while keeping approval signing, rollback execution, restore, backup creation, and installation blocked.
+
+### `scripts/lib/local-worker-rollback-plan-v1.mjs`
+
+- Evidence role: Phase 66 verification contract and rollback plan checks.
+- Use when answering: how the rollback plan is validated as declarative-only, owner-review-only, non-signing, non-locking, non-approving, non-installing, non-restoring, non-persisting, and non-mutating.
+
+### `scripts/run-local-worker-rollback-plan-v1.mjs`
+
+- Evidence role: Phase 66 demo runner.
+- Use when answering: how to prove the local worker rollback plan is ready.
+
+### `tests/integration/local-worker-rollback-plan-v1.test.ts`
+
+- Evidence role: test proof for rollback plan fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 66 blocks rollback signing, rollback execution, state restore, backup creation, install approval, dependency download, installer execution, worker install/connection/spawn, scheduler actions, command execution, shell execution, task execution, runner connectivity, workspace probing, filesystem scanning, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.

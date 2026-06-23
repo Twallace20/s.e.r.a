@@ -17,6 +17,7 @@ import { localWorkerInstallPlanPacket, localWorkerInstallPlanSafetyGates } from 
 import { localWorkerInstallApprovalRecordPacket, localWorkerInstallApprovalRecordSafetyGates } from "./local-worker-install-approval-record";
 import { localWorkerInstallScopeLockPacket, localWorkerInstallScopeLockSafetyGates } from "./local-worker-install-scope-lock";
 import { localWorkerWorkspaceBoundaryPacket, localWorkerWorkspaceBoundarySafetyGates } from "./local-worker-workspace-boundary";
+import { localWorkerRollbackPlanPacket, localWorkerRollbackPlanSafetyGates } from "./local-worker-rollback-plan";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -67,6 +68,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker install approval", value: localWorkerInstallApprovalRecordPacket.localWorkerInstallApprovalRecordStatus, tone: "planned" },
   { label: "Worker install scope lock", value: localWorkerInstallScopeLockPacket.localWorkerInstallScopeLockStatus, tone: "planned" },
   { label: "Worker workspace boundary", value: localWorkerWorkspaceBoundaryPacket.localWorkerWorkspaceBoundaryStatus, tone: "planned" },
+  { label: "Worker rollback plan", value: localWorkerRollbackPlanPacket.localWorkerRollbackPlanStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -76,10 +78,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 65 local worker workspace boundary",
-    branch: "phase-65-local-worker-workspace-boundary-v1",
+    title: "Phase 66 local worker rollback plan",
+    branch: "phase-66-local-worker-rollback-plan-v1",
     risk: "Low",
-    workflow: "Local worker workspace boundary",
+    workflow: "Local worker rollback plan",
     status: "Queued",
   },
   {
@@ -99,6 +101,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerRollbackPlanSafetyGates,
   ...localWorkerWorkspaceBoundarySafetyGates,
   ...localWorkerInstallScopeLockSafetyGates,
   ...localWorkerInstallApprovalRecordSafetyGates,
@@ -896,6 +899,48 @@ export function App() {
     <button type="button" disabled>Review boundary only</button>
   </div>
   <p className="muted">Phase 65 creates an owner-review workspace boundary structure for future local worker installation. It does not lock the workspace as approved, sign approval, approve installation, install a worker, download dependencies, execute installers, scan or probe the filesystem, connect to a worker, schedule work, execute commands, execute tasks, persist workspace records, mutate files, mutate source, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Rollback Plan" eyebrow="owner-review rollback plan">
+  <div className="packet-list">
+    <span>Phase: {localWorkerRollbackPlanPacket.phase.label}</span>
+    <span>Status: {localWorkerRollbackPlanPacket.localWorkerRollbackPlanStatus}</span>
+    <span>Mode: {localWorkerRollbackPlanPacket.rollbackPlanMode}</span>
+    <span>Owner: {localWorkerRollbackPlanPacket.rollbackPlanSummary.owner}</span>
+    <span>Source phase: {localWorkerRollbackPlanPacket.rollbackPlanSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerRollbackPlanPacket.rollbackPlanSummary.safeState}</span>
+    <span>Requirements: {localWorkerRollbackPlanPacket.rollbackPlanRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerRollbackPlanPacket.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerRollbackPlanPacket.rollbackPlanSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Rollback target required: {localWorkerRollbackPlanPacket.rollbackPlanSummary.rollbackTargetRequired ? "yes" : "no"}</span>
+    <span>Rollback trigger required: {localWorkerRollbackPlanPacket.rollbackPlanSummary.rollbackTriggerRequired ? "yes" : "no"}</span>
+    <span>State restore boundary required: {localWorkerRollbackPlanPacket.rollbackPlanSummary.stateRestoreBoundaryRequired ? "yes" : "no"}</span>
+    <span>Rollback plan locked: {localWorkerRollbackPlanPacket.rollbackPlanSummary.rollbackPlanLocked ? "yes" : "no"}</span>
+    <span>Workspace boundary locked: {localWorkerRollbackPlanPacket.rollbackPlanSummary.workspaceBoundaryLocked ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerRollbackPlanPacket.rollbackPlanSummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Worker installed: {localWorkerRollbackPlanPacket.rollbackPlanSummary.workerInstalled ? "yes" : "no"}</span>
+    <span>Worker install: {localWorkerRollbackPlanPacket.boundaries.workerInstallAllowed ? "allowed" : "blocked"}</span>
+    <span>Rollback execution: {localWorkerRollbackPlanPacket.boundaries.rollbackExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>State restore: {localWorkerRollbackPlanPacket.boundaries.stateRestoreAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerRollbackPlanPacket.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerRollbackPlanPacket.rollbackPlanRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">rollback only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock rollback in future phase</button>
+    <button type="button" disabled>Review rollback only</button>
+  </div>
+  <p className="muted">Phase 66 creates an owner-review rollback plan structure for future local worker installation. It does not lock rollback as approved, sign approval, execute rollback, restore state, create backups, approve installation, install a worker, download dependencies, execute installers, scan or probe the filesystem, connect to a worker, schedule work, execute commands, execute tasks, persist rollback records, mutate files, mutate source, route work, or approve execution.</p>
 </Card>
 
 </section>
