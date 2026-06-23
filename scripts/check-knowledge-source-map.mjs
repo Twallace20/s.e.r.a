@@ -301,6 +301,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-command-execution-approval-plan-v1.mjs",
   "tests/integration/local-worker-command-execution-approval-plan-v1.test.ts",
   "apps/operator-console/src/local-worker-command-execution-approval-plan.ts",
+  "docs/phases/PHASE_75_LOCAL_WORKER_COMMAND_ALLOWLIST_DRAFT_V1.md",
+  "scripts/lib/local-worker-command-allowlist-draft-v1.mjs",
+  "scripts/run-local-worker-command-allowlist-draft-v1.mjs",
+  "tests/integration/local-worker-command-allowlist-draft-v1.test.ts",
+  "apps/operator-console/src/local-worker-command-allowlist-draft.ts",
 ];
 
 function fail(message) {

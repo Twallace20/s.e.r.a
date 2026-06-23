@@ -1253,3 +1253,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the command execution approval plan surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 74 remains command-execution-approval-plan-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, PowerShell execution, schtasks execution, command execution, filesystem mutation, persistence, routing, and self-approval behavior.
+
+| Local worker command allowlist draft | Defines the owner-review command allowlist draft structure for any future local worker command execution path in Phase 75. | `docs/phases/PHASE_75_LOCAL_WORKER_COMMAND_ALLOWLIST_DRAFT_V1.md`, `apps/operator-console/src/local-worker-command-allowlist-draft.ts`, `scripts/lib/local-worker-command-allowlist-draft-v1.mjs`, `scripts/run-local-worker-command-allowlist-draft-v1.mjs`, `tests/integration/local-worker-command-allowlist-draft-v1.test.ts` |
+
+### `docs/phases/PHASE_75_LOCAL_WORKER_COMMAND_ALLOWLIST_DRAFT_V1.md`
+
+- Evidence role: Phase 75 local worker command allowlist draft contract and validation instructions.
+- Use when answering: what Phase 75 adds, what it blocks, and why a command allowlist draft does not equal command execution.
+
+### `apps/operator-console/src/local-worker-command-allowlist-draft.ts`
+
+- Evidence role: typed frontend-consumable command allowlist draft packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review command allowlist draft status, command allowlist inventory requirements, command denylist boundary requirements, and blocked scheduler/command/worker/filesystem flags.
+
+### `scripts/lib/local-worker-command-allowlist-draft-v1.mjs`
+
+- Evidence role: Phase 75 command allowlist draft validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-command-allowlist-draft-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 75 command allowlist draft report.
+- Use when answering: how to run the command allowlist draft proof.
+
+### `tests/integration/local-worker-command-allowlist-draft-v1.test.ts`
+
+- Evidence role: integration tests proving the command allowlist draft surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 75 remains command-allowlist-draft-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, scheduler access, filesystem mutation, persistence, routing, and self-approval behavior.
