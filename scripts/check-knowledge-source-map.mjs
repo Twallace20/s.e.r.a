@@ -311,6 +311,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-command-argument-boundary-draft-v1.mjs",
   "tests/integration/local-worker-command-argument-boundary-draft-v1.test.ts",
   "apps/operator-console/src/local-worker-command-argument-boundary-draft.ts",
+  "docs/phases/PHASE_77_LOCAL_WORKER_COMMAND_WORKING_DIRECTORY_BOUNDARY_DRAFT_V1.md",
+  "scripts/lib/local-worker-command-working-directory-boundary-draft-v1.mjs",
+  "scripts/run-local-worker-command-working-directory-boundary-draft-v1.mjs",
+  "tests/integration/local-worker-command-working-directory-boundary-draft-v1.test.ts",
+  "apps/operator-console/src/local-worker-command-working-directory-boundary-draft.ts",
 ];
 
 function fail(message) {

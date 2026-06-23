@@ -28,6 +28,7 @@ import { localWorkerSchedulerApprovalPlan, localWorkerSchedulerApprovalPlanSafet
 import { localWorkerCommandExecutionApprovalPlan, localWorkerCommandExecutionApprovalPlanSafetyGates } from "./local-worker-command-execution-approval-plan";
 import { localWorkerCommandAllowlistDraft, localWorkerCommandAllowlistDraftSafetyGates } from "./local-worker-command-allowlist-draft";
 import { localWorkerCommandArgumentBoundaryDraft, localWorkerCommandArgumentBoundaryDraftSafetyGates } from "./local-worker-command-argument-boundary-draft";
+import { localWorkerCommandWorkingDirectoryBoundaryDraft, localWorkerCommandWorkingDirectoryBoundaryDraftSafetyGates } from "./local-worker-command-working-directory-boundary-draft";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -89,6 +90,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker command execution approval plan", value: localWorkerCommandExecutionApprovalPlan.localWorkerCommandExecutionApprovalPlanStatus, tone: "planned" },
   { label: "Worker command allowlist draft", value: localWorkerCommandAllowlistDraft.localWorkerCommandAllowlistDraftStatus, tone: "planned" },
   { label: "Worker command argument boundary draft", value: localWorkerCommandArgumentBoundaryDraft.localWorkerCommandArgumentBoundaryDraftStatus, tone: "planned" },
+  { label: "Worker command working directory boundary draft", value: localWorkerCommandWorkingDirectoryBoundaryDraft.localWorkerCommandWorkingDirectoryBoundaryDraftStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -121,6 +123,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerCommandWorkingDirectoryBoundaryDraftSafetyGates,
   ...localWorkerCommandArgumentBoundaryDraftSafetyGates,
   ...localWorkerCommandAllowlistDraftSafetyGates,
   ...localWorkerCommandExecutionApprovalPlanSafetyGates,
@@ -1371,6 +1374,44 @@ export function App() {
     <button type="button" disabled>Review draft only</button>
   </div>
   <p className="muted">Phase 76 creates an owner-review command argument boundary draft for future local worker command execution. It does not execute PowerShell, execute schtasks, execute shell commands, query or mutate Windows Task Scheduler, connect to a worker, poll health, persist command approval records, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Command Working Directory Boundary Draft" eyebrow="owner-review command working directory boundary draft">
+  <div className="packet-list">
+    <span>Phase: {localWorkerCommandWorkingDirectoryBoundaryDraft.phase.label}</span>
+    <span>Status: {localWorkerCommandWorkingDirectoryBoundaryDraft.localWorkerCommandWorkingDirectoryBoundaryDraftStatus}</span>
+    <span>Mode: {localWorkerCommandWorkingDirectoryBoundaryDraft.commandWorkingDirectoryBoundaryDraftMode}</span>
+    <span>Owner: {localWorkerCommandWorkingDirectoryBoundaryDraft.commandWorkingDirectoryBoundaryDraftSummary.owner}</span>
+    <span>Source phase: {localWorkerCommandWorkingDirectoryBoundaryDraft.commandWorkingDirectoryBoundaryDraftSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerCommandWorkingDirectoryBoundaryDraft.commandWorkingDirectoryBoundaryDraftSummary.safeState}</span>
+    <span>Requirements: {localWorkerCommandWorkingDirectoryBoundaryDraft.commandWorkingDirectoryBoundaryDraftRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerCommandWorkingDirectoryBoundaryDraft.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerCommandWorkingDirectoryBoundaryDraft.commandWorkingDirectoryBoundaryDraftSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Working directory pattern inventory required: {localWorkerCommandWorkingDirectoryBoundaryDraft.commandWorkingDirectoryBoundaryDraftSummary.commandWorkingDirectoryPatternInventoryRequired ? "yes" : "no"}</span>
+    <span>Blocked working directory pattern boundary required: {localWorkerCommandWorkingDirectoryBoundaryDraft.commandWorkingDirectoryBoundaryDraftSummary.blockedWorkingDirectoryPatternBoundaryRequired ? "yes" : "no"}</span>
+    <span>Working directory boundary draft locked: {localWorkerCommandWorkingDirectoryBoundaryDraft.commandWorkingDirectoryBoundaryDraftSummary.commandWorkingDirectoryBoundaryDraftLocked ? "yes" : "no"}</span>
+    <span>Command execution: {localWorkerCommandWorkingDirectoryBoundaryDraft.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>PowerShell execution: {localWorkerCommandWorkingDirectoryBoundaryDraft.boundaries.powershellExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>schtasks execution: {localWorkerCommandWorkingDirectoryBoundaryDraft.boundaries.schtasksExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerCommandWorkingDirectoryBoundaryDraft.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerCommandWorkingDirectoryBoundaryDraft.commandWorkingDirectoryBoundaryDraftRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">working directory boundary draft only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock working directory boundary in future phase</button>
+    <button type="button" disabled>Review draft only</button>
+  </div>
+  <p className="muted">Phase 77 creates an owner-review command working directory boundary draft for future local worker command execution. It does not execute PowerShell, execute schtasks, execute shell commands, query or mutate Windows Task Scheduler, connect to a worker, poll health, persist command approval records, route work, or approve execution.</p>
 </Card>
 
 </section>

@@ -1307,3 +1307,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the command argument boundary draft surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 76 remains command-argument-boundary-draft-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, scheduler access, filesystem mutation, persistence, routing, and self-approval behavior.
+
+| Local worker command working directory boundary draft | Defines the owner-review command working directory boundary draft structure for any future local worker command execution path in Phase 77. | `docs/phases/PHASE_77_LOCAL_WORKER_COMMAND_WORKING_DIRECTORY_BOUNDARY_DRAFT_V1.md`, `apps/operator-console/src/local-worker-command-working-directory-boundary-draft.ts`, `scripts/lib/local-worker-command-working-directory-boundary-draft-v1.mjs`, `scripts/run-local-worker-command-working-directory-boundary-draft-v1.mjs`, `tests/integration/local-worker-command-working-directory-boundary-draft-v1.test.ts` |
+
+### `docs/phases/PHASE_77_LOCAL_WORKER_COMMAND_WORKING_DIRECTORY_BOUNDARY_DRAFT_V1.md`
+
+- Evidence role: Phase 77 local worker command working directory boundary draft contract and validation instructions.
+- Use when answering: what Phase 77 adds, what it blocks, and why working directory boundaries do not equal command execution.
+
+### `apps/operator-console/src/local-worker-command-working-directory-boundary-draft.ts`
+
+- Evidence role: typed frontend-consumable command working directory boundary draft packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review command working directory boundary draft status, working directory pattern inventory requirements, blocked working directory pattern requirements, and blocked scheduler/command/worker/filesystem flags.
+
+### `scripts/lib/local-worker-command-working-directory-boundary-draft-v1.mjs`
+
+- Evidence role: Phase 77 command working directory boundary draft validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-command-working-directory-boundary-draft-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 77 command working directory boundary draft report.
+- Use when answering: how to run the command working directory boundary draft proof.
+
+### `tests/integration/local-worker-command-working-directory-boundary-draft-v1.test.ts`
+
+- Evidence role: integration tests proving the command working directory boundary draft surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 77 remains command-working-directory-boundary-draft-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, scheduler access, filesystem mutation, persistence, routing, and self-approval behavior.
