@@ -820,3 +820,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for scheduler fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 58 blocks scheduled task creation, query, mutation, deletion, enable/disable, scheduled execution, PowerShell, schtasks, command execution, worker spawn, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
+
+| Morning status packet | Defines the declarative future-morning summary surface for local overnight work reporting in Phase 59. | `docs/phases/PHASE_59_MORNING_STATUS_PACKET_V1.md`, `apps/operator-console/src/morning-status-packet.ts`, `scripts/lib/morning-status-packet-v1.mjs`, `scripts/run-morning-status-packet-v1.mjs`, `tests/integration/morning-status-packet-v1.test.ts` |
+
+### `docs/phases/PHASE_59_MORNING_STATUS_PACKET_V1.md`
+
+- Evidence role: Phase 59 morning status packet contract and validation instructions.
+- Use when answering: what Phase 59 adds, what it blocks, and why morning summaries remain non-executing and non-live.
+
+### `apps/operator-console/src/morning-status-packet.ts`
+
+- Evidence role: typed frontend-consumable morning packet, sections, evidence requirements, and safety gates.
+- Use when answering: how future overnight work summaries appear in the private operator app before overnight execution exists.
+
+### `scripts/lib/morning-status-packet-v1.mjs`
+
+- Evidence role: Phase 59 verification contract and morning packet boundary checks.
+- Use when answering: how the morning packet is validated as declarative-only, non-executing, non-live, non-persisting, and non-mutating.
+
+### `scripts/run-morning-status-packet-v1.mjs`
+
+- Evidence role: Phase 59 demo runner.
+- Use when answering: how to prove the morning status packet is ready.
+
+### `tests/integration/morning-status-packet-v1.test.ts`
+
+- Evidence role: test proof for morning packet fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 59 blocks overnight execution, live run reports, scheduler actions, worker actions, command execution, shell execution, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.

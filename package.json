@@ -116,7 +116,9 @@
     "phase57:demo": "node scripts/run-local-worker-dry-run-harness-v1.mjs",
     "phase57:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase56:verify && npm run phase57:demo",
     "phase58:demo": "node scripts/run-windows-task-scheduler-status-check-v1.mjs",
-    "phase58:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase57:verify && npm run phase58:demo"
+    "phase58:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase57:verify && npm run phase58:demo",
+    "phase59:demo": "node scripts/run-morning-status-packet-v1.mjs",
+    "phase59:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase58:verify && npm run phase59:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
