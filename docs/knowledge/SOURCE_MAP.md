@@ -1226,3 +1226,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the scheduler approval plan surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 73 remains scheduler-approval-plan-only and blocks scheduler creation, scheduler query, scheduler mutation, scheduler deletion, scheduler enable/disable, PowerShell execution, schtasks execution, command execution, filesystem mutation, persistence, routing, and self-approval behavior.
+
+| Local worker command execution approval plan | Defines the owner-review command execution approval plan structure for any future local worker command execution path in Phase 74. | `docs/phases/PHASE_74_LOCAL_WORKER_COMMAND_EXECUTION_APPROVAL_PLAN_V1.md`, `apps/operator-console/src/local-worker-command-execution-approval-plan.ts`, `scripts/lib/local-worker-command-execution-approval-plan-v1.mjs`, `scripts/run-local-worker-command-execution-approval-plan-v1.mjs`, `tests/integration/local-worker-command-execution-approval-plan-v1.test.ts` |
+
+### `docs/phases/PHASE_74_LOCAL_WORKER_COMMAND_EXECUTION_APPROVAL_PLAN_V1.md`
+
+- Evidence role: Phase 74 local worker command execution approval plan contract and validation instructions.
+- Use when answering: what Phase 74 adds, what it blocks, and why a command execution approval plan structure does not equal scheduler creation, query, mutation, deletion, enable/disable, PowerShell execution, schtasks execution, or worker connection.
+
+### `apps/operator-console/src/local-worker-command-execution-approval-plan.ts`
+
+- Evidence role: typed frontend-consumable command execution approval plan packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review command execution approval plan status, command execution boundary requirements, command execution action inventory requirements, and blocked scheduler/command/worker/filesystem flags.
+
+### `scripts/lib/local-worker-command-execution-approval-plan-v1.mjs`
+
+- Evidence role: Phase 74 command execution approval plan validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-command-execution-approval-plan-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 74 command execution approval plan report.
+- Use when answering: how to run the command execution approval plan proof.
+
+### `tests/integration/local-worker-command-execution-approval-plan-v1.test.ts`
+
+- Evidence role: integration tests proving the command execution approval plan surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 74 remains command-execution-approval-plan-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, PowerShell execution, schtasks execution, command execution, filesystem mutation, persistence, routing, and self-approval behavior.
