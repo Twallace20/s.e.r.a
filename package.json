@@ -144,7 +144,9 @@
     "phase71:demo": "node scripts/run-local-worker-post-install-health-record-v1.mjs",
     "phase71:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase70:demo && npm run phase71:demo",
     "phase72:demo": "node scripts/run-local-worker-health-polling-approval-plan-v1.mjs",
-    "phase72:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase71:demo && npm run phase72:demo"
+    "phase72:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase71:demo && npm run phase72:demo",
+    "phase73:demo": "node scripts/run-local-worker-scheduler-approval-plan-v1.mjs",
+    "phase73:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase72:demo && npm run phase73:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

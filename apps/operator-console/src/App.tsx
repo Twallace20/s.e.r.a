@@ -24,6 +24,7 @@ import { localWorkerInstallEvidencePacket, localWorkerInstallEvidencePacketSafet
 import { localWorkerManualInstallGate, localWorkerManualInstallGateSafetyGates } from "./local-worker-manual-install-gate";
 import { localWorkerPostInstallHealthRecord, localWorkerPostInstallHealthRecordSafetyGates } from "./local-worker-post-install-health-record";
 import { localWorkerHealthPollingApprovalPlan, localWorkerHealthPollingApprovalPlanSafetyGates } from "./local-worker-health-polling-approval-plan";
+import { localWorkerSchedulerApprovalPlan, localWorkerSchedulerApprovalPlanSafetyGates } from "./local-worker-scheduler-approval-plan";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -81,6 +82,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker manual install gate", value: localWorkerManualInstallGate.localWorkerManualInstallGateStatus, tone: "planned" },
   { label: "Worker post-install health record", value: localWorkerPostInstallHealthRecord.localWorkerPostInstallHealthRecordStatus, tone: "planned" },
   { label: "Worker health polling approval plan", value: localWorkerHealthPollingApprovalPlan.localWorkerHealthPollingApprovalPlanStatus, tone: "planned" },
+  { label: "Worker scheduler approval plan", value: localWorkerSchedulerApprovalPlan.localWorkerSchedulerApprovalPlanStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -113,6 +115,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerSchedulerApprovalPlanSafetyGates,
   ...localWorkerHealthPollingApprovalPlanSafetyGates,
   ...localWorkerPostInstallHealthRecordSafetyGates,
   ...localWorkerManualInstallGateSafetyGates,
@@ -1205,6 +1208,45 @@ export function App() {
     <button type="button" disabled>Review polling plan only</button>
   </div>
   <p className="muted">Phase 72 creates an owner-review health polling approval plan structure for any future local worker installation. It does not approve installation, sign approval, execute installers, download dependencies, run package managers, mutate files, connect to a worker, schedule work, execute commands, persist health polling approval records, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Scheduler Approval Plan" eyebrow="owner-review scheduler approval plan">
+  <div className="packet-list">
+    <span>Phase: {localWorkerSchedulerApprovalPlan.phase.label}</span>
+    <span>Status: {localWorkerSchedulerApprovalPlan.localWorkerSchedulerApprovalPlanStatus}</span>
+    <span>Mode: {localWorkerSchedulerApprovalPlan.schedulerApprovalPlanMode}</span>
+    <span>Owner: {localWorkerSchedulerApprovalPlan.schedulerApprovalPlanSummary.owner}</span>
+    <span>Source phase: {localWorkerSchedulerApprovalPlan.schedulerApprovalPlanSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerSchedulerApprovalPlan.schedulerApprovalPlanSummary.safeState}</span>
+    <span>Requirements: {localWorkerSchedulerApprovalPlan.schedulerApprovalPlanRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerSchedulerApprovalPlan.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerSchedulerApprovalPlan.schedulerApprovalPlanSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Scheduler command boundary required: {localWorkerSchedulerApprovalPlan.schedulerApprovalPlanSummary.schedulerCommandBoundaryRequired ? "yes" : "no"}</span>
+    <span>Scheduler action inventory required: {localWorkerSchedulerApprovalPlan.schedulerApprovalPlanSummary.schedulerActionInventoryRequired ? "yes" : "no"}</span>
+    <span>Scheduler approval plan locked: {localWorkerSchedulerApprovalPlan.schedulerApprovalPlanSummary.schedulerApprovalPlanLocked ? "yes" : "no"}</span>
+    <span>Scheduler creation: {localWorkerSchedulerApprovalPlan.boundaries.schedulerCreationAllowed ? "allowed" : "blocked"}</span>
+    <span>Scheduler query: {localWorkerSchedulerApprovalPlan.boundaries.schedulerQueryAllowed ? "allowed" : "blocked"}</span>
+    <span>PowerShell execution: {localWorkerSchedulerApprovalPlan.boundaries.powershellExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>schtasks execution: {localWorkerSchedulerApprovalPlan.boundaries.schtasksExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerSchedulerApprovalPlan.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerSchedulerApprovalPlan.schedulerApprovalPlanRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">scheduler approval only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock scheduler approval plan in future phase</button>
+    <button type="button" disabled>Review scheduler plan only</button>
+  </div>
+  <p className="muted">Phase 73 creates an owner-review scheduler approval plan structure for future local worker scheduler access. It does not create tasks, query Windows Task Scheduler, mutate tasks, execute PowerShell, execute schtasks, connect to a worker, poll health, persist scheduler approval records, route work, or approve execution.</p>
 </Card>
 
 </section>
