@@ -22,6 +22,7 @@ import { localWorkerDependencyAllowlistPacket, localWorkerDependencyAllowlistSaf
 import { localWorkerInstallDryRunPacket, localWorkerInstallDryRunSafetyGates } from "./local-worker-install-dry-run";
 import { localWorkerInstallEvidencePacket, localWorkerInstallEvidencePacketSafetyGates } from "./local-worker-install-evidence-packet";
 import { localWorkerManualInstallGate, localWorkerManualInstallGateSafetyGates } from "./local-worker-manual-install-gate";
+import { localWorkerPostInstallHealthRecord, localWorkerPostInstallHealthRecordSafetyGates } from "./local-worker-post-install-health-record";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -77,6 +78,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker install dry-run", value: localWorkerInstallDryRunPacket.localWorkerInstallDryRunStatus, tone: "planned" },
   { label: "Worker install evidence packet", value: localWorkerInstallEvidencePacket.localWorkerInstallEvidencePacketStatus, tone: "planned" },
   { label: "Worker manual install gate", value: localWorkerManualInstallGate.localWorkerManualInstallGateStatus, tone: "planned" },
+  { label: "Worker post-install health record", value: localWorkerPostInstallHealthRecord.localWorkerPostInstallHealthRecordStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -86,10 +88,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 70 local worker manual install gate",
-    branch: "phase-70-local-worker-manual-install-gate-v1",
+    title: "Phase 71 local worker post-install health record",
+    branch: "phase-71-local-worker-post-install-health-record-v1",
     risk: "Low",
-    workflow: "Local worker manual install gate",
+    workflow: "Local worker post-install health record",
     status: "Queued",
   },
   {
@@ -109,6 +111,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerPostInstallHealthRecordSafetyGates,
   ...localWorkerManualInstallGateSafetyGates,
   ...localWorkerInstallEvidencePacketSafetyGates,
   ...localWorkerInstallDryRunSafetyGates,
@@ -1119,6 +1122,46 @@ export function App() {
     <button type="button" disabled>Review manual gate only</button>
   </div>
   <p className="muted">Phase 70 creates an owner-review manual install gate structure for future local worker installation. It does not approve installation, sign approval, execute installers, download dependencies, run package managers, mutate files, connect to a worker, schedule work, execute commands, persist manual gate records, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Post-Install Health Record" eyebrow="owner-review post-install health record">
+  <div className="packet-list">
+    <span>Phase: {localWorkerPostInstallHealthRecord.phase.label}</span>
+    <span>Status: {localWorkerPostInstallHealthRecord.localWorkerPostInstallHealthRecordStatus}</span>
+    <span>Mode: {localWorkerPostInstallHealthRecord.postInstallHealthRecordMode}</span>
+    <span>Owner: {localWorkerPostInstallHealthRecord.postInstallHealthRecordSummary.owner}</span>
+    <span>Source phase: {localWorkerPostInstallHealthRecord.postInstallHealthRecordSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerPostInstallHealthRecord.postInstallHealthRecordSummary.safeState}</span>
+    <span>Requirements: {localWorkerPostInstallHealthRecord.postInstallHealthRecordRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerPostInstallHealthRecord.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerPostInstallHealthRecord.postInstallHealthRecordSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Health signal inventory required: {localWorkerPostInstallHealthRecord.postInstallHealthRecordSummary.healthSignalInventoryRequired ? "yes" : "no"}</span>
+    <span>Post-install health checklist required: {localWorkerPostInstallHealthRecord.postInstallHealthRecordSummary.postInstallHealthChecklistRequired ? "yes" : "no"}</span>
+    <span>Post-install health record locked: {localWorkerPostInstallHealthRecord.postInstallHealthRecordSummary.postInstallHealthRecordLocked ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerPostInstallHealthRecord.postInstallHealthRecordSummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Worker installed: {localWorkerPostInstallHealthRecord.postInstallHealthRecordSummary.workerInstalled ? "yes" : "no"}</span>
+    <span>Worker install: {localWorkerPostInstallHealthRecord.boundaries.workerInstallAllowed ? "allowed" : "blocked"}</span>
+    <span>Manual install execution: {localWorkerPostInstallHealthRecord.boundaries.manualInstallExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Installer execution: {localWorkerPostInstallHealthRecord.boundaries.installerExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerPostInstallHealthRecord.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerPostInstallHealthRecord.postInstallHealthRecordRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">health record only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock health record in future phase</button>
+    <button type="button" disabled>Review health record only</button>
+  </div>
+  <p className="muted">Phase 71 creates an owner-review post-install health record structure for any future local worker installation. It does not approve installation, sign approval, execute installers, download dependencies, run package managers, mutate files, connect to a worker, schedule work, execute commands, persist health record records, route work, or approve execution.</p>
 </Card>
 
 </section>

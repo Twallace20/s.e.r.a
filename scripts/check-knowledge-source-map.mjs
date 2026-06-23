@@ -281,6 +281,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-manual-install-gate-v1.mjs",
   "tests/integration/local-worker-manual-install-gate-v1.test.ts",
   "apps/operator-console/src/local-worker-manual-install-gate.ts",
+  "docs/phases/PHASE_71_LOCAL_WORKER_POST_INSTALL_HEALTH_RECORD_V1.md",
+  "scripts/lib/local-worker-post-install-health-record-v1.mjs",
+  "scripts/run-local-worker-post-install-health-record-v1.mjs",
+  "tests/integration/local-worker-post-install-health-record-v1.test.ts",
+  "apps/operator-console/src/local-worker-post-install-health-record.ts",
 ];
 
 function fail(message) {
