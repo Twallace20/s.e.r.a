@@ -847,3 +847,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for morning packet fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 59 blocks overnight execution, live run reports, scheduler actions, worker actions, command execution, shell execution, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
+
+| Local worker readiness gate | Defines the final declarative readiness gate before any future local worker unlock can be considered in Phase 60. | `docs/phases/PHASE_60_LOCAL_WORKER_READINESS_GATE_V1.md`, `apps/operator-console/src/local-worker-readiness-gate.ts`, `scripts/lib/local-worker-readiness-gate-v1.mjs`, `scripts/run-local-worker-readiness-gate-v1.mjs`, `tests/integration/local-worker-readiness-gate-v1.test.ts` |
+
+### `docs/phases/PHASE_60_LOCAL_WORKER_READINESS_GATE_V1.md`
+
+- Evidence role: Phase 60 local worker readiness gate contract and validation instructions.
+- Use when answering: what Phase 60 adds, what it blocks, and why readiness assessment does not unlock execution.
+
+### `apps/operator-console/src/local-worker-readiness-gate.ts`
+
+- Evidence role: typed frontend-consumable readiness gate, prerequisite checks, evidence requirements, and safety gates.
+- Use when answering: how the private operator app represents local worker readiness without granting execution authority.
+
+### `scripts/lib/local-worker-readiness-gate-v1.mjs`
+
+- Evidence role: Phase 60 verification contract and readiness gate boundary checks.
+- Use when answering: how the readiness gate is validated as declarative-only, non-installing, non-connecting, non-executing, non-persisting, and non-mutating.
+
+### `scripts/run-local-worker-readiness-gate-v1.mjs`
+
+- Evidence role: Phase 60 demo runner.
+- Use when answering: how to prove the local worker readiness gate is ready.
+
+### `tests/integration/local-worker-readiness-gate-v1.test.ts`
+
+- Evidence role: test proof for readiness gate fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 60 blocks execution unlock, overnight execution, live run reports, scheduler actions, worker actions, command execution, shell execution, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.

@@ -226,6 +226,11 @@ const requiredMappedPaths = [
   "scripts/run-morning-status-packet-v1.mjs",
   "tests/integration/morning-status-packet-v1.test.ts",
   "apps/operator-console/src/morning-status-packet.ts",
+  "docs/phases/PHASE_60_LOCAL_WORKER_READINESS_GATE_V1.md",
+  "scripts/lib/local-worker-readiness-gate-v1.mjs",
+  "scripts/run-local-worker-readiness-gate-v1.mjs",
+  "tests/integration/local-worker-readiness-gate-v1.test.ts",
+  "apps/operator-console/src/local-worker-readiness-gate.ts",
 ];
 
 function fail(message) {

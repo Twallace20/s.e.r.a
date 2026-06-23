@@ -11,6 +11,7 @@ import { localWorkerHealthPanelPacket, localWorkerHealthPanelSafetyGates } from 
 import { localWorkerDryRunHarnessPacket, localWorkerDryRunHarnessSafetyGates } from "./local-worker-dry-run-harness";
 import { windowsTaskSchedulerStatusCheckPacket, windowsTaskSchedulerStatusCheckSafetyGates } from "./windows-task-scheduler-status-check";
 import { morningStatusPacket, morningStatusPacketSafetyGates } from "./morning-status-packet";
+import { localWorkerReadinessGatePacket, localWorkerReadinessGateSafetyGates } from "./local-worker-readiness-gate";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -55,6 +56,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker dry-run harness", value: localWorkerDryRunHarnessPacket.dryRunHarnessStatus, tone: "planned" },
   { label: "Windows scheduler", value: windowsTaskSchedulerStatusCheckPacket.schedulerStatusCheckStatus, tone: "planned" },
   { label: "Morning packet", value: morningStatusPacket.morningStatusPacketStatus, tone: "planned" },
+  { label: "Worker readiness gate", value: localWorkerReadinessGatePacket.localWorkerReadinessGateStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -64,10 +66,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 59 morning status packet",
-    branch: "phase-59-morning-status-packet-v1",
+    title: "Phase 60 local worker readiness gate",
+    branch: "phase-60-local-worker-readiness-gate-v1",
     risk: "Low",
-    workflow: "Morning status packet",
+    workflow: "Local worker readiness gate",
     status: "Queued",
   },
   {
@@ -87,6 +89,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerReadinessGateSafetyGates,
   ...morningStatusPacketSafetyGates,
   ...windowsTaskSchedulerStatusCheckSafetyGates,
   ...localWorkerDryRunHarnessSafetyGates,
@@ -639,6 +642,45 @@ export function App() {
   </div>
   <p className="muted">Phase 59 creates the morning status packet surface for future overnight work summaries. It does not claim overnight work ran, query Windows scheduling, connect to a worker, execute commands, execute tasks, persist task records, route work, mutate files, or mutate source.</p>
 </Card>
+
+<Card title="Local Worker Readiness Gate" eyebrow="final readiness checkpoint">
+  <div className="packet-list">
+    <span>Phase: {localWorkerReadinessGatePacket.phase.label}</span>
+    <span>Status: {localWorkerReadinessGatePacket.localWorkerReadinessGateStatus}</span>
+    <span>Mode: {localWorkerReadinessGatePacket.readinessGateMode}</span>
+    <span>Owner: {localWorkerReadinessGatePacket.readinessSummary.owner}</span>
+    <span>Source phase: {localWorkerReadinessGatePacket.readinessSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerReadinessGatePacket.readinessSummary.safeState}</span>
+    <span>Prerequisites represented: {localWorkerReadinessGatePacket.readinessSummary.allPrerequisitesRepresented ? "yes" : "no"}</span>
+    <span>Readiness checks: {localWorkerReadinessGatePacket.readinessGateChecks.length}</span>
+    <span>Evidence requirements: {localWorkerReadinessGatePacket.evidenceRequirements.length}</span>
+    <span>Ready for unlock: {localWorkerReadinessGatePacket.readinessSummary.localWorkerReadyForUnlock ? "yes" : "no"}</span>
+    <span>Execution unlock approved: {localWorkerReadinessGatePacket.readinessSummary.executionUnlockApproved ? "yes" : "no"}</span>
+    <span>Overnight work authorized: {localWorkerReadinessGatePacket.readinessSummary.overnightWorkAuthorized ? "yes" : "no"}</span>
+    <span>Worker connected: {localWorkerReadinessGatePacket.readinessSummary.workerConnected ? "yes" : "no"}</span>
+    <span>Execution unlock: {localWorkerReadinessGatePacket.boundaries.executionUnlockAllowed ? "allowed" : "blocked"}</span>
+    <span>Command execution: {localWorkerReadinessGatePacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerReadinessGatePacket.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerReadinessGatePacket.readinessGateChecks.map((check) => (
+      <article className="queue-item" key={check.id}>
+        <div>
+          <strong>{check.label}</strong>
+          <p>{check.evidence}</p>
+        </div>
+        <span>{check.state}</span>
+        <Badge tone="planned">gate only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Unlock local worker in future approved phase</button>
+    <button type="button" disabled>Assess readiness only</button>
+  </div>
+  <p className="muted">Phase 60 closes the local worker readiness arc with a declarative readiness gate. It does not install a worker, connect to a worker, schedule work, execute commands, execute tasks, persist readiness decisions, mutate files, mutate source, route work, or approve execution.</p>
+</Card>
+
 
           </aside>
         </div>
