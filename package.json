@@ -134,7 +134,9 @@
     "phase66:demo": "node scripts/run-local-worker-rollback-plan-v1.mjs",
     "phase66:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase65:demo && npm run phase66:demo",
     "phase67:demo": "node scripts/run-local-worker-dependency-allowlist-v1.mjs",
-    "phase67:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase66:demo && npm run phase67:demo"
+    "phase67:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase66:demo && npm run phase67:demo",
+    "phase68:demo": "node scripts/run-local-worker-install-dry-run-v1.mjs",
+    "phase68:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase67:demo && npm run phase68:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

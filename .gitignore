@@ -111,3 +111,5 @@ packages/*/src/*.d.ts
 .sera-local-worker-rollback-plan/
 
 .sera-local-worker-dependency-allowlist/
+
+.sera-local-worker-install-dry-run/

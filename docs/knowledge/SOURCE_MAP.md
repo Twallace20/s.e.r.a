@@ -1064,3 +1064,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the dependency allowlist surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 67 remains dependency-allowlist-only and blocks dependency download, package install, package manager execution, manifest mutation, lockfile mutation, install, scheduler, command, filesystem, persistence, routing, and self-approval behavior.
+
+| Local worker install dry-run | Defines the owner-review install dry-run structure for any future local worker installation path in Phase 68. | `docs/phases/PHASE_68_LOCAL_WORKER_INSTALL_DRY_RUN_V1.md`, `apps/operator-console/src/local-worker-install-dry-run.ts`, `scripts/lib/local-worker-install-dry-run-v1.mjs`, `scripts/run-local-worker-install-dry-run-v1.mjs`, `tests/integration/local-worker-install-dry-run-v1.test.ts` |
+
+### `docs/phases/PHASE_68_LOCAL_WORKER_INSTALL_DRY_RUN_V1.md`
+
+- Evidence role: Phase 68 local worker install dry-run contract and validation instructions.
+- Use when answering: what Phase 68 adds, what it blocks, and why an install dry-run structure does not equal actual dry-run execution, dependency download, package install, package manager execution, mutation, or installation.
+
+### `apps/operator-console/src/local-worker-install-dry-run.ts`
+
+- Evidence role: typed frontend-consumable install dry-run packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review install dry-run status, dry-run script requirements, dry-run input requirements, dry-run output evidence requirements, and blocked install/execution/dependency/network/filesystem flags.
+
+### `scripts/lib/local-worker-install-dry-run-v1.mjs`
+
+- Evidence role: Phase 68 install dry-run validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-install-dry-run-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 68 install dry-run report.
+- Use when answering: how to run the install dry-run proof.
+
+### `tests/integration/local-worker-install-dry-run-v1.test.ts`
+
+- Evidence role: integration tests proving the install dry-run surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 68 remains install-dry-run-only and blocks actual dry-run execution, smoke tests, network access, dependency download, package install, package manager execution, manifest mutation, lockfile mutation, install, scheduler, command, filesystem, persistence, routing, and self-approval behavior.

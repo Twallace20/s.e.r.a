@@ -266,6 +266,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-dependency-allowlist-v1.mjs",
   "tests/integration/local-worker-dependency-allowlist-v1.test.ts",
   "apps/operator-console/src/local-worker-dependency-allowlist.ts",
+  "docs/phases/PHASE_68_LOCAL_WORKER_INSTALL_DRY_RUN_V1.md",
+  "scripts/lib/local-worker-install-dry-run-v1.mjs",
+  "scripts/run-local-worker-install-dry-run-v1.mjs",
+  "tests/integration/local-worker-install-dry-run-v1.test.ts",
+  "apps/operator-console/src/local-worker-install-dry-run.ts",
 ];
 
 function fail(message) {

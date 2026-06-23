@@ -19,6 +19,7 @@ import { localWorkerInstallScopeLockPacket, localWorkerInstallScopeLockSafetyGat
 import { localWorkerWorkspaceBoundaryPacket, localWorkerWorkspaceBoundarySafetyGates } from "./local-worker-workspace-boundary";
 import { localWorkerRollbackPlanPacket, localWorkerRollbackPlanSafetyGates } from "./local-worker-rollback-plan";
 import { localWorkerDependencyAllowlistPacket, localWorkerDependencyAllowlistSafetyGates } from "./local-worker-dependency-allowlist";
+import { localWorkerInstallDryRunPacket, localWorkerInstallDryRunSafetyGates } from "./local-worker-install-dry-run";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -71,6 +72,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker workspace boundary", value: localWorkerWorkspaceBoundaryPacket.localWorkerWorkspaceBoundaryStatus, tone: "planned" },
   { label: "Worker rollback plan", value: localWorkerRollbackPlanPacket.localWorkerRollbackPlanStatus, tone: "planned" },
   { label: "Worker dependency allowlist", value: localWorkerDependencyAllowlistPacket.localWorkerDependencyAllowlistStatus, tone: "planned" },
+  { label: "Worker install dry-run", value: localWorkerInstallDryRunPacket.localWorkerInstallDryRunStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -80,10 +82,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 67 local worker dependency allowlist",
-    branch: "phase-67-local-worker-dependency-allowlist-v1",
+    title: "Phase 68 local worker install dry-run",
+    branch: "phase-68-local-worker-install-dry-run-v1",
     risk: "Low",
-    workflow: "Local worker dependency allowlist",
+    workflow: "Local worker install dry-run",
     status: "Queued",
   },
   {
@@ -103,6 +105,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerInstallDryRunSafetyGates,
   ...localWorkerDependencyAllowlistSafetyGates,
   ...localWorkerRollbackPlanSafetyGates,
   ...localWorkerWorkspaceBoundarySafetyGates,
@@ -986,6 +989,48 @@ export function App() {
     <button type="button" disabled>Review allowlist only</button>
   </div>
   <p className="muted">Phase 67 creates an owner-review dependency allowlist structure for future local worker installation. It does not lock dependencies as approved, sign approval, download dependencies, install packages, run package managers, mutate dependency manifests, create lockfiles, approve installation, install a worker, execute installers, scan or probe the filesystem, connect to a worker, schedule work, execute commands, execute tasks, persist dependency allowlist records, mutate files, mutate source, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Install Dry-Run" eyebrow="owner-review install dry-run">
+  <div className="packet-list">
+    <span>Phase: {localWorkerInstallDryRunPacket.phase.label}</span>
+    <span>Status: {localWorkerInstallDryRunPacket.localWorkerInstallDryRunStatus}</span>
+    <span>Mode: {localWorkerInstallDryRunPacket.installDryRunMode}</span>
+    <span>Owner: {localWorkerInstallDryRunPacket.installDryRunSummary.owner}</span>
+    <span>Source phase: {localWorkerInstallDryRunPacket.installDryRunSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerInstallDryRunPacket.installDryRunSummary.safeState}</span>
+    <span>Requirements: {localWorkerInstallDryRunPacket.installDryRunRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerInstallDryRunPacket.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerInstallDryRunPacket.installDryRunSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Dry-run script required: {localWorkerInstallDryRunPacket.installDryRunSummary.dryRunScriptRequired ? "yes" : "no"}</span>
+    <span>Dry-run inputs required: {localWorkerInstallDryRunPacket.installDryRunSummary.dryRunInputsRequired ? "yes" : "no"}</span>
+    <span>Dry-run output evidence required: {localWorkerInstallDryRunPacket.installDryRunSummary.dryRunOutputEvidenceRequired ? "yes" : "no"}</span>
+    <span>Install dry-run locked: {localWorkerInstallDryRunPacket.installDryRunSummary.installDryRunLocked ? "yes" : "no"}</span>
+    <span>Dependency allowlist locked: {localWorkerInstallDryRunPacket.installDryRunSummary.dependencyAllowlistLocked ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerInstallDryRunPacket.installDryRunSummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Worker installed: {localWorkerInstallDryRunPacket.installDryRunSummary.workerInstalled ? "yes" : "no"}</span>
+    <span>Worker install: {localWorkerInstallDryRunPacket.boundaries.workerInstallAllowed ? "allowed" : "blocked"}</span>
+    <span>Dry-run execution: {localWorkerInstallDryRunPacket.boundaries.dryRunExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Network access: {localWorkerInstallDryRunPacket.boundaries.networkAccessAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerInstallDryRunPacket.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerInstallDryRunPacket.installDryRunRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">dry-run only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock dry-run in future phase</button>
+    <button type="button" disabled>Review dry-run only</button>
+  </div>
+  <p className="muted">Phase 68 creates an owner-review install dry-run structure for future local worker installation. It does not execute a dry-run, run smoke tests, access the network, download dependencies, install packages, run package managers, mutate dependency manifests, create lockfiles, approve installation, install a worker, execute installers, scan or probe the filesystem, connect to a worker, schedule work, execute commands, execute tasks, persist install dry-run records, mutate files, mutate source, route work, or approve execution.</p>
 </Card>
 
 </section>
