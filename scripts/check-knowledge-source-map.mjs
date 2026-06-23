@@ -236,6 +236,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-unlock-proposal-packet-v1.mjs",
   "tests/integration/local-worker-unlock-proposal-packet-v1.test.ts",
   "apps/operator-console/src/local-worker-unlock-proposal-packet.ts",
+  "docs/phases/PHASE_62_LOCAL_WORKER_INSTALL_PLAN_V1.md",
+  "scripts/lib/local-worker-install-plan-v1.mjs",
+  "scripts/run-local-worker-install-plan-v1.mjs",
+  "tests/integration/local-worker-install-plan-v1.test.ts",
+  "apps/operator-console/src/local-worker-install-plan.ts",
 ];
 
 function fail(message) {

@@ -13,6 +13,7 @@ import { windowsTaskSchedulerStatusCheckPacket, windowsTaskSchedulerStatusCheckS
 import { morningStatusPacket, morningStatusPacketSafetyGates } from "./morning-status-packet";
 import { localWorkerReadinessGatePacket, localWorkerReadinessGateSafetyGates } from "./local-worker-readiness-gate";
 import { localWorkerUnlockProposalPacket, localWorkerUnlockProposalPacketSafetyGates } from "./local-worker-unlock-proposal-packet";
+import { localWorkerInstallPlanPacket, localWorkerInstallPlanSafetyGates } from "./local-worker-install-plan";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -59,6 +60,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Morning packet", value: morningStatusPacket.morningStatusPacketStatus, tone: "planned" },
   { label: "Worker readiness gate", value: localWorkerReadinessGatePacket.localWorkerReadinessGateStatus, tone: "planned" },
   { label: "Worker unlock proposal", value: localWorkerUnlockProposalPacket.localWorkerUnlockProposalPacketStatus, tone: "planned" },
+  { label: "Worker install plan", value: localWorkerInstallPlanPacket.localWorkerInstallPlanStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -68,10 +70,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 61 local worker unlock proposal packet",
-    branch: "phase-61-local-worker-unlock-proposal-packet-v1",
+    title: "Phase 62 local worker install plan",
+    branch: "phase-62-local-worker-install-plan-v1",
     risk: "Low",
-    workflow: "Local worker unlock proposal packet",
+    workflow: "Local worker install plan",
     status: "Queued",
   },
   {
@@ -91,6 +93,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerInstallPlanSafetyGates,
   ...localWorkerUnlockProposalPacketSafetyGates,
   ...localWorkerReadinessGateSafetyGates,
   ...morningStatusPacketSafetyGates,
@@ -723,6 +726,44 @@ export function App() {
     <button type="button" disabled>Review proposal only</button>
   </div>
   <p className="muted">Phase 61 creates an owner-review proposal packet for future local worker unlock work. It does not approve the proposal, install a worker, connect to a worker, schedule work, execute commands, execute tasks, persist unlock decisions, mutate files, mutate source, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Install Plan" eyebrow="owner-review install plan">
+  <div className="packet-list">
+    <span>Phase: {localWorkerInstallPlanPacket.phase.label}</span>
+    <span>Status: {localWorkerInstallPlanPacket.localWorkerInstallPlanStatus}</span>
+    <span>Mode: {localWorkerInstallPlanPacket.installPlanMode}</span>
+    <span>Owner: {localWorkerInstallPlanPacket.installPlanSummary.owner}</span>
+    <span>Source phase: {localWorkerInstallPlanPacket.installPlanSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerInstallPlanPacket.installPlanSummary.safeState}</span>
+    <span>Requirements: {localWorkerInstallPlanPacket.installPlanRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerInstallPlanPacket.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerInstallPlanPacket.installPlanSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Install plan approved: {localWorkerInstallPlanPacket.installPlanSummary.installPlanApproved ? "yes" : "no"}</span>
+    <span>Ready for install: {localWorkerInstallPlanPacket.installPlanSummary.localWorkerReadyForInstall ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerInstallPlanPacket.installPlanSummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Worker installed: {localWorkerInstallPlanPacket.installPlanSummary.workerInstalled ? "yes" : "no"}</span>
+    <span>Worker install: {localWorkerInstallPlanPacket.boundaries.workerInstallAllowed ? "allowed" : "blocked"}</span>
+    <span>Installer execution: {localWorkerInstallPlanPacket.boundaries.installerExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerInstallPlanPacket.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerInstallPlanPacket.installPlanRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">plan only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Approve install in future phase</button>
+    <button type="button" disabled>Review install plan only</button>
+  </div>
+  <p className="muted">Phase 62 creates an owner-review install plan for future local worker installation. It does not approve installation, install a worker, download dependencies, execute installers, connect to a worker, schedule work, execute commands, execute tasks, persist install decisions, mutate files, mutate source, route work, or approve execution.</p>
 </Card>
 
 </section>

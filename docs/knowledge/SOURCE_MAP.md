@@ -901,3 +901,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: test proof for unlock proposal fields, app bindings, generated reports, and blocked unsafe boundaries.
 - Use when answering: how Phase 61 blocks proposal approval, execution unlock, overnight execution, worker install/connection/spawn, scheduler actions, command execution, shell execution, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
+
+| Local worker install plan | Defines the owner-review installation plan for any future local worker installation path in Phase 62. | `docs/phases/PHASE_62_LOCAL_WORKER_INSTALL_PLAN_V1.md`, `apps/operator-console/src/local-worker-install-plan.ts`, `scripts/lib/local-worker-install-plan-v1.mjs`, `scripts/run-local-worker-install-plan-v1.mjs`, `tests/integration/local-worker-install-plan-v1.test.ts` |
+
+### `docs/phases/PHASE_62_LOCAL_WORKER_INSTALL_PLAN_V1.md`
+
+- Evidence role: Phase 62 local worker install plan contract and validation instructions.
+- Use when answering: what Phase 62 adds, what it blocks, and why an install plan does not equal installation or approval.
+
+### `apps/operator-console/src/local-worker-install-plan.ts`
+
+- Evidence role: typed frontend-consumable install plan packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: how the private operator app represents a future worker installation plan while keeping installation blocked.
+
+### `scripts/lib/local-worker-install-plan-v1.mjs`
+
+- Evidence role: Phase 62 verification contract and installation plan boundary checks.
+- Use when answering: how the install plan is validated as declarative-only, owner-review-only, non-installing, non-downloading, non-executing, non-persisting, and non-mutating.
+
+### `scripts/run-local-worker-install-plan-v1.mjs`
+
+- Evidence role: Phase 62 demo runner.
+- Use when answering: how to prove the local worker install plan is ready.
+
+### `tests/integration/local-worker-install-plan-v1.test.ts`
+
+- Evidence role: test proof for install plan fields, app bindings, generated reports, and blocked unsafe boundaries.
+- Use when answering: how Phase 62 blocks install approval, dependency download, installer execution, worker install/connection/spawn, scheduler actions, command execution, shell execution, task execution, runner connectivity, filesystem mutation, persistence, final approval, auto-route, auto-merge, and self-approval.
