@@ -12,6 +12,7 @@ import { localWorkerDryRunHarnessPacket, localWorkerDryRunHarnessSafetyGates } f
 import { windowsTaskSchedulerStatusCheckPacket, windowsTaskSchedulerStatusCheckSafetyGates } from "./windows-task-scheduler-status-check";
 import { morningStatusPacket, morningStatusPacketSafetyGates } from "./morning-status-packet";
 import { localWorkerReadinessGatePacket, localWorkerReadinessGateSafetyGates } from "./local-worker-readiness-gate";
+import { localWorkerUnlockProposalPacket, localWorkerUnlockProposalPacketSafetyGates } from "./local-worker-unlock-proposal-packet";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -57,6 +58,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Windows scheduler", value: windowsTaskSchedulerStatusCheckPacket.schedulerStatusCheckStatus, tone: "planned" },
   { label: "Morning packet", value: morningStatusPacket.morningStatusPacketStatus, tone: "planned" },
   { label: "Worker readiness gate", value: localWorkerReadinessGatePacket.localWorkerReadinessGateStatus, tone: "planned" },
+  { label: "Worker unlock proposal", value: localWorkerUnlockProposalPacket.localWorkerUnlockProposalPacketStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -66,10 +68,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 60 local worker readiness gate",
-    branch: "phase-60-local-worker-readiness-gate-v1",
+    title: "Phase 61 local worker unlock proposal packet",
+    branch: "phase-61-local-worker-unlock-proposal-packet-v1",
     risk: "Low",
-    workflow: "Local worker readiness gate",
+    workflow: "Local worker unlock proposal packet",
     status: "Queued",
   },
   {
@@ -89,6 +91,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerUnlockProposalPacketSafetyGates,
   ...localWorkerReadinessGateSafetyGates,
   ...morningStatusPacketSafetyGates,
   ...windowsTaskSchedulerStatusCheckSafetyGates,
@@ -684,7 +687,45 @@ export function App() {
 
           </aside>
         </div>
-      </section>
+      <Card title="Local Worker Unlock Proposal Packet" eyebrow="owner-review proposal">
+  <div className="packet-list">
+    <span>Phase: {localWorkerUnlockProposalPacket.phase.label}</span>
+    <span>Status: {localWorkerUnlockProposalPacket.localWorkerUnlockProposalPacketStatus}</span>
+    <span>Mode: {localWorkerUnlockProposalPacket.unlockProposalMode}</span>
+    <span>Owner: {localWorkerUnlockProposalPacket.proposalSummary.owner}</span>
+    <span>Source phase: {localWorkerUnlockProposalPacket.proposalSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerUnlockProposalPacket.proposalSummary.safeState}</span>
+    <span>Requirements: {localWorkerUnlockProposalPacket.unlockProposalRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerUnlockProposalPacket.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerUnlockProposalPacket.proposalSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Proposal approved: {localWorkerUnlockProposalPacket.proposalSummary.unlockProposalApproved ? "yes" : "no"}</span>
+    <span>Ready for unlock: {localWorkerUnlockProposalPacket.proposalSummary.localWorkerReadyForUnlock ? "yes" : "no"}</span>
+    <span>Execution unlock approved: {localWorkerUnlockProposalPacket.proposalSummary.executionUnlockApproved ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerUnlockProposalPacket.proposalSummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Execution unlock: {localWorkerUnlockProposalPacket.boundaries.executionUnlockAllowed ? "allowed" : "blocked"}</span>
+    <span>Command execution: {localWorkerUnlockProposalPacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerUnlockProposalPacket.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerUnlockProposalPacket.unlockProposalRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">proposal only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Approve unlock in future phase</button>
+    <button type="button" disabled>Review proposal only</button>
+  </div>
+  <p className="muted">Phase 61 creates an owner-review proposal packet for future local worker unlock work. It does not approve the proposal, install a worker, connect to a worker, schedule work, execute commands, execute tasks, persist unlock decisions, mutate files, mutate source, route work, or approve execution.</p>
+</Card>
+
+</section>
     </main>
   );
 }
