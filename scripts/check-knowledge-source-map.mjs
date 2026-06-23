@@ -276,6 +276,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-install-evidence-packet-v1.mjs",
   "tests/integration/local-worker-install-evidence-packet-v1.test.ts",
   "apps/operator-console/src/local-worker-install-evidence-packet.ts",
+  "docs/phases/PHASE_70_LOCAL_WORKER_MANUAL_INSTALL_GATE_V1.md",
+  "scripts/lib/local-worker-manual-install-gate-v1.mjs",
+  "scripts/run-local-worker-manual-install-gate-v1.mjs",
+  "tests/integration/local-worker-manual-install-gate-v1.test.ts",
+  "apps/operator-console/src/local-worker-manual-install-gate.ts",
 ];
 
 function fail(message) {
