@@ -100,3 +100,6 @@ packages/*/src/*.d.ts
 .sera-local-worker-unlock-proposal-packet/
 
 .sera-local-worker-install-plan/
+
+
+.sera-local-worker-install-approval-record/
