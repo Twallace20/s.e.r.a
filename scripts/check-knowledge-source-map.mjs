@@ -246,6 +246,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-install-approval-record-v1.mjs",
   "tests/integration/local-worker-install-approval-record-v1.test.ts",
   "apps/operator-console/src/local-worker-install-approval-record.ts",
+  "docs/phases/PHASE_64_LOCAL_WORKER_INSTALL_SCOPE_LOCK_V1.md",
+  "scripts/lib/local-worker-install-scope-lock-v1.mjs",
+  "scripts/run-local-worker-install-scope-lock-v1.mjs",
+  "tests/integration/local-worker-install-scope-lock-v1.test.ts",
+  "apps/operator-console/src/local-worker-install-scope-lock.ts",
 ];
 
 function fail(message) {

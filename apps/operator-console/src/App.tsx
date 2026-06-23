@@ -15,6 +15,7 @@ import { localWorkerReadinessGatePacket, localWorkerReadinessGateSafetyGates } f
 import { localWorkerUnlockProposalPacket, localWorkerUnlockProposalPacketSafetyGates } from "./local-worker-unlock-proposal-packet";
 import { localWorkerInstallPlanPacket, localWorkerInstallPlanSafetyGates } from "./local-worker-install-plan";
 import { localWorkerInstallApprovalRecordPacket, localWorkerInstallApprovalRecordSafetyGates } from "./local-worker-install-approval-record";
+import { localWorkerInstallScopeLockPacket, localWorkerInstallScopeLockSafetyGates } from "./local-worker-install-scope-lock";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -63,6 +64,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker unlock proposal", value: localWorkerUnlockProposalPacket.localWorkerUnlockProposalPacketStatus, tone: "planned" },
   { label: "Worker install plan", value: localWorkerInstallPlanPacket.localWorkerInstallPlanStatus, tone: "planned" },
   { label: "Worker install approval", value: localWorkerInstallApprovalRecordPacket.localWorkerInstallApprovalRecordStatus, tone: "planned" },
+  { label: "Worker install scope lock", value: localWorkerInstallScopeLockPacket.localWorkerInstallScopeLockStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -72,10 +74,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 63 local worker install approval record",
-    branch: "phase-63-local-worker-install-approval-record-v1",
+    title: "Phase 64 local worker install scope lock",
+    branch: "phase-64-local-worker-install-scope-lock-v1",
     risk: "Low",
-    workflow: "Local worker install approval record",
+    workflow: "Local worker install scope lock",
     status: "Queued",
   },
   {
@@ -95,6 +97,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerInstallScopeLockSafetyGates,
   ...localWorkerInstallApprovalRecordSafetyGates,
   ...localWorkerInstallPlanSafetyGates,
   ...localWorkerUnlockProposalPacketSafetyGates,
@@ -808,6 +811,47 @@ export function App() {
   <p className="muted">Phase 63 creates an owner-review approval record structure for future local worker installation. It does not sign approval, approve installation, install a worker, download dependencies, execute installers, connect to a worker, schedule work, execute commands, execute tasks, persist approval records, mutate files, mutate source, route work, or approve execution.</p>
 </Card>
 
+
+<Card title="Local Worker Install Scope Lock" eyebrow="owner-review scope lock">
+  <div className="packet-list">
+    <span>Phase: {localWorkerInstallScopeLockPacket.phase.label}</span>
+    <span>Status: {localWorkerInstallScopeLockPacket.localWorkerInstallScopeLockStatus}</span>
+    <span>Mode: {localWorkerInstallScopeLockPacket.scopeLockMode}</span>
+    <span>Owner: {localWorkerInstallScopeLockPacket.installScopeLockSummary.owner}</span>
+    <span>Source phase: {localWorkerInstallScopeLockPacket.installScopeLockSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerInstallScopeLockPacket.installScopeLockSummary.safeState}</span>
+    <span>Requirements: {localWorkerInstallScopeLockPacket.installScopeLockRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerInstallScopeLockPacket.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerInstallScopeLockPacket.installScopeLockSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Explicit scope lock required: {localWorkerInstallScopeLockPacket.installScopeLockSummary.explicitScopeLockRequired ? "yes" : "no"}</span>
+    <span>Signed scope required: {localWorkerInstallScopeLockPacket.installScopeLockSummary.signedScopeRequired ? "yes" : "no"}</span>
+    <span>Scope locked: {localWorkerInstallScopeLockPacket.installScopeLockSummary.installScopeLocked ? "yes" : "no"}</span>
+    <span>Approval record approved: {localWorkerInstallScopeLockPacket.installScopeLockSummary.installApprovalRecordApproved ? "yes" : "no"}</span>
+    <span>Install plan approved: {localWorkerInstallScopeLockPacket.installScopeLockSummary.installPlanApproved ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerInstallScopeLockPacket.installScopeLockSummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Worker installed: {localWorkerInstallScopeLockPacket.installScopeLockSummary.workerInstalled ? "yes" : "no"}</span>
+    <span>Worker install: {localWorkerInstallScopeLockPacket.boundaries.workerInstallAllowed ? "allowed" : "blocked"}</span>
+    <span>Scope signing: {localWorkerInstallScopeLockPacket.boundaries.scopeLockSigningAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerInstallScopeLockPacket.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerInstallScopeLockPacket.installScopeLockRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">scope only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock scope in future phase</button>
+    <button type="button" disabled>Review scope lock only</button>
+  </div>
+  <p className="muted">Phase 64 creates an owner-review scope lock structure for future local worker installation. It does not lock scope as approved, sign approval, approve installation, install a worker, download dependencies, execute installers, connect to a worker, schedule work, execute commands, execute tasks, persist scope records, mutate files, mutate source, route work, or approve execution.</p>
+</Card>
 
 </section>
     </main>
