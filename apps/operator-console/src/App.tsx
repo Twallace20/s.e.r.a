@@ -14,6 +14,7 @@ import { morningStatusPacket, morningStatusPacketSafetyGates } from "./morning-s
 import { localWorkerReadinessGatePacket, localWorkerReadinessGateSafetyGates } from "./local-worker-readiness-gate";
 import { localWorkerUnlockProposalPacket, localWorkerUnlockProposalPacketSafetyGates } from "./local-worker-unlock-proposal-packet";
 import { localWorkerInstallPlanPacket, localWorkerInstallPlanSafetyGates } from "./local-worker-install-plan";
+import { localWorkerInstallApprovalRecordPacket, localWorkerInstallApprovalRecordSafetyGates } from "./local-worker-install-approval-record";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -61,6 +62,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker readiness gate", value: localWorkerReadinessGatePacket.localWorkerReadinessGateStatus, tone: "planned" },
   { label: "Worker unlock proposal", value: localWorkerUnlockProposalPacket.localWorkerUnlockProposalPacketStatus, tone: "planned" },
   { label: "Worker install plan", value: localWorkerInstallPlanPacket.localWorkerInstallPlanStatus, tone: "planned" },
+  { label: "Worker install approval", value: localWorkerInstallApprovalRecordPacket.localWorkerInstallApprovalRecordStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -70,10 +72,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 62 local worker install plan",
-    branch: "phase-62-local-worker-install-plan-v1",
+    title: "Phase 63 local worker install approval record",
+    branch: "phase-63-local-worker-install-approval-record-v1",
     risk: "Low",
-    workflow: "Local worker install plan",
+    workflow: "Local worker install approval record",
     status: "Queued",
   },
   {
@@ -93,6 +95,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerInstallApprovalRecordSafetyGates,
   ...localWorkerInstallPlanSafetyGates,
   ...localWorkerUnlockProposalPacketSafetyGates,
   ...localWorkerReadinessGateSafetyGates,
@@ -765,6 +768,46 @@ export function App() {
   </div>
   <p className="muted">Phase 62 creates an owner-review install plan for future local worker installation. It does not approve installation, install a worker, download dependencies, execute installers, connect to a worker, schedule work, execute commands, execute tasks, persist install decisions, mutate files, mutate source, route work, or approve execution.</p>
 </Card>
+
+<Card title="Local Worker Install Approval Record" eyebrow="owner-review approval record">
+  <div className="packet-list">
+    <span>Phase: {localWorkerInstallApprovalRecordPacket.phase.label}</span>
+    <span>Status: {localWorkerInstallApprovalRecordPacket.localWorkerInstallApprovalRecordStatus}</span>
+    <span>Mode: {localWorkerInstallApprovalRecordPacket.approvalRecordMode}</span>
+    <span>Owner: {localWorkerInstallApprovalRecordPacket.installApprovalRecordSummary.owner}</span>
+    <span>Source phase: {localWorkerInstallApprovalRecordPacket.installApprovalRecordSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerInstallApprovalRecordPacket.installApprovalRecordSummary.safeState}</span>
+    <span>Requirements: {localWorkerInstallApprovalRecordPacket.installApprovalRecordRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerInstallApprovalRecordPacket.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerInstallApprovalRecordPacket.installApprovalRecordSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Explicit approval record required: {localWorkerInstallApprovalRecordPacket.installApprovalRecordSummary.explicitApprovalRecordRequired ? "yes" : "no"}</span>
+    <span>Approval record approved: {localWorkerInstallApprovalRecordPacket.installApprovalRecordSummary.installApprovalRecordApproved ? "yes" : "no"}</span>
+    <span>Install plan approved: {localWorkerInstallApprovalRecordPacket.installApprovalRecordSummary.installPlanApproved ? "yes" : "no"}</span>
+    <span>Worker install approved: {localWorkerInstallApprovalRecordPacket.installApprovalRecordSummary.workerInstallApproved ? "yes" : "no"}</span>
+    <span>Worker installed: {localWorkerInstallApprovalRecordPacket.installApprovalRecordSummary.workerInstalled ? "yes" : "no"}</span>
+    <span>Worker install: {localWorkerInstallApprovalRecordPacket.boundaries.workerInstallAllowed ? "allowed" : "blocked"}</span>
+    <span>Approval signing: {localWorkerInstallApprovalRecordPacket.boundaries.approvalRecordSigningAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerInstallApprovalRecordPacket.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerInstallApprovalRecordPacket.installApprovalRecordRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">record only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Sign approval in future phase</button>
+    <button type="button" disabled>Review approval record only</button>
+  </div>
+  <p className="muted">Phase 63 creates an owner-review approval record structure for future local worker installation. It does not sign approval, approve installation, install a worker, download dependencies, execute installers, connect to a worker, schedule work, execute commands, execute tasks, persist approval records, mutate files, mutate source, route work, or approve execution.</p>
+</Card>
+
 
 </section>
     </main>
