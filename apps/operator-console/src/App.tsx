@@ -25,6 +25,7 @@ import { localWorkerManualInstallGate, localWorkerManualInstallGateSafetyGates }
 import { localWorkerPostInstallHealthRecord, localWorkerPostInstallHealthRecordSafetyGates } from "./local-worker-post-install-health-record";
 import { localWorkerHealthPollingApprovalPlan, localWorkerHealthPollingApprovalPlanSafetyGates } from "./local-worker-health-polling-approval-plan";
 import { localWorkerSchedulerApprovalPlan, localWorkerSchedulerApprovalPlanSafetyGates } from "./local-worker-scheduler-approval-plan";
+import { localWorkerCommandExecutionApprovalPlan, localWorkerCommandExecutionApprovalPlanSafetyGates } from "./local-worker-command-execution-approval-plan";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -83,6 +84,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker post-install health record", value: localWorkerPostInstallHealthRecord.localWorkerPostInstallHealthRecordStatus, tone: "planned" },
   { label: "Worker health polling approval plan", value: localWorkerHealthPollingApprovalPlan.localWorkerHealthPollingApprovalPlanStatus, tone: "planned" },
   { label: "Worker scheduler approval plan", value: localWorkerSchedulerApprovalPlan.localWorkerSchedulerApprovalPlanStatus, tone: "planned" },
+  { label: "Worker command execution approval plan", value: localWorkerCommandExecutionApprovalPlan.localWorkerCommandExecutionApprovalPlanStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -115,6 +117,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerCommandExecutionApprovalPlanSafetyGates,
   ...localWorkerSchedulerApprovalPlanSafetyGates,
   ...localWorkerHealthPollingApprovalPlanSafetyGates,
   ...localWorkerPostInstallHealthRecordSafetyGates,
@@ -1247,6 +1250,45 @@ export function App() {
     <button type="button" disabled>Review scheduler plan only</button>
   </div>
   <p className="muted">Phase 73 creates an owner-review scheduler approval plan structure for future local worker scheduler access. It does not create tasks, query Windows Task Scheduler, mutate tasks, execute PowerShell, execute schtasks, connect to a worker, poll health, persist scheduler approval records, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Command Execution Approval Plan" eyebrow="owner-review command execution approval plan">
+  <div className="packet-list">
+    <span>Phase: {localWorkerCommandExecutionApprovalPlan.phase.label}</span>
+    <span>Status: {localWorkerCommandExecutionApprovalPlan.localWorkerCommandExecutionApprovalPlanStatus}</span>
+    <span>Mode: {localWorkerCommandExecutionApprovalPlan.commandExecutionApprovalPlanMode}</span>
+    <span>Owner: {localWorkerCommandExecutionApprovalPlan.commandExecutionApprovalPlanSummary.owner}</span>
+    <span>Source phase: {localWorkerCommandExecutionApprovalPlan.commandExecutionApprovalPlanSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerCommandExecutionApprovalPlan.commandExecutionApprovalPlanSummary.safeState}</span>
+    <span>Requirements: {localWorkerCommandExecutionApprovalPlan.commandExecutionApprovalPlanRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerCommandExecutionApprovalPlan.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerCommandExecutionApprovalPlan.commandExecutionApprovalPlanSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Command execution boundary required: {localWorkerCommandExecutionApprovalPlan.commandExecutionApprovalPlanSummary.commandExecutionBoundaryRequired ? "yes" : "no"}</span>
+    <span>Command execution action inventory required: {localWorkerCommandExecutionApprovalPlan.commandExecutionApprovalPlanSummary.commandExecutionActionInventoryRequired ? "yes" : "no"}</span>
+    <span>Command execution approval plan locked: {localWorkerCommandExecutionApprovalPlan.commandExecutionApprovalPlanSummary.commandExecutionApprovalPlanLocked ? "yes" : "no"}</span>
+    <span>Scheduler creation: {localWorkerCommandExecutionApprovalPlan.boundaries.schedulerCreationAllowed ? "allowed" : "blocked"}</span>
+    <span>Command execution: {localWorkerCommandExecutionApprovalPlan.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>PowerShell execution: {localWorkerCommandExecutionApprovalPlan.boundaries.powershellExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>schtasks execution: {localWorkerCommandExecutionApprovalPlan.boundaries.schtasksExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerCommandExecutionApprovalPlan.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerCommandExecutionApprovalPlan.commandExecutionApprovalPlanRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">command execution approval only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock command execution approval plan in future phase</button>
+    <button type="button" disabled>Review command execution plan only</button>
+  </div>
+  <p className="muted">Phase 74 creates an owner-review command execution approval plan structure for future local worker command execution. It does not create tasks, query Windows Task Scheduler, mutate tasks, execute PowerShell, execute schtasks, connect to a worker, poll health, persist command execution approval records, route work, or approve execution.</p>
 </Card>
 
 </section>
