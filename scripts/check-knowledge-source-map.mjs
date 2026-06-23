@@ -271,6 +271,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-install-dry-run-v1.mjs",
   "tests/integration/local-worker-install-dry-run-v1.test.ts",
   "apps/operator-console/src/local-worker-install-dry-run.ts",
+  "docs/phases/PHASE_69_LOCAL_WORKER_INSTALL_EVIDENCE_PACKET_V1.md",
+  "scripts/lib/local-worker-install-evidence-packet-v1.mjs",
+  "scripts/run-local-worker-install-evidence-packet-v1.mjs",
+  "tests/integration/local-worker-install-evidence-packet-v1.test.ts",
+  "apps/operator-console/src/local-worker-install-evidence-packet.ts",
 ];
 
 function fail(message) {

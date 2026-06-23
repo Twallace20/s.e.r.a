@@ -113,3 +113,5 @@ packages/*/src/*.d.ts
 .sera-local-worker-dependency-allowlist/
 
 .sera-local-worker-install-dry-run/
+
+.sera-local-worker-install-evidence-packet/
