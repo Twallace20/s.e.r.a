@@ -291,6 +291,11 @@ const requiredMappedPaths = [
   "scripts/run-local-worker-health-polling-approval-plan-v1.mjs",
   "tests/integration/local-worker-health-polling-approval-plan-v1.test.ts",
   "apps/operator-console/src/local-worker-health-polling-approval-plan.ts",
+  "docs/phases/PHASE_73_LOCAL_WORKER_SCHEDULER_APPROVAL_PLAN_V1.md",
+  "scripts/lib/local-worker-scheduler-approval-plan-v1.mjs",
+  "scripts/run-local-worker-scheduler-approval-plan-v1.mjs",
+  "tests/integration/local-worker-scheduler-approval-plan-v1.test.ts",
+  "apps/operator-console/src/local-worker-scheduler-approval-plan.ts",
 ];
 
 function fail(message) {

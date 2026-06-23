@@ -1199,3 +1199,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the health polling approval plan surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 72 remains health-polling-approval-plan-only and blocks actual installation, installer execution, dependency download, package install, package manager execution, command execution, filesystem mutation, persistence, routing, and self-approval behavior.
+
+| Local worker scheduler approval plan | Defines the owner-review scheduler approval plan structure for any future local worker scheduler access path in Phase 73. | `docs/phases/PHASE_73_LOCAL_WORKER_SCHEDULER_APPROVAL_PLAN_V1.md`, `apps/operator-console/src/local-worker-scheduler-approval-plan.ts`, `scripts/lib/local-worker-scheduler-approval-plan-v1.mjs`, `scripts/run-local-worker-scheduler-approval-plan-v1.mjs`, `tests/integration/local-worker-scheduler-approval-plan-v1.test.ts` |
+
+### `docs/phases/PHASE_73_LOCAL_WORKER_SCHEDULER_APPROVAL_PLAN_V1.md`
+
+- Evidence role: Phase 73 local worker scheduler approval plan contract and validation instructions.
+- Use when answering: what Phase 73 adds, what it blocks, and why a scheduler approval plan structure does not equal scheduler creation, query, mutation, deletion, enable/disable, PowerShell execution, schtasks execution, or worker connection.
+
+### `apps/operator-console/src/local-worker-scheduler-approval-plan.ts`
+
+- Evidence role: typed frontend-consumable scheduler approval plan packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review scheduler approval plan status, scheduler command boundary requirements, scheduler action inventory requirements, and blocked scheduler/command/worker/filesystem flags.
+
+### `scripts/lib/local-worker-scheduler-approval-plan-v1.mjs`
+
+- Evidence role: Phase 73 scheduler approval plan validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-scheduler-approval-plan-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 73 scheduler approval plan report.
+- Use when answering: how to run the scheduler approval plan proof.
+
+### `tests/integration/local-worker-scheduler-approval-plan-v1.test.ts`
+
+- Evidence role: integration tests proving the scheduler approval plan surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 73 remains scheduler-approval-plan-only and blocks scheduler creation, scheduler query, scheduler mutation, scheduler deletion, scheduler enable/disable, PowerShell execution, schtasks execution, command execution, filesystem mutation, persistence, routing, and self-approval behavior.
