@@ -221,6 +221,11 @@ const requiredMappedPaths = [
   "scripts/run-windows-task-scheduler-status-check-v1.mjs",
   "tests/integration/windows-task-scheduler-status-check-v1.test.ts",
   "apps/operator-console/src/windows-task-scheduler-status-check.ts",
+  "docs/phases/PHASE_59_MORNING_STATUS_PACKET_V1.md",
+  "scripts/lib/morning-status-packet-v1.mjs",
+  "scripts/run-morning-status-packet-v1.mjs",
+  "tests/integration/morning-status-packet-v1.test.ts",
+  "apps/operator-console/src/morning-status-packet.ts",
 ];
 
 function fail(message) {

@@ -10,6 +10,7 @@ import { localDesktopWorkerBlueprintPacket, localDesktopWorkerBlueprintSafetyGat
 import { localWorkerHealthPanelPacket, localWorkerHealthPanelSafetyGates } from "./local-worker-health-panel";
 import { localWorkerDryRunHarnessPacket, localWorkerDryRunHarnessSafetyGates } from "./local-worker-dry-run-harness";
 import { windowsTaskSchedulerStatusCheckPacket, windowsTaskSchedulerStatusCheckSafetyGates } from "./windows-task-scheduler-status-check";
+import { morningStatusPacket, morningStatusPacketSafetyGates } from "./morning-status-packet";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -53,6 +54,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Local worker health", value: localWorkerHealthPanelPacket.healthPanelStatus, tone: "planned" },
   { label: "Worker dry-run harness", value: localWorkerDryRunHarnessPacket.dryRunHarnessStatus, tone: "planned" },
   { label: "Windows scheduler", value: windowsTaskSchedulerStatusCheckPacket.schedulerStatusCheckStatus, tone: "planned" },
+  { label: "Morning packet", value: morningStatusPacket.morningStatusPacketStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -62,10 +64,10 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
 
 const queueItems: QueueItem[] = [
   {
-    title: "Phase 58 Windows Task Scheduler status check",
-    branch: "phase-58-windows-task-scheduler-status-check-v1",
+    title: "Phase 59 morning status packet",
+    branch: "phase-59-morning-status-packet-v1",
     risk: "Low",
-    workflow: "Windows scheduler status check",
+    workflow: "Morning status packet",
     status: "Queued",
   },
   {
@@ -85,6 +87,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...morningStatusPacketSafetyGates,
   ...windowsTaskSchedulerStatusCheckSafetyGates,
   ...localWorkerDryRunHarnessSafetyGates,
   ...localWorkerHealthPanelSafetyGates,
@@ -598,6 +601,45 @@ export function App() {
               </div>
               <p className="muted">Phase 58 represents Windows Task Scheduler readiness without creating, querying, modifying, enabling, disabling, or running scheduled tasks. It does not execute PowerShell, schtasks, commands, shell operations, worker actions, tasks, runner connections, file mutations, or source mutations.</p>
             </Card>
+
+<Card title="Morning Status Packet" eyebrow="future overnight summary surface">
+  <div className="packet-list">
+    <span>Phase: {morningStatusPacket.phase.label}</span>
+    <span>Status: {morningStatusPacket.morningStatusPacketStatus}</span>
+    <span>Mode: {morningStatusPacket.morningStatusPacketMode}</span>
+    <span>Owner: {morningStatusPacket.packetSummary.owner}</span>
+    <span>Source phase: {morningStatusPacket.packetSummary.sourcePhase}</span>
+    <span>Report window: {morningStatusPacket.packetSummary.reportWindow}</span>
+    <span>Safe state: {morningStatusPacket.packetSummary.safeState}</span>
+    <span>Packet sections: {morningStatusPacket.packetSections.length}</span>
+    <span>Evidence requirements: {morningStatusPacket.evidenceRequirements.length}</span>
+    <span>Overnight work executed: {morningStatusPacket.packetSummary.overnightWorkExecuted ? "yes" : "no"}</span>
+    <span>Live run report: {morningStatusPacket.packetSummary.reportGeneratedFromLiveRun ? "yes" : "no"}</span>
+    <span>Windows scheduler configured: {morningStatusPacket.packetSummary.windowsSchedulerConfigured ? "yes" : "no"}</span>
+    <span>Worker connected: {morningStatusPacket.packetSummary.workerConnected ? "yes" : "no"}</span>
+    <span>Overnight execution: {morningStatusPacket.boundaries.overnightExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Command execution: {morningStatusPacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {morningStatusPacket.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {morningStatusPacket.packetSections.map((section) => (
+      <article className="queue-item" key={section.id}>
+        <div>
+          <strong>{section.label}</strong>
+          <p>{section.evidence}</p>
+        </div>
+        <span>{section.state}</span>
+        <Badge tone="planned">summary only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Generate live morning report in future phase</button>
+    <button type="button" disabled>Summary structure only</button>
+  </div>
+  <p className="muted">Phase 59 creates the morning status packet surface for future overnight work summaries. It does not claim overnight work ran, query Windows scheduling, connect to a worker, execute commands, execute tasks, persist task records, route work, mutate files, or mutate source.</p>
+</Card>
+
           </aside>
         </div>
       </section>
