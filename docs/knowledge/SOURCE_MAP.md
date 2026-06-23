@@ -1145,3 +1145,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the manual install gate surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 70 remains manual-install-gate-only and blocks actual installation, installer execution, dependency download, package install, package manager execution, command execution, filesystem mutation, persistence, routing, and self-approval behavior.
+
+| Local worker post-install health record | Defines the owner-review post-install health record structure for any future local worker installation path in Phase 71. | `docs/phases/PHASE_71_LOCAL_WORKER_POST_INSTALL_HEALTH_RECORD_V1.md`, `apps/operator-console/src/local-worker-post-install-health-record.ts`, `scripts/lib/local-worker-post-install-health-record-v1.mjs`, `scripts/run-local-worker-post-install-health-record-v1.mjs`, `tests/integration/local-worker-post-install-health-record-v1.test.ts` |
+
+### `docs/phases/PHASE_71_LOCAL_WORKER_POST_INSTALL_HEALTH_RECORD_V1.md`
+
+- Evidence role: Phase 71 local worker post-install health record contract and validation instructions.
+- Use when answering: what Phase 71 adds, what it blocks, and why a post-install health record structure does not equal actual installation, dependency download, package install, package manager execution, mutation, or worker connection.
+
+### `apps/operator-console/src/local-worker-post-install-health-record.ts`
+
+- Evidence role: typed frontend-consumable post-install health record packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review post-install health record status, command plan requirements, post-install health checklist requirements, and blocked install/execution/dependency/network/filesystem flags.
+
+### `scripts/lib/local-worker-post-install-health-record-v1.mjs`
+
+- Evidence role: Phase 71 post-install health record validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-post-install-health-record-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 71 post-install health record report.
+- Use when answering: how to run the post-install health record proof.
+
+### `tests/integration/local-worker-post-install-health-record-v1.test.ts`
+
+- Evidence role: integration tests proving the post-install health record surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 71 remains post-install-health-record-only and blocks actual installation, installer execution, dependency download, package install, package manager execution, command execution, filesystem mutation, persistence, routing, and self-approval behavior.

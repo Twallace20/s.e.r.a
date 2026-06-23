@@ -117,3 +117,5 @@ packages/*/src/*.d.ts
 .sera-local-worker-install-evidence-packet/
 
 .sera-local-worker-manual-install-gate/
+
+.sera-local-worker-post-install-health-record/

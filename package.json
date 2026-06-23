@@ -140,7 +140,9 @@
     "phase69:demo": "node scripts/run-local-worker-install-evidence-packet-v1.mjs",
     "phase69:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase68:demo && npm run phase69:demo",
     "phase70:demo": "node scripts/run-local-worker-manual-install-gate-v1.mjs",
-    "phase70:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase69:demo && npm run phase70:demo"
+    "phase70:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase69:demo && npm run phase70:demo",
+    "phase71:demo": "node scripts/run-local-worker-post-install-health-record-v1.mjs",
+    "phase71:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase70:demo && npm run phase71:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
