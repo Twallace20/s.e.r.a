@@ -1451,3 +1451,10 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - Evidence role: command dry-run simulator policy truth for future local command previews, validation runners, branch work, phase ZIP factory application, website/Python/iOS/creative worker routing, and distributed fleet impact previews.
 - Mapped files: `docs/phases/PHASE_88_LOCAL_WORKER_COMMAND_DRY_RUN_SIMULATOR_V1.md`, `scripts/lib/local-worker-command-dry-run-simulator-v1.mjs`, `scripts/run-local-worker-command-dry-run-simulator-v1.mjs`, `tests/integration/local-worker-command-dry-run-simulator-v1.test.ts`, `apps/operator-console/src/local-worker-command-dry-run-simulator.ts`.
 - Risk note: Phase 88 remains preview-only and does not enable command execution, process spawn, shell/PowerShell/schtasks, source mutation, dry-run promotion to execution, scheduler creation, GitHub workflow mutation, iPhone automation mutation, phase ZIP auto-generation, phase ZIP auto-apply, fleet execution, away-mode execution, self-merge, self-deploy, or self-approval.
+
+
+### Phase 89 local worker command sandbox workspace v1
+
+- Evidence role: command sandbox workspace policy truth for future local command containment, validation runners, branch work, phase ZIP factory application, website/Python/iOS/creative worker routing, and distributed fleet workspace containment.
+- Mapped files: `docs/phases/PHASE_89_LOCAL_WORKER_COMMAND_SANDBOX_WORKSPACE_V1.md`, `scripts/lib/local-worker-command-sandbox-workspace-v1.mjs`, `scripts/run-local-worker-command-sandbox-workspace-v1.mjs`, `tests/integration/local-worker-command-sandbox-workspace-v1.test.ts`, `apps/operator-console/src/local-worker-command-sandbox-workspace.ts`.
+- Risk note: Phase 89 remains containment-policy-only and does not enable command execution, process spawn, shell/PowerShell/schtasks, source mutation, workspace escape, scheduler creation, GitHub workflow mutation, iPhone automation mutation, phase ZIP auto-generation, phase ZIP auto-apply, fleet execution, away-mode execution, self-merge, self-deploy, or self-approval.

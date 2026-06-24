@@ -144,6 +144,8 @@ packages/*/src/*.d.ts
 .sera-local-worker-command-approval-packet/
 .sera-local-worker-command-scope-lock/
 .sera-local-worker-command-dry-run-simulator/
+.sera-local-worker-command-sandbox-workspace/
+
 
 
 
