@@ -1402,3 +1402,10 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - Evidence role: command result-record boundary draft truth for future command result evidence envelopes.
 - Mapped files: `docs/phases/PHASE_81_LOCAL_WORKER_COMMAND_RESULT_RECORD_BOUNDARY_DRAFT_V1.md`, `scripts/lib/local-worker-command-result-record-boundary-draft-v1.mjs`, `scripts/run-local-worker-command-result-record-boundary-draft-v1.mjs`, `tests/integration/local-worker-command-result-record-boundary-draft-v1.test.ts`, `apps/operator-console/src/local-worker-command-result-record-boundary-draft.ts`.
 - Risk note: Phase 81 remains owner-review only and does not enable command execution, live output capture, or live result persistence.
+
+
+### Phase 82 S.E.R.A. roadmap + operator control plane v1
+
+- Evidence role: roadmap/control-plane truth proving S.E.R.A. is not CLI-only and that website, mobile/PWA, app, safe execution, branch development, universal ingest, deliverables, agency, and productization paths are sequenced.
+- Mapped files: `apps/operator-console/src/operator-control-plane-roadmap.ts`, `docs/architecture/OPERATOR_CONTROL_PLANE_V1.md`, `docs/roadmap/SERA_ROADMAP_V2.md`, `docs/phases/PHASE_82_SERA_ROADMAP_OPERATOR_CONTROL_PLANE_V1.md`, `scripts/lib/sera-roadmap-operator-control-plane-v1.mjs`, `scripts/run-sera-roadmap-operator-control-plane-v1.mjs`, `tests/integration/sera-roadmap-operator-control-plane-v1.test.ts`.
+- Risk note: Phase 82 is architecture and roadmap truth only. It does not enable command execution, away-mode execution, native app release, website launch, self-merge, self-deploy, or productization.
