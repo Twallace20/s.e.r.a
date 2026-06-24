@@ -30,6 +30,7 @@ import { localWorkerCommandAllowlistDraft, localWorkerCommandAllowlistDraftSafet
 import { localWorkerCommandArgumentBoundaryDraft, localWorkerCommandArgumentBoundaryDraftSafetyGates } from "./local-worker-command-argument-boundary-draft";
 import { localWorkerCommandWorkingDirectoryBoundaryDraft, localWorkerCommandWorkingDirectoryBoundaryDraftSafetyGates } from "./local-worker-command-working-directory-boundary-draft";
 import { localWorkerCommandEnvironmentBoundaryDraft, localWorkerCommandEnvironmentBoundaryDraftSafetyGates } from "./local-worker-command-environment-boundary-draft";
+import { localWorkerCommandOutputBoundaryDraft, localWorkerCommandOutputBoundaryDraftSafetyGates } from "./local-worker-command-output-boundary-draft";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -93,6 +94,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker command argument boundary draft", value: localWorkerCommandArgumentBoundaryDraft.localWorkerCommandArgumentBoundaryDraftStatus, tone: "planned" },
   { label: "Worker command working directory boundary draft", value: localWorkerCommandWorkingDirectoryBoundaryDraft.localWorkerCommandWorkingDirectoryBoundaryDraftStatus, tone: "planned" },
   { label: "Worker command environment boundary draft", value: localWorkerCommandEnvironmentBoundaryDraft.localWorkerCommandEnvironmentBoundaryDraftStatus, tone: "planned" },
+  { label: "Worker command output boundary draft", value: localWorkerCommandOutputBoundaryDraft.localWorkerCommandOutputBoundaryDraftStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -125,6 +127,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerCommandOutputBoundaryDraftSafetyGates,
   ...localWorkerCommandEnvironmentBoundaryDraftSafetyGates,
   ...localWorkerCommandWorkingDirectoryBoundaryDraftSafetyGates,
   ...localWorkerCommandArgumentBoundaryDraftSafetyGates,
@@ -1453,6 +1456,44 @@ export function App() {
     <button type="button" disabled>Review draft only</button>
   </div>
   <p className="muted">Phase 78 creates an owner-review command environment boundary draft for future local worker command execution. It does not execute PowerShell, execute schtasks, execute shell commands, query or mutate Windows Task Scheduler, connect to a worker, poll health, persist command approval records, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Command Output Boundary Draft" eyebrow="owner-review command output boundary draft">
+  <div className="packet-list">
+    <span>Phase: {localWorkerCommandOutputBoundaryDraft.phase.label}</span>
+    <span>Status: {localWorkerCommandOutputBoundaryDraft.localWorkerCommandOutputBoundaryDraftStatus}</span>
+    <span>Mode: {localWorkerCommandOutputBoundaryDraft.commandOutputBoundaryDraftMode}</span>
+    <span>Owner: {localWorkerCommandOutputBoundaryDraft.commandOutputBoundaryDraftSummary.owner}</span>
+    <span>Source phase: {localWorkerCommandOutputBoundaryDraft.commandOutputBoundaryDraftSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerCommandOutputBoundaryDraft.commandOutputBoundaryDraftSummary.safeState}</span>
+    <span>Requirements: {localWorkerCommandOutputBoundaryDraft.commandOutputBoundaryDraftRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerCommandOutputBoundaryDraft.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerCommandOutputBoundaryDraft.commandOutputBoundaryDraftSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Output capture inventory required: {localWorkerCommandOutputBoundaryDraft.commandOutputBoundaryDraftSummary.commandOutputCaptureInventoryRequired ? "yes" : "no"}</span>
+    <span>Blocked output capture boundary required: {localWorkerCommandOutputBoundaryDraft.commandOutputBoundaryDraftSummary.blockedOutputCaptureBoundaryRequired ? "yes" : "no"}</span>
+    <span>Output boundary draft locked: {localWorkerCommandOutputBoundaryDraft.commandOutputBoundaryDraftSummary.commandOutputBoundaryDraftLocked ? "yes" : "no"}</span>
+    <span>Command execution: {localWorkerCommandOutputBoundaryDraft.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>PowerShell execution: {localWorkerCommandOutputBoundaryDraft.boundaries.powershellExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>schtasks execution: {localWorkerCommandOutputBoundaryDraft.boundaries.schtasksExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerCommandOutputBoundaryDraft.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerCommandOutputBoundaryDraft.commandOutputBoundaryDraftRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">output boundary draft only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock output boundary in future phase</button>
+    <button type="button" disabled>Review draft only</button>
+  </div>
+  <p className="muted">Phase 79 creates an owner-review command output boundary draft for future local worker command execution. It does not execute PowerShell, execute schtasks, execute shell commands, capture stdout/stderr, persist logs or artifacts, query or mutate Windows Task Scheduler, connect to a worker, poll health, persist command approval records, route work, or approve execution.</p>
 </Card>
 
 </section>

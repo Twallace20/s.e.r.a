@@ -1361,3 +1361,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the command environment boundary draft surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 78 remains command-environment-boundary-draft-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, scheduler access, filesystem mutation, persistence, routing, and self-approval behavior.
+
+| Local worker command output boundary draft | Defines the owner-review command output boundary draft structure for any future local worker command execution path in Phase 79. | `docs/phases/PHASE_79_LOCAL_WORKER_COMMAND_OUTPUT_BOUNDARY_DRAFT_V1.md`, `apps/operator-console/src/local-worker-command-output-boundary-draft.ts`, `scripts/lib/local-worker-command-output-boundary-draft-v1.mjs`, `scripts/run-local-worker-command-output-boundary-draft-v1.mjs`, `tests/integration/local-worker-command-output-boundary-draft-v1.test.ts` |
+
+### `docs/phases/PHASE_79_LOCAL_WORKER_COMMAND_OUTPUT_BOUNDARY_DRAFT_V1.md`
+
+- Evidence role: Phase 79 local worker command output boundary draft contract and validation instructions.
+- Use when answering: what Phase 79 adds, what it blocks, and why output boundaries do not equal command execution or output capture.
+
+### `apps/operator-console/src/local-worker-command-output-boundary-draft.ts`
+
+- Evidence role: typed frontend-consumable command output boundary draft packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review command output boundary draft status, output capture inventory requirements, blocked output capture requirements, and blocked scheduler/command/worker/filesystem flags.
+
+### `scripts/lib/local-worker-command-output-boundary-draft-v1.mjs`
+
+- Evidence role: Phase 79 command output boundary draft validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-command-output-boundary-draft-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 79 command output boundary draft report.
+- Use when answering: how to run the command output boundary draft proof.
+
+### `tests/integration/local-worker-command-output-boundary-draft-v1.test.ts`
+
+- Evidence role: integration tests proving the command output boundary draft surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 79 remains command-output-boundary-draft-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, scheduler access, filesystem mutation, persistence, routing, and self-approval behavior.
