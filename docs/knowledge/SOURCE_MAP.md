@@ -1458,3 +1458,14 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - Evidence role: command sandbox workspace policy truth for future local command containment, validation runners, branch work, phase ZIP factory application, website/Python/iOS/creative worker routing, and distributed fleet workspace containment.
 - Mapped files: `docs/phases/PHASE_89_LOCAL_WORKER_COMMAND_SANDBOX_WORKSPACE_V1.md`, `scripts/lib/local-worker-command-sandbox-workspace-v1.mjs`, `scripts/run-local-worker-command-sandbox-workspace-v1.mjs`, `tests/integration/local-worker-command-sandbox-workspace-v1.test.ts`, `apps/operator-console/src/local-worker-command-sandbox-workspace.ts`.
 - Risk note: Phase 89 remains containment-policy-only and does not enable command execution, process spawn, shell/PowerShell/schtasks, source mutation, workspace escape, scheduler creation, GitHub workflow mutation, iPhone automation mutation, phase ZIP auto-generation, phase ZIP auto-apply, fleet execution, away-mode execution, self-merge, self-deploy, or self-approval.
+
+## Phase 90 — Approval-Gated Local Command Runner v1
+
+Phase 90 adds the first catalog-only, owner-approved, shellless local command runner. It proves S.E.R.A. can execute a tightly approved local command, capture bounded stdout/stderr, record exit-code evidence, write a result record, and still block arbitrary commands, shell execution, PowerShell, schtasks, scheduler mutation, phase ZIP auto-apply, fleet execution, away-mode execution, self-approval, self-merge, and self-deploy.
+
+- `docs/phases/PHASE_90_APPROVAL_GATED_LOCAL_COMMAND_RUNNER_V1.md` — Defines Phase 90 purpose, command-runner boundary, validation, and completion criteria.
+- `scripts/lib/approval-gated-local-command-runner-v1.mjs` — Implements the catalog-only approval-gated command runner and result record checks.
+- `scripts/run-approval-gated-local-command-runner-v1.mjs` — Runs the Phase 90 demo and writes local result evidence.
+- `tests/integration/approval-gated-local-command-runner-v1.test.ts` — Verifies owner approval, exact catalog matching, shell blocking, workspace containment, evidence output, and blocked unsafe command paths.
+- `apps/operator-console/src/approval-gated-local-command-runner.ts` — Exposes Phase 90 status and safety gates to the operator console.
+
