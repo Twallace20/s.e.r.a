@@ -785,6 +785,17 @@ export function App() {
               </div>
               <p className="muted">Phase 83 defines future command timeout, max-runtime, forced-stop, and timeout-result evidence boundaries for owner review. It does not execute commands, start timeout handlers, terminate processes, retry commands, or approve away-mode execution.</p>
             </Card>
+
+            <Card title="Command Retry Boundary Draft" eyebrow="retry review only">
+              <div className="packet-list">
+                <span>Owner: {localWorkerCommandRetryBoundaryDraft.commandRetryBoundaryDraftSummary.owner}</span>
+                <span>Requirements: {localWorkerCommandRetryBoundaryDraft.commandRetryBoundaryDraftRequirements.length}</span>
+                <span>Evidence: {localWorkerCommandRetryBoundaryDraft.evidenceRequirements.length}</span>
+                <span>Command execution: {localWorkerCommandRetryBoundaryDraft.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Draft required: {localWorkerCommandRetryBoundaryDraft.commandRetryBoundaryDraftSummary.retryBoundaryRemainsDraftRequired ? "yes" : "no"}</span>
+              </div>
+              <p className="muted">Phase 84 defines future command retry, attempt-limit, backoff, failure escalation, and retry-result evidence boundaries for owner review. It does not execute commands, retry commands, start retry schedulers, run backoff timers, execute failure classifiers, or approve away-mode execution.</p>
+            </Card>
           </aside>
         </div>
       <Card title="Local Worker Unlock Proposal Packet" eyebrow="owner-review proposal">

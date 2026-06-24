@@ -1416,3 +1416,10 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - Evidence role: command timeout boundary draft truth for future command timeout, max-runtime, forced-stop, and timeout-result evidence boundaries.
 - Mapped files: `docs/phases/PHASE_83_LOCAL_WORKER_COMMAND_TIMEOUT_BOUNDARY_DRAFT_V1.md`, `scripts/lib/local-worker-command-timeout-boundary-draft-v1.mjs`, `scripts/run-local-worker-command-timeout-boundary-draft-v1.mjs`, `tests/integration/local-worker-command-timeout-boundary-draft-v1.test.ts`, `apps/operator-console/src/local-worker-command-timeout-boundary-draft.ts`.
 - Risk note: Phase 83 remains owner-review only and does not enable command execution, timeout-handler execution, process termination, retry execution, or away-mode execution.
+
+
+### Phase 84 local worker command retry boundary draft v1
+
+- Evidence role: command retry boundary draft truth for future command retry, attempt-limit, backoff, failure escalation, and retry-result evidence boundaries.
+- Mapped files: `docs/phases/PHASE_84_LOCAL_WORKER_COMMAND_RETRY_BOUNDARY_DRAFT_V1.md`, `scripts/lib/local-worker-command-retry-boundary-draft-v1.mjs`, `scripts/run-local-worker-command-retry-boundary-draft-v1.mjs`, `tests/integration/local-worker-command-retry-boundary-draft-v1.test.ts`, `apps/operator-console/src/local-worker-command-retry-boundary-draft.ts`.
+- Risk note: Phase 84 remains owner-review only and does not enable command execution, retry execution, automatic retry, retry scheduler execution, failure-classifier execution, or away-mode execution.

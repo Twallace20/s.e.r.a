@@ -166,7 +166,9 @@
     "phase82:demo": "node scripts/run-sera-roadmap-operator-control-plane-v1.mjs",
     "phase82:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase81:demo && npm run phase82:demo",
     "phase83:demo": "node scripts/run-local-worker-command-timeout-boundary-draft-v1.mjs",
-    "phase83:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase82:demo && npm run phase83:demo"
+    "phase83:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase82:demo && npm run phase83:demo",
+    "phase84:demo": "node scripts/run-local-worker-command-retry-boundary-draft-v1.mjs",
+    "phase84:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase83:demo && npm run phase84:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

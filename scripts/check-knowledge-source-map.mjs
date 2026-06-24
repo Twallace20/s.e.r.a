@@ -346,6 +346,11 @@ const requiredMappedPaths = [
   "scripts/lib/local-worker-command-timeout-boundary-draft-v1.mjs",
   "scripts/run-local-worker-command-timeout-boundary-draft-v1.mjs",
   "tests/integration/local-worker-command-timeout-boundary-draft-v1.test.ts",
+  "docs/phases/PHASE_84_LOCAL_WORKER_COMMAND_RETRY_BOUNDARY_DRAFT_V1.md",
+  "scripts/lib/local-worker-command-retry-boundary-draft-v1.mjs",
+  "scripts/run-local-worker-command-retry-boundary-draft-v1.mjs",
+  "tests/integration/local-worker-command-retry-boundary-draft-v1.test.ts",
+  "apps/operator-console/src/local-worker-command-retry-boundary-draft.ts",
   "apps/operator-console/src/local-worker-command-timeout-boundary-draft.ts",
   "apps/operator-console/src/local-worker-command-result-record-boundary-draft.ts",
 ];
