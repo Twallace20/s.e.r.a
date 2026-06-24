@@ -1395,3 +1395,10 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - Evidence role: command exit-code, timeout, failure, and retry boundary draft truth.
 - Mapped files: `docs/phases/PHASE_80_LOCAL_WORKER_COMMAND_EXIT_CODE_BOUNDARY_DRAFT_V1.md`, `scripts/lib/local-worker-command-exit-code-boundary-draft-v1.mjs`, `scripts/run-local-worker-command-exit-code-boundary-draft-v1.mjs`, `tests/integration/local-worker-command-exit-code-boundary-draft-v1.test.ts`, `apps/operator-console/src/local-worker-command-exit-code-boundary-draft.ts`.
 - Risk note: Phase 80 remains owner-review only and does not enable command execution.
+
+
+### Phase 81 local worker command result-record boundary draft v1
+
+- Evidence role: command result-record boundary draft truth for future command result evidence envelopes.
+- Mapped files: `docs/phases/PHASE_81_LOCAL_WORKER_COMMAND_RESULT_RECORD_BOUNDARY_DRAFT_V1.md`, `scripts/lib/local-worker-command-result-record-boundary-draft-v1.mjs`, `scripts/run-local-worker-command-result-record-boundary-draft-v1.mjs`, `tests/integration/local-worker-command-result-record-boundary-draft-v1.test.ts`, `apps/operator-console/src/local-worker-command-result-record-boundary-draft.ts`.
+- Risk note: Phase 81 remains owner-review only and does not enable command execution, live output capture, or live result persistence.

@@ -750,6 +750,17 @@ export function App() {
               </div>
               <p className="muted">Phase 80 defines exit-code, timeout, failure, and retry boundaries for owner review. It does not execute commands, run shells, persist live output, retry commands, or approve command execution.</p>
             </Card>
+
+            <Card title="Command Result-Record Boundary Draft" eyebrow="result evidence review only">
+              <div className="packet-list">
+                <span>Owner: {localWorkerCommandResultRecordBoundaryDraft.commandResultRecordBoundaryDraftSummary.owner}</span>
+                <span>Requirements: {localWorkerCommandResultRecordBoundaryDraft.commandResultRecordBoundaryDraftRequirements.length}</span>
+                <span>Evidence: {localWorkerCommandResultRecordBoundaryDraft.evidenceRequirements.length}</span>
+                <span>Command execution: {localWorkerCommandResultRecordBoundaryDraft.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Draft locked: {localWorkerCommandResultRecordBoundaryDraft.commandResultRecordBoundaryDraftSummary.commandResultRecordBoundaryDraftLocked ? "yes" : "no"}</span>
+              </div>
+              <p className="muted">Phase 81 defines the future command result evidence envelope for owner review. It does not execute commands, capture live stdout or stderr, persist live results, retry commands, or approve command execution.</p>
+            </Card>
           </aside>
         </div>
       <Card title="Local Worker Unlock Proposal Packet" eyebrow="owner-review proposal">

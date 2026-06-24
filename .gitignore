@@ -136,4 +136,6 @@ packages/*/src/*.d.ts
 
 .sera-local-worker-command-output-boundary-draft/
 .sera-local-worker-command-exit-code-boundary-draft/
+.sera-local-worker-command-result-record-boundary-draft/
+
 
