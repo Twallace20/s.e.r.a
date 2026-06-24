@@ -796,6 +796,18 @@ export function App() {
               </div>
               <p className="muted">Phase 84 defines future command retry, attempt-limit, backoff, failure escalation, and retry-result evidence boundaries for owner review. It does not execute commands, retry commands, start retry schedulers, run backoff timers, execute failure classifiers, or approve away-mode execution.</p>
             </Card>
+
+            <Card title="Command Risk Classifier" eyebrow="policy review only">
+              <div className="packet-list">
+                <span>Owner: {localWorkerCommandRiskClassifier.commandRiskClassifierSummary.owner}</span>
+                <span>Requirements: {localWorkerCommandRiskClassifier.commandRiskClassifierRequirements.length}</span>
+                <span>Risk classes: {localWorkerCommandRiskClassifier.riskClasses.length}</span>
+                <span>Worker profiles: {localWorkerCommandRiskClassifier.workerCapabilityRiskProfiles.length}</span>
+                <span>Command execution: {localWorkerCommandRiskClassifier.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Fleet inheritance: {localWorkerCommandRiskClassifier.commandRiskClassifierSummary.fleetModeRiskInheritanceRequired ? "required" : "missing"}</span>
+              </div>
+              <p className="muted">Phase 85 defines safe, caution, owner-only, dangerous, and prohibited command risk classes plus future fleet worker capability risk profiles. It does not execute commands, auto-route risk decisions, connect workers, enable Fleet Mode, enable away mode, self-merge, self-deploy, or self-approve.</p>
+            </Card>
           </aside>
         </div>
       <Card title="Local Worker Unlock Proposal Packet" eyebrow="owner-review proposal">
