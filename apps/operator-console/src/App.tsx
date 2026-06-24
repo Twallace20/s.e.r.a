@@ -1,3 +1,4 @@
+import { approvedValidationRunner, approvedValidationRunnerSafetyGates } from "./approved-validation-runner";
 import { approvalGatedLocalCommandRunner, approvalGatedLocalCommandRunnerSafetyGates } from "./approval-gated-local-command-runner";
 import { operatorRuntimeStatus } from "./runtime-status";
 import { requestIntakeDraft, requestIntakeSafetyGates } from "./request-intake";
@@ -62,6 +63,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Approved validation runner", value: approvedValidationRunner.approvedValidationRunnerStatus, tone: "review" },
   { label: "Approval-gated command runner", value: approvalGatedLocalCommandRunner.approvalGatedLocalCommandRunnerStatus, tone: "review" },
   { label: "Desktop worker", value: operatorRuntimeStatus.status.desktopWorker, tone: "online" },
   { label: "Local runtime", value: operatorRuntimeStatus.status.localRuntime, tone: "ready" },
@@ -129,6 +131,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...approvedValidationRunnerSafetyGates,
   ...approvalGatedLocalCommandRunnerSafetyGates,
   ...localWorkerCommandOutputBoundaryDraftSafetyGates,
   ...localWorkerCommandEnvironmentBoundaryDraftSafetyGates,

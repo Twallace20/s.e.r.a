@@ -180,7 +180,9 @@
     "phase89:demo": "node scripts/run-local-worker-command-sandbox-workspace-v1.mjs",
     "phase89:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase88:demo && npm run phase89:demo",
     "phase90:demo": "node scripts/run-approval-gated-local-command-runner-v1.mjs",
-    "phase90:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase89:demo && npm run phase90:demo"
+    "phase90:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase89:demo && npm run phase90:demo",
+    "phase91:demo": "node scripts/run-approved-validation-runner-v1.mjs",
+    "phase91:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase90:demo && npm run phase91:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
