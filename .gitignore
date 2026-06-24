@@ -149,3 +149,5 @@ packages/*/src/*.d.ts
 .sera-approval-gated-local-command-runner-test/
 .sera-approved-validation-runner/
 .sera-approved-validation-runner-test/
+.sera-approved-file-patch-runner/
+.sera-approved-file-patch-runner-test/
