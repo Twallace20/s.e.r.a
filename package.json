@@ -172,7 +172,9 @@
     "phase85:demo": "node scripts/run-local-worker-command-risk-classifier-v1.mjs",
     "phase85:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase84:demo && npm run phase85:demo",
     "phase86:demo": "node scripts/run-local-worker-command-approval-packet-v1.mjs",
-    "phase86:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase85:demo && npm run phase86:demo"
+    "phase86:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase85:demo && npm run phase86:demo",
+    "phase87:demo": "node scripts/run-local-worker-command-scope-lock-v1.mjs",
+    "phase87:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase86:demo && npm run phase87:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

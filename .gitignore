@@ -142,6 +142,8 @@ packages/*/src/*.d.ts
 .sera-local-worker-command-retry-boundary-draft/
 .sera-local-worker-command-risk-classifier/
 .sera-local-worker-command-approval-packet/
+.sera-local-worker-command-scope-lock/
+
 
 
 

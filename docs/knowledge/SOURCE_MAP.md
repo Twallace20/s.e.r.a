@@ -1437,3 +1437,10 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - Evidence role: command approval packet policy truth for future command approvals, automation source context, phase ZIP factory review, GitHub Actions planning, iPhone/PWA controls, and fleet worker approval inheritance.
 - Mapped files: `docs/phases/PHASE_86_LOCAL_WORKER_COMMAND_APPROVAL_PACKET_V1.md`, `scripts/lib/local-worker-command-approval-packet-v1.mjs`, `scripts/run-local-worker-command-approval-packet-v1.mjs`, `tests/integration/local-worker-command-approval-packet-v1.test.ts`, `apps/operator-console/src/local-worker-command-approval-packet.ts`.
 - Risk note: Phase 86 remains owner-review only and does not enable command execution, auto-approval, scheduler creation, GitHub workflow mutation, iPhone automation mutation, phase ZIP auto-generation, phase ZIP auto-apply, distributed fleet execution, away-mode execution, self-merge, self-deploy, or self-approval.
+
+
+### Phase 87 local worker command scope lock v1
+
+- Evidence role: command scope lock policy truth for future local command requests, branch work, phase ZIP factory application, website/Python/iOS/creative worker routing, and distributed fleet scope inheritance.
+- Mapped files: `docs/phases/PHASE_87_LOCAL_WORKER_COMMAND_SCOPE_LOCK_V1.md`, `scripts/lib/local-worker-command-scope-lock-v1.mjs`, `scripts/run-local-worker-command-scope-lock-v1.mjs`, `tests/integration/local-worker-command-scope-lock-v1.test.ts`, `apps/operator-console/src/local-worker-command-scope-lock.ts`.
+- Risk note: Phase 87 remains owner-review only and does not enable command execution, scope auto-expansion, scope auto-repair, path escape, branch escape, workspace escape, approval packet bypass, scheduler creation, GitHub workflow mutation, iPhone automation mutation, phase ZIP auto-generation, phase ZIP auto-apply, fleet execution, away-mode execution, self-merge, self-deploy, or self-approval.
