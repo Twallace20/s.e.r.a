@@ -176,7 +176,9 @@
     "phase87:demo": "node scripts/run-local-worker-command-scope-lock-v1.mjs",
     "phase87:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase86:demo && npm run phase87:demo",
     "phase88:demo": "node scripts/run-local-worker-command-dry-run-simulator-v1.mjs",
-    "phase88:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase87:demo && npm run phase88:demo"
+    "phase88:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase87:demo && npm run phase88:demo",
+    "phase89:demo": "node scripts/run-local-worker-command-sandbox-workspace-v1.mjs",
+    "phase89:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase88:demo && npm run phase89:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

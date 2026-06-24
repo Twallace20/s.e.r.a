@@ -844,6 +844,18 @@ export function App() {
               </div>
               <p className="muted">Phase 88 defines the dry-run preview required before any future command runner, validation runner, branch worker, phase ZIP factory, website builder, Python worker, iOS/Mac worker, creative worker, or fleet worker can request execution. It does not execute commands, spawn processes, mutate source, create schedulers, mutate workflows, auto-apply ZIPs, self-merge, self-deploy, or self-approve.</p>
             </Card>
+
+            <Card title="Command Sandbox Workspace" eyebrow="containment only">
+              <div className="packet-list">
+                <span>Owner: {localWorkerCommandSandboxWorkspace.commandSandboxWorkspaceSummary.owner}</span>
+                <span>Requirements: {localWorkerCommandSandboxWorkspace.commandSandboxWorkspaceRequirements.length}</span>
+                <span>Workspace dimensions: {localWorkerCommandSandboxWorkspace.sandboxWorkspaceDimensions.length}</span>
+                <span>Artifact policies: {localWorkerCommandSandboxWorkspace.sandboxArtifactPolicies.length}</span>
+                <span>Command execution: {localWorkerCommandSandboxWorkspace.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Workspace escape: {localWorkerCommandSandboxWorkspace.boundaries.workspaceEscapeAllowed ? "unsafe" : "blocked"}</span>
+              </div>
+              <p className="muted">Phase 89 defines the isolated sandbox workspace required before any future command runner, validation runner, branch worker, phase ZIP factory, website builder, Python worker, iOS/Mac worker, creative worker, or fleet worker can request execution. It does not execute commands, spawn processes, mutate source, create schedulers, mutate workflows, auto-apply ZIPs, self-merge, self-deploy, or self-approve.</p>
+            </Card>
           </aside>
         </div>
       <Card title="Local Worker Unlock Proposal Packet" eyebrow="owner-review proposal">
