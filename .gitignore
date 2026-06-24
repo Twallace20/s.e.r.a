@@ -145,13 +145,5 @@ packages/*/src/*.d.ts
 .sera-local-worker-command-scope-lock/
 .sera-local-worker-command-dry-run-simulator/
 .sera-local-worker-command-sandbox-workspace/
-
-
-
-
-
-
-
-
-
-
+.sera-approval-gated-local-command-runner/
+.sera-approval-gated-local-command-runner-test/
