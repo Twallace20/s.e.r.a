@@ -140,6 +140,8 @@ packages/*/src/*.d.ts
 .sera-roadmap-operator-control-plane/
 .sera-local-worker-command-timeout-boundary-draft/
 .sera-local-worker-command-retry-boundary-draft/
+.sera-local-worker-command-risk-classifier/
+
 
 
 
