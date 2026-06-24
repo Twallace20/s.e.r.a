@@ -1479,3 +1479,13 @@ Phase 91 adds a validation-only runner on top of the Phase 90 approval-gated loc
 - `tests/integration/approved-validation-runner-v1.test.ts` — Verifies approved validation suites, owner approval, shell blocking, disabled heavy validation behavior, evidence output, and blocked unsafe validation paths.
 - `apps/operator-console/src/approved-validation-runner.ts` — Exposes Phase 91 status and safety gates to the operator console.
 
+## Phase 92 — Approved File Patch Runner v1
+
+Phase 92 adds an exact-plan approved file patch runner. It proves S.E.R.A. can patch a contained sandbox workspace file only after owner approval, expected SHA verification, expected occurrence verification, backup capture, validation, rollback-on-failure, and evidence recording. It still blocks direct repository source mutation, branch mutation, arbitrary path patching, arbitrary patch text, binary patches, deletes, creates, unbounded replacements, shell expansion, scheduler/workflow/iPhone automation mutation, phase ZIP auto-apply, fleet execution, away-mode execution, self-approval, self-merge, and self-deploy.
+
+- `docs/phases/PHASE_92_APPROVED_FILE_PATCH_RUNNER_V1.md` — Defines Phase 92 purpose, sandbox patch boundary, validation, and completion criteria.
+- `scripts/lib/approved-file-patch-runner-v1.mjs` — Implements exact approved patch plans, SHA and occurrence checks, backup, rollback, and evidence.
+- `scripts/run-approved-file-patch-runner-v1.mjs` — Runs the Phase 92 demo and writes local patch evidence.
+- `tests/integration/approved-file-patch-runner-v1.test.ts` — Verifies approved patch execution, owner approval, rollback, evidence output, and blocked unsafe patch paths.
+- `apps/operator-console/src/approved-file-patch-runner.ts` — Exposes Phase 92 status and safety gates to the operator console.
+
