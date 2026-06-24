@@ -160,7 +160,9 @@
     "phase79:demo": "node scripts/run-local-worker-command-output-boundary-draft-v1.mjs",
     "phase79:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase78:demo && npm run phase79:demo",
     "phase80:demo": "node scripts/run-local-worker-command-exit-code-boundary-draft-v1.mjs",
-    "phase80:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase79:demo && npm run phase80:demo"
+    "phase80:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase79:demo && npm run phase80:demo",
+    "phase81:demo": "node scripts/run-local-worker-command-result-record-boundary-draft-v1.mjs",
+    "phase81:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase80:demo && npm run phase81:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
