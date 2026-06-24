@@ -774,6 +774,17 @@ export function App() {
               </div>
               <p className="muted">Phase 82 locks the updated roadmap and operator control-plane architecture into repo truth. It keeps the safe execution spine, pulls universal ingest and deliverables earlier, and sequences the existing site, mobile companion, and future native app without unlocking command execution.</p>
             </Card>
+
+            <Card title="Command Timeout Boundary Draft" eyebrow="timeout review only">
+              <div className="packet-list">
+                <span>Owner: {localWorkerCommandTimeoutBoundaryDraft.commandTimeoutBoundaryDraftSummary.owner}</span>
+                <span>Requirements: {localWorkerCommandTimeoutBoundaryDraft.commandTimeoutBoundaryDraftRequirements.length}</span>
+                <span>Evidence: {localWorkerCommandTimeoutBoundaryDraft.evidenceRequirements.length}</span>
+                <span>Command execution: {localWorkerCommandTimeoutBoundaryDraft.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Draft required: {localWorkerCommandTimeoutBoundaryDraft.commandTimeoutBoundaryDraftSummary.timeoutBoundaryRemainsDraftRequired ? "yes" : "no"}</span>
+              </div>
+              <p className="muted">Phase 83 defines future command timeout, max-runtime, forced-stop, and timeout-result evidence boundaries for owner review. It does not execute commands, start timeout handlers, terminate processes, retry commands, or approve away-mode execution.</p>
+            </Card>
           </aside>
         </div>
       <Card title="Local Worker Unlock Proposal Packet" eyebrow="owner-review proposal">

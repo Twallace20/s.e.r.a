@@ -1409,3 +1409,10 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - Evidence role: roadmap/control-plane truth proving S.E.R.A. is not CLI-only and that website, mobile/PWA, app, safe execution, branch development, universal ingest, deliverables, agency, and productization paths are sequenced.
 - Mapped files: `apps/operator-console/src/operator-control-plane-roadmap.ts`, `docs/architecture/OPERATOR_CONTROL_PLANE_V1.md`, `docs/roadmap/SERA_ROADMAP_V2.md`, `docs/phases/PHASE_82_SERA_ROADMAP_OPERATOR_CONTROL_PLANE_V1.md`, `scripts/lib/sera-roadmap-operator-control-plane-v1.mjs`, `scripts/run-sera-roadmap-operator-control-plane-v1.mjs`, `tests/integration/sera-roadmap-operator-control-plane-v1.test.ts`.
 - Risk note: Phase 82 is architecture and roadmap truth only. It does not enable command execution, away-mode execution, native app release, website launch, self-merge, self-deploy, or productization.
+
+
+### Phase 83 local worker command timeout boundary draft v1
+
+- Evidence role: command timeout boundary draft truth for future command timeout, max-runtime, forced-stop, and timeout-result evidence boundaries.
+- Mapped files: `docs/phases/PHASE_83_LOCAL_WORKER_COMMAND_TIMEOUT_BOUNDARY_DRAFT_V1.md`, `scripts/lib/local-worker-command-timeout-boundary-draft-v1.mjs`, `scripts/run-local-worker-command-timeout-boundary-draft-v1.mjs`, `tests/integration/local-worker-command-timeout-boundary-draft-v1.test.ts`, `apps/operator-console/src/local-worker-command-timeout-boundary-draft.ts`.
+- Risk note: Phase 83 remains owner-review only and does not enable command execution, timeout-handler execution, process termination, retry execution, or away-mode execution.
