@@ -739,6 +739,17 @@ export function App() {
 </Card>
 
 
+
+            <Card title="Command Exit-Code Boundary Draft" eyebrow="exit-code review only">
+              <div className="packet-list">
+                <span>Owner: {localWorkerCommandExitCodeBoundaryDraft.commandExitCodeBoundaryDraftSummary.owner}</span>
+                <span>Requirements: {localWorkerCommandExitCodeBoundaryDraft.commandExitCodeBoundaryDraftRequirements.length}</span>
+                <span>Evidence: {localWorkerCommandExitCodeBoundaryDraft.evidenceRequirements.length}</span>
+                <span>Command execution: {localWorkerCommandExitCodeBoundaryDraft.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Draft locked: {localWorkerCommandExitCodeBoundaryDraft.commandExitCodeBoundaryDraftSummary.commandExitCodeBoundaryDraftLocked ? "yes" : "no"}</span>
+              </div>
+              <p className="muted">Phase 80 defines exit-code, timeout, failure, and retry boundaries for owner review. It does not execute commands, run shells, persist live output, retry commands, or approve command execution.</p>
+            </Card>
           </aside>
         </div>
       <Card title="Local Worker Unlock Proposal Packet" eyebrow="owner-review proposal">
