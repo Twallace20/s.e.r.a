@@ -1388,3 +1388,10 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the command output boundary draft surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 79 remains command-output-boundary-draft-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, scheduler access, filesystem mutation, persistence, routing, and self-approval behavior.
+
+
+### Phase 80 local worker command exit-code boundary draft v1
+
+- Evidence role: command exit-code, timeout, failure, and retry boundary draft truth.
+- Mapped files: `docs/phases/PHASE_80_LOCAL_WORKER_COMMAND_EXIT_CODE_BOUNDARY_DRAFT_V1.md`, `scripts/lib/local-worker-command-exit-code-boundary-draft-v1.mjs`, `scripts/run-local-worker-command-exit-code-boundary-draft-v1.mjs`, `tests/integration/local-worker-command-exit-code-boundary-draft-v1.test.ts`, `apps/operator-console/src/local-worker-command-exit-code-boundary-draft.ts`.
+- Risk note: Phase 80 remains owner-review only and does not enable command execution.
