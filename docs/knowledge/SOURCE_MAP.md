@@ -1334,3 +1334,30 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 
 - Evidence role: integration tests proving the command working directory boundary draft surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
 - Use when answering: why Phase 77 remains command-working-directory-boundary-draft-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, scheduler access, filesystem mutation, persistence, routing, and self-approval behavior.
+
+| Local worker command environment boundary draft | Defines the owner-review command environment boundary draft structure for any future local worker command execution path in Phase 78. | `docs/phases/PHASE_78_LOCAL_WORKER_COMMAND_ENVIRONMENT_BOUNDARY_DRAFT_V1.md`, `apps/operator-console/src/local-worker-command-environment-boundary-draft.ts`, `scripts/lib/local-worker-command-environment-boundary-draft-v1.mjs`, `scripts/run-local-worker-command-environment-boundary-draft-v1.mjs`, `tests/integration/local-worker-command-environment-boundary-draft-v1.test.ts` |
+
+### `docs/phases/PHASE_78_LOCAL_WORKER_COMMAND_ENVIRONMENT_BOUNDARY_DRAFT_V1.md`
+
+- Evidence role: Phase 78 local worker command environment boundary draft contract and validation instructions.
+- Use when answering: what Phase 78 adds, what it blocks, and why environment boundaries do not equal command execution.
+
+### `apps/operator-console/src/local-worker-command-environment-boundary-draft.ts`
+
+- Evidence role: typed frontend-consumable command environment boundary draft packet, requirements, evidence requirements, routing, boundaries, and safety gates.
+- Use when answering: owner-review command environment boundary draft status, environment variable inventory requirements, blocked environment variable requirements, and blocked scheduler/command/worker/filesystem flags.
+
+### `scripts/lib/local-worker-command-environment-boundary-draft-v1.mjs`
+
+- Evidence role: Phase 78 command environment boundary draft validator and local report writer.
+- Use when answering: how the phase confirms declared files, app bindings, package scripts, required true flags, required false flags, and safety counts.
+
+### `scripts/run-local-worker-command-environment-boundary-draft-v1.mjs`
+
+- Evidence role: CLI entrypoint for generating the local Phase 78 command environment boundary draft report.
+- Use when answering: how to run the command environment boundary draft proof.
+
+### `tests/integration/local-worker-command-environment-boundary-draft-v1.test.ts`
+
+- Evidence role: integration tests proving the command environment boundary draft surface is declarative-only, app-bound, artifact-writing, and blocked from unsafe boundaries.
+- Use when answering: why Phase 78 remains command-environment-boundary-draft-only and blocks PowerShell execution, schtasks execution, shell execution, command execution, scheduler access, filesystem mutation, persistence, routing, and self-approval behavior.

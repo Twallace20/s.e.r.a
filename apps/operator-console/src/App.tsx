@@ -29,6 +29,7 @@ import { localWorkerCommandExecutionApprovalPlan, localWorkerCommandExecutionApp
 import { localWorkerCommandAllowlistDraft, localWorkerCommandAllowlistDraftSafetyGates } from "./local-worker-command-allowlist-draft";
 import { localWorkerCommandArgumentBoundaryDraft, localWorkerCommandArgumentBoundaryDraftSafetyGates } from "./local-worker-command-argument-boundary-draft";
 import { localWorkerCommandWorkingDirectoryBoundaryDraft, localWorkerCommandWorkingDirectoryBoundaryDraftSafetyGates } from "./local-worker-command-working-directory-boundary-draft";
+import { localWorkerCommandEnvironmentBoundaryDraft, localWorkerCommandEnvironmentBoundaryDraftSafetyGates } from "./local-worker-command-environment-boundary-draft";
 
 type StatusTone = "online" | "ready" | "planned" | "blocked" | "pending" | "review";
 
@@ -91,6 +92,7 @@ const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = 
   { label: "Worker command allowlist draft", value: localWorkerCommandAllowlistDraft.localWorkerCommandAllowlistDraftStatus, tone: "planned" },
   { label: "Worker command argument boundary draft", value: localWorkerCommandArgumentBoundaryDraft.localWorkerCommandArgumentBoundaryDraftStatus, tone: "planned" },
   { label: "Worker command working directory boundary draft", value: localWorkerCommandWorkingDirectoryBoundaryDraft.localWorkerCommandWorkingDirectoryBoundaryDraftStatus, tone: "planned" },
+  { label: "Worker command environment boundary draft", value: localWorkerCommandEnvironmentBoundaryDraft.localWorkerCommandEnvironmentBoundaryDraftStatus, tone: "planned" },
   { label: "GitHub bridge", value: operatorRuntimeStatus.status.githubBridge, tone: "pending" },
   { label: "Tailscale access", value: operatorRuntimeStatus.status.tailscaleAccess, tone: "planned" },
   { label: "Last check-in", value: operatorRuntimeStatus.status.lastCheckIn, tone: "ready" },
@@ -123,6 +125,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...localWorkerCommandEnvironmentBoundaryDraftSafetyGates,
   ...localWorkerCommandWorkingDirectoryBoundaryDraftSafetyGates,
   ...localWorkerCommandArgumentBoundaryDraftSafetyGates,
   ...localWorkerCommandAllowlistDraftSafetyGates,
@@ -1412,6 +1415,44 @@ export function App() {
     <button type="button" disabled>Review draft only</button>
   </div>
   <p className="muted">Phase 77 creates an owner-review command working directory boundary draft for future local worker command execution. It does not execute PowerShell, execute schtasks, execute shell commands, query or mutate Windows Task Scheduler, connect to a worker, poll health, persist command approval records, route work, or approve execution.</p>
+</Card>
+
+<Card title="Local Worker Command Environment Boundary Draft" eyebrow="owner-review command environment boundary draft">
+  <div className="packet-list">
+    <span>Phase: {localWorkerCommandEnvironmentBoundaryDraft.phase.label}</span>
+    <span>Status: {localWorkerCommandEnvironmentBoundaryDraft.localWorkerCommandEnvironmentBoundaryDraftStatus}</span>
+    <span>Mode: {localWorkerCommandEnvironmentBoundaryDraft.commandEnvironmentBoundaryDraftMode}</span>
+    <span>Owner: {localWorkerCommandEnvironmentBoundaryDraft.commandEnvironmentBoundaryDraftSummary.owner}</span>
+    <span>Source phase: {localWorkerCommandEnvironmentBoundaryDraft.commandEnvironmentBoundaryDraftSummary.sourcePhase}</span>
+    <span>Safe state: {localWorkerCommandEnvironmentBoundaryDraft.commandEnvironmentBoundaryDraftSummary.safeState}</span>
+    <span>Requirements: {localWorkerCommandEnvironmentBoundaryDraft.commandEnvironmentBoundaryDraftRequirements.length}</span>
+    <span>Evidence requirements: {localWorkerCommandEnvironmentBoundaryDraft.evidenceRequirements.length}</span>
+    <span>Owner approval required: {localWorkerCommandEnvironmentBoundaryDraft.commandEnvironmentBoundaryDraftSummary.ownerApprovalRequired ? "yes" : "no"}</span>
+    <span>Environment variable inventory required: {localWorkerCommandEnvironmentBoundaryDraft.commandEnvironmentBoundaryDraftSummary.commandEnvironmentVariableInventoryRequired ? "yes" : "no"}</span>
+    <span>Blocked environment variable boundary required: {localWorkerCommandEnvironmentBoundaryDraft.commandEnvironmentBoundaryDraftSummary.blockedEnvironmentVariableBoundaryRequired ? "yes" : "no"}</span>
+    <span>Environment boundary draft locked: {localWorkerCommandEnvironmentBoundaryDraft.commandEnvironmentBoundaryDraftSummary.commandEnvironmentBoundaryDraftLocked ? "yes" : "no"}</span>
+    <span>Command execution: {localWorkerCommandEnvironmentBoundaryDraft.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>PowerShell execution: {localWorkerCommandEnvironmentBoundaryDraft.boundaries.powershellExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>schtasks execution: {localWorkerCommandEnvironmentBoundaryDraft.boundaries.schtasksExecutionAllowed ? "allowed" : "blocked"}</span>
+    <span>Suggested queue: {localWorkerCommandEnvironmentBoundaryDraft.routing.suggestedQueue}</span>
+  </div>
+  <div className="queue-list compact">
+    {localWorkerCommandEnvironmentBoundaryDraft.commandEnvironmentBoundaryDraftRequirements.map((requirement) => (
+      <article className="queue-item" key={requirement.id}>
+        <div>
+          <strong>{requirement.label}</strong>
+          <p>{requirement.evidence}</p>
+        </div>
+        <span>{requirement.state}</span>
+        <Badge tone="planned">environment boundary draft only</Badge>
+      </article>
+    ))}
+  </div>
+  <div className="button-row">
+    <button type="button" className="secondary" disabled>Lock environment boundary in future phase</button>
+    <button type="button" disabled>Review draft only</button>
+  </div>
+  <p className="muted">Phase 78 creates an owner-review command environment boundary draft for future local worker command execution. It does not execute PowerShell, execute schtasks, execute shell commands, query or mutate Windows Task Scheduler, connect to a worker, poll health, persist command approval records, route work, or approve execution.</p>
 </Card>
 
 </section>
