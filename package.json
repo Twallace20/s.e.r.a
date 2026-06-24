@@ -156,7 +156,9 @@
     "phase77:demo": "node scripts/run-local-worker-command-working-directory-boundary-draft-v1.mjs",
     "phase77:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase76:demo && npm run phase77:demo",
     "phase78:demo": "node scripts/run-local-worker-command-environment-boundary-draft-v1.mjs",
-    "phase78:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase77:demo && npm run phase78:demo"
+    "phase78:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase77:demo && npm run phase78:demo",
+    "phase79:demo": "node scripts/run-local-worker-command-output-boundary-draft-v1.mjs",
+    "phase79:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase78:demo && npm run phase79:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
