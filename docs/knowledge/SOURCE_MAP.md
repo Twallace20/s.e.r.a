@@ -1430,3 +1430,10 @@ tests/integration/branch-readiness-inspector-v1.test.ts
 - Evidence role: command risk classifier policy truth for future command risk classes, worker capability risk profiles, and distributed S.E.R.A. Fleet Mode risk inheritance.
 - Mapped files: `docs/phases/PHASE_85_LOCAL_WORKER_COMMAND_RISK_CLASSIFIER_V1.md`, `scripts/lib/local-worker-command-risk-classifier-v1.mjs`, `scripts/run-local-worker-command-risk-classifier-v1.mjs`, `tests/integration/local-worker-command-risk-classifier-v1.test.ts`, `apps/operator-console/src/local-worker-command-risk-classifier.ts`.
 - Risk note: Phase 85 remains owner-review only and does not enable command execution, risk auto-route, worker connection, distributed fleet execution, away-mode execution, self-merge, self-deploy, or self-approval.
+
+
+### Phase 86 local worker command approval packet v1
+
+- Evidence role: command approval packet policy truth for future command approvals, automation source context, phase ZIP factory review, GitHub Actions planning, iPhone/PWA controls, and fleet worker approval inheritance.
+- Mapped files: `docs/phases/PHASE_86_LOCAL_WORKER_COMMAND_APPROVAL_PACKET_V1.md`, `scripts/lib/local-worker-command-approval-packet-v1.mjs`, `scripts/run-local-worker-command-approval-packet-v1.mjs`, `tests/integration/local-worker-command-approval-packet-v1.test.ts`, `apps/operator-console/src/local-worker-command-approval-packet.ts`.
+- Risk note: Phase 86 remains owner-review only and does not enable command execution, auto-approval, scheduler creation, GitHub workflow mutation, iPhone automation mutation, phase ZIP auto-generation, phase ZIP auto-apply, distributed fleet execution, away-mode execution, self-merge, self-deploy, or self-approval.

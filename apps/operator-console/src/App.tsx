@@ -808,6 +808,18 @@ export function App() {
               </div>
               <p className="muted">Phase 85 defines safe, caution, owner-only, dangerous, and prohibited command risk classes plus future fleet worker capability risk profiles. It does not execute commands, auto-route risk decisions, connect workers, enable Fleet Mode, enable away mode, self-merge, self-deploy, or self-approve.</p>
             </Card>
+
+            <Card title="Command Approval Packet" eyebrow="owner review only">
+              <div className="packet-list">
+                <span>Owner: {localWorkerCommandApprovalPacket.commandApprovalPacketSummary.owner}</span>
+                <span>Requirements: {localWorkerCommandApprovalPacket.commandApprovalPacketRequirements.length}</span>
+                <span>Packet sections: {localWorkerCommandApprovalPacket.approvalPacketSections.length}</span>
+                <span>Automation lanes: {localWorkerCommandApprovalPacket.automationAccelerationLanes.length}</span>
+                <span>Command execution: {localWorkerCommandApprovalPacket.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Automation source context: {localWorkerCommandApprovalPacket.commandApprovalPacketSummary.automationSourceContextRequired ? "required" : "missing"}</span>
+              </div>
+              <p className="muted">Phase 86 defines the owner approval packet required before any future command runner, phase ZIP factory, scheduler, GitHub workflow, iPhone automation, or fleet worker can request execution. It does not execute commands, create schedules, mutate workflows, auto-generate phase ZIPs, auto-apply ZIPs, self-merge, self-deploy, or self-approve.</p>
+            </Card>
           </aside>
         </div>
       <Card title="Local Worker Unlock Proposal Packet" eyebrow="owner-review proposal">

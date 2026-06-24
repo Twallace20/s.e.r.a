@@ -170,7 +170,9 @@
     "phase84:demo": "node scripts/run-local-worker-command-retry-boundary-draft-v1.mjs",
     "phase84:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase83:demo && npm run phase84:demo",
     "phase85:demo": "node scripts/run-local-worker-command-risk-classifier-v1.mjs",
-    "phase85:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase84:demo && npm run phase85:demo"
+    "phase85:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase84:demo && npm run phase85:demo",
+    "phase86:demo": "node scripts/run-local-worker-command-approval-packet-v1.mjs",
+    "phase86:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase85:demo && npm run phase86:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
