@@ -335,6 +335,13 @@ const requiredMappedPaths = [
   "scripts/lib/local-worker-command-result-record-boundary-draft-v1.mjs",
   "scripts/run-local-worker-command-result-record-boundary-draft-v1.mjs",
   "tests/integration/local-worker-command-result-record-boundary-draft-v1.test.ts",
+  "apps/operator-console/src/operator-control-plane-roadmap.ts",
+  "docs/architecture/OPERATOR_CONTROL_PLANE_V1.md",
+  "docs/roadmap/SERA_ROADMAP_V2.md",
+  "docs/phases/PHASE_82_SERA_ROADMAP_OPERATOR_CONTROL_PLANE_V1.md",
+  "scripts/lib/sera-roadmap-operator-control-plane-v1.mjs",
+  "scripts/run-sera-roadmap-operator-control-plane-v1.mjs",
+  "tests/integration/sera-roadmap-operator-control-plane-v1.test.ts",
   "apps/operator-console/src/local-worker-command-result-record-boundary-draft.ts",
 ];
 

@@ -761,6 +761,19 @@ export function App() {
               </div>
               <p className="muted">Phase 81 defines the future command result evidence envelope for owner review. It does not execute commands, capture live stdout or stderr, persist live results, retry commands, or approve command execution.</p>
             </Card>
+
+            <Card title="Roadmap + Operator Control Plane" eyebrow="repo truth / not CLI-only">
+              <div className="packet-list">
+                <span>Operator: {seraRoadmapOperatorControlPlaneV1.roadmapOperatorControlPlaneSummary.operatorAuthorityOwner}</span>
+                <span>Lanes: {seraRoadmapOperatorControlPlaneV1.roadmapLanes.length}</span>
+                <span>Milestones: {seraRoadmapOperatorControlPlaneV1.roadmapMilestones.length}</span>
+                <span>Website path: {seraRoadmapOperatorControlPlaneV1.roadmapOperatorControlPlaneSummary.websitePathIncluded ? "included" : "missing"}</span>
+                <span>Mobile/PWA path: {seraRoadmapOperatorControlPlaneV1.roadmapOperatorControlPlaneSummary.mobilePwaPathIncluded ? "included" : "missing"}</span>
+                <span>Native app path: {seraRoadmapOperatorControlPlaneV1.roadmapOperatorControlPlaneSummary.nativeAppPathIncluded ? "included" : "missing"}</span>
+                <span>Command execution: {seraRoadmapOperatorControlPlaneV1.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+              </div>
+              <p className="muted">Phase 82 locks the updated roadmap and operator control-plane architecture into repo truth. It keeps the safe execution spine, pulls universal ingest and deliverables earlier, and sequences the existing site, mobile companion, and future native app without unlocking command execution.</p>
+            </Card>
           </aside>
         </div>
       <Card title="Local Worker Unlock Proposal Packet" eyebrow="owner-review proposal">
