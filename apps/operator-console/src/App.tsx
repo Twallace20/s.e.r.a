@@ -832,6 +832,18 @@ export function App() {
               </div>
               <p className="muted">Phase 87 defines the owner-approved scope lock required before any future command runner, branch worker, phase ZIP factory, website builder, Python worker, iOS/Mac worker, creative worker, or fleet worker can request execution. It does not execute commands, expand scope, repair scope, mutate workflows, connect workers, self-merge, self-deploy, or self-approve.</p>
             </Card>
+
+            <Card title="Command Dry-Run Simulator" eyebrow="preview only">
+              <div className="packet-list">
+                <span>Owner: {localWorkerCommandDryRunSimulator.commandDryRunSimulatorSummary.owner}</span>
+                <span>Requirements: {localWorkerCommandDryRunSimulator.commandDryRunSimulatorRequirements.length}</span>
+                <span>Dry-run scenarios: {localWorkerCommandDryRunSimulator.dryRunScenarios.length}</span>
+                <span>Outcome policies: {localWorkerCommandDryRunSimulator.dryRunOutcomePolicies.length}</span>
+                <span>Command execution: {localWorkerCommandDryRunSimulator.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Dry-run promotion: {localWorkerCommandDryRunSimulator.boundaries.dryRunToExecutionPromotionAllowed ? "unsafe" : "blocked"}</span>
+              </div>
+              <p className="muted">Phase 88 defines the dry-run preview required before any future command runner, validation runner, branch worker, phase ZIP factory, website builder, Python worker, iOS/Mac worker, creative worker, or fleet worker can request execution. It does not execute commands, spawn processes, mutate source, create schedulers, mutate workflows, auto-apply ZIPs, self-merge, self-deploy, or self-approve.</p>
+            </Card>
           </aside>
         </div>
       <Card title="Local Worker Unlock Proposal Packet" eyebrow="owner-review proposal">
