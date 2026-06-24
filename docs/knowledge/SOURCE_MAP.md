@@ -1469,3 +1469,13 @@ Phase 90 adds the first catalog-only, owner-approved, shellless local command ru
 - `tests/integration/approval-gated-local-command-runner-v1.test.ts` — Verifies owner approval, exact catalog matching, shell blocking, workspace containment, evidence output, and blocked unsafe command paths.
 - `apps/operator-console/src/approval-gated-local-command-runner.ts` — Exposes Phase 90 status and safety gates to the operator console.
 
+## Phase 91 — Approved Validation Runner v1
+
+Phase 91 adds a validation-only runner on top of the Phase 90 approval-gated local command runner. It proves S.E.R.A. can run exact approved validation suites, capture bounded evidence, stop on failure, and still block arbitrary commands, shell execution, PowerShell, schtasks, source mutation, self-repair, scheduler/workflow mutation, phase ZIP automation, fleet execution, away-mode execution, self-approval, self-merge, and self-deploy.
+
+- `docs/phases/PHASE_91_APPROVED_VALIDATION_RUNNER_V1.md` — Defines Phase 91 purpose, validation-runner boundary, validation, and completion criteria.
+- `scripts/lib/approved-validation-runner-v1.mjs` — Implements the approved validation suite runner and evidence checks.
+- `scripts/run-approved-validation-runner-v1.mjs` — Runs the Phase 91 demo and writes local validation evidence.
+- `tests/integration/approved-validation-runner-v1.test.ts` — Verifies approved validation suites, owner approval, shell blocking, disabled heavy validation behavior, evidence output, and blocked unsafe validation paths.
+- `apps/operator-console/src/approved-validation-runner.ts` — Exposes Phase 91 status and safety gates to the operator console.
+
