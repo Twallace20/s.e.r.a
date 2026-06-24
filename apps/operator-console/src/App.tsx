@@ -820,6 +820,18 @@ export function App() {
               </div>
               <p className="muted">Phase 86 defines the owner approval packet required before any future command runner, phase ZIP factory, scheduler, GitHub workflow, iPhone automation, or fleet worker can request execution. It does not execute commands, create schedules, mutate workflows, auto-generate phase ZIPs, auto-apply ZIPs, self-merge, self-deploy, or self-approve.</p>
             </Card>
+
+            <Card title="Command Scope Lock" eyebrow="scope control only">
+              <div className="packet-list">
+                <span>Owner: {localWorkerCommandScopeLock.commandScopeLockSummary.owner}</span>
+                <span>Requirements: {localWorkerCommandScopeLock.commandScopeLockRequirements.length}</span>
+                <span>Scope dimensions: {localWorkerCommandScopeLock.scopeDimensions.length}</span>
+                <span>Violation policies: {localWorkerCommandScopeLock.scopeViolationPolicies.length}</span>
+                <span>Command execution: {localWorkerCommandScopeLock.boundaries.commandExecutionAllowed ? "allowed" : "blocked"}</span>
+                <span>Scope expansion: {localWorkerCommandScopeLock.commandScopeLockSummary.scopeExpansionRequiresNewApproval ? "new approval required" : "unsafe"}</span>
+              </div>
+              <p className="muted">Phase 87 defines the owner-approved scope lock required before any future command runner, branch worker, phase ZIP factory, website builder, Python worker, iOS/Mac worker, creative worker, or fleet worker can request execution. It does not execute commands, expand scope, repair scope, mutate workflows, connect workers, self-merge, self-deploy, or self-approve.</p>
+            </Card>
           </aside>
         </div>
       <Card title="Local Worker Unlock Proposal Packet" eyebrow="owner-review proposal">
