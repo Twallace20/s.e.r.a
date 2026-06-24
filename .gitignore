@@ -131,3 +131,5 @@ packages/*/src/*.d.ts
 .sera-local-worker-command-argument-boundary-draft/
 
 .sera-local-worker-command-working-directory-boundary-draft/
+
+.sera-local-worker-command-environment-boundary-draft/
