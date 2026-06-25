@@ -1511,3 +1511,14 @@ Phase 94 converts isolated Phase 93 branch workspace proof into a structured own
 - `tests/integration/approved-branch-plan-generator-v1.test.ts` — Verifies plan generation, owner approval, self-approval blocking, unsafe branch blocking, source mutation blocking, missing doctrine blocking, and ambitious sandbox domain preservation.
 - `apps/operator-console/src/approved-branch-plan-generator.ts` — Exposes Phase 94 status and safety gates to the operator console.
 
+## Phase 95 — Approved Branch Creation Gate v1
+
+Phase 95 converts Phase 94 branch plan proof into an owner-approved branch creation gate packet. It validates safe work/ branch names, declared base refs, clean-tree requirements, validation suites, rollback plans, evidence packet requirements, sandbox branch practice markers, and the multi-language production doctrine. Phase 95 still blocks real project repository branch creation, remote branch creation, git push, source mutation, patch execution, arbitrary branch names, arbitrary plan text, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, and self-deploy.
+
+- `docs/phases/PHASE_95_APPROVED_BRANCH_CREATION_GATE_V1.md` — Defines Phase 95 purpose, branch creation gate boundaries, multi-language doctrine, and completion criteria.
+- `docs/roadmap/SERA_MULTI_LANGUAGE_PRODUCTION_DOCTRINE.md` — Documents that S.E.R.A. should produce useful projects across multiple coding languages based on the project, not only Python.
+- `scripts/lib/approved-branch-creation-gate-v1.mjs` — Implements exact owner-approved branch creation gate packet generation, safe branch-name checks, sandbox branch practice, multi-language production targets, and fail-closed boundaries.
+- `scripts/run-approved-branch-creation-gate-v1.mjs` — Runs the Phase 95 demo and writes local branch creation gate evidence.
+- `tests/integration/approved-branch-creation-gate-v1.test.ts` — Verifies owner approval, self-approval blocking, unsafe branch blocking, source mutation blocking, real branch/push blocking, and multi-language target preservation.
+- `apps/operator-console/src/approved-branch-creation-gate.ts` — Exposes Phase 95 status and safety gates to the operator console.
+
