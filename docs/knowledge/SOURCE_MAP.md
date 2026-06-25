@@ -1500,3 +1500,14 @@ Phase 93 adds an exact-plan approved branch workspace runner. It proves S.E.R.A.
 - `tests/integration/approved-branch-workspace-runner-v1.test.ts` — Verifies approved branch workspace execution, owner approval, rollback, unsafe branch blocking, source mutation blocking, and Revenue Acceleration Track inclusion.
 - `apps/operator-console/src/approved-branch-workspace-runner.ts` — Exposes Phase 93 status and safety gates to the operator console.
 
+## Phase 94 — Approved Branch Plan Generator v1
+
+Phase 94 converts isolated Phase 93 branch workspace proof into a structured owner-reviewable branch plan packet. It writes branch-plan JSON, branch-plan Markdown, sandbox learning doctrine artifacts, target file lists, validation suite declarations, rollback plans, and evidence packet definitions. It also formalizes the Sandbox Learning Doctrine: hard domains are sandbox-first, not impossible. Phase 94 still blocks real local Git branch creation, remote branch creation, git push, patch execution, direct repository source mutation, arbitrary branch names, arbitrary plan text, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, and self-deploy.
+
+- `docs/phases/PHASE_94_APPROVED_BRANCH_PLAN_GENERATOR_V1.md` — Defines Phase 94 purpose, branch plan generation boundary, sandbox learning doctrine, and completion criteria.
+- `docs/roadmap/SERA_SANDBOX_LEARNING_DOCTRINE.md` — Documents the study, notes, sandbox, evidence, refinement, validation, expert-review, and approval loop for ambitious domains.
+- `scripts/lib/approved-branch-plan-generator-v1.mjs` — Implements exact owner-approved branch plan generation, safe branch-name checks, validation suite declarations, rollback plans, evidence packets, ambitious domain scope, and fail-closed boundaries.
+- `scripts/run-approved-branch-plan-generator-v1.mjs` — Runs the Phase 94 demo and writes local branch plan evidence.
+- `tests/integration/approved-branch-plan-generator-v1.test.ts` — Verifies plan generation, owner approval, self-approval blocking, unsafe branch blocking, source mutation blocking, missing doctrine blocking, and ambitious sandbox domain preservation.
+- `apps/operator-console/src/approved-branch-plan-generator.ts` — Exposes Phase 94 status and safety gates to the operator console.
+

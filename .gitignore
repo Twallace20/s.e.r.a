@@ -153,3 +153,5 @@ packages/*/src/*.d.ts
 .sera-approved-file-patch-runner-test/
 .sera-approved-branch-workspace-runner/
 .sera-approved-branch-workspace-runner-test/
+.sera-approved-branch-plan-generator/
+.sera-approved-branch-plan-generator-test/

@@ -1,3 +1,4 @@
+import { approvedBranchPlanGenerator, approvedBranchPlanGeneratorSafetyGates } from "./approved-branch-plan-generator";
 import { approvedBranchWorkspaceRunner, approvedBranchWorkspaceRunnerSafetyGates } from "./approved-branch-workspace-runner";
 import { approvedFilePatchRunner, approvedFilePatchRunnerSafetyGates } from "./approved-file-patch-runner";
 import { approvedValidationRunner, approvedValidationRunnerSafetyGates } from "./approved-validation-runner";
@@ -65,6 +66,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Approved branch plan generator", value: approvedBranchPlanGenerator.approvedBranchPlanGeneratorStatus, tone: "review" },
   { label: "Approved branch workspace runner", value: approvedBranchWorkspaceRunner.approvedBranchWorkspaceRunnerStatus, tone: "review" },
   { label: "Approved file patch runner", value: approvedFilePatchRunner.approvedFilePatchRunnerStatus, tone: "review" },
   { label: "Approved validation runner", value: approvedValidationRunner.approvedValidationRunnerStatus, tone: "review" },
@@ -135,6 +137,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...approvedBranchPlanGeneratorSafetyGates,
   ...approvedBranchWorkspaceRunnerSafetyGates,
   ...approvedFilePatchRunnerSafetyGates,
   ...approvedValidationRunnerSafetyGates,
