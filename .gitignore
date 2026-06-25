@@ -151,3 +151,5 @@ packages/*/src/*.d.ts
 .sera-approved-validation-runner-test/
 .sera-approved-file-patch-runner/
 .sera-approved-file-patch-runner-test/
+.sera-approved-branch-workspace-runner/
+.sera-approved-branch-workspace-runner-test/
