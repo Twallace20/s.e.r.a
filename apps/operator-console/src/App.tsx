@@ -1,3 +1,4 @@
+import { approvedBranchWorkspaceRunner, approvedBranchWorkspaceRunnerSafetyGates } from "./approved-branch-workspace-runner";
 import { approvedFilePatchRunner, approvedFilePatchRunnerSafetyGates } from "./approved-file-patch-runner";
 import { approvedValidationRunner, approvedValidationRunnerSafetyGates } from "./approved-validation-runner";
 import { approvalGatedLocalCommandRunner, approvalGatedLocalCommandRunnerSafetyGates } from "./approval-gated-local-command-runner";
@@ -64,6 +65,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Approved branch workspace runner", value: approvedBranchWorkspaceRunner.approvedBranchWorkspaceRunnerStatus, tone: "review" },
   { label: "Approved file patch runner", value: approvedFilePatchRunner.approvedFilePatchRunnerStatus, tone: "review" },
   { label: "Approved validation runner", value: approvedValidationRunner.approvedValidationRunnerStatus, tone: "review" },
   { label: "Approval-gated command runner", value: approvalGatedLocalCommandRunner.approvalGatedLocalCommandRunnerStatus, tone: "review" },
@@ -133,6 +135,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...approvedBranchWorkspaceRunnerSafetyGates,
   ...approvedFilePatchRunnerSafetyGates,
   ...approvedValidationRunnerSafetyGates,
   ...approvalGatedLocalCommandRunnerSafetyGates,

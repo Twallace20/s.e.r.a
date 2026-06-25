@@ -1489,3 +1489,14 @@ Phase 92 adds an exact-plan approved file patch runner. It proves S.E.R.A. can p
 - `tests/integration/approved-file-patch-runner-v1.test.ts` — Verifies approved patch execution, owner approval, rollback, evidence output, and blocked unsafe patch paths.
 - `apps/operator-console/src/approved-file-patch-runner.ts` — Exposes Phase 92 status and safety gates to the operator console.
 
+## Phase 93 — Approved Branch Workspace Runner v1
+
+Phase 93 adds an exact-plan approved branch workspace runner. It proves S.E.R.A. can create an isolated branch workspace, apply an embedded approved patch plan, write backups, roll back on validation failure, write validation evidence, and carry the updated Revenue Acceleration Track as a required roadmap lane. It still blocks real local Git branch creation, remote branch creation, git push, direct repository source mutation, arbitrary branch names, arbitrary patch text, arbitrary path patching, scheduler/workflow/iPhone automation mutation, phase ZIP auto-apply, fleet execution, away-mode execution, self-approval, self-merge, and self-deploy.
+
+- `docs/phases/PHASE_93_APPROVED_BRANCH_WORKSPACE_RUNNER_V1.md` — Defines Phase 93 purpose, branch workspace boundary, revenue roadmap integration, and completion criteria.
+- `docs/roadmap/SERA_UPDATED_ROADMAP_REVENUE_ACCELERATION_TRACK.md` — Adds the required 101R-120R Revenue Acceleration Track and the updated commercial roadmap.
+- `scripts/lib/approved-branch-workspace-runner-v1.mjs` — Implements exact branch workspace plans, safe branch names, contained patching, backup, rollback, validation evidence, and revenue track metadata.
+- `scripts/run-approved-branch-workspace-runner-v1.mjs` — Runs the Phase 93 demo and writes local branch workspace evidence.
+- `tests/integration/approved-branch-workspace-runner-v1.test.ts` — Verifies approved branch workspace execution, owner approval, rollback, unsafe branch blocking, source mutation blocking, and Revenue Acceleration Track inclusion.
+- `apps/operator-console/src/approved-branch-workspace-runner.ts` — Exposes Phase 93 status and safety gates to the operator console.
+
