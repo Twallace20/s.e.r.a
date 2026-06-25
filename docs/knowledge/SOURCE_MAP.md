@@ -1522,3 +1522,13 @@ Phase 95 converts Phase 94 branch plan proof into an owner-approved branch creat
 - `tests/integration/approved-branch-creation-gate-v1.test.ts` — Verifies owner approval, self-approval blocking, unsafe branch blocking, source mutation blocking, real branch/push blocking, and multi-language target preservation.
 - `apps/operator-console/src/approved-branch-creation-gate.ts` — Exposes Phase 95 status and safety gates to the operator console.
 
+## Phase 96 — Approved Branch Edit Executor v1
+
+Phase 96 gives S.E.R.A. a controlled branch-scoped editing hand inside an isolated branch workspace. It consumes the Phase 95 branch creation gate pattern and proves owner-approved exact edit execution with safe work/ branch scope, safe target paths, expected SHA-256 checks, expected occurrence counts, backups, post-edit validation, rollback, evidence packets, and multi-language doctrine preservation. Phase 96 still blocks direct project repo source mutation, real local/remote Git branch creation, git push, merge, arbitrary patch text, arbitrary path patching, binary patches, create/delete file operations, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, and self-deploy.
+
+- `docs/phases/PHASE_96_APPROVED_BRANCH_EDIT_EXECUTOR_V1.md` — Defines Phase 96 purpose, branch workspace edit boundaries, evidence, rollback, and completion criteria.
+- `scripts/lib/approved-branch-edit-executor-v1.mjs` — Implements exact owner-approved branch workspace edit execution with SHA checks, occurrence checks, backup, validation, rollback, and fail-closed boundaries.
+- `scripts/run-approved-branch-edit-executor-v1.mjs` — Runs the Phase 96 demo and writes local branch edit executor evidence.
+- `tests/integration/approved-branch-edit-executor-v1.test.ts` — Verifies owner approval, self-approval blocking, exact plan binding, branch workspace edit execution, rollback, and blocked Git/source powers.
+- `apps/operator-console/src/approved-branch-edit-executor.ts` — Exposes Phase 96 status and safety gates to the operator console.
+
