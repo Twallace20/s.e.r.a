@@ -157,3 +157,6 @@ packages/*/src/*.d.ts
 .sera-approved-branch-plan-generator-test/
 .sera-approved-branch-creation-gate/
 .sera-approved-branch-creation-gate-test/
+.sera-approved-branch-edit-executor/
+.sera-approved-branch-edit-executor-test/
+.sera-approved-branch-edit-executor-test-rollback/
