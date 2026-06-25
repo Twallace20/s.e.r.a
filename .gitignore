@@ -155,3 +155,5 @@ packages/*/src/*.d.ts
 .sera-approved-branch-workspace-runner-test/
 .sera-approved-branch-plan-generator/
 .sera-approved-branch-plan-generator-test/
+.sera-approved-branch-creation-gate/
+.sera-approved-branch-creation-gate-test/
