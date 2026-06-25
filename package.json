@@ -186,7 +186,9 @@
     "phase92:demo": "node scripts/run-approved-file-patch-runner-v1.mjs",
     "phase92:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase91:demo && npm run phase92:demo",
     "phase93:demo": "node scripts/run-approved-branch-workspace-runner-v1.mjs",
-    "phase93:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase92:demo && npm run phase93:demo"
+    "phase93:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase92:demo && npm run phase93:demo",
+    "phase94:demo": "node scripts/run-approved-branch-plan-generator-v1.mjs",
+    "phase94:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase93:demo && npm run phase94:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
