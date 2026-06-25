@@ -1,3 +1,4 @@
+import { branchValidationEvidenceRunner, branchValidationEvidenceRunnerSafetyGates } from "./branch-validation-evidence-runner";
 import { approvedBranchEditExecutor, approvedBranchEditExecutorSafetyGates } from "./approved-branch-edit-executor";
 import { approvedBranchCreationGate, approvedBranchCreationGateSafetyGates } from "./approved-branch-creation-gate";
 import { approvedBranchPlanGenerator, approvedBranchPlanGeneratorSafetyGates } from "./approved-branch-plan-generator";
@@ -68,6 +69,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Branch validation evidence", value: branchValidationEvidenceRunner.branchValidationEvidenceRunnerStatus, tone: "review" },
   { label: "Approved branch edit executor", value: approvedBranchEditExecutor.approvedBranchEditExecutorStatus, tone: "review" },
   { label: "Approved branch creation gate", value: approvedBranchCreationGate.approvedBranchCreationGateStatus, tone: "review" },
   { label: "Approved branch plan generator", value: approvedBranchPlanGenerator.approvedBranchPlanGeneratorStatus, tone: "review" },
@@ -141,6 +143,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...branchValidationEvidenceRunnerSafetyGates,
   ...approvedBranchEditExecutorSafetyGates,
   ...approvedBranchCreationGateSafetyGates,
   ...approvedBranchPlanGeneratorSafetyGates,

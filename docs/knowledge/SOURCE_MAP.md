@@ -1532,3 +1532,13 @@ Phase 96 gives S.E.R.A. a controlled branch-scoped editing hand inside an isolat
 - `tests/integration/approved-branch-edit-executor-v1.test.ts` — Verifies owner approval, self-approval blocking, exact plan binding, branch workspace edit execution, rollback, and blocked Git/source powers.
 - `apps/operator-console/src/approved-branch-edit-executor.ts` — Exposes Phase 96 status and safety gates to the operator console.
 
+## Phase 97 — Branch Validation Evidence Runner v1
+
+Phase 97 gives S.E.R.A. an approved validation evidence layer for branch-scoped edits. It consumes Phase 96 branch edit executor output and proves that branch workspace results can be validated, recorded, and prepared for owner review without granting direct project source mutation, real local/remote Git branch creation, git push, merge, arbitrary validation commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, or self-deploy.
+
+- `docs/phases/PHASE_97_BRANCH_VALIDATION_EVIDENCE_RUNNER_V1.md` — Defines Phase 97 purpose, validation evidence boundaries, proof packet requirements, and completion criteria.
+- `scripts/lib/branch-validation-evidence-runner-v1.mjs` — Implements owner-approved branch workspace validation evidence with safe branch/path checks, expected SHA/content checks, read-only validation posture, and fail-closed boundaries.
+- `scripts/run-branch-validation-evidence-runner-v1.mjs` — Runs the Phase 97 demo and writes branch validation evidence.
+- `tests/integration/branch-validation-evidence-runner-v1.test.ts` — Verifies owner approval, self-approval blocking, evidence writing, validation failure records, and blocked Git/source powers.
+- `apps/operator-console/src/branch-validation-evidence-runner.ts` — Exposes Phase 97 status and safety gates to the operator console.
+

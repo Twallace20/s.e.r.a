@@ -160,3 +160,6 @@ packages/*/src/*.d.ts
 .sera-approved-branch-edit-executor/
 .sera-approved-branch-edit-executor-test/
 .sera-approved-branch-edit-executor-test-rollback/
+.sera-branch-validation-evidence-runner/
+.sera-branch-validation-evidence-runner-test/
+.sera-branch-validation-evidence-runner-test-failure/
