@@ -1,3 +1,4 @@
+import { phaseSpecGenerator, phaseSpecGeneratorSafetyGates } from "./phase-spec-generator";
 import { phaseBacklogGenerator, phaseBacklogGeneratorSafetyGates } from "./phase-backlog-generator";
 import { approvedBranchDeveloperAlpha, approvedBranchDeveloperAlphaSafetyGates } from "./approved-branch-developer-alpha";
 import { ownerApprovedMergeRunner, ownerApprovedMergeRunnerSafetyGates } from "./owner-approved-merge-runner";
@@ -73,6 +74,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Phase spec generator", value: phaseSpecGenerator.phaseSpecGeneratorStatus, tone: "review" },
   { label: "Phase backlog generator", value: phaseBacklogGenerator.phaseBacklogGeneratorStatus, tone: "review" },
   { label: "Approved branch developer Alpha", value: approvedBranchDeveloperAlpha.approvedBranchDeveloperAlphaStatus, tone: "review" },
   { label: "Owner-approved merge runner", value: ownerApprovedMergeRunner.ownerApprovedMergeRunnerStatus, tone: "review" },
@@ -151,6 +153,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...phaseSpecGeneratorSafetyGates,
   ...phaseBacklogGeneratorSafetyGates,
   ...approvedBranchDeveloperAlphaSafetyGates,
   ...ownerApprovedMergeRunnerSafetyGates,

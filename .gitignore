@@ -175,3 +175,6 @@ packages/*/src/*.d.ts
 .sera-phase-backlog-generator/
 .sera-phase-backlog-generator-test/
 .sera-phase-backlog-generator-test-failure/
+.sera-phase-spec-generator/
+.sera-phase-spec-generator-test/
+.sera-phase-spec-generator-test-failure/
