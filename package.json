@@ -198,7 +198,9 @@
     "phase98:demo": "node scripts/run-merge-approval-packet-v1.mjs",
     "phase98:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase97:demo && npm run phase98:demo",
     "phase99:demo": "node scripts/run-owner-approved-merge-runner-v1.mjs",
-    "phase99:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase98:demo && npm run phase99:demo"
+    "phase99:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase98:demo && npm run phase99:demo",
+    "phase100:demo": "node scripts/run-approved-branch-developer-alpha-v1.mjs",
+    "phase100:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase99:demo && npm run phase100:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
