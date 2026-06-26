@@ -1612,3 +1612,13 @@ Phase 100D validates the owner-reviewable overlay package manifests produced by 
 - `tests/integration/phase-zip-validator-v1.test.ts` — Verifies ZIP validation evidence generation, Phase 100C readiness, owner approval, safe package paths, blocked unsafe powers, and validation failure evidence.
 - `apps/operator-console/src/phase-zip-validator.ts` — Exposes Phase 100D status and safety gates to the operator console.
 
+## Phase 100E — Phase Apply Queue v1
+
+Phase 100E receives validated phase ZIP evidence from Phase 100D and creates a manual, owner-reviewable apply queue packet. It preserves validated ZIP lineage, Phase Factory 100A–100H queue coverage, repo/tools path containment, owner review, queue manifests, owner review manifests, rollback expectations, validation expectations, evidence expectations, and the multi-language production doctrine while apply execution, patch execution, project repo source mutation, real branch creation, real project merge execution, git push, tag creation, arbitrary commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_100E_PHASE_APPLY_QUEUE_V1.md` — Defines Phase 100E purpose, manual apply queue boundaries, safety gates, and completion criteria.
+- `scripts/lib/phase-apply-queue-v1.mjs` — Implements the queue-only Phase Factory apply queue with Phase 100D lineage, owner review, safe queue item definitions, fail-closed validation, and evidence output.
+- `scripts/run-phase-apply-queue-v1.mjs` — Runs the Phase 100E demo and writes the apply queue evidence packet.
+- `tests/integration/phase-apply-queue-v1.test.ts` — Verifies apply queue evidence generation, Phase 100D readiness, owner approval, safe package paths, blocked unsafe powers, and validation failure evidence.
+- `apps/operator-console/src/phase-apply-queue.ts` — Exposes Phase 100E status and safety gates to the operator console.
+

@@ -184,3 +184,6 @@ packages/*/src/*.d.ts
 .sera-phase-zip-validator/
 .sera-phase-zip-validator-test/
 .sera-phase-zip-validator-test-failure/
+.sera-phase-apply-queue/
+.sera-phase-apply-queue-test/
+.sera-phase-apply-queue-test-failure/
