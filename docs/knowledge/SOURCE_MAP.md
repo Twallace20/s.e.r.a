@@ -1562,3 +1562,13 @@ Phase 99 gives S.E.R.A. an owner-approved isolated merge runner layer. It consum
 - `tests/integration/owner-approved-merge-runner-v1.test.ts` — Verifies owner approval, final merge approval, self-approval blocking, isolated merge evidence, unready merge behavior, and blocked Git/source/real-merge powers.
 - `apps/operator-console/src/owner-approved-merge-runner.ts` — Exposes Phase 99 status and safety gates to the operator console.
 
+## Phase 100 — Approved Branch Developer Alpha v1
+
+Phase 100 connects Phases 94 through 99 into one approved branch developer Alpha spine. It proves S.E.R.A. can move from branch plan to branch gate, approved edit, validation evidence, merge approval packet, and owner-approved isolated merge-result evidence while project repo source mutation, real branch creation, real merge execution, git push, tag creation, arbitrary commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, and self-deploy remain blocked.
+
+- `docs/phases/PHASE_100_APPROVED_BRANCH_DEVELOPER_ALPHA.md` — Defines Phase 100 purpose, approved branch developer Alpha boundaries, multi-language production doctrine preservation, and completion criteria.
+- `scripts/lib/approved-branch-developer-alpha-v1.mjs` — Implements the integrated Phase 94–99 branch developer Alpha proof with lineage checks, safe branch/path/language validation, isolated evidence generation, and fail-closed boundaries.
+- `scripts/run-approved-branch-developer-alpha-v1.mjs` — Runs the Phase 100 demo and writes approved branch developer Alpha evidence.
+- `tests/integration/approved-branch-developer-alpha-v1.test.ts` — Verifies Phase 94–99 lineage, owner approval, task safety, multi-language doctrine, blocked Git/source/merge powers, and validation failure evidence.
+- `apps/operator-console/src/approved-branch-developer-alpha.ts` — Exposes Phase 100 status and safety gates to the operator console.
+

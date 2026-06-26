@@ -1,3 +1,4 @@
+import { approvedBranchDeveloperAlpha, approvedBranchDeveloperAlphaSafetyGates } from "./approved-branch-developer-alpha";
 import { ownerApprovedMergeRunner, ownerApprovedMergeRunnerSafetyGates } from "./owner-approved-merge-runner";
 import { mergeApprovalPacket, mergeApprovalPacketSafetyGates } from "./merge-approval-packet";
 import { branchValidationEvidenceRunner, branchValidationEvidenceRunnerSafetyGates } from "./branch-validation-evidence-runner";
@@ -71,6 +72,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Approved branch developer Alpha", value: approvedBranchDeveloperAlpha.approvedBranchDeveloperAlphaStatus, tone: "review" },
   { label: "Owner-approved merge runner", value: ownerApprovedMergeRunner.ownerApprovedMergeRunnerStatus, tone: "review" },
   { label: "Merge approval packet", value: mergeApprovalPacket.mergeApprovalPacketStatus, tone: "review" },
   { label: "Branch validation evidence", value: branchValidationEvidenceRunner.branchValidationEvidenceRunnerStatus, tone: "review" },
@@ -147,6 +149,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...approvedBranchDeveloperAlphaSafetyGates,
   ...ownerApprovedMergeRunnerSafetyGates,
   ...mergeApprovalPacketSafetyGates,
   ...branchValidationEvidenceRunnerSafetyGates,
