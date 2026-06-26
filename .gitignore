@@ -166,3 +166,6 @@ packages/*/src/*.d.ts
 .sera-merge-approval-packet/
 .sera-merge-approval-packet-test/
 .sera-merge-approval-packet-test-failure/
+.sera-owner-approved-merge-runner/
+.sera-owner-approved-merge-runner-test/
+.sera-owner-approved-merge-runner-test-failure/
