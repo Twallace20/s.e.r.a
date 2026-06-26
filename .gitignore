@@ -163,3 +163,6 @@ packages/*/src/*.d.ts
 .sera-branch-validation-evidence-runner/
 .sera-branch-validation-evidence-runner-test/
 .sera-branch-validation-evidence-runner-test-failure/
+.sera-merge-approval-packet/
+.sera-merge-approval-packet-test/
+.sera-merge-approval-packet-test-failure/

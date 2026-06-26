@@ -194,7 +194,9 @@
     "phase96:demo": "node scripts/run-approved-branch-edit-executor-v1.mjs",
     "phase96:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase95:demo && npm run phase96:demo",
     "phase97:demo": "node scripts/run-branch-validation-evidence-runner-v1.mjs",
-    "phase97:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase96:demo && npm run phase97:demo"
+    "phase97:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase96:demo && npm run phase97:demo",
+    "phase98:demo": "node scripts/run-merge-approval-packet-v1.mjs",
+    "phase98:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase97:demo && npm run phase98:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
