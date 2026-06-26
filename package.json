@@ -210,7 +210,9 @@
     "phase100d:demo": "node scripts/run-phase-zip-validator-v1.mjs",
     "phase100d:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100c:demo && npm run phase100d:demo",
     "phase100e:demo": "node scripts/run-phase-apply-queue-v1.mjs",
-    "phase100e:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100d:demo && npm run phase100e:demo"
+    "phase100e:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100d:demo && npm run phase100e:demo",
+    "phase100f:demo": "node scripts/run-phase-troubleshooting-loop-v1.mjs",
+    "phase100f:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100e:demo && npm run phase100f:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

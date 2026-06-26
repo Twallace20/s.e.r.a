@@ -187,3 +187,6 @@ packages/*/src/*.d.ts
 .sera-phase-apply-queue/
 .sera-phase-apply-queue-test/
 .sera-phase-apply-queue-test-failure/
+.sera-phase-troubleshooting-loop/
+.sera-phase-troubleshooting-loop-test/
+.sera-phase-troubleshooting-loop-test-failure/
