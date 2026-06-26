@@ -202,7 +202,9 @@
     "phase100:demo": "node scripts/run-approved-branch-developer-alpha-v1.mjs",
     "phase100:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase99:demo && npm run phase100:demo",
     "phase100a:demo": "node scripts/run-phase-backlog-generator-v1.mjs",
-    "phase100a:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100:demo && npm run phase100a:demo"
+    "phase100a:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100:demo && npm run phase100a:demo",
+    "phase100b:demo": "node scripts/run-phase-spec-generator-v1.mjs",
+    "phase100b:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100a:demo && npm run phase100b:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

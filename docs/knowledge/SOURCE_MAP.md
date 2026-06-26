@@ -1582,3 +1582,13 @@ Phase 100A starts the Phase Factory by turning the approved roadmap into an owne
 - `tests/integration/phase-backlog-generator-v1.test.ts` — Verifies backlog generation, Phase 100 readiness, owner approval, roadmap coverage, blocked unsafe powers, and validation failure evidence.
 - `apps/operator-console/src/phase-backlog-generator.ts` — Exposes Phase 100A status and safety gates to the operator console.
 
+## Phase 100B — Phase Spec Generator v1
+
+Phase 100B turns the Phase 100A Phase Factory backlog into owner-reviewable phase specification packets. It preserves Phase 100A backlog lineage, the multi-language production doctrine, exact Phase Factory phase IDs, required spec sections, acceptance criteria, safety boundaries, evidence expectations, validation expectations, planned files, rollback plans, and owner review while overlay ZIP building, patch execution, project repo source mutation, real branch creation, real project merge execution, git push, tag creation, arbitrary commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, and self-deploy remain blocked.
+
+- `docs/phases/PHASE_100B_PHASE_SPEC_GENERATOR_V1.md` — Defines Phase 100B purpose, Phase Factory spec boundaries, safety gates, and completion criteria.
+- `scripts/lib/phase-spec-generator-v1.mjs` — Implements the planning-only Phase Factory spec generator with Phase 100A lineage, owner approval, roadmap track checks, required spec sections, multi-language doctrine checks, fail-closed validation, and evidence output.
+- `scripts/run-phase-spec-generator-v1.mjs` — Runs the Phase 100B demo and writes the owner-reviewable phase spec packet.
+- `tests/integration/phase-spec-generator-v1.test.ts` — Verifies spec generation, Phase 100A readiness, owner approval, roadmap coverage, blocked unsafe powers, and validation failure evidence.
+- `apps/operator-console/src/phase-spec-generator.ts` — Exposes Phase 100B status and safety gates to the operator console.
+
