@@ -1,3 +1,4 @@
+import { phaseOverlayZipBuilder, phaseOverlayZipBuilderSafetyGates } from "./phase-overlay-zip-builder";
 import { phaseSpecGenerator, phaseSpecGeneratorSafetyGates } from "./phase-spec-generator";
 import { phaseBacklogGenerator, phaseBacklogGeneratorSafetyGates } from "./phase-backlog-generator";
 import { approvedBranchDeveloperAlpha, approvedBranchDeveloperAlphaSafetyGates } from "./approved-branch-developer-alpha";
@@ -74,6 +75,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Phase overlay ZIP builder", value: phaseOverlayZipBuilder.phaseOverlayZipBuilderStatus, tone: "review" },
   { label: "Phase spec generator", value: phaseSpecGenerator.phaseSpecGeneratorStatus, tone: "review" },
   { label: "Phase backlog generator", value: phaseBacklogGenerator.phaseBacklogGeneratorStatus, tone: "review" },
   { label: "Approved branch developer Alpha", value: approvedBranchDeveloperAlpha.approvedBranchDeveloperAlphaStatus, tone: "review" },
@@ -153,6 +155,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...phaseOverlayZipBuilderSafetyGates,
   ...phaseSpecGeneratorSafetyGates,
   ...phaseBacklogGeneratorSafetyGates,
   ...approvedBranchDeveloperAlphaSafetyGates,
