@@ -1542,3 +1542,13 @@ Phase 97 gives S.E.R.A. an approved validation evidence layer for branch-scoped 
 - `tests/integration/branch-validation-evidence-runner-v1.test.ts` — Verifies owner approval, self-approval blocking, evidence writing, validation failure records, and blocked Git/source powers.
 - `apps/operator-console/src/branch-validation-evidence-runner.ts` — Exposes Phase 97 status and safety gates to the operator console.
 
+## Phase 98 — Merge Approval Packet v1
+
+Phase 98 gives S.E.R.A. an owner-reviewable merge approval packet layer. It consumes Phase 97 branch validation evidence and packages merge readiness, risk, rollback expectations, and evidence lineage without granting merge execution, git push, tag creation, direct project source mutation, branch workspace mutation, real local/remote Git branch creation, arbitrary commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, or self-deploy.
+
+- `docs/phases/PHASE_98_MERGE_APPROVAL_PACKET_V1.md` — Defines Phase 98 purpose, merge approval packet boundaries, risk/rollback requirements, and completion criteria.
+- `scripts/lib/merge-approval-packet-v1.mjs` — Implements owner-approved merge approval packet generation with safe branch/path checks, Phase 97 evidence linkage, readiness checklist, risk summary, rollback plan, and fail-closed boundaries.
+- `scripts/run-merge-approval-packet-v1.mjs` — Runs the Phase 98 demo and writes merge approval packet evidence.
+- `tests/integration/merge-approval-packet-v1.test.ts` — Verifies owner approval, self-approval blocking, packet writing, validation-not-ready behavior, and blocked Git/source/merge powers.
+- `apps/operator-console/src/merge-approval-packet.ts` — Exposes Phase 98 status and safety gates to the operator console.
+
