@@ -181,3 +181,6 @@ packages/*/src/*.d.ts
 .sera-phase-overlay-zip-builder/
 .sera-phase-overlay-zip-builder-test/
 .sera-phase-overlay-zip-builder-test-failure/
+.sera-phase-zip-validator/
+.sera-phase-zip-validator-test/
+.sera-phase-zip-validator-test-failure/
