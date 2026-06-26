@@ -1602,3 +1602,13 @@ Phase 100C turns the Phase 100B owner-reviewable phase specifications into owner
 - `tests/integration/phase-overlay-zip-builder-v1.test.ts` — Verifies overlay package manifest generation, Phase 100B readiness, owner approval, safe package paths, blocked unsafe powers, and validation failure evidence.
 - `apps/operator-console/src/phase-overlay-zip-builder.ts` — Exposes Phase 100C status and safety gates to the operator console.
 
+## Phase 100D — Phase ZIP Validator v1
+
+Phase 100D validates the owner-reviewable overlay package manifests produced by Phase 100C before any package can enter an apply queue. It preserves Phase 100C overlay manifest lineage, exact Phase Factory package IDs, repo/tools path containment, required overlay file categories, SHA-256 checksum manifest requirements, owner review, validation evidence packets, invalid-package quarantine reporting, rollback expectations, and the multi-language production doctrine while overlay building, patch execution, project repo source mutation, real branch creation, real project merge execution, git push, tag creation, arbitrary commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_100D_PHASE_ZIP_VALIDATOR_V1.md` — Defines Phase 100D purpose, ZIP validation boundaries, safety gates, and completion criteria.
+- `scripts/lib/phase-zip-validator-v1.mjs` — Implements the validation-only Phase Factory ZIP validator with Phase 100C lineage, owner approval, repo/tools path containment, checksum requirements, fail-closed validation, and evidence output.
+- `scripts/run-phase-zip-validator-v1.mjs` — Runs the Phase 100D demo and writes the ZIP validation evidence packet.
+- `tests/integration/phase-zip-validator-v1.test.ts` — Verifies ZIP validation evidence generation, Phase 100C readiness, owner approval, safe package paths, blocked unsafe powers, and validation failure evidence.
+- `apps/operator-console/src/phase-zip-validator.ts` — Exposes Phase 100D status and safety gates to the operator console.
+
