@@ -1592,3 +1592,13 @@ Phase 100B turns the Phase 100A Phase Factory backlog into owner-reviewable phas
 - `tests/integration/phase-spec-generator-v1.test.ts` — Verifies spec generation, Phase 100A readiness, owner approval, roadmap coverage, blocked unsafe powers, and validation failure evidence.
 - `apps/operator-console/src/phase-spec-generator.ts` — Exposes Phase 100B status and safety gates to the operator console.
 
+## Phase 100C — Phase Overlay ZIP Builder v1
+
+Phase 100C turns the Phase 100B owner-reviewable phase specifications into owner-reviewable overlay package manifests. It preserves Phase 100B spec lineage, exact Phase Factory phase IDs, repo/tools overlay path containment, required overlay file categories, owner review, validation expectations, rollback expectations, and the multi-language production doctrine while patch execution, project repo source mutation, real branch creation, real project merge execution, git push, tag creation, arbitrary commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_100C_PHASE_OVERLAY_ZIP_BUILDER_V1.md` — Defines Phase 100C purpose, overlay packaging boundaries, safety gates, and completion criteria.
+- `scripts/lib/phase-overlay-zip-builder-v1.mjs` — Implements the packaging-only Phase Factory overlay ZIP builder with Phase 100B lineage, owner approval, repo/tools path containment, required overlay file checks, fail-closed validation, and manifest evidence output.
+- `scripts/run-phase-overlay-zip-builder-v1.mjs` — Runs the Phase 100C demo and writes the owner-reviewable overlay package manifest.
+- `tests/integration/phase-overlay-zip-builder-v1.test.ts` — Verifies overlay package manifest generation, Phase 100B readiness, owner approval, safe package paths, blocked unsafe powers, and validation failure evidence.
+- `apps/operator-console/src/phase-overlay-zip-builder.ts` — Exposes Phase 100C status and safety gates to the operator console.
+
