@@ -1572,3 +1572,13 @@ Phase 100 connects Phases 94 through 99 into one approved branch developer Alpha
 - `tests/integration/approved-branch-developer-alpha-v1.test.ts` — Verifies Phase 94–99 lineage, owner approval, task safety, multi-language doctrine, blocked Git/source/merge powers, and validation failure evidence.
 - `apps/operator-console/src/approved-branch-developer-alpha.ts` — Exposes Phase 100 status and safety gates to the operator console.
 
+## Phase 100A — Phase Backlog Generator v1
+
+Phase 100A starts the Phase Factory by turning the approved roadmap into an owner-reviewable backlog packet for future phases. It preserves Phase 100 approved branch developer Alpha lineage, the multi-language production doctrine, and strict planning-only safety boundaries while phase spec generation, overlay building, patch execution, project repo source mutation, real branch creation, real merge execution, git push, tag creation, arbitrary commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, and self-deploy remain blocked.
+
+- `docs/phases/PHASE_100A_PHASE_BACKLOG_GENERATOR_V1.md` — Defines Phase 100A purpose, Phase Factory backlog boundaries, safety gates, and completion criteria.
+- `scripts/lib/phase-backlog-generator-v1.mjs` — Implements the planning-only Phase Factory backlog generator with owner approval, roadmap track checks, multi-language doctrine checks, fail-closed validation, and evidence output.
+- `scripts/run-phase-backlog-generator-v1.mjs` — Runs the Phase 100A demo and writes the owner-reviewable phase backlog packet.
+- `tests/integration/phase-backlog-generator-v1.test.ts` — Verifies backlog generation, Phase 100 readiness, owner approval, roadmap coverage, blocked unsafe powers, and validation failure evidence.
+- `apps/operator-console/src/phase-backlog-generator.ts` — Exposes Phase 100A status and safety gates to the operator console.
+
