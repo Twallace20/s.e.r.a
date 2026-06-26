@@ -1,3 +1,4 @@
+import { ownerApprovedMergeRunner, ownerApprovedMergeRunnerSafetyGates } from "./owner-approved-merge-runner";
 import { mergeApprovalPacket, mergeApprovalPacketSafetyGates } from "./merge-approval-packet";
 import { branchValidationEvidenceRunner, branchValidationEvidenceRunnerSafetyGates } from "./branch-validation-evidence-runner";
 import { approvedBranchEditExecutor, approvedBranchEditExecutorSafetyGates } from "./approved-branch-edit-executor";
@@ -70,6 +71,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Owner-approved merge runner", value: ownerApprovedMergeRunner.ownerApprovedMergeRunnerStatus, tone: "review" },
   { label: "Merge approval packet", value: mergeApprovalPacket.mergeApprovalPacketStatus, tone: "review" },
   { label: "Branch validation evidence", value: branchValidationEvidenceRunner.branchValidationEvidenceRunnerStatus, tone: "review" },
   { label: "Approved branch edit executor", value: approvedBranchEditExecutor.approvedBranchEditExecutorStatus, tone: "review" },
@@ -145,6 +147,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...ownerApprovedMergeRunnerSafetyGates,
   ...mergeApprovalPacketSafetyGates,
   ...branchValidationEvidenceRunnerSafetyGates,
   ...approvedBranchEditExecutorSafetyGates,

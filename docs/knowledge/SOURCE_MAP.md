@@ -1552,3 +1552,13 @@ Phase 98 gives S.E.R.A. an owner-reviewable merge approval packet layer. It cons
 - `tests/integration/merge-approval-packet-v1.test.ts` — Verifies owner approval, self-approval blocking, packet writing, validation-not-ready behavior, and blocked Git/source/merge powers.
 - `apps/operator-console/src/merge-approval-packet.ts` — Exposes Phase 98 status and safety gates to the operator console.
 
+## Phase 99 — Owner-Approved Merge Runner v1
+
+Phase 99 gives S.E.R.A. an owner-approved isolated merge runner layer. It consumes the Phase 98 merge approval packet and writes isolated merge-result evidence only; real project repo merge execution, direct source mutation, branch workspace mutation, local/remote Git branch creation, git push, tag creation, arbitrary commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, and self-deploy remain blocked.
+
+- `docs/phases/PHASE_99_OWNER_APPROVED_MERGE_RUNNER_V1.md` — Defines Phase 99 purpose, owner-approved merge runner boundaries, isolated merge-result evidence, and completion criteria.
+- `scripts/lib/owner-approved-merge-runner-v1.mjs` — Implements owner-approved isolated merge-result generation with Phase 98 packet linkage, safe branch/path checks, final owner approval, evidence manifest, rollback declaration, and fail-closed boundaries.
+- `scripts/run-owner-approved-merge-runner-v1.mjs` — Runs the Phase 99 demo and writes owner-approved merge runner evidence.
+- `tests/integration/owner-approved-merge-runner-v1.test.ts` — Verifies owner approval, final merge approval, self-approval blocking, isolated merge evidence, unready merge behavior, and blocked Git/source/real-merge powers.
+- `apps/operator-console/src/owner-approved-merge-runner.ts` — Exposes Phase 99 status and safety gates to the operator console.
+
