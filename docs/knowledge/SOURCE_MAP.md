@@ -1622,3 +1622,13 @@ Phase 100E receives validated phase ZIP evidence from Phase 100D and creates a m
 - `tests/integration/phase-apply-queue-v1.test.ts` — Verifies apply queue evidence generation, Phase 100D readiness, owner approval, safe package paths, blocked unsafe powers, and validation failure evidence.
 - `apps/operator-console/src/phase-apply-queue.ts` — Exposes Phase 100E status and safety gates to the operator console.
 
+## Phase 100F — Phase Troubleshooting Loop v1
+
+Phase 100F reads Phase 100E apply queue lineage and creates a diagnostic troubleshooting loop for failed phase applications. It captures failed phase symptoms, likely causes, evidence links, validation references, repair guidance drafts, rollback guidance, owner review requirements, and multi-language doctrine preservation while autofix, apply execution, patch execution, project repo source mutation, real branch creation, real project merge execution, git push, tag creation, arbitrary commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_100F_PHASE_TROUBLESHOOTING_LOOP_V1.md` — Defines Phase 100F purpose, diagnostic-only boundaries, safety gates, and completion criteria.
+- `scripts/lib/phase-troubleshooting-loop-v1.mjs` — Implements the diagnostic-only troubleshooting loop with Phase 100E lineage, safe case definitions, fail-closed validation, and evidence output.
+- `scripts/run-phase-troubleshooting-loop-v1.mjs` — Runs the Phase 100F demo and writes diagnostic troubleshooting evidence.
+- `tests/integration/phase-troubleshooting-loop-v1.test.ts` — Verifies diagnostic evidence, repair guidance, Phase 100E readiness, blocked autofix/apply/patch/source/Git/shell/fleet/self-governance powers, and validation failure evidence.
+- `apps/operator-console/src/phase-troubleshooting-loop.ts` — Exposes Phase 100F status and safety gates to the operator console.
+
