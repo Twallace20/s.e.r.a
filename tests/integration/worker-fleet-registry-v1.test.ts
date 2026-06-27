@@ -1,0 +1,150 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+import { createDefaultWorkerFleetRegistryV1, inspectWorkerFleetRegistryV1, runWorkerFleetRegistryV1 } from "../../scripts/lib/worker-fleet-registry-v1.mjs";
+
+function tempRoot(name: string) {
+  return fs.mkdtempSync(path.join(os.tmpdir(), `sera-${name}-`));
+}
+
+describe("Phase 101 — Worker Fleet Registry v1", () => {
+  it("produces owner-review worker fleet registry evidence without execution", () => {
+    const artifactRoot = tempRoot("phase101-worker-fleet-registry");
+    const result = runWorkerFleetRegistryV1(createDefaultWorkerFleetRegistryV1(), { artifactRoot });
+    expect(result.ok).toBe(true);
+    expect(result.workerFleetRegistryStatus).toBe("worker-fleet-registry-ready");
+    expect(result.validationFailedCount).toBe(0);
+    expect(result.declaredFileCount).toBe(5);
+    expect(result.workerFleetRegistryRequirementCount).toBe(40);
+    expect(result.workerFleetRegistryFieldCount).toBe(78);
+    expect(result.workerFleetLaneCount).toBe(10);
+    expect(result.workerDefinitionCount).toBe(12);
+    expect(result.roadmapTrackCount).toBe(13);
+    expect(result.multiLanguageProductionTargetCount).toBe(18);
+    expect(result.safetyGateCount).toBe(1860);
+    expect(result.workerFleetRegistryAllowed).toBe(true);
+    expect(result.phaseFactoryAlphaReadAllowed).toBe(true);
+    expect(result.workerDefinitionCatalogAllowed).toBe(true);
+    expect(result.ownerReviewFleetPacketAllowed).toBe(true);
+    expect(result.workerExecutionAllowed).toBe(false);
+    expect(result.workerSpawningAllowed).toBe(false);
+    expect(result.autonomousDelegationAllowed).toBe(false);
+    expect(result.projectRepoSourceMutated).toBe(false);
+    expect(result.workerExecuted).toBe(false);
+    expect(result.workerSpawned).toBe(false);
+    expect(result.autonomousDelegationExecuted).toBe(false);
+    expect(result.registryPacketProduced).toBe(true);
+    expect(result.workerDefinitionCatalogProduced).toBe(true);
+    expect(result.ownerReviewManifestProduced).toBe(true);
+    expect(result.readyForOwnerReview).toBe(true);
+    expect(fs.existsSync(result.packetPath)).toBe(true);
+    expect(fs.existsSync(result.registryManifestPath)).toBe(true);
+    expect(fs.existsSync(result.workerCatalogPath)).toBe(true);
+    expect(fs.existsSync(result.ownerReviewManifestPath)).toBe(true);
+  });
+
+  it("requires Phase 100H lineage and Tyler approval", () => {
+    const config = createDefaultWorkerFleetRegistryV1();
+    config.phase100HPhaseFactoryAlphaReady = false;
+    config.sourcePhaseFactoryAlphaId = "wrong-alpha";
+    config.approvalRecord.approved = false;
+    config.approvalRecord.selfApproved = true;
+    const result = inspectWorkerFleetRegistryV1(config);
+    expect(result.ok).toBe(false);
+    expect(result.blockers).toContain("Phase 100H Phase Factory Alpha must be ready before Phase 101.");
+    expect(result.blockers).toContain("Phase 101 must link to the Phase 100H Phase Factory Alpha.");
+    expect(result.blockers).toContain("Tyler Wallace approval record is required for Phase 101 Worker Fleet Registry.");
+    expect(result.blockers).toContain("Self-approval is blocked for Phase 101 Worker Fleet Registry.");
+  });
+
+  it("fails closed for unsafe or incomplete worker definitions", () => {
+    const config = createDefaultWorkerFleetRegistryV1();
+    config.workerFleetLanes[0] = "Unsafe Lane";
+    config.workerDefinitions[0].workerId = "phase-planner";
+    config.workerDefinitions[0].lane = "missing-lane";
+    config.workerDefinitions[0].permissionLevel = "execute";
+    config.workerDefinitions[0].ownerReviewRequired = false;
+    config.workerDefinitions[0].responsibilities = [];
+    config.declaredPaths = ["../unsafe.txt"];
+    const result = inspectWorkerFleetRegistryV1(config);
+    expect(result.ok).toBe(false);
+    expect(result.blockers.some((blocker: string) => blocker.includes("safe relative path"))).toBe(true);
+    expect(result.blockers.some((blocker: string) => blocker.includes("safe lowercase identifier"))).toBe(true);
+    expect(result.blockers.some((blocker: string) => blocker.includes("worker.* id"))).toBe(true);
+    expect(result.blockers.some((blocker: string) => blocker.includes("known lane"))).toBe(true);
+    expect(result.blockers.some((blocker: string) => blocker.includes("review-only"))).toBe(true);
+    expect(result.blockers.some((blocker: string) => blocker.includes("owner review"))).toBe(true);
+    expect(result.blockers.some((blocker: string) => blocker.includes("bounded responsibilities"))).toBe(true);
+  });
+
+  it("blocks unsafe worker, automation, project, Git, shell, fleet, and self-governance powers", () => {
+    const config = createDefaultWorkerFleetRegistryV1();
+    config.boundaries.workerExecutionAllowed = true;
+    config.boundaries.workerSpawningAllowed = true;
+    config.boundaries.autonomousDelegationAllowed = true;
+    config.boundaries.schedulerWorkflowMutationAllowed = true;
+    config.boundaries.iPhoneAutomationMutationAllowed = true;
+    config.boundaries.awayModeExecutionAllowed = true;
+    config.boundaries.fleetExecutionAllowed = true;
+    config.boundaries.applyExecutionAllowed = true;
+    config.boundaries.patchExecutionAllowed = true;
+    config.boundaries.projectRepoSourceMutationAllowed = true;
+    config.boundaries.realProjectBranchCreationAllowed = true;
+    config.boundaries.realProjectMergeExecutionAllowed = true;
+    config.boundaries.gitPushAllowed = true;
+    config.boundaries.tagCreationAllowed = true;
+    config.boundaries.arbitraryCommandAllowed = true;
+    config.boundaries.shellExecutionAllowed = true;
+    config.boundaries.selfApprovalAllowed = true;
+    config.boundaries.selfMergeAllowed = true;
+    config.boundaries.selfDeployAllowed = true;
+    config.boundaries.productionDeploymentAllowed = true;
+    config.projectRepoSourceMutated = true;
+    config.workerExecuted = true;
+    config.workerSpawned = true;
+    config.autonomousDelegationExecuted = true;
+    config.schedulerWorkflowMutated = true;
+    config.iPhoneAutomationMutated = true;
+    config.awayModeExecuted = true;
+    config.fleetExecuted = true;
+    config.applyExecuted = true;
+    config.patchExecuted = true;
+    const result = inspectWorkerFleetRegistryV1(config);
+    expect(result.ok).toBe(false);
+    expect(result.blockers).toContain("workerExecutionAllowed must remain false");
+    expect(result.blockers).toContain("workerSpawningAllowed must remain false");
+    expect(result.blockers).toContain("autonomousDelegationAllowed must remain false");
+    expect(result.blockers).toContain("schedulerWorkflowMutationAllowed must remain false");
+    expect(result.blockers).toContain("iPhoneAutomationMutationAllowed must remain false");
+    expect(result.blockers).toContain("awayModeExecutionAllowed must remain false");
+    expect(result.blockers).toContain("fleetExecutionAllowed must remain false");
+    expect(result.blockers).toContain("applyExecutionAllowed must remain false");
+    expect(result.blockers).toContain("patchExecutionAllowed must remain false");
+    expect(result.blockers).toContain("projectRepoSourceMutationAllowed must remain false");
+    expect(result.blockers).toContain("gitPushAllowed must remain false");
+    expect(result.blockers).toContain("tagCreationAllowed must remain false");
+    expect(result.blockers).toContain("shellExecutionAllowed must remain false");
+    expect(result.blockers).toContain("selfApprovalAllowed must remain false");
+    expect(result.blockers).toContain("productionDeploymentAllowed must remain false");
+    expect(result.blockers).toContain("workerExecuted must remain false");
+    expect(result.blockers).toContain("workerSpawned must remain false");
+    expect(result.blockers).toContain("autonomousDelegationExecuted must remain false");
+  });
+
+  it("records validation failure evidence when worker counts do not match expectations", () => {
+    const artifactRoot = tempRoot("phase101-worker-fleet-registry-failure");
+    const config = createDefaultWorkerFleetRegistryV1({ expectedWorkerDefinitionCount: 99 });
+    const result = runWorkerFleetRegistryV1(config, { artifactRoot });
+    expect(result.ok).toBe(false);
+    expect(result.validationFailedCount).toBe(1);
+    expect(result.readyForOwnerReview).toBe(false);
+    expect(result.projectRepoSourceMutated).toBe(false);
+    expect(result.workerExecuted).toBe(false);
+    expect(result.workerSpawned).toBe(false);
+    const packet = JSON.parse(fs.readFileSync(result.packetPath, "utf8"));
+    expect(packet.status).toBe("worker-fleet-registry-validation-failed");
+    expect(packet.ownerReviewManifest.readyForOwnerReview).toBe(false);
+    expect(packet.checks.filter((check: { passed: boolean }) => !check.passed).length).toBe(1);
+  });
+});
