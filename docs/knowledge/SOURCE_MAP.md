@@ -1662,3 +1662,13 @@ Phase 101 reads Phase 100H Phase Factory Alpha lineage and creates an owner-revi
 - `tests/integration/worker-fleet-registry-v1.test.ts` — Verifies registry packet output, Phase 100H lineage readiness, Tyler approval, safe worker definitions, blocked worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
 - `apps/operator-console/src/worker-fleet-registry.ts` — Exposes Phase 101 status and safety gates to the operator console.
 
+## Phase 102 — Worker Capability Cards v1
+
+Phase 102 reads Phase 101 Worker Fleet Registry lineage and creates owner-reviewable Worker Capability Cards. It catalogs worker inputs, outputs, permission boundaries, evidence requirements, activation boundaries, and Phase 103 handoff expectations while worker execution, worker spawning, autonomous delegation, scheduler/workflow/iPhone automation mutation, away-mode execution, fleet execution, apply execution, patch execution, project repo source mutation, real branch creation, real merge execution, git push, tag creation, arbitrary commands, shell execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_102_WORKER_CAPABILITY_CARDS_V1.md` — Defines Phase 102 purpose, worker capability card boundaries, safety gates, and completion criteria.
+- `scripts/lib/worker-capability-cards-v1.mjs` — Implements Worker Capability Cards with Phase 101 lineage checks, safe input/output contracts, fail-closed validation, and evidence output.
+- `scripts/run-worker-capability-cards-v1.mjs` — Runs the Phase 102 demo and writes Worker Capability Cards output.
+- `tests/integration/worker-capability-cards-v1.test.ts` — Verifies capability card packet output, Phase 101 lineage readiness, Tyler approval, safe worker capability cards, blocked worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
+- `apps/operator-console/src/worker-capability-cards.ts` — Exposes Phase 102 status and safety gates to the operator console.
+
