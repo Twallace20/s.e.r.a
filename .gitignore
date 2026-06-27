@@ -196,3 +196,6 @@ packages/*/src/*.d.ts
 .sera-phase-factory-alpha/
 .sera-phase-factory-alpha-test/
 .sera-phase-factory-alpha-test-failure/
+.sera-worker-fleet-registry/
+.sera-worker-fleet-registry-test/
+.sera-worker-fleet-registry-test-failure/

@@ -1652,3 +1652,13 @@ Phase 100H reads Phase 100G evidence pack lineage and creates an owner-review Ph
 - `tests/integration/phase-factory-alpha-v1.test.ts` — Verifies Alpha manifests, owner review manifests, Phase 100A–100G lineage readiness, blocked future auto-run/autofix/apply/patch/source/Git/shell/fleet/self-governance powers, and validation failure evidence.
 - `apps/operator-console/src/phase-factory-alpha.ts` — Exposes Phase 100H status and safety gates to the operator console.
 
+## Phase 101 — Worker Fleet Registry v1
+
+Phase 101 reads Phase 100H Phase Factory Alpha lineage and creates an owner-reviewable Worker Fleet Registry packet. It catalogs future worker lanes, worker definitions, ownership, permission, evidence, readiness, and Phase 102 handoff expectations while worker execution, worker spawning, autonomous delegation, scheduler/workflow/iPhone automation mutation, away-mode execution, fleet execution, apply execution, patch execution, project repo source mutation, real branch creation, real merge execution, git push, tag creation, arbitrary commands, shell execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_101_WORKER_FLEET_REGISTRY_V1.md` — Defines Phase 101 purpose, worker fleet registry boundaries, safety gates, and completion criteria.
+- `scripts/lib/worker-fleet-registry-v1.mjs` — Implements the Worker Fleet Registry with Phase 100H lineage checks, safe worker definitions, fail-closed validation, and evidence output.
+- `scripts/run-worker-fleet-registry-v1.mjs` — Runs the Phase 101 demo and writes Worker Fleet Registry output.
+- `tests/integration/worker-fleet-registry-v1.test.ts` — Verifies registry packet output, Phase 100H lineage readiness, Tyler approval, safe worker definitions, blocked worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
+- `apps/operator-console/src/worker-fleet-registry.ts` — Exposes Phase 101 status and safety gates to the operator console.
+

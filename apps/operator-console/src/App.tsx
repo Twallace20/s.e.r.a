@@ -1,3 +1,4 @@
+import { workerFleetRegistry, workerFleetRegistrySafetyGates } from "./worker-fleet-registry";
 import { phaseFactoryAlpha, phaseFactoryAlphaSafetyGates } from "./phase-factory-alpha";
 import { phaseEvidencePack, phaseEvidencePackSafetyGates } from "./phase-evidence-pack";
 import { phaseTroubleshootingLoop, phaseTroubleshootingLoopSafetyGates } from "./phase-troubleshooting-loop";
@@ -80,6 +81,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Worker Fleet Registry", value: workerFleetRegistry.workerFleetRegistryStatus, tone: "review" },
   { label: "Phase Factory Alpha", value: phaseFactoryAlpha.phaseFactoryAlphaStatus, tone: "review" },
   { label: "Phase evidence pack", value: phaseEvidencePack.phaseEvidencePackStatus, tone: "review" },
   { label: "Phase troubleshooting loop", value: phaseTroubleshootingLoop.phaseTroubleshootingStatus, tone: "review" },
@@ -165,6 +167,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...workerFleetRegistrySafetyGates,
   ...phaseFactoryAlphaSafetyGates,
   ...phaseEvidencePackSafetyGates,
   ...phaseTroubleshootingLoopSafetyGates,
