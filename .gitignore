@@ -193,3 +193,6 @@ packages/*/src/*.d.ts
 .sera-phase-evidence-pack/
 .sera-phase-evidence-pack-test/
 .sera-phase-evidence-pack-test-failure/
+.sera-phase-factory-alpha/
+.sera-phase-factory-alpha-test/
+.sera-phase-factory-alpha-test-failure/

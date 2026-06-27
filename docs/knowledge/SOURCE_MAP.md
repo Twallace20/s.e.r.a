@@ -1642,3 +1642,13 @@ Phase 100G reads Phase 100F troubleshooting evidence lineage and creates owner-r
 - `tests/integration/phase-evidence-pack-v1.test.ts` — Verifies evidence manifests, owner review manifests, Phase 100F readiness, blocked autofix/apply/patch/source/Git/shell/fleet/self-governance powers, and validation failure evidence.
 - `apps/operator-console/src/phase-evidence-pack.ts` — Exposes Phase 100G status and safety gates to the operator console.
 
+## Phase 100H — Phase Factory Alpha v1
+
+Phase 100H reads Phase 100G evidence pack lineage and creates an owner-review Phase Factory Alpha packet that integrates Phase Factory 100A through 100H. It preserves backlog, spec, overlay package, ZIP validation, apply queue, troubleshooting, and evidence pack lineage while future phase auto-run, autofix, apply execution, patch execution, project repo source mutation, real branch creation, real project merge execution, git push, tag creation, arbitrary commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_100H_PHASE_FACTORY_ALPHA_V1.md` — Defines Phase 100H purpose, Alpha integration boundaries, safety gates, and completion criteria.
+- `scripts/lib/phase-factory-alpha-v1.mjs` — Implements the Phase Factory Alpha integration with 100A–100G lineage checks, safe integration item definitions, fail-closed validation, and evidence output.
+- `scripts/run-phase-factory-alpha-v1.mjs` — Runs the Phase 100H demo and writes Phase Factory Alpha output.
+- `tests/integration/phase-factory-alpha-v1.test.ts` — Verifies Alpha manifests, owner review manifests, Phase 100A–100G lineage readiness, blocked future auto-run/autofix/apply/patch/source/Git/shell/fleet/self-governance powers, and validation failure evidence.
+- `apps/operator-console/src/phase-factory-alpha.ts` — Exposes Phase 100H status and safety gates to the operator console.
+
