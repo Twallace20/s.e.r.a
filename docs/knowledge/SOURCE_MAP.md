@@ -1632,3 +1632,13 @@ Phase 100F reads Phase 100E apply queue lineage and creates a diagnostic trouble
 - `tests/integration/phase-troubleshooting-loop-v1.test.ts` — Verifies diagnostic evidence, repair guidance, Phase 100E readiness, blocked autofix/apply/patch/source/Git/shell/fleet/self-governance powers, and validation failure evidence.
 - `apps/operator-console/src/phase-troubleshooting-loop.ts` — Exposes Phase 100F status and safety gates to the operator console.
 
+## Phase 100G — Phase Evidence Pack v1
+
+Phase 100G reads Phase 100F troubleshooting evidence lineage and creates owner-review evidence pack bundles for Phase Factory 100A through 100H. It preserves source evidence links, validation summaries, safety summaries, owner review summaries, rollback references, checksum references, diagnostic references, and Phase 100H handoff notes while autofix, apply execution, patch execution, project repo source mutation, real branch creation, real project merge execution, git push, tag creation, arbitrary commands, shell execution, scheduler/workflow/iPhone automation mutation, fleet execution, away-mode execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_100G_PHASE_EVIDENCE_PACK_V1.md` — Defines Phase 100G purpose, evidence-bundling boundaries, safety gates, and completion criteria.
+- `scripts/lib/phase-evidence-pack-v1.mjs` — Implements the evidence-pack generator with Phase 100F lineage, safe evidence item definitions, fail-closed validation, and evidence output.
+- `scripts/run-phase-evidence-pack-v1.mjs` — Runs the Phase 100G demo and writes evidence pack output.
+- `tests/integration/phase-evidence-pack-v1.test.ts` — Verifies evidence manifests, owner review manifests, Phase 100F readiness, blocked autofix/apply/patch/source/Git/shell/fleet/self-governance powers, and validation failure evidence.
+- `apps/operator-console/src/phase-evidence-pack.ts` — Exposes Phase 100G status and safety gates to the operator console.
+

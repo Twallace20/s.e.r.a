@@ -190,3 +190,6 @@ packages/*/src/*.d.ts
 .sera-phase-troubleshooting-loop/
 .sera-phase-troubleshooting-loop-test/
 .sera-phase-troubleshooting-loop-test-failure/
+.sera-phase-evidence-pack/
+.sera-phase-evidence-pack-test/
+.sera-phase-evidence-pack-test-failure/
