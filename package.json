@@ -220,7 +220,9 @@
     "phase101:demo": "node scripts/run-worker-fleet-registry-v1.mjs",
     "phase101:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100h:demo && npm run phase101:demo",
     "phase102:demo": "node scripts/run-worker-capability-cards-v1.mjs",
-    "phase102:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase101:demo && npm run phase102:demo"
+    "phase102:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase101:demo && npm run phase102:demo",
+    "phase103:demo": "node scripts/run-worker-activation-review-queue-v1.mjs",
+    "phase103:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase102:demo && npm run phase103:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

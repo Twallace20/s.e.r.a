@@ -202,3 +202,6 @@ packages/*/src/*.d.ts
 .sera-worker-capability-cards/
 .sera-worker-capability-cards-test/
 .sera-worker-capability-cards-test-failure/
+.sera-worker-activation-review-queue/
+.sera-worker-activation-review-queue-test/
+.sera-worker-activation-review-queue-test-failure/

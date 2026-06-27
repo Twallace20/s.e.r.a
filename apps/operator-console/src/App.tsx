@@ -1,3 +1,4 @@
+import { workerActivationReviewQueue, workerActivationReviewQueueSafetyGates } from "./worker-activation-review-queue";
 import { workerCapabilityCards, workerCapabilityCardsSafetyGates } from "./worker-capability-cards";
 import { workerFleetRegistry, workerFleetRegistrySafetyGates } from "./worker-fleet-registry";
 import { phaseFactoryAlpha, phaseFactoryAlphaSafetyGates } from "./phase-factory-alpha";
@@ -82,6 +83,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Worker Activation Review Queue", value: workerActivationReviewQueue.workerActivationReviewQueueStatus, tone: "review" },
   { label: "Worker Capability Cards", value: workerCapabilityCards.workerCapabilityCardsStatus, tone: "review" },
   { label: "Worker Fleet Registry", value: workerFleetRegistry.workerFleetRegistryStatus, tone: "review" },
   { label: "Phase Factory Alpha", value: phaseFactoryAlpha.phaseFactoryAlphaStatus, tone: "review" },
@@ -169,6 +171,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...workerActivationReviewQueueSafetyGates,
   ...workerCapabilityCardsSafetyGates,
   ...workerFleetRegistrySafetyGates,
   ...phaseFactoryAlphaSafetyGates,
