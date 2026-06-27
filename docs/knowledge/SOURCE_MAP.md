@@ -1672,3 +1672,13 @@ Phase 102 reads Phase 101 Worker Fleet Registry lineage and creates owner-review
 - `tests/integration/worker-capability-cards-v1.test.ts` — Verifies capability card packet output, Phase 101 lineage readiness, Tyler approval, safe worker capability cards, blocked worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
 - `apps/operator-console/src/worker-capability-cards.ts` — Exposes Phase 102 status and safety gates to the operator console.
 
+## Phase 103 — Worker Activation Review Queue v1
+
+Phase 103 reads Phase 102 Worker Capability Cards lineage and creates a manual owner-review activation queue. It creates activation review queue items, activation decision drafts, readiness checklists, evidence references, and owner-review manifests while worker activation, worker execution, worker spawning, autonomous delegation, scheduler/workflow/iPhone automation mutation, away-mode execution, fleet execution, apply execution, patch execution, project repo source mutation, real branch creation, real merge execution, git push, tag creation, arbitrary commands, shell execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_103_WORKER_ACTIVATION_REVIEW_QUEUE_V1.md` — Defines Phase 103 purpose, activation review queue boundaries, safety gates, and completion criteria.
+- `scripts/lib/worker-activation-review-queue-v1.mjs` — Implements Worker Activation Review Queue with Phase 102 lineage checks, safe queue items, fail-closed validation, and evidence output.
+- `scripts/run-worker-activation-review-queue-v1.mjs` — Runs the Phase 103 demo and writes Worker Activation Review Queue output.
+- `tests/integration/worker-activation-review-queue-v1.test.ts` — Verifies activation queue packet output, Phase 102 lineage readiness, Tyler approval, safe queue items, blocked activation/worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
+- `apps/operator-console/src/worker-activation-review-queue.ts` — Exposes Phase 103 status and safety gates to the operator console.
+
