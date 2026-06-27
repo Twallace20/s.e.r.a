@@ -1,3 +1,4 @@
+import { phaseFactoryAlpha, phaseFactoryAlphaSafetyGates } from "./phase-factory-alpha";
 import { phaseEvidencePack, phaseEvidencePackSafetyGates } from "./phase-evidence-pack";
 import { phaseTroubleshootingLoop, phaseTroubleshootingLoopSafetyGates } from "./phase-troubleshooting-loop";
 import { phaseApplyQueue, phaseApplyQueueSafetyGates } from "./phase-apply-queue";
@@ -79,6 +80,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Phase Factory Alpha", value: phaseFactoryAlpha.phaseFactoryAlphaStatus, tone: "review" },
   { label: "Phase evidence pack", value: phaseEvidencePack.phaseEvidencePackStatus, tone: "review" },
   { label: "Phase troubleshooting loop", value: phaseTroubleshootingLoop.phaseTroubleshootingStatus, tone: "review" },
   { label: "Phase apply queue", value: phaseApplyQueue.phaseApplyQueueStatus, tone: "review" },
@@ -163,6 +165,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...phaseFactoryAlphaSafetyGates,
   ...phaseEvidencePackSafetyGates,
   ...phaseTroubleshootingLoopSafetyGates,
   ...phaseApplyQueueSafetyGates,

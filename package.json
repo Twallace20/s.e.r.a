@@ -214,7 +214,9 @@
     "phase100f:demo": "node scripts/run-phase-troubleshooting-loop-v1.mjs",
     "phase100f:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100e:demo && npm run phase100f:demo",
     "phase100g:demo": "node scripts/run-phase-evidence-pack-v1.mjs",
-    "phase100g:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100f:demo && npm run phase100g:demo"
+    "phase100g:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100f:demo && npm run phase100g:demo",
+    "phase100h:demo": "node scripts/run-phase-factory-alpha-v1.mjs",
+    "phase100h:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase100a:demo && npm run phase100b:demo && npm run phase100c:demo && npm run phase100d:demo && npm run phase100e:demo && npm run phase100f:demo && npm run phase100g:demo && npm run phase100h:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
