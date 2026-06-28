@@ -232,7 +232,10 @@
     "phase107:demo": "node scripts/run-worker-activation-token-review-record-v1.mjs",
     "phase107:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase106:demo && npm run phase107:demo",
     "phase108:demo": "node scripts/run-autopilot-reliability-scaffold-v1.mjs --demo",
-    "phase108:verify": "node scripts/run-autopilot-reliability-scaffold-v1.mjs --verify"
+    "phase108:verify": "node scripts/run-autopilot-reliability-scaffold-v1.mjs --verify",
+    "phase109:demo": "node scripts/run-proof-of-use-simulation-harness-v1.mjs --demo",
+    "phase109:verify": "node scripts/run-proof-of-use-simulation-harness-v1.mjs --verify",
+    "sera:proof": "node scripts/run-proof-of-use-simulation-harness-v1.mjs --verify"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
