@@ -228,7 +228,9 @@
     "phase105:demo": "node scripts/run-worker-activation-decision-record-v1.mjs",
     "phase105:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase104:demo && npm run phase105:demo",
     "phase106:demo": "node scripts/run-worker-activation-token-draft-v1.mjs",
-    "phase106:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase105:demo && npm run phase106:demo"
+    "phase106:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase105:demo && npm run phase106:demo",
+    "phase107:demo": "node scripts/run-worker-activation-token-review-record-v1.mjs",
+    "phase107:verify": "npm run free-core:verify && npm run knowledge:verify && npm run phase106:demo && npm run phase107:demo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

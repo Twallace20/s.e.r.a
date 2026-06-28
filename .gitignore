@@ -214,3 +214,6 @@ packages/*/src/*.d.ts
 .sera-worker-activation-token-draft/
 .sera-worker-activation-token-draft-test/
 .sera-worker-activation-token-draft-test-failure/
+.sera-worker-activation-token-review-record/
+.sera-worker-activation-token-review-record-test/
+.sera-worker-activation-token-review-record-test-failure/
