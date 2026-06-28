@@ -1722,3 +1722,11 @@ Phase 107 reads Phase 106 Worker Activation Token Draft lineage and creates a ma
 - `tests/integration/worker-activation-token-review-record-v1.test.ts` — Verifies token review record output, Phase 106 lineage readiness, Tyler approval, safe review records, blocked token/credential/material/worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
 - `apps/operator-console/src/worker-activation-token-review-record.ts` — Exposes Phase 107 status and safety gates to the operator console.
 
+## Phase 108 — Autopilot Reliability Scaffold v1
+
+- docs/phases/PHASE_108_AUTOPILOT_RELIABILITY_SCAFFOLD_V1.md
+- apps/operator-console/src/autopilot-reliability-scaffold.ts
+- scripts/lib/autopilot-reliability-scaffold-v1.mjs
+- scripts/run-autopilot-reliability-scaffold-v1.mjs
+- tests/integration/autopilot-reliability-scaffold-v1.test.ts
+
