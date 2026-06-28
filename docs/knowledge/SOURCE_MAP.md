@@ -1738,3 +1738,11 @@ Phase 107 reads Phase 106 Worker Activation Token Draft lineage and creates a ma
 - scripts/run-proof-of-use-simulation-harness-v1.mjs
 - tests/integration/proof-of-use-simulation-harness-v1.test.ts
 
+## Phase 110 — Validation Profiles + Proof Gate v1
+
+- docs/phases/PHASE_110_VALIDATION_PROFILES_PROOF_GATE_V1.md
+- apps/operator-console/src/validation-profiles-proof-gate.ts
+- scripts/lib/validation-profiles-proof-gate-v1.mjs
+- scripts/run-validation-profiles-proof-gate-v1.mjs
+- tests/integration/validation-profiles-proof-gate-v1.test.ts
+
