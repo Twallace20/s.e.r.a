@@ -1,0 +1,78 @@
+#!/usr/bin/env node
+import { createDefaultWorkerActivationDecisionRecordV1, runWorkerActivationDecisionRecordV1 } from "./lib/worker-activation-decision-record-v1.mjs";
+
+const result = runWorkerActivationDecisionRecordV1(createDefaultWorkerActivationDecisionRecordV1());
+
+if (!result.ok) {
+  console.error("S.E.R.A. phase105 worker activation decision record v1: FAIL");
+  for (const blocker of result.blockers) console.error(`- ${blocker}`);
+  process.exit(1);
+}
+
+console.log("S.E.R.A. phase105 worker activation decision record v1: PASS");
+console.log(`workerActivationDecisionRecordStatus: ${result.workerActivationDecisionRecordStatus}`);
+console.log(`validationFailedCount: ${result.validationFailedCount}`);
+console.log(`declaredFileCount: ${result.declaredFileCount}`);
+console.log(`workerActivationDecisionRecordRequirementCount: ${result.workerActivationDecisionRecordRequirementCount}`);
+console.log(`workerActivationDecisionRecordFieldCount: ${result.workerActivationDecisionRecordFieldCount}`);
+console.log(`activationDecisionRecordCount: ${result.activationDecisionRecordCount}`);
+console.log(`ownerActivationDecisionRecordCount: ${result.ownerActivationDecisionRecordCount}`);
+console.log(`decisionAuditRecordCount: ${result.decisionAuditRecordCount}`);
+console.log(`activationDenialRecordCount: ${result.activationDenialRecordCount}`);
+console.log(`roadmapTrackCount: ${result.roadmapTrackCount}`);
+console.log(`multiLanguageProductionTargetCount: ${result.multiLanguageProductionTargetCount}`);
+console.log(`safetyGateCount: ${result.safetyGateCount}`);
+console.log(`workerActivationDecisionRecordAllowed: ${result.workerActivationDecisionRecordAllowed}`);
+console.log(`workerActivationGateReadAllowed: ${result.workerActivationGateReadAllowed}`);
+console.log(`activationDecisionRecordManifestAllowed: ${result.activationDecisionRecordManifestAllowed}`);
+console.log(`ownerReviewDecisionRecordPacketAllowed: ${result.ownerReviewDecisionRecordPacketAllowed}`);
+console.log(`ownerActivationDecisionDraftAllowed: ${result.ownerActivationDecisionDraftAllowed}`);
+console.log(`activationDenialRecordAllowed: ${result.activationDenialRecordAllowed}`);
+console.log(`workerActivationAllowed: ${result.workerActivationAllowed}`);
+console.log(`workerExecutionAllowed: ${result.workerExecutionAllowed}`);
+console.log(`workerSpawningAllowed: ${result.workerSpawningAllowed}`);
+console.log(`autonomousDelegationAllowed: ${result.autonomousDelegationAllowed}`);
+console.log(`schedulerWorkflowMutationAllowed: ${result.schedulerWorkflowMutationAllowed}`);
+console.log(`iPhoneAutomationMutationAllowed: ${result.iPhoneAutomationMutationAllowed}`);
+console.log(`awayModeExecutionAllowed: ${result.awayModeExecutionAllowed}`);
+console.log(`fleetExecutionAllowed: ${result.fleetExecutionAllowed}`);
+console.log(`applyExecutionAllowed: ${result.applyExecutionAllowed}`);
+console.log(`patchExecutionAllowed: ${result.patchExecutionAllowed}`);
+console.log(`projectRepoSourceMutationAllowed: ${result.projectRepoSourceMutationAllowed}`);
+console.log(`realProjectBranchCreationAllowed: ${result.realProjectBranchCreationAllowed}`);
+console.log(`realProjectMergeExecutionAllowed: ${result.realProjectMergeExecutionAllowed}`);
+console.log(`gitPushAllowed: ${result.gitPushAllowed}`);
+console.log(`tagCreationAllowed: ${result.tagCreationAllowed}`);
+console.log(`arbitraryCommandAllowed: ${result.arbitraryCommandAllowed}`);
+console.log(`shellExecutionAllowed: ${result.shellExecutionAllowed}`);
+console.log(`selfApprovalAllowed: ${result.selfApprovalAllowed}`);
+console.log(`selfMergeAllowed: ${result.selfMergeAllowed}`);
+console.log(`selfDeployAllowed: ${result.selfDeployAllowed}`);
+console.log(`productionDeploymentAllowed: ${result.productionDeploymentAllowed}`);
+console.log(`workerActivationDecisionRecordId: ${result.workerActivationDecisionRecordId}`);
+console.log(`sourceWorkerActivationGateId: ${result.sourceWorkerActivationGateId}`);
+console.log(`phase104WorkerActivationGateReady: ${result.phase104WorkerActivationGateReady}`);
+console.log(`activationDecisionRecordPacketProduced: ${result.activationDecisionRecordPacketProduced}`);
+console.log(`activationDecisionRecordManifestProduced: ${result.activationDecisionRecordManifestProduced}`);
+console.log(`ownerActivationDecisionRecordManifestProduced: ${result.ownerActivationDecisionRecordManifestProduced}`);
+console.log(`decisionAuditManifestProduced: ${result.decisionAuditManifestProduced}`);
+console.log(`activationDenialManifestProduced: ${result.activationDenialManifestProduced}`);
+console.log(`ownerReviewManifestProduced: ${result.ownerReviewManifestProduced}`);
+console.log(`readyForOwnerReview: ${result.readyForOwnerReview}`);
+console.log(`projectRepoSourceMutated: ${result.projectRepoSourceMutated}`);
+console.log(`workerActivated: ${result.workerActivated}`);
+console.log(`workerExecuted: ${result.workerExecuted}`);
+console.log(`workerSpawned: ${result.workerSpawned}`);
+console.log(`autonomousDelegationExecuted: ${result.autonomousDelegationExecuted}`);
+console.log(`schedulerWorkflowMutated: ${result.schedulerWorkflowMutated}`);
+console.log(`iPhoneAutomationMutated: ${result.iPhoneAutomationMutated}`);
+console.log(`awayModeExecuted: ${result.awayModeExecuted}`);
+console.log(`fleetExecuted: ${result.fleetExecuted}`);
+console.log(`applyExecuted: ${result.applyExecuted}`);
+console.log(`patchExecuted: ${result.patchExecuted}`);
+console.log(`realProjectBranchCreated: ${result.realProjectBranchCreated}`);
+console.log(`realProjectMergePerformed: ${result.realProjectMergePerformed}`);
+console.log(`activationTokenIssued: ${result.activationTokenIssued}`);
+console.log(`activationCredentialIssued: ${result.activationCredentialIssued}`);
+console.log(`activationImplementationBlocked: ${result.activationImplementationBlocked}`);
+console.log(`multiLanguageProductionDoctrineIncluded: ${result.multiLanguageProductionDoctrineIncluded}`);

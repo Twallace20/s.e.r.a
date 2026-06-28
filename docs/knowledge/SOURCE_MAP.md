@@ -1692,3 +1692,13 @@ Phase 104 reads Phase 103 Worker Activation Review Queue lineage and creates a m
 - `tests/integration/worker-activation-gate-v1.test.ts` — Verifies activation gate packet output, Phase 103 lineage readiness, Tyler approval, safe gate items, blocked activation/token/worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
 - `apps/operator-console/src/worker-activation-gate.ts` — Exposes Phase 104 status and safety gates to the operator console.
 
+## Phase 105 — Worker Activation Decision Record v1
+
+Phase 105 reads Phase 104 Worker Activation Gate lineage and creates a manual owner-review activation decision record packet. It creates activation decision records, owner activation decision records, decision audit records, activation denial records, gate evidence references, activation token/credential block evidence, decision ledgers, and owner-review manifests while worker activation, activation token issuance, credential issuance, worker execution, worker spawning, autonomous delegation, scheduler/workflow/iPhone automation mutation, away-mode execution, fleet execution, apply execution, patch execution, project repo source mutation, real branch creation, real merge execution, git push, tag creation, arbitrary commands, shell execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_105_WORKER_ACTIVATION_DECISION_RECORD_V1.md` — Defines Phase 105 purpose, activation decision record boundaries, safety gates, and completion criteria.
+- `scripts/lib/worker-activation-decision-record-v1.mjs` — Implements Worker Activation Decision Record with Phase 104 lineage checks, safe decision records, fail-closed validation, and evidence output.
+- `scripts/run-worker-activation-decision-record-v1.mjs` — Runs the Phase 105 demo and writes Worker Activation Decision Record output.
+- `tests/integration/worker-activation-decision-record-v1.test.ts` — Verifies decision record packet output, Phase 104 lineage readiness, Tyler approval, safe decision records, blocked activation/token/credential/worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
+- `apps/operator-console/src/worker-activation-decision-record.ts` — Exposes Phase 105 status and safety gates to the operator console.
+
