@@ -1,0 +1,845 @@
+diff --git a/.overlay/phase114-manifest.json b/.overlay/phase114-manifest.json
+new file mode 100644
+index 0000000..dc43233
+--- /dev/null
++++ b/.overlay/phase114-manifest.json
+@@ -0,0 +1,43 @@
++{
++  "overlay": "s.e.r.a_phase114_autopilot_end_to_end_validation_harness_v1_overlay",
++  "phase": 114,
++  "phaseName": "Autopilot End-to-End Validation Harness v1",
++  "createdAt": "2026-06-28T16:45:00Z",
++  "safetyLevel": "validation_harness_no_new_browser_execution",
++  "zipRoot": "repo/",
++  "adds": [
++    "docs/phases/PHASE_114_AUTOPILOT_END_TO_END_VALIDATION_HARNESS_V1.md",
++    "docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md",
++    "docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md",
++    "docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md",
++    "scripts/phase114-build-bridge-prompt.ps1",
++    "scripts/phase114-write-phase115-test-prompt.ps1",
++    "scripts/phase114-verify.mjs"
++  ],
++  "validationCommands": [
++    "node scripts/phase114-verify.mjs",
++    "npm run sera:gate"
++  ],
++  "requiresPhase113ClosedCleanly": true,
++  "normalFlow": {
++    "source": "CLOSED_CLEANLY handoff",
++    "template": "docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md",
++    "outbox": "15_bridge_outbox",
++    "zipRoot": "repo/",
++    "routerTarget": "13_chatgpt_downloads -> 01_apply_approved"
++  },
++  "blockedFlow": {
++    "source": "BLOCKED handoff",
++    "template": "docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md",
++    "outbox": "15_bridge_outbox",
++    "zipRoot": "repo/",
++    "routerTarget": "13_chatgpt_downloads -> 02_hotfix_approved when action_required exists"
++  },
++  "browserControl": {
++    "addsNoNewBrowserExecutor": true,
++    "usesPhase113SubmitDownloadBridge": true,
++    "requiresExplicitExecutionFlag": "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true",
++    "usesRandomRecentChatFallback": false,
++    "usesNewChatFallback": false
++  }
++}
+diff --git a/.sera-proof/phase114/phase114-verify.json b/.sera-proof/phase114/phase114-verify.json
+new file mode 100644
+index 0000000..2089964
+--- /dev/null
++++ b/.sera-proof/phase114/phase114-verify.json
+@@ -0,0 +1,162 @@
++{
++  "phase": "phase114-autopilot-end-to-end-validation-harness-v1",
++  "status": "PASS",
++  "createdAt": "2026-06-28T16:26:23.432Z",
++  "results": [
++    {
++      "check": "exists:docs/phases/PHASE_114_AUTOPILOT_END_TO_END_VALIDATION_HARNESS_V1.md",
++      "ok": true,
++      "detail": "9370df500643c1c7c4474220638fc3acd132dc1b5269a8a90477896eee37ad75"
++    },
++    {
++      "check": "exists:docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md",
++      "ok": true,
++      "detail": "03818d09d12f55c3163b9d257fa5b6f15a1f3a114af996b78bc08db9b304566a"
++    },
++    {
++      "check": "exists:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md",
++      "ok": true,
++      "detail": "bb7fb599b274b3ddfce3026b46739074db8735f1feeb7c4271f9bd2a82640d06"
++    },
++    {
++      "check": "exists:docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md",
++      "ok": true,
++      "detail": "0f6e5459f11436d56ef1e07e6b33bf1aa3997cc7b1d6b132b0f2ec220cbdd37a"
++    },
++    {
++      "check": "exists:scripts/phase114-build-bridge-prompt.ps1",
++      "ok": true,
++      "detail": "aebc0d9a6148ef871f682b92b6e310a9fb5bee6c954865c0fcccdc9ae3f6ec40"
++    },
++    {
++      "check": "exists:scripts/phase114-write-phase115-test-prompt.ps1",
++      "ok": true,
++      "detail": "9d9fe8dce13539e3c3ccc8f5e8b3d82296389186da09b4e8bfccf533ae41ead4"
++    },
++    {
++      "check": "exists:scripts/phase114-verify.mjs",
++      "ok": true,
++      "detail": "419467b39eef9b524b8bb98d777fcc5fb28021fa7815e30d074dca674d6f76c8"
++    },
++    {
++      "check": "node_syntax:phase114-verify",
++      "ok": true,
++      "detail": "syntax ok"
++    },
++    {
++      "check": "contains:docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md:The laptop does not ask vague questions",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md:repo/",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md:NEEDS_ATTENTION",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md:must not invent",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:{{CURRENT_STATE}}",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:{{NEXT_PHASE_NUMBER}}",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:ZIP must use this root",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:repo/",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:npm run sera:gate",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:If you cannot determine",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md:{{BLOCKED_PACKET}}",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md:Do not invent",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md:repo/",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:scripts/phase114-build-bridge-prompt.ps1:allowNewChatFallback",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:scripts/phase114-build-bridge-prompt.ps1:allowRandomRecentChatFallback",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:scripts/phase114-build-bridge-prompt.ps1:15_bridge_outbox",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:scripts/phase114-build-bridge-prompt.ps1:CLOSED_CLEANLY",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:scripts/phase114-build-bridge-prompt.ps1:BLOCKED",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:scripts/phase114-write-phase115-test-prompt.ps1:Intentional Blocked Repair Loop Smoke Test v1",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "forbidden:scripts/phase114-build-bridge-prompt.ps1:allowNewChatFallback = $true",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "forbidden:scripts/phase114-build-bridge-prompt.ps1:allowRandomRecentChatFallback = $true",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "forbidden:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:s.e.r.a/",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "forbidden:docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md:s.e.r.a/",
++      "ok": true,
++      "detail": "not found"
++    }
++  ]
++}
+\ No newline at end of file
+diff --git a/docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md b/docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md
+new file mode 100644
+index 0000000..04b4d8a
+--- /dev/null
++++ b/docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md
+@@ -0,0 +1,86 @@
++# S.E.R.A. Autopilot Prompt Contract
++
++This contract defines how the laptop should prompt ChatGPT during AutoOps bridge runs.
++
++## Core rule
++
++The laptop does not ask vague questions. It sends grounded phase packets.
++
++Every prompt must be created from:
++
++- the latest handoff packet,
++- the saved ChatGPT target configuration,
++- the current requested phase number and phase name,
++- the AutoOps ZIP packaging contract,
++- explicit validation requirements,
++- explicit stop conditions.
++
++## Required prompt sections
++
++1. **Current state** — latest CLOSED_CLEANLY, PASS, BLOCKED, or NEEDS_ATTENTION packet.
++2. **Requested action** — generate overlay ZIP, repair ZIP, hotfix ZIP, or needs-attention response.
++3. **Allowed changes** — bounded to the phase purpose.
++4. **Forbidden changes** — credentials, GitHub/security settings, paid services, dependency installs unless explicitly approved, random browser targets.
++5. **Packaging contract** — ZIP root must be `repo/`.
++6. **Validation contract** — output must be compatible with `npm run sera:gate`.
++7. **Response contract** — return ZIP link, SHA256, short summary, and stop if uncertain.
++
++## Anti-hallucination rules
++
++ChatGPT must not invent:
++
++- repo state,
++- missing files,
++- passing tests,
++- merge status,
++- secrets,
++- installed tools,
++- browser state,
++- approval decisions.
++
++If the prompt lacks required evidence, the correct response is `NEEDS_ATTENTION`, not a fabricated ZIP.
++
++## Normal prompt output expectation
++
++A normal phase prompt should result in one overlay ZIP named like:
++
++```text
++s.e.r.a_phaseNNN_name_v1_overlay.zip
++```
++
++## Repair prompt output expectation
++
++A blocked phase prompt should result in one repair or hotfix ZIP named like:
++
++```text
++s.e.r.a_phaseNNN_name_v1_repair.zip
++s.e.r.a_phaseNNN_name_v1_hotfix.zip
++```
++
++## Required ZIP root
++
++All AutoOps ZIPs must use:
++
++```text
++repo/
++```
++
++Not:
++
++```text
++s.e.r.a/
++```
++
++## Stop conditions
++
++The bridge should stop and write a needs-attention packet if:
++
++- no saved target URL exists,
++- target allows random recent chat fallback,
++- target allows new chat fallback,
++- no handoff packet is available,
++- multiple conflicting next phases are detected,
++- a prompt asks for credentials or secrets,
++- a response has no ZIP link,
++- a ZIP does not use `repo/` root,
++- a blocked packet does not identify the work branch.
+diff --git a/docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md b/docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md
+new file mode 100644
+index 0000000..93de248
+--- /dev/null
++++ b/docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md
+@@ -0,0 +1,74 @@
++# Normal Phase Prompt Template
++
++You are continuing S.E.R.A. AutoOps development in the existing S.E.R.A. project thread.
++
++## Current verified state
++
++{{CURRENT_STATE}}
++
++## Requested next phase
++
++Phase: {{NEXT_PHASE_NUMBER}}
++Name: {{NEXT_PHASE_NAME}}
++Output type: overlay ZIP
++
++## Task
++
++Generate the next phase overlay as a downloadable ZIP.
++
++The phase should be bounded to the requested purpose. Do not add unrelated capabilities. Do not skip safety checks. Do not claim tests passed unless the ZIP contains verification evidence or the user later provides terminal proof.
++
++## Required ZIP contract
++
++The ZIP must use this root:
++
++```text
++repo/
++```
++
++The ZIP should contain, when relevant:
++
++```text
++repo/.overlay/phase{{NEXT_PHASE_NUMBER}}-manifest.json
++repo/.sera-proof/phase{{NEXT_PHASE_NUMBER}}/phase{{NEXT_PHASE_NUMBER}}-verify.json
++repo/docs/...
++repo/scripts/...
++repo/<phase-overlay>.patch
++```
++
++The ZIP must not contain:
++
++```text
++.git/
++node_modules/
++dist/
++.sera-runs/
++.sera-cert/
++.sera-memory/
++.sera-tasks/
++.sera-knowledge/
++secrets
++credentials
++tokens
++```
++
++## Required validation contract
++
++The phase must be compatible with:
++
++```text
++npm run sera:gate
++```
++
++Include a phase verifier script when useful.
++
++## Response contract
++
++Return:
++
++1. a downloadable ZIP,
++2. SHA256,
++3. short summary,
++4. exact next command or routing instruction.
++
++If you cannot determine the correct phase or repo state from the current evidence, do not generate a ZIP. Respond with `NEEDS_ATTENTION` and explain what is missing.
+diff --git a/docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md b/docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md
+new file mode 100644
+index 0000000..cb9b0a7
+--- /dev/null
++++ b/docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md
+@@ -0,0 +1,85 @@
++# Repair / Hotfix Prompt Template
++
++You are repairing a blocked S.E.R.A. AutoOps phase.
++
++## Exact blocked packet
++
++{{BLOCKED_PACKET}}
++
++## Task
++
++Diagnose the failure and generate exactly one of these:
++
++- a repair ZIP,
++- a hotfix ZIP,
++- or a NEEDS_ATTENTION response if the issue is unsafe or ambiguous.
++
++## Repair rules
++
++Use a repair/hotfix ZIP only when the phase already applied code and failed validation or gate checks.
++
++Use a fixed overlay ZIP when the failure happened before code application, such as:
++
++- invalid ZIP structure,
++- missing `repo/` root,
++- branch setup failure,
++- router misclassification,
++- missing phase packet.
++
++Use NEEDS_ATTENTION when the failure involves:
++
++- credentials,
++- tokens,
++- paid services,
++- GitHub/security settings,
++- dependency or tool install approval,
++- unclear branch state,
++- repeated failure without enough evidence.
++
++## Required ZIP contract
++
++The ZIP must use this root:
++
++```text
++repo/
++```
++
++Repair/hotfix filenames must include:
++
++```text
++repair
++```
++
++or:
++
++```text
++hotfix
++```
++
++The ZIP must not contain:
++
++```text
++.git/
++node_modules/
++dist/
++.sera-runs/
++.sera-cert/
++.sera-memory/
++.sera-tasks/
++.sera-knowledge/
++secrets
++credentials
++tokens
++```
++
++## Response contract
++
++Return:
++
++1. diagnosis,
++2. whether this is fixed overlay, repair, hotfix, rollback, or needs-attention,
++3. downloadable ZIP if appropriate,
++4. SHA256 if ZIP is provided,
++5. exact routing folder.
++
++Do not invent missing logs, branches, files, or successful validation.
+diff --git a/docs/phases/PHASE_114_AUTOPILOT_END_TO_END_VALIDATION_HARNESS_V1.md b/docs/phases/PHASE_114_AUTOPILOT_END_TO_END_VALIDATION_HARNESS_V1.md
+new file mode 100644
+index 0000000..e87dea4
+--- /dev/null
++++ b/docs/phases/PHASE_114_AUTOPILOT_END_TO_END_VALIDATION_HARNESS_V1.md
+@@ -0,0 +1,111 @@
++# Phase 114 — Autopilot End-to-End Validation Harness v1
++
++## Purpose
++
++Phase 114 validates the practical S.E.R.A. AutoOps bridge loop introduced by Phases 112 and 113.
++
++It does not add broader autonomy. It standardizes how the laptop asks ChatGPT for the next phase or a repair ZIP so the system keeps developing from grounded evidence instead of vague prompts.
++
++## What this phase proves
++
++Phase 114 adds a validation harness for the normal and blocked flows:
++
++1. The bridge target is a saved, exact ChatGPT conversation.
++2. Normal next-phase prompts are generated from a strict contract.
++3. Blocked repair prompts are generated from the exact BLOCKED handoff packet.
++4. Prompts include the required ZIP packaging contract: `repo/` at the root.
++5. Prompts tell ChatGPT to fail closed instead of inventing missing repo state.
++6. The bridge can keep the loop standard: prompt, ZIP, download, route, apply, gate, merge, close.
++
++## Non-goals
++
++Phase 114 must not:
++
++- submit browser prompts by itself,
++- download files by itself,
++- add new credential handling,
++- bypass `SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true`,
++- merge branches,
++- auto-approve unsafe work,
++- generate code without the current phase state,
++- create new ChatGPT conversations, or
++- use random recent chats as fallback.
++
++Phase 113 remains the submit/download bridge. Phase 114 only validates and standardizes the prompt/input layer for that bridge.
++
++## Prompt discipline
++
++Every prompt generated for ChatGPT must include:
++
++- latest CLOSED_CLEANLY or BLOCKED handoff summary,
++- exact requested output type: overlay, repair, hotfix, or needs-attention,
++- required ZIP root: `repo/`,
++- no `node_modules`, `dist`, `.git`, runtime folders, or secrets,
++- validation requirement: `npm run sera:gate`,
++- instruction to avoid guessing when evidence is missing,
++- instruction to return a downloadable ZIP and SHA256.
++
++## Normal phase loop
++
++```text
++CLOSED_CLEANLY
++→ build next phase prompt from template
++→ write prompt to 15_bridge_outbox
++→ Phase 113 submits prompt when explicitly enabled
++→ ChatGPT returns overlay ZIP
++→ Phase 113 downloads ZIP to 13_chatgpt_downloads
++→ router sends ZIP to 01_apply_approved
++→ AutoOps applies/gates/merges/closes
++```
++
++## Blocked repair loop
++
++```text
++BLOCKED
++→ build repair prompt from exact blocked handoff
++→ write prompt to 15_bridge_outbox
++→ Phase 113 submits prompt when explicitly enabled
++→ ChatGPT returns repair/hotfix ZIP
++→ Phase 113 downloads ZIP to 13_chatgpt_downloads
++→ router sends repair/hotfix ZIP to 02_hotfix_approved only when action_required exists
++→ AutoOps applies repair on the blocked branch
++→ gate reruns
++```
++
++## Commands
++
++Verify Phase 114 static contract:
++
++```powershell
++node scripts/phase114-verify.mjs
++```
++
++Build a normal next-phase prompt:
++
++```powershell
++powershell -ExecutionPolicy Bypass -File .\scripts\phase114-build-bridge-prompt.ps1 -Mode Normal -NextPhaseNumber 115 -NextPhaseName "Intentional Blocked Repair Loop Smoke Test v1"
++```
++
++Build a repair prompt from the newest BLOCKED handoff:
++
++```powershell
++powershell -ExecutionPolicy Bypass -File .\scripts\phase114-build-bridge-prompt.ps1 -Mode Repair
++```
++
++Write the Phase 115 test prompt:
++
++```powershell
++powershell -ExecutionPolicy Bypass -File .\scripts\phase114-write-phase115-test-prompt.ps1
++```
++
++## Definition of done
++
++Phase 114 counts only if:
++
++- the overlay applies from a `repo/` root ZIP,
++- `npm run sera:gate` passes,
++- `node scripts/phase114-verify.mjs` passes,
++- the prompt contract files exist,
++- normal and repair prompt builders are present,
++- generated prompts refuse to invent repo state,
++- the phase closes cleanly through AutoOps.
+diff --git a/scripts/phase114-build-bridge-prompt.ps1 b/scripts/phase114-build-bridge-prompt.ps1
+new file mode 100644
+index 0000000..7d126b7
+--- /dev/null
++++ b/scripts/phase114-build-bridge-prompt.ps1
+@@ -0,0 +1,114 @@
++param(
++  [ValidateSet("Normal", "Repair")]
++  [string]$Mode = "Normal",
++
++  [string]$NextPhaseNumber = "115",
++  [string]$NextPhaseName = "Intentional Blocked Repair Loop Smoke Test v1"
++)
++
++$ErrorActionPreference = "Stop"
++
++$AutoOps = "$env:USERPROFILE\OneDrive\SERA-AutoOps"
++$HandoffDir = "$AutoOps\06_handoff"
++$OutboxDir = "$AutoOps\15_bridge_outbox"
++$StateDir = "$AutoOps\12_browser_helper_state"
++$NeedsAttentionDir = "$AutoOps\17_needs_attention"
++
++New-Item -ItemType Directory -Path $OutboxDir, $NeedsAttentionDir -Force | Out-Null
++
++function Write-NeedsAttention($Message) {
++  $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
++  $path = "$NeedsAttentionDir\PHASE114_PROMPT_BUILDER_NEEDS_ATTENTION-$timestamp.md"
++  @(
++    "# S.E.R.A. Phase 114 Prompt Builder Needs Attention",
++    "",
++    "Timestamp: $timestamp",
++    "",
++    "## Reason",
++    "",
++    $Message
++  ) | Set-Content -Path $path -Encoding UTF8
++  throw $Message
++}
++
++$targetPath = "$StateDir\chatgpt-bridge-target.json"
++if (!(Test-Path $targetPath)) {
++  Write-NeedsAttention "Missing saved ChatGPT bridge target: $targetPath"
++}
++
++$target = Get-Content $targetPath -Raw | ConvertFrom-Json
++if ($target.allowNewChatFallback -ne $false) {
++  Write-NeedsAttention "ChatGPT bridge target must set allowNewChatFallback=false."
++}
++if ($target.allowRandomRecentChatFallback -ne $false) {
++  Write-NeedsAttention "ChatGPT bridge target must set allowRandomRecentChatFallback=false."
++}
++if (!$target.targetUrl -or $target.targetUrl -notlike "https://chatgpt.com/*") {
++  Write-NeedsAttention "ChatGPT bridge targetUrl is missing or not a chatgpt.com URL."
++}
++
++$repo = Resolve-Path "."
++$templateRoot = Join-Path $repo "docs\autopilot"
++
++if ($Mode -eq "Normal") {
++  $latest = Get-ChildItem $HandoffDir -File -Filter "*CLOSED_CLEANLY.md" |
++    Sort-Object LastWriteTime -Descending |
++    Select-Object -First 1
++
++  if (!$latest) {
++    Write-NeedsAttention "No CLOSED_CLEANLY handoff found for normal next-phase prompt."
++  }
++
++  $templatePath = Join-Path $templateRoot "NORMAL_PHASE_PROMPT_TEMPLATE.md"
++  if (!(Test-Path $templatePath)) {
++    Write-NeedsAttention "Missing normal phase prompt template: $templatePath"
++  }
++
++  $state = Get-Content $latest.FullName -Raw
++  $template = Get-Content $templatePath -Raw
++  $prompt = $template.Replace("{{CURRENT_STATE}}", $state).Replace("{{NEXT_PHASE_NUMBER}}", $NextPhaseNumber).Replace("{{NEXT_PHASE_NAME}}", $NextPhaseName)
++
++  if ($prompt -notmatch "ZIP must use this root" -or $prompt -notmatch "repo/") {
++    Write-NeedsAttention "Normal prompt is missing required repo/ ZIP root contract."
++  }
++
++  $safeName = ($NextPhaseName.ToLowerInvariant() -replace "[^a-z0-9]+", "-").Trim("-")
++  $outPath = "$OutboxDir\phase$NextPhaseNumber-$safeName-normal-prompt.md"
++  $prompt | Set-Content -Path $outPath -Encoding UTF8
++
++  Write-Host "NORMAL_PROMPT_READY: $outPath"
++  exit 0
++}
++
++if ($Mode -eq "Repair") {
++  $blocked = Get-ChildItem $HandoffDir -File -Filter "*BLOCKED.md" |
++    Sort-Object LastWriteTime -Descending |
++    Select-Object -First 1
++
++  if (!$blocked) {
++    Write-NeedsAttention "No BLOCKED handoff found for repair prompt."
++  }
++
++  $templatePath = Join-Path $templateRoot "REPAIR_HOTFIX_PROMPT_TEMPLATE.md"
++  if (!(Test-Path $templatePath)) {
++    Write-NeedsAttention "Missing repair prompt template: $templatePath"
++  }
++
++  $packet = Get-Content $blocked.FullName -Raw
++  $template = Get-Content $templatePath -Raw
++  $prompt = $template.Replace("{{BLOCKED_PACKET}}", $packet)
++
++  if ($prompt -notmatch "Do not invent" -and $prompt -notmatch "Do not invent missing") {
++    Write-NeedsAttention "Repair prompt is missing anti-hallucination guardrail."
++  }
++  if ($prompt -notmatch "repo/") {
++    Write-NeedsAttention "Repair prompt is missing required repo/ ZIP root contract."
++  }
++
++  $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
++  $outPath = "$OutboxDir\repair-prompt-$timestamp.md"
++  $prompt | Set-Content -Path $outPath -Encoding UTF8
++
++  Write-Host "REPAIR_PROMPT_READY: $outPath"
++  exit 0
++}
+diff --git a/scripts/phase114-verify.mjs b/scripts/phase114-verify.mjs
+new file mode 100644
+index 0000000..c5a310e
+--- /dev/null
++++ b/scripts/phase114-verify.mjs
+@@ -0,0 +1,109 @@
++#!/usr/bin/env node
++import fs from "node:fs";
++import path from "node:path";
++import crypto from "node:crypto";
++import { spawnSync } from "node:child_process";
++
++const phase = "phase114-autopilot-end-to-end-validation-harness-v1";
++const root = process.cwd();
++
++const requiredFiles = [
++  "docs/phases/PHASE_114_AUTOPILOT_END_TO_END_VALIDATION_HARNESS_V1.md",
++  "docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md",
++  "docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md",
++  "docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md",
++  "scripts/phase114-build-bridge-prompt.ps1",
++  "scripts/phase114-write-phase115-test-prompt.ps1",
++  "scripts/phase114-verify.mjs"
++];
++
++function sha256(file) {
++  return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
++}
++
++function read(rel) {
++  return fs.readFileSync(path.join(root, rel), "utf8");
++}
++
++const results = [];
++for (const rel of requiredFiles) {
++  const file = path.join(root, rel);
++  results.push({
++    check: `exists:${rel}`,
++    ok: fs.existsSync(file),
++    detail: fs.existsSync(file) ? sha256(file) : "missing"
++  });
++}
++
++const verifyFile = path.join(root, "scripts/phase114-verify.mjs");
++if (fs.existsSync(verifyFile)) {
++  const syntax = spawnSync(process.execPath, ["--check", verifyFile], { encoding: "utf8" });
++  results.push({
++    check: "node_syntax:phase114-verify",
++    ok: syntax.status === 0,
++    detail: syntax.stderr || syntax.stdout || "syntax ok"
++  });
++}
++
++const tokenChecks = [
++  ["docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md", "The laptop does not ask vague questions"],
++  ["docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md", "repo/"],
++  ["docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md", "NEEDS_ATTENTION"],
++  ["docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md", "must not invent"],
++  ["docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md", "{{CURRENT_STATE}}"],
++  ["docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md", "{{NEXT_PHASE_NUMBER}}"],
++  ["docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md", "ZIP must use this root"],
++  ["docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md", "repo/"],
++  ["docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md", "npm run sera:gate"],
++  ["docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md", "If you cannot determine"],
++  ["docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md", "{{BLOCKED_PACKET}}"],
++  ["docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md", "Do not invent"],
++  ["docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md", "repo/"],
++  ["scripts/phase114-build-bridge-prompt.ps1", "allowNewChatFallback"],
++  ["scripts/phase114-build-bridge-prompt.ps1", "allowRandomRecentChatFallback"],
++  ["scripts/phase114-build-bridge-prompt.ps1", "15_bridge_outbox"],
++  ["scripts/phase114-build-bridge-prompt.ps1", "CLOSED_CLEANLY"],
++  ["scripts/phase114-build-bridge-prompt.ps1", "BLOCKED"],
++  ["scripts/phase114-write-phase115-test-prompt.ps1", "Intentional Blocked Repair Loop Smoke Test v1"]
++];
++
++for (const [rel, token] of tokenChecks) {
++  const file = path.join(root, rel);
++  const source = fs.existsSync(file) ? read(rel) : "";
++  results.push({
++    check: `contains:${rel}:${token}`,
++    ok: source.includes(token),
++    detail: source.includes(token) ? "found" : "missing"
++  });
++}
++
++const forbidden = [
++  ["scripts/phase114-build-bridge-prompt.ps1", "allowNewChatFallback = $true"],
++  ["scripts/phase114-build-bridge-prompt.ps1", "allowRandomRecentChatFallback = $true"],
++  ["docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md", "s.e.r.a/"],
++  ["docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md", "s.e.r.a/"]
++];
++
++for (const [rel, token] of forbidden) {
++  const file = path.join(root, rel);
++  const source = fs.existsSync(file) ? read(rel) : "";
++  results.push({
++    check: `forbidden:${rel}:${token}`,
++    ok: !source.includes(token),
++    detail: source.includes(token) ? "found" : "not found"
++  });
++}
++
++const pass = results.every((result) => result.ok);
++const outDir = path.join(root, ".sera-proof", "phase114");
++fs.mkdirSync(outDir, { recursive: true });
++const report = { phase, status: pass ? "PASS" : "FAIL", createdAt: new Date().toISOString(), results };
++const outFile = path.join(outDir, "phase114-verify.json");
++fs.writeFileSync(outFile, JSON.stringify(report, null, 2), "utf8");
++
++for (const result of results) {
++  console.log(`${result.ok ? "✓" : "✗"} ${result.check} — ${result.detail}`);
++}
++console.log(`Phase 114 verify: ${report.status}`);
++console.log(outFile);
++process.exit(pass ? 0 : 1);
+diff --git a/scripts/phase114-write-phase115-test-prompt.ps1 b/scripts/phase114-write-phase115-test-prompt.ps1
+new file mode 100644
+index 0000000..0680af7
+--- /dev/null
++++ b/scripts/phase114-write-phase115-test-prompt.ps1
+@@ -0,0 +1,6 @@
++$ErrorActionPreference = "Stop"
++
++powershell -ExecutionPolicy Bypass -File ".\scripts\phase114-build-bridge-prompt.ps1" `
++  -Mode Normal `
++  -NextPhaseNumber "115" `
++  -NextPhaseName "Intentional Blocked Repair Loop Smoke Test v1"
