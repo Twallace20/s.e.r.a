@@ -1,0 +1,620 @@
+diff --git a/.overlay/phase112-manifest.json b/.overlay/phase112-manifest.json
+new file mode 100644
+index 0000000..b8cf22d
+--- /dev/null
++++ b/.overlay/phase112-manifest.json
+@@ -0,0 +1,27 @@
++{
++  "overlay": "s.e.r.a_phase112_chatgpt_bridge_dom_inspector_v1_overlay",
++  "phase": 112,
++  "phaseName": "ChatGPT Bridge DOM Inspector v1",
++  "createdAt": "2026-06-28T15:23:06Z",
++  "safetyLevel": "inspection_only_no_submit",
++  "adds": [
++    "docs/phases/PHASE_112_CHATGPT_BRIDGE_DOM_INSPECTOR_V1.md",
++    "scripts/chatgpt-bridge-dom-inspector.mjs",
++    "scripts/phase112-set-chatgpt-target.ps1",
++    "scripts/sera-chatgpt-dom-inspector.ps1",
++    "scripts/phase112-verify.mjs"
++  ],
++  "validationCommands": [
++    "node scripts/phase112-verify.mjs",
++    "npm run sera:gate"
++  ],
++  "requiresOwnerProvidedTargetUrl": true,
++  "browserControl": {
++    "opensBrowser": false,
++    "submitsPrompts": false,
++    "downloadsFiles": false,
++    "usesRandomRecentChatFallback": false,
++    "usesNewChatFallback": false,
++    "requiresChromeDevToolsEndpoint": "http://127.0.0.1:9222"
++  }
++}
+\ No newline at end of file
+diff --git a/docs/phases/PHASE_112_CHATGPT_BRIDGE_DOM_INSPECTOR_V1.md b/docs/phases/PHASE_112_CHATGPT_BRIDGE_DOM_INSPECTOR_V1.md
+new file mode 100644
+index 0000000..67ce6b5
+--- /dev/null
++++ b/docs/phases/PHASE_112_CHATGPT_BRIDGE_DOM_INSPECTOR_V1.md
+@@ -0,0 +1,109 @@
++# Phase 112 — ChatGPT Bridge DOM Inspector v1
++
++## Purpose
++
++Phase 112 adds the first browser-observation layer for the S.E.R.A. ChatGPT Bridge. It is intentionally **inspection-only** by default.
++
++It can:
++
++- read the saved ChatGPT bridge target from OneDrive AutoOps state
++- connect to a dedicated Chrome DevTools Protocol endpoint
++- find the saved ChatGPT tab by URL
++- inspect likely composer/textbox selectors
++- write structured DOM evidence to `12_browser_helper_state`
++- write safe blocked packets to `12_browser_helper_blocked` and `17_needs_attention`
++
++It does **not**:
++
++- submit prompts
++- click send buttons
++- download files
++- type into ChatGPT
++- choose a random conversation
++- create a new chat as fallback
++- use credentials, tokens, paid services, or GitHub/security settings
++
++## Required target file
++
++The bridge target must exist here:
++
++```text
++%USERPROFILE%\OneDrive\SERA-AutoOps\12_browser_helper_state\chatgpt-bridge-target.json
++```
++
++Expected shape:
++
++```json
++{
++  "targetName": "SERA Autopilot Control Thread",
++  "targetUrl": "https://chatgpt.com/...",
++  "failIfTargetMissing": true,
++  "allowNewChatFallback": false,
++  "allowRandomRecentChatFallback": false,
++  "composerSelectors": [
++    "div#prompt-textarea.ProseMirror[contenteditable=\"true\"][role=\"textbox\"]",
++    "div[contenteditable=\"true\"][role=\"textbox\"]",
++    "textarea[name=\"prompt-textarea\"]"
++  ]
++}
++```
++
++Use `scripts/phase112-set-chatgpt-target.ps1` to create this file.
++
++## Chrome DevTools requirement
++
++Phase 112 only inspects a browser that is intentionally launched with Chrome DevTools Protocol enabled. If it cannot reach the CDP endpoint, it writes a blocked packet with exact next steps instead of guessing.
++
++Recommended dedicated Chrome launch command:
++
++```powershell
++$ChatUrl = "PASTE_THIS_EXACT_CHATGPT_CONVERSATION_URL"
++$Profile = "$env:USERPROFILE\OneDrive\SERA-AutoOps\12_browser_helper_state\chrome-profile"
++New-Item -ItemType Directory -Force $Profile | Out-Null
++Start-Process "chrome.exe" -ArgumentList @(
++  "--remote-debugging-port=9222",
++  "--user-data-dir=`"$Profile`"",
++  "--no-first-run",
++  "--new-window",
++  "`"$ChatUrl`""
++)
++```
++
++## Commands
++
++Run the static phase verifier:
++
++```powershell
++node scripts/phase112-verify.mjs
++```
++
++Run DOM inspection:
++
++```powershell
++node scripts/chatgpt-bridge-dom-inspector.mjs
++```
++
++Or use the PowerShell wrapper:
++
++```powershell
++powershell -ExecutionPolicy Bypass -File .\scripts\sera-chatgpt-dom-inspector.ps1
++```
++
++## Pass conditions
++
++The inspector can pass only when all of these are true:
++
++1. `chatgpt-bridge-target.json` exists.
++2. The target URL is a ChatGPT/OpenAI chat URL.
++3. Chrome DevTools Protocol is reachable.
++4. A tab matching the saved target URL is open.
++5. A visible, editable composer/textbox candidate is found.
++6. Evidence is written without prompt submission or download activity.
++
++## Failure behavior
++
++Any missing requirement produces a blocked packet, not an unsafe fallback. The bridge must not use random recent chats, create new chats, or submit prompts during Phase 112.
++
++## Next phase
++
++Phase 113 can add a safer batch-runner contract after Phase 112 proves that the saved-thread DOM target can be found reliably. Prompt submission should remain disabled until an explicit later phase proves dry-run evidence and owner controls.
+diff --git a/scripts/chatgpt-bridge-dom-inspector.mjs b/scripts/chatgpt-bridge-dom-inspector.mjs
+new file mode 100644
+index 0000000..835ebf3
+--- /dev/null
++++ b/scripts/chatgpt-bridge-dom-inspector.mjs
+@@ -0,0 +1,326 @@
++#!/usr/bin/env node
++import fs from "node:fs";
++import path from "node:path";
++import os from "node:os";
++import crypto from "node:crypto";
++
++const PHASE = "phase112-chatgpt-bridge-dom-inspector-v1";
++const DEFAULT_SELECTORS = [
++  'div#prompt-textarea.ProseMirror[contenteditable="true"][role="textbox"]',
++  'div[contenteditable="true"][role="textbox"]#prompt-textarea',
++  'div[contenteditable="true"][role="textbox"]',
++  'textarea[name="prompt-textarea"]',
++  '[data-testid*="composer"] [contenteditable="true"]',
++  '[data-testid*="prompt"] [contenteditable="true"]'
++];
++
++function timestamp() {
++  return new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z").replace("T", "_");
++}
++
++function autoOpsDir() {
++  if (process.env.SERA_AUTOOPS_DIR) return process.env.SERA_AUTOOPS_DIR;
++  return path.join(os.homedir(), "OneDrive", "SERA-AutoOps");
++}
++
++function ensureDir(p) {
++  fs.mkdirSync(p, { recursive: true });
++}
++
++function writeJson(file, data) {
++  ensureDir(path.dirname(file));
++  fs.writeFileSync(file, JSON.stringify(data, null, 2), "utf8");
++}
++
++function writeMarkdown(file, lines) {
++  ensureDir(path.dirname(file));
++  fs.writeFileSync(file, lines.join("\n"), "utf8");
++}
++
++function redactedUrl(raw) {
++  try {
++    const u = new URL(raw);
++    return `${u.origin}${u.pathname}`;
++  } catch {
++    return "INVALID_URL";
++  }
++}
++
++function sha256(value) {
++  return crypto.createHash("sha256").update(String(value)).digest("hex");
++}
++
++function loadTarget(stateDir) {
++  const targetPath = path.join(stateDir, "chatgpt-bridge-target.json");
++  if (!fs.existsSync(targetPath)) {
++    throw new Error(`Missing target config: ${targetPath}`);
++  }
++  const target = JSON.parse(fs.readFileSync(targetPath, "utf8"));
++  if (!target.targetUrl) throw new Error("chatgpt-bridge-target.json is missing targetUrl.");
++  const targetUrl = new URL(target.targetUrl);
++  if (!["chatgpt.com", "chat.openai.com"].includes(targetUrl.hostname)) {
++    throw new Error(`Target URL must be chatgpt.com or chat.openai.com. Found: ${targetUrl.hostname}`);
++  }
++  if (target.allowNewChatFallback !== false) throw new Error("allowNewChatFallback must be false for Phase 112.");
++  if (target.allowRandomRecentChatFallback !== false) throw new Error("allowRandomRecentChatFallback must be false for Phase 112.");
++  return { targetPath, target, targetUrl };
++}
++
++async function fetchJson(url) {
++  const response = await fetch(url, { headers: { accept: "application/json" } });
++  if (!response.ok) throw new Error(`${url} returned HTTP ${response.status}`);
++  return response.json();
++}
++
++function sameSavedConversation(tabUrl, targetUrl) {
++  try {
++    const tab = new URL(tabUrl);
++    if (tab.hostname !== targetUrl.hostname) return false;
++    const tabPath = tab.pathname.replace(/\/$/, "");
++    const targetPath = targetUrl.pathname.replace(/\/$/, "");
++    return tabPath === targetPath || tab.href.split("?")[0] === targetUrl.href.split("?")[0];
++  } catch {
++    return false;
++  }
++}
++
++class CdpClient {
++  constructor(wsUrl) {
++    this.wsUrl = wsUrl;
++    this.nextId = 1;
++    this.pending = new Map();
++  }
++
++  async connect() {
++    if (typeof WebSocket === "undefined") {
++      throw new Error("Node WebSocket client is unavailable. Use Node 22+ or newer.");
++    }
++    this.ws = new WebSocket(this.wsUrl);
++    this.ws.addEventListener("message", (event) => {
++      const message = JSON.parse(event.data);
++      if (message.id && this.pending.has(message.id)) {
++        const { resolve, reject } = this.pending.get(message.id);
++        this.pending.delete(message.id);
++        if (message.error) reject(new Error(`${message.error.message || "CDP error"}: ${JSON.stringify(message.error)}`));
++        else resolve(message.result);
++      }
++    });
++    this.ws.addEventListener("error", (event) => {
++      for (const { reject } of this.pending.values()) reject(new Error(`WebSocket error: ${event.message || "unknown"}`));
++      this.pending.clear();
++    });
++    await new Promise((resolve, reject) => {
++      const timeout = setTimeout(() => reject(new Error("Timed out connecting to Chrome DevTools WebSocket.")), 8000);
++      this.ws.addEventListener("open", () => { clearTimeout(timeout); resolve(); }, { once: true });
++      this.ws.addEventListener("error", () => { clearTimeout(timeout); reject(new Error("Chrome DevTools WebSocket connection failed.")); }, { once: true });
++    });
++  }
++
++  send(method, params = {}) {
++    const id = this.nextId++;
++    const payload = JSON.stringify({ id, method, params });
++    return new Promise((resolve, reject) => {
++      this.pending.set(id, { resolve, reject });
++      this.ws.send(payload);
++      setTimeout(() => {
++        if (this.pending.has(id)) {
++          this.pending.delete(id);
++          reject(new Error(`CDP command timed out: ${method}`));
++        }
++      }, 10000);
++    });
++  }
++
++  close() {
++    try { this.ws?.close(); } catch {}
++  }
++}
++
++function domInspectionExpression(selectors, allowFocus) {
++  return `(() => {
++    const selectors = ${JSON.stringify(selectors)};
++    const allowFocus = ${allowFocus ? "true" : "false"};
++    const results = [];
++    let selected = null;
++    for (const selector of selectors) {
++      const matches = Array.from(document.querySelectorAll(selector));
++      const details = matches.map((el, index) => {
++        const rect = el.getBoundingClientRect();
++        const style = window.getComputedStyle(el);
++        const editable = el.isContentEditable || el.getAttribute("contenteditable") === "true";
++        const visible = rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && style.display !== "none";
++        const disabled = el.disabled === true || el.getAttribute("aria-disabled") === "true" || el.getAttribute("disabled") !== null;
++        const readOnly = el.readOnly === true || el.getAttribute("readonly") !== null;
++        const candidate = {
++          index,
++          tagName: el.tagName,
++          id: el.id || null,
++          className: typeof el.className === "string" ? el.className : null,
++          role: el.getAttribute("role"),
++          ariaLabel: el.getAttribute("aria-label"),
++          contentEditable: el.getAttribute("contenteditable"),
++          isContentEditable: editable,
++          visible,
++          disabled,
++          readOnly,
++          rect: { x: Math.round(rect.x), y: Math.round(rect.y), width: Math.round(rect.width), height: Math.round(rect.height) },
++          textLength: (el.textContent || el.value || "").length,
++          safeComposerCandidate: visible && !disabled && !readOnly && (editable || el.tagName === "TEXTAREA")
++        };
++        if (!selected && candidate.safeComposerCandidate) selected = { selector, index, tagName: candidate.tagName };
++        return candidate;
++      });
++      results.push({ selector, matchCount: matches.length, matches: details });
++    }
++    let focused = false;
++    if (allowFocus && selected) {
++      const el = document.querySelectorAll(selected.selector)[selected.index];
++      if (el && typeof el.focus === "function") {
++        el.focus({ preventScroll: true });
++        focused = document.activeElement === el;
++      }
++    }
++    return {
++      url: location.href,
++      title: document.title,
++      readyState: document.readyState,
++      selectorsChecked: selectors.length,
++      selected,
++      focused,
++      inspectionOnly: true,
++      submittedPrompt: false,
++      downloadedFile: false,
++      results
++    };
++  })()`;
++}
++
++async function main() {
++  const args = new Set(process.argv.slice(2));
++  const allowFocus = args.has("--focus") || process.env.SERA_BRIDGE_FOCUS === "1";
++  const autoOps = autoOpsDir();
++  const stateDir = path.join(autoOps, "12_browser_helper_state");
++  const blockedDir = path.join(autoOps, "12_browser_helper_blocked");
++  const needsAttentionDir = path.join(autoOps, "17_needs_attention");
++  ensureDir(stateDir);
++  ensureDir(blockedDir);
++  ensureDir(needsAttentionDir);
++
++  const runId = `${PHASE}-${timestamp()}`;
++  const cdpEndpoint = process.env.SERA_CHROME_CDP || "http://127.0.0.1:9222";
++  const baseEvidence = { phase: PHASE, runId, createdAt: new Date().toISOString(), cdpEndpoint, focusRequested: allowFocus };
++
++  try {
++    const { targetPath, target, targetUrl } = loadTarget(stateDir);
++    const selectors = Array.isArray(target.composerSelectors) && target.composerSelectors.length ? target.composerSelectors : DEFAULT_SELECTORS;
++    const tabs = await fetchJson(`${cdpEndpoint.replace(/\/$/, "")}/json`);
++    const candidates = tabs.filter((tab) => tab.type === "page" && typeof tab.url === "string");
++    const tab = candidates.find((candidate) => sameSavedConversation(candidate.url, targetUrl));
++    if (!tab) {
++      throw new Error(`Saved ChatGPT target tab was not found in Chrome DevTools pages. Target: ${redactedUrl(target.targetUrl)}. Open the exact saved target in the dedicated CDP Chrome window and rerun.`);
++    }
++    if (!tab.webSocketDebuggerUrl) throw new Error("Matched Chrome tab has no webSocketDebuggerUrl.");
++
++    const client = new CdpClient(tab.webSocketDebuggerUrl);
++    await client.connect();
++    try {
++      await client.send("Runtime.enable");
++      const result = await client.send("Runtime.evaluate", {
++        expression: domInspectionExpression(selectors, allowFocus),
++        returnByValue: true,
++        awaitPromise: false
++      });
++      const value = result?.result?.value;
++      if (!value) throw new Error("DOM inspection returned no serializable result.");
++      const found = Boolean(value.selected);
++      const evidence = {
++        ...baseEvidence,
++        status: found ? "PASS" : "BLOCKED",
++        targetName: target.targetName || "SERA Autopilot Control Thread",
++        targetUrlHash: sha256(target.targetUrl),
++        targetUrlRedacted: redactedUrl(target.targetUrl),
++        targetPath,
++        matchedTab: { id: tab.id, title: tab.title, urlHash: sha256(tab.url), urlRedacted: redactedUrl(tab.url) },
++        dom: value,
++        safety: {
++          noPromptSubmission: true,
++          noDownloadAttempt: true,
++          noRandomRecentChatFallback: target.allowRandomRecentChatFallback === false,
++          noNewChatFallback: target.allowNewChatFallback === false
++        }
++      };
++      const evidencePath = path.join(stateDir, `${runId}-${found ? "PASS" : "BLOCKED"}.json`);
++      writeJson(evidencePath, evidence);
++      if (!found) {
++        const blockedPath = path.join(blockedDir, `${runId}-COMPOSER_NOT_FOUND.md`);
++        writeMarkdown(blockedPath, [
++          "# S.E.R.A. ChatGPT Bridge DOM Inspector Blocked",
++          "",
++          `Phase: ${PHASE}`,
++          `Run ID: ${runId}`,
++          "",
++          "## Reason",
++          "",
++          "The saved ChatGPT tab was found, but no visible editable composer/textbox candidate matched the configured selectors.",
++          "",
++          "## Evidence",
++          "",
++          evidencePath,
++          "",
++          "## Safety",
++          "",
++          "No prompt was submitted. No file was downloaded. No fallback chat was selected."
++        ]);
++        console.log(JSON.stringify({ ok: false, status: "blocked", message: "Composer not found.", evidencePath, blockedPath }, null, 2));
++        process.exitCode = 2;
++      } else {
++        console.log(JSON.stringify({ ok: true, status: "pass", message: "Saved ChatGPT composer candidate found. No prompt submitted.", evidencePath, selected: value.selected }, null, 2));
++      }
++    } finally {
++      client.close();
++    }
++  } catch (error) {
++    const blocked = {
++      ...baseEvidence,
++      status: "BLOCKED",
++      error: error instanceof Error ? error.message : String(error),
++      safety: {
++        noPromptSubmission: true,
++        noDownloadAttempt: true,
++        noRandomRecentChatFallback: true,
++        noNewChatFallback: true
++      }
++    };
++    const evidencePath = path.join(blockedDir, `${runId}-BLOCKED.json`);
++    const attentionPath = path.join(needsAttentionDir, `${runId}-NEEDS_ATTENTION.md`);
++    writeJson(evidencePath, blocked);
++    writeMarkdown(attentionPath, [
++      "# S.E.R.A. ChatGPT Bridge DOM Inspector Needs Attention",
++      "",
++      `Phase: ${PHASE}`,
++      `Run ID: ${runId}`,
++      "",
++      "## Reason",
++      "",
++      blocked.error,
++      "",
++      "## Required owner action",
++      "",
++      "1. Confirm `chatgpt-bridge-target.json` exists in `12_browser_helper_state`.",
++      "2. Open the exact saved ChatGPT conversation URL in a dedicated Chrome window launched with `--remote-debugging-port=9222`.",
++      "3. Rerun `node scripts/chatgpt-bridge-dom-inspector.mjs`.",
++      "",
++      "## Safety",
++      "",
++      "No prompt was submitted. No file was downloaded. No fallback chat was selected.",
++      "",
++      "## Evidence",
++      "",
++      evidencePath
++    ]);
++    console.log(JSON.stringify({ ok: false, status: "blocked", message: blocked.error, evidencePath, attentionPath }, null, 2));
++    process.exitCode = 2;
++  }
++}
++
++main();
+diff --git a/scripts/phase112-set-chatgpt-target.ps1 b/scripts/phase112-set-chatgpt-target.ps1
+new file mode 100644
+index 0000000..86b059e
+--- /dev/null
++++ b/scripts/phase112-set-chatgpt-target.ps1
+@@ -0,0 +1,42 @@
++$ErrorActionPreference = "Stop"
++
++$AutoOps = if ($env:SERA_AUTOOPS_DIR) { $env:SERA_AUTOOPS_DIR } else { "$env:USERPROFILE\OneDrive\SERA-AutoOps" }
++$StateDir = Join-Path $AutoOps "12_browser_helper_state"
++New-Item -ItemType Directory -Force -Path $StateDir | Out-Null
++
++$ChatUrl = Read-Host "Paste the exact S.E.R.A. ChatGPT conversation URL"
++
++if ([string]::IsNullOrWhiteSpace($ChatUrl)) {
++  throw "No URL provided. Target config was not written."
++}
++
++$uri = [Uri]$ChatUrl
++if ($uri.Host -notin @("chatgpt.com", "chat.openai.com")) {
++  throw "URL must be a ChatGPT conversation URL on chatgpt.com or chat.openai.com. Provided host: $($uri.Host)"
++}
++
++$config = [ordered]@{
++  targetName = "SERA Autopilot Control Thread"
++  targetUrl = $ChatUrl
++  preferredConversation = "same_project_thread"
++  failIfTargetMissing = $true
++  allowNewChatFallback = $false
++  allowRandomRecentChatFallback = $false
++  bridgeMode = "dom_inspector_only_no_submit"
++  cdpEndpoint = "http://127.0.0.1:9222"
++  composerSelectors = @(
++    'div#prompt-textarea.ProseMirror[contenteditable="true"][role="textbox"]',
++    'div[contenteditable="true"][role="textbox"]#prompt-textarea',
++    'div[contenteditable="true"][role="textbox"]',
++    'textarea[name="prompt-textarea"]',
++    '[data-testid*="composer"] [contenteditable="true"]',
++    '[data-testid*="prompt"] [contenteditable="true"]'
++  )
++  createdAt = (Get-Date).ToString("o")
++}
++
++$Path = Join-Path $StateDir "chatgpt-bridge-target.json"
++$config | ConvertTo-Json -Depth 10 | Set-Content -Path $Path -Encoding UTF8
++
++Write-Host "Wrote ChatGPT bridge target: $Path"
++Get-Content $Path
+diff --git a/scripts/phase112-verify.mjs b/scripts/phase112-verify.mjs
+new file mode 100644
+index 0000000..390f44d
+--- /dev/null
++++ b/scripts/phase112-verify.mjs
+@@ -0,0 +1,67 @@
++#!/usr/bin/env node
++import fs from "node:fs";
++import path from "node:path";
++import crypto from "node:crypto";
++import { spawnSync } from "node:child_process";
++
++const phase = "phase112-chatgpt-bridge-dom-inspector-v1";
++const root = process.cwd();
++const requiredFiles = [
++  "docs/phases/PHASE_112_CHATGPT_BRIDGE_DOM_INSPECTOR_V1.md",
++  "scripts/chatgpt-bridge-dom-inspector.mjs",
++  "scripts/phase112-set-chatgpt-target.ps1",
++  "scripts/sera-chatgpt-dom-inspector.ps1"
++];
++
++function sha256(file) {
++  return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
++}
++
++const results = [];
++for (const rel of requiredFiles) {
++  const file = path.join(root, rel);
++  results.push({ check: `exists:${rel}`, ok: fs.existsSync(file), detail: fs.existsSync(file) ? sha256(file) : "missing" });
++}
++
++const script = path.join(root, "scripts/chatgpt-bridge-dom-inspector.mjs");
++if (fs.existsSync(script)) {
++  const syntax = spawnSync(process.execPath, ["--check", script], { encoding: "utf8" });
++  results.push({ check: "node_syntax:chatgpt-bridge-dom-inspector", ok: syntax.status === 0, detail: syntax.stderr || syntax.stdout || "syntax ok" });
++  const source = fs.readFileSync(script, "utf8");
++  const forbidden = [
++    "Input.dispatchKeyEvent",
++    "Input.insertText",
++    "page.click",
++    ".click()",
++    "downloadFile",
++    "setDownloadBehavior",
++    "textarea.value =",
++    "el.value =",
++    "innerText =",
++    "textContent ="
++  ];
++  for (const token of forbidden) {
++    results.push({ check: `forbidden:${token}`, ok: !source.includes(token), detail: source.includes(token) ? "found" : "not found" });
++  }
++  results.push({ check: "contains:composer-selectors", ok: source.includes("prompt-textarea") && source.includes("contenteditable"), detail: "checks ChatGPT composer selectors" });
++  results.push({ check: "contains:no-random-fallback", ok: source.includes("allowRandomRecentChatFallback") && source.includes("allowNewChatFallback"), detail: "checks fallback controls" });
++}
++
++const pass = results.every((result) => result.ok);
++const outDir = path.join(root, ".sera-proof", "phase112");
++fs.mkdirSync(outDir, { recursive: true });
++const report = {
++  phase,
++  status: pass ? "PASS" : "FAIL",
++  createdAt: new Date().toISOString(),
++  results
++};
++const outFile = path.join(outDir, "phase112-verify.json");
++fs.writeFileSync(outFile, JSON.stringify(report, null, 2), "utf8");
++
++for (const result of results) {
++  console.log(`${result.ok ? "✓" : "✗"} ${result.check} — ${result.detail}`);
++}
++console.log(`Phase 112 verify: ${report.status}`);
++console.log(outFile);
++process.exit(pass ? 0 : 1);
+diff --git a/scripts/sera-chatgpt-dom-inspector.ps1 b/scripts/sera-chatgpt-dom-inspector.ps1
+new file mode 100644
+index 0000000..ea40b1b
+--- /dev/null
++++ b/scripts/sera-chatgpt-dom-inspector.ps1
+@@ -0,0 +1,12 @@
++$ErrorActionPreference = "Stop"
++
++$Repo = Resolve-Path (Join-Path $PSScriptRoot "..")
++Set-Location $Repo
++
++$NodeScript = Join-Path $Repo "scripts\chatgpt-bridge-dom-inspector.mjs"
++if (!(Test-Path $NodeScript)) {
++  throw "Missing DOM inspector script: $NodeScript"
++}
++
++node $NodeScript @args
++exit $LASTEXITCODE
