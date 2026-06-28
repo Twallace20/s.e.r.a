@@ -1,0 +1,30 @@
+{
+  "overlay": "s.e.r.a_phase113_chatgpt_bridge_submit_download_v1_overlay",
+  "phase": 113,
+  "phaseName": "ChatGPT Bridge Submit + Download v1",
+  "createdAt": "2026-06-28T16:30:00Z",
+  "safetyLevel": "controlled_submit_download_requires_explicit_enable",
+  "zipRoot": "repo/",
+  "adds": [
+    "docs/phases/PHASE_113_CHATGPT_BRIDGE_SUBMIT_DOWNLOAD_V1.md",
+    "scripts/chatgpt-bridge-submit-download.mjs",
+    "scripts/sera-chatgpt-submit-download.ps1",
+    "scripts/phase113-write-phase114-test-prompt.ps1",
+    "scripts/phase113-verify.mjs"
+  ],
+  "validationCommands": [
+    "node scripts/phase113-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "requiresPhase112ClosedCleanly": true,
+  "requiresOwnerProvidedTargetUrl": true,
+  "browserControl": {
+    "requiresChromeDevToolsEndpoint": "http://127.0.0.1:9222",
+    "usesSavedTargetOnly": true,
+    "submitsPromptsOnlyWhenEnvEnabled": "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true",
+    "downloadsFilesOnlyWhenEnvEnabled": "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true",
+    "downloadDestination": "13_chatgpt_downloads",
+    "usesRandomRecentChatFallback": false,
+    "usesNewChatFallback": false
+  }
+}
