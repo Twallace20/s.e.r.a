@@ -235,7 +235,13 @@
     "phase108:verify": "node scripts/run-autopilot-reliability-scaffold-v1.mjs --verify",
     "phase109:demo": "node scripts/run-proof-of-use-simulation-harness-v1.mjs --demo",
     "phase109:verify": "node scripts/run-proof-of-use-simulation-harness-v1.mjs --verify",
-    "sera:proof": "node scripts/run-proof-of-use-simulation-harness-v1.mjs --verify"
+    "sera:proof": "node scripts/run-proof-of-use-simulation-harness-v1.mjs --verify",
+    "phase110:demo": "node scripts/run-validation-profiles-proof-gate-v1.mjs --demo",
+    "phase110:verify": "node scripts/run-validation-profiles-proof-gate-v1.mjs --verify",
+    "certify:artifacts": "node packages/certs/dist/certify.js",
+    "sera:quick": "node scripts/run-validation-profiles-proof-gate-v1.mjs --profile quick",
+    "sera:gate": "node scripts/run-validation-profiles-proof-gate-v1.mjs --profile gate",
+    "sera:milestone": "node scripts/run-validation-profiles-proof-gate-v1.mjs --profile milestone"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
