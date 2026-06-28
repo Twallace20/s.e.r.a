@@ -1702,3 +1702,13 @@ Phase 105 reads Phase 104 Worker Activation Gate lineage and creates a manual ow
 - `tests/integration/worker-activation-decision-record-v1.test.ts` — Verifies decision record packet output, Phase 104 lineage readiness, Tyler approval, safe decision records, blocked activation/token/credential/worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
 - `apps/operator-console/src/worker-activation-decision-record.ts` — Exposes Phase 105 status and safety gates to the operator console.
 
+## Phase 106 — Worker Activation Token Draft v1
+
+Phase 106 reads Phase 105 Worker Activation Decision Record lineage and creates a manual owner-review activation token draft packet. It creates activation token drafts, owner token decision drafts, token policy drafts, token audit drafts, activation token denial records, decision record references, token issuance block evidence, token draft ledgers, and owner-review manifests while activation token issuance, credential issuance, token material generation, secret material generation, worker activation, worker execution, worker spawning, autonomous delegation, scheduler/workflow/iPhone automation mutation, away-mode execution, fleet execution, apply execution, patch execution, project repo source mutation, real branch creation, real merge execution, git push, tag creation, arbitrary commands, shell execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_106_WORKER_ACTIVATION_TOKEN_DRAFT_V1.md` — Defines Phase 106 purpose, token draft boundaries, safety gates, and completion criteria.
+- `scripts/lib/worker-activation-token-draft-v1.mjs` — Implements Worker Activation Token Draft with Phase 105 lineage checks, safe token drafts, fail-closed validation, and evidence output.
+- `scripts/run-worker-activation-token-draft-v1.mjs` — Runs the Phase 106 demo and writes Worker Activation Token Draft output.
+- `tests/integration/worker-activation-token-draft-v1.test.ts` — Verifies token draft packet output, Phase 105 lineage readiness, Tyler approval, safe token drafts, blocked token/credential/material/worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
+- `apps/operator-console/src/worker-activation-token-draft.ts` — Exposes Phase 106 status and safety gates to the operator console.
+
