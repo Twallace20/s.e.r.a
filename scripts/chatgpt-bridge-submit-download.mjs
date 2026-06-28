@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
 
-const PHASE = "phase113-chatgpt-bridge-submit-download-v1";
+const PHASE = "phase115-chatgpt-dom-download-troubleshooter-v1";
 const DEFAULT_SELECTORS = [
   'div#prompt-textarea.ProseMirror[contenteditable="true"][role="textbox"]',
   'div[contenteditable="true"][role="textbox"]#prompt-textarea',
@@ -51,13 +51,14 @@ function sha256(value) {
 }
 
 function parseArgs(argv) {
-  const args = { mode: "dry-run", promptFile: null, maxWaitMs: 900000 };
+  const args = { mode: "dry-run", promptFile: null, maxWaitMs: 900000, expectedZipName: null };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--execute") args.mode = "execute";
     else if (arg === "--dry-run") args.mode = "dry-run";
     else if (arg === "--prompt-file") args.promptFile = argv[++i];
     else if (arg === "--max-wait-ms") args.maxWaitMs = Number(argv[++i]);
+    else if (arg === "--expected-zip-name") args.expectedZipName = argv[++i];
   }
   return args;
 }
@@ -120,6 +121,21 @@ function readSafePrompt(promptFile) {
   const matched = risky.find((rx) => rx.test(prompt));
   if (matched) throw new Error(`Prompt blocked by Phase 113 risk filter: ${matched}`);
   return prompt;
+}
+
+
+function expectedZipNameFromPrompt(prompt) {
+  const patterns = [
+    /Return\s+a\s+downloadable\s+ZIP\s+named\s+exactly:\s*`?([^`\s"']+\.zip)`?/i,
+    /downloadable\s+ZIP\s+named\s+exactly\s*:?\s*`?([^`\s"']+\.zip)`?/i,
+    /named\s+exactly\s*:?\s*`?([^`\s"']+\.zip)`?/i,
+    /([A-Za-z0-9._-]+_phase\d+[A-Za-z0-9._-]*\.zip)/i
+  ];
+  for (const rx of patterns) {
+    const match = prompt.match(rx);
+    if (match?.[1]) return match[1].trim();
+  }
+  return null;
 }
 
 async function fetchJson(url) {
@@ -307,41 +323,137 @@ async function clickSend(client) {
   return evaluate(client, js);
 }
 
-async function waitForZipLink(client, requestedName, maxWaitMs) {
-  const start = Date.now();
-  const needle = requestedName || ".zip";
-  while (Date.now() - start < maxWaitMs) {
-    const js = `(() => {
-      const links = Array.from(document.querySelectorAll('a[href]'))
-        .map((a) => ({ href: a.href, text: (a.innerText || a.textContent || '').trim() }))
-        .filter((item) => item.href.toLowerCase().includes('.zip') || item.text.toLowerCase().includes('.zip'));
-      const exact = links.find((item) => item.href.includes(${JSON.stringify(needle)}) || item.text.includes(${JSON.stringify(needle)}));
-      const any = links[links.length - 1];
-      return exact || any || null;
-    })()`;
-    const link = await evaluate(client, js);
-    if (link) return link;
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-  }
-  throw new Error(`Timed out waiting for ZIP link after ${maxWaitMs}ms.`);
-}
-
-async function clickDownloadLink(client, link) {
+async function getDownloadCandidates(client, expectedName) {
   const js = `(() => {
-    const targetHref = ${JSON.stringify(link.href)};
-    const anchors = Array.from(document.querySelectorAll('a[href]'));
-    const a = anchors.find((node) => node.href === targetHref) || anchors.find((node) => (node.innerText || node.textContent || '').trim() === ${JSON.stringify(link.text)});
-    if (!a) return { ok: false, reason: "download link disappeared" };
-    a.click();
-    return { ok: true, href: a.href, text: (a.innerText || a.textContent || '').trim() };
+    const expectedName = (${JSON.stringify(expectedName || "")}).toLowerCase();
+    const visible = (el) => {
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      const style = window.getComputedStyle(el);
+      return rect.width > 4 && rect.height > 4 && style.visibility !== "hidden" && style.display !== "none";
+    };
+    const textOf = (el) => [
+      el.innerText,
+      el.textContent,
+      el.getAttribute("aria-label"),
+      el.getAttribute("title"),
+      el.getAttribute("download"),
+      el.getAttribute("data-testid"),
+      el.id,
+      el.className
+    ].filter(Boolean).join(" ").replace(/\\s+/g, " ").trim();
+    const latestAssistant = Array.from(document.querySelectorAll('[data-message-author-role="assistant"], article, [data-testid*="conversation-turn"]'))
+      .filter(visible)
+      .slice(-1)[0] || null;
+    const allCandidates = [];
+    const addCandidate = (el, query, kind, source) => {
+      const nodes = Array.from(document.querySelectorAll(query));
+      const index = nodes.indexOf(el);
+      if (index < 0) return;
+      const href = el.href || el.getAttribute("href") || "";
+      const text = textOf(el);
+      const haystack = (href + " " + text).toLowerCase();
+      const mentionsZip = haystack.includes(".zip");
+      const mentionsExpected = expectedName && haystack.includes(expectedName);
+      const looksDownload = haystack.includes("download") || haystack.includes("download file") || haystack.includes("download artifact");
+      if (!mentionsZip && !mentionsExpected && !looksDownload) return;
+      let score = 0;
+      if (mentionsExpected) score += 100;
+      if (mentionsZip) score += 40;
+      if (looksDownload) score += 20;
+      if (source === "latestAssistant") score += 20;
+      if (visible(el)) score += 10;
+      if (kind === "link" && href) score += 5;
+      allCandidates.push({
+        kind,
+        query,
+        index,
+        source,
+        score,
+        href,
+        hrefHost: (() => { try { return href ? new URL(href).hostname : null; } catch { return "invalid"; } })(),
+        text: text.slice(0, 300),
+        ariaLabel: el.getAttribute("aria-label") || null,
+        title: el.getAttribute("title") || null,
+        dataTestId: el.getAttribute("data-testid") || null,
+        visible: visible(el)
+      });
+    };
+    const scopes = latestAssistant ? [{ node: latestAssistant, source: "latestAssistant" }, { node: document, source: "document" }] : [{ node: document, source: "document" }];
+    for (const { node, source } of scopes) {
+      for (const el of Array.from(node.querySelectorAll('a[href], a[download]'))) addCandidate(el, 'a[href], a[download]', 'link', source);
+      for (const el of Array.from(node.querySelectorAll('button, [role="button"]'))) addCandidate(el, 'button, [role="button"]', 'button', source);
+    }
+    const deduped = [];
+    const seen = new Set();
+    for (const item of allCandidates.sort((a, b) => b.score - a.score)) {
+      const key = item.kind + ':' + item.query + ':' + item.index + ':' + item.href + ':' + item.text;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      deduped.push(item);
+    }
+    const pageText = (document.body?.innerText || "").replace(/\\s+/g, " ");
+    const zipTextMatches = Array.from(new Set(pageText.match(/[A-Za-z0-9._-]+\\.zip/g) || [])).slice(-20);
+    const latestAssistantText = latestAssistant ? (latestAssistant.innerText || latestAssistant.textContent || "").replace(/\\s+/g, " ").trim().slice(-2000) : null;
+    return {
+      ok: deduped.length > 0,
+      candidate: deduped[0] || null,
+      candidates: deduped.slice(0, 20),
+      snapshot: {
+        expectedName,
+        candidateCount: deduped.length,
+        zipTextMatches,
+        latestAssistantText,
+        assistantNodeFound: Boolean(latestAssistant),
+        pageTitle: document.title,
+        url: location.href
+      }
+    };
   })()`;
   return evaluate(client, js);
 }
 
-function newestZip(dir, sinceMs) {
+async function waitForZipCandidate(client, expectedName, maxWaitMs) {
+  const start = Date.now();
+  let last = null;
+  while (Date.now() - start < maxWaitMs) {
+    last = await getDownloadCandidates(client, expectedName);
+    if (last?.ok && last.candidate) return last;
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+  }
+  const snapshot = last?.snapshot ? JSON.stringify(last.snapshot).slice(0, 4000) : "no DOM snapshot available";
+  throw new Error(`Timed out waiting for a downloadable ZIP candidate after ${maxWaitMs}ms. DOM troubleshooting snapshot: ${snapshot}`);
+}
+
+async function clickDownloadCandidate(client, candidate) {
+  const js = `(() => {
+    const candidate = ${JSON.stringify(candidate)};
+    const nodes = Array.from(document.querySelectorAll(candidate.query));
+    const el = nodes[candidate.index];
+    if (!el) return { ok: false, reason: "download candidate disappeared", candidate };
+    el.scrollIntoView({ block: "center", inline: "center" });
+    el.click();
+    return {
+      ok: true,
+      kind: candidate.kind,
+      source: candidate.source,
+      score: candidate.score,
+      hrefHost: candidate.hrefHost || null,
+      text: candidate.text || "",
+      ariaLabel: candidate.ariaLabel || null,
+      title: candidate.title || null,
+      dataTestId: candidate.dataTestId || null
+    };
+  })()`;
+  return evaluate(client, js);
+}
+
+function newestZip(dir, sinceMs, expectedName = null) {
   if (!fs.existsSync(dir)) return null;
+  const expected = expectedName ? expectedName.toLowerCase() : null;
   const candidates = fs.readdirSync(dir)
     .filter((name) => name.toLowerCase().endsWith(".zip"))
+    .filter((name) => !expected || name.toLowerCase().includes(expected.replace(/\.zip$/, "")))
     .map((name) => path.join(dir, name))
     .map((file) => ({ file, mtime: fs.statSync(file).mtimeMs, size: fs.statSync(file).size }))
     .filter((item) => item.mtime >= sinceMs && item.size > 0)
@@ -349,14 +461,14 @@ function newestZip(dir, sinceMs) {
   return candidates[0] || null;
 }
 
-async function waitForDownloadedZip(downloadDir, sinceMs, maxWaitMs) {
+async function waitForDownloadedZip(downloadDir, sinceMs, maxWaitMs, expectedName = null) {
   const start = Date.now();
   while (Date.now() - start < maxWaitMs) {
-    const zip = newestZip(downloadDir, sinceMs);
+    const zip = newestZip(downloadDir, sinceMs, expectedName);
     if (zip) return zip;
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
-  throw new Error(`Timed out waiting for downloaded ZIP in ${downloadDir}`);
+  throw new Error(`Timed out waiting for downloaded ZIP in ${downloadDir}${expectedName ? ` matching ${expectedName}` : ""}`);
 }
 
 async function main() {
@@ -380,6 +492,7 @@ async function main() {
     const cdpEndpoint = target.cdpEndpoint || "http://127.0.0.1:9222";
     const promptFile = findPromptFile(outboxDir, args.promptFile);
     const prompt = readSafePrompt(promptFile);
+    const expectedZipName = args.expectedZipName || expectedZipNameFromPrompt(prompt) || null;
     const selectors = Array.isArray(target.composerSelectors) && target.composerSelectors.length > 0 ? target.composerSelectors : DEFAULT_SELECTORS;
 
     const tab = await findTargetTab(cdpEndpoint, targetUrl);
@@ -397,6 +510,7 @@ async function main() {
         promptFile,
         promptSha256: sha256(prompt),
         promptLength: prompt.length,
+        expectedZipName,
         cdpEndpoint,
         tab: { id: tab.id, title: tab.title, url: redactedUrl(tab.url) },
         composer,
@@ -425,16 +539,19 @@ async function main() {
       const sent = await clickSend(client);
       if (!sent?.ok) throw new Error(`Send click failed: ${sent?.reason || "unknown"}`);
 
-      const link = await waitForZipLink(client, ".zip", args.maxWaitMs);
-      const clicked = await clickDownloadLink(client, link);
+      const candidateResult = await waitForZipCandidate(client, expectedZipName || ".zip", args.maxWaitMs);
+      const clicked = await clickDownloadCandidate(client, candidateResult.candidate);
       if (!clicked?.ok) throw new Error(`Download click failed: ${clicked?.reason || "unknown"}`);
-      const downloaded = await waitForDownloadedZip(downloadsDir, submitStartMs, Math.min(args.maxWaitMs, 300000));
+      const downloaded = await waitForDownloadedZip(downloadsDir, submitStartMs, Math.min(args.maxWaitMs, 300000), expectedZipName);
 
       evidence.status = "EXECUTE_PASS";
       evidence.downloadBehavior = downloadBehavior;
       evidence.inserted = inserted;
       evidence.sent = sent;
-      evidence.link = { text: link.text, hrefHost: (() => { try { return new URL(link.href).hostname; } catch { return "unknown"; } })() };
+      evidence.downloadCandidate = candidateResult.candidate;
+      evidence.downloadCandidates = candidateResult.candidates;
+      evidence.domTroubleshooting = candidateResult.snapshot;
+      evidence.clicked = clicked;
       evidence.downloaded = downloaded;
       writeJson(evidencePath, evidence);
       console.log(JSON.stringify({ ok: true, status: "execute_pass", downloaded: downloaded.file, evidencePath }, null, 2));

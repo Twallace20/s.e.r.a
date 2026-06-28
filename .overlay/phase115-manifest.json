@@ -1,0 +1,44 @@
+{
+  "overlay": "s.e.r.a_phase115_chatgpt_dom_download_troubleshooter_v1_overlay",
+  "phase": 115,
+  "phaseName": "ChatGPT DOM Download Troubleshooter v1",
+  "createdAt": "2026-06-28T17:05:00Z",
+  "safetyLevel": "controlled_dom_download_troubleshooting_requires_explicit_execute",
+  "zipRoot": "repo/",
+  "adds": [
+    "docs/phases/PHASE_115_CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTER_V1.md",
+    "docs/autopilot/CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTING.md",
+    "scripts/phase115-write-phase116-test-prompt.ps1",
+    "scripts/phase115-verify.mjs"
+  ],
+  "modifies": [
+    "scripts/chatgpt-bridge-submit-download.mjs",
+    "scripts/sera-chatgpt-submit-download.ps1"
+  ],
+  "validationCommands": [
+    "node scripts/phase115-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "requiresPhase114ClosedCleanly": true,
+  "downloadController": {
+    "searchScope": "latest assistant response first, then document fallback",
+    "candidateTypes": [
+      "a[href]",
+      "a[download]",
+      "button",
+      "[role=button]"
+    ],
+    "expectedZipNameSource": [
+      "--expected-zip-name",
+      "prompt parsing"
+    ],
+    "evidence": "12_browser_helper_state JSON with candidates and DOM snapshot",
+    "failClosedTarget": "12_browser_helper_blocked and 17_needs_attention"
+  },
+  "browserControl": {
+    "usesSavedTargetOnly": true,
+    "requiresExplicitExecutionFlag": "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true",
+    "usesRandomRecentChatFallback": false,
+    "usesNewChatFallback": false
+  }
+}

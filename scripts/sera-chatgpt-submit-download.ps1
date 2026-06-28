@@ -1,7 +1,8 @@
 param(
   [switch]$DryRun,
   [switch]$Execute,
-  [string]$PromptFile
+  [string]$PromptFile,
+  [string]$ExpectedZipName
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,6 +19,7 @@ $argsList = @()
 if ($Execute) { $argsList += "--execute" }
 if ($DryRun) { $argsList += "--dry-run" }
 if ($PromptFile) { $argsList += @("--prompt-file", $PromptFile) }
+if ($ExpectedZipName) { $argsList += @("--expected-zip-name", $ExpectedZipName) }
 
 node $NodeScript @argsList
 exit $LASTEXITCODE
