@@ -1,0 +1,27 @@
+{
+  "overlay": "s.e.r.a_phase112_chatgpt_bridge_dom_inspector_v1_overlay",
+  "phase": 112,
+  "phaseName": "ChatGPT Bridge DOM Inspector v1",
+  "createdAt": "2026-06-28T15:23:06Z",
+  "safetyLevel": "inspection_only_no_submit",
+  "adds": [
+    "docs/phases/PHASE_112_CHATGPT_BRIDGE_DOM_INSPECTOR_V1.md",
+    "scripts/chatgpt-bridge-dom-inspector.mjs",
+    "scripts/phase112-set-chatgpt-target.ps1",
+    "scripts/sera-chatgpt-dom-inspector.ps1",
+    "scripts/phase112-verify.mjs"
+  ],
+  "validationCommands": [
+    "node scripts/phase112-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "requiresOwnerProvidedTargetUrl": true,
+  "browserControl": {
+    "opensBrowser": false,
+    "submitsPrompts": false,
+    "downloadsFiles": false,
+    "usesRandomRecentChatFallback": false,
+    "usesNewChatFallback": false,
+    "requiresChromeDevToolsEndpoint": "http://127.0.0.1:9222"
+  }
+}
