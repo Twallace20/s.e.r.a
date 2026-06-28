@@ -1,0 +1,76 @@
+#!/usr/bin/env node
+import { createDefaultWorkerActivationGateV1, runWorkerActivationGateV1 } from "./lib/worker-activation-gate-v1.mjs";
+
+const result = runWorkerActivationGateV1(createDefaultWorkerActivationGateV1());
+
+if (!result.ok) {
+  console.error("S.E.R.A. phase104 worker activation gate v1: FAIL");
+  for (const blocker of result.blockers) console.error(`- ${blocker}`);
+  process.exit(1);
+}
+
+console.log("S.E.R.A. phase104 worker activation gate v1: PASS");
+console.log(`workerActivationGateStatus: ${result.workerActivationGateStatus}`);
+console.log(`validationFailedCount: ${result.validationFailedCount}`);
+console.log(`declaredFileCount: ${result.declaredFileCount}`);
+console.log(`workerActivationGateRequirementCount: ${result.workerActivationGateRequirementCount}`);
+console.log(`workerActivationGateFieldCount: ${result.workerActivationGateFieldCount}`);
+console.log(`activationGateItemCount: ${result.activationGateItemCount}`);
+console.log(`eligibilityReviewCount: ${result.eligibilityReviewCount}`);
+console.log(`gateDecisionDraftCount: ${result.gateDecisionDraftCount}`);
+console.log(`readinessGateChecklistCount: ${result.readinessGateChecklistCount}`);
+console.log(`roadmapTrackCount: ${result.roadmapTrackCount}`);
+console.log(`multiLanguageProductionTargetCount: ${result.multiLanguageProductionTargetCount}`);
+console.log(`safetyGateCount: ${result.safetyGateCount}`);
+console.log(`workerActivationGateAllowed: ${result.workerActivationGateAllowed}`);
+console.log(`workerActivationReviewQueueReadAllowed: ${result.workerActivationReviewQueueReadAllowed}`);
+console.log(`activationGateManifestAllowed: ${result.activationGateManifestAllowed}`);
+console.log(`ownerReviewActivationGatePacketAllowed: ${result.ownerReviewActivationGatePacketAllowed}`);
+console.log(`activationEligibilityReviewAllowed: ${result.activationEligibilityReviewAllowed}`);
+console.log(`activationGateDecisionDraftAllowed: ${result.activationGateDecisionDraftAllowed}`);
+console.log(`workerActivationAllowed: ${result.workerActivationAllowed}`);
+console.log(`workerExecutionAllowed: ${result.workerExecutionAllowed}`);
+console.log(`workerSpawningAllowed: ${result.workerSpawningAllowed}`);
+console.log(`autonomousDelegationAllowed: ${result.autonomousDelegationAllowed}`);
+console.log(`schedulerWorkflowMutationAllowed: ${result.schedulerWorkflowMutationAllowed}`);
+console.log(`iPhoneAutomationMutationAllowed: ${result.iPhoneAutomationMutationAllowed}`);
+console.log(`awayModeExecutionAllowed: ${result.awayModeExecutionAllowed}`);
+console.log(`fleetExecutionAllowed: ${result.fleetExecutionAllowed}`);
+console.log(`applyExecutionAllowed: ${result.applyExecutionAllowed}`);
+console.log(`patchExecutionAllowed: ${result.patchExecutionAllowed}`);
+console.log(`projectRepoSourceMutationAllowed: ${result.projectRepoSourceMutationAllowed}`);
+console.log(`realProjectBranchCreationAllowed: ${result.realProjectBranchCreationAllowed}`);
+console.log(`realProjectMergeExecutionAllowed: ${result.realProjectMergeExecutionAllowed}`);
+console.log(`gitPushAllowed: ${result.gitPushAllowed}`);
+console.log(`tagCreationAllowed: ${result.tagCreationAllowed}`);
+console.log(`arbitraryCommandAllowed: ${result.arbitraryCommandAllowed}`);
+console.log(`shellExecutionAllowed: ${result.shellExecutionAllowed}`);
+console.log(`selfApprovalAllowed: ${result.selfApprovalAllowed}`);
+console.log(`selfMergeAllowed: ${result.selfMergeAllowed}`);
+console.log(`selfDeployAllowed: ${result.selfDeployAllowed}`);
+console.log(`productionDeploymentAllowed: ${result.productionDeploymentAllowed}`);
+console.log(`workerActivationGateId: ${result.workerActivationGateId}`);
+console.log(`sourceWorkerActivationReviewQueueId: ${result.sourceWorkerActivationReviewQueueId}`);
+console.log(`phase103WorkerActivationReviewQueueReady: ${result.phase103WorkerActivationReviewQueueReady}`);
+console.log(`activationGatePacketProduced: ${result.activationGatePacketProduced}`);
+console.log(`activationGateManifestProduced: ${result.activationGateManifestProduced}`);
+console.log(`eligibilityReviewManifestProduced: ${result.eligibilityReviewManifestProduced}`);
+console.log(`activationGateDecisionDraftsProduced: ${result.activationGateDecisionDraftsProduced}`);
+console.log(`readinessGateChecklistManifestProduced: ${result.readinessGateChecklistManifestProduced}`);
+console.log(`ownerReviewManifestProduced: ${result.ownerReviewManifestProduced}`);
+console.log(`readyForOwnerReview: ${result.readyForOwnerReview}`);
+console.log(`projectRepoSourceMutated: ${result.projectRepoSourceMutated}`);
+console.log(`workerActivated: ${result.workerActivated}`);
+console.log(`workerExecuted: ${result.workerExecuted}`);
+console.log(`workerSpawned: ${result.workerSpawned}`);
+console.log(`autonomousDelegationExecuted: ${result.autonomousDelegationExecuted}`);
+console.log(`schedulerWorkflowMutated: ${result.schedulerWorkflowMutated}`);
+console.log(`iPhoneAutomationMutated: ${result.iPhoneAutomationMutated}`);
+console.log(`awayModeExecuted: ${result.awayModeExecuted}`);
+console.log(`fleetExecuted: ${result.fleetExecuted}`);
+console.log(`applyExecuted: ${result.applyExecuted}`);
+console.log(`patchExecuted: ${result.patchExecuted}`);
+console.log(`realProjectBranchCreated: ${result.realProjectBranchCreated}`);
+console.log(`realProjectMergePerformed: ${result.realProjectMergePerformed}`);
+console.log(`activationTokenIssued: ${result.activationTokenIssued}`);
+console.log(`multiLanguageProductionDoctrineIncluded: ${result.multiLanguageProductionDoctrineIncluded}`);
