@@ -1712,3 +1712,13 @@ Phase 106 reads Phase 105 Worker Activation Decision Record lineage and creates 
 - `tests/integration/worker-activation-token-draft-v1.test.ts` — Verifies token draft packet output, Phase 105 lineage readiness, Tyler approval, safe token drafts, blocked token/credential/material/worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
 - `apps/operator-console/src/worker-activation-token-draft.ts` — Exposes Phase 106 status and safety gates to the operator console.
 
+## Phase 107 — Worker Activation Token Review Record v1
+
+Phase 107 reads Phase 106 Worker Activation Token Draft lineage and creates a manual owner-review token review record packet. It records activation token review records, owner token review records, token policy review records, token audit review records, activation token review denial records, token draft references, token issuance block evidence, token review ledgers, and owner-review manifests while activation token issuance, credential issuance, token material generation, secret material generation, worker activation, worker execution, worker spawning, autonomous delegation, scheduler/workflow/iPhone automation mutation, away-mode execution, fleet execution, apply execution, patch execution, project repo source mutation, real branch creation, real merge execution, git push, tag creation, arbitrary commands, shell execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_107_WORKER_ACTIVATION_TOKEN_REVIEW_RECORD_V1.md` — Defines Phase 107 purpose, token review record boundaries, safety gates, and completion criteria.
+- `scripts/lib/worker-activation-token-review-record-v1.mjs` — Implements Worker Activation Token Review Record with Phase 106 lineage checks, safe review records, fail-closed validation, and evidence output.
+- `scripts/run-worker-activation-token-review-record-v1.mjs` — Runs the Phase 107 demo and writes Worker Activation Token Review Record output.
+- `tests/integration/worker-activation-token-review-record-v1.test.ts` — Verifies token review record output, Phase 106 lineage readiness, Tyler approval, safe review records, blocked token/credential/material/worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
+- `apps/operator-console/src/worker-activation-token-review-record.ts` — Exposes Phase 107 status and safety gates to the operator console.
+

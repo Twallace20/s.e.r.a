@@ -1,3 +1,4 @@
+import { workerActivationTokenReviewRecord, workerActivationTokenReviewRecordSafetyGates } from "./worker-activation-token-review-record";
 import { workerActivationTokenDraft, workerActivationTokenDraftSafetyGates } from "./worker-activation-token-draft";
 import { workerActivationDecisionRecord, workerActivationDecisionRecordSafetyGates } from "./worker-activation-decision-record";
 import { workerActivationGate, workerActivationGateSafetyGates } from "./worker-activation-gate";
@@ -86,6 +87,7 @@ const navigation = [
 ];
 
 const systemStatus: Array<{ label: string; value: string; tone: StatusTone }> = [
+  { label: "Worker Activation Token Review Record", value: workerActivationTokenReviewRecord.workerActivationTokenReviewRecordStatus, tone: "review" },
   { label: "Worker Activation Token Draft", value: workerActivationTokenDraft.workerActivationTokenDraftStatus, tone: "review" },
   { label: "Worker Activation Decision Record", value: workerActivationDecisionRecord.workerActivationDecisionRecordStatus, tone: "review" },
   { label: "Worker Activation Gate", value: workerActivationGate.workerActivationGateStatus, tone: "review" },
@@ -177,6 +179,7 @@ const queueItems: QueueItem[] = [
 ];
 
 const gates = [
+  ...workerActivationTokenReviewRecordSafetyGates,
   ...workerActivationTokenDraftSafetyGates,
   ...workerActivationDecisionRecordSafetyGates,
   ...workerActivationGateSafetyGates,
