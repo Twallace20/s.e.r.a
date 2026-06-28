@@ -241,7 +241,10 @@
     "certify:artifacts": "node packages/certs/dist/certify.js",
     "sera:quick": "node scripts/run-validation-profiles-proof-gate-v1.mjs --profile quick",
     "sera:gate": "node scripts/run-validation-profiles-proof-gate-v1.mjs --profile gate",
-    "sera:milestone": "node scripts/run-validation-profiles-proof-gate-v1.mjs --profile milestone"
+    "sera:milestone": "node scripts/run-validation-profiles-proof-gate-v1.mjs --profile milestone",
+    "phase111:demo": "node scripts/run-chatgpt-bridge-dry-run-v1.mjs --demo",
+    "phase111:verify": "node scripts/run-chatgpt-bridge-dry-run-v1.mjs --verify",
+    "phase111:write-sample-outbox": "node scripts/run-chatgpt-bridge-dry-run-v1.mjs --write-sample-outbox"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
