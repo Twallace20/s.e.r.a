@@ -1,0 +1,142 @@
+{
+  "phase": "phase115-chatgpt-dom-download-troubleshooter-v1",
+  "status": "PASS",
+  "createdAt": "2026-06-28T16:36:42.102Z",
+  "results": [
+    {
+      "check": "exists:docs/phases/PHASE_115_CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTER_V1.md",
+      "ok": true,
+      "detail": "bae19ba94a805f04952ba6d500b2172fea7a0cfe92e9d919490cdc0648dd10ed"
+    },
+    {
+      "check": "exists:docs/autopilot/CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTING.md",
+      "ok": true,
+      "detail": "0040a280272d4cc9aed4e2ae2d37b3562c4afe8b21b439ad99b328cbfedf144c"
+    },
+    {
+      "check": "exists:scripts/chatgpt-bridge-submit-download.mjs",
+      "ok": true,
+      "detail": "7de2cacbaf1e85b4b93270027866a863d5690ecf9bc3b3aa59a6b18c59fd2b95"
+    },
+    {
+      "check": "exists:scripts/sera-chatgpt-submit-download.ps1",
+      "ok": true,
+      "detail": "456451f45b5f2bf91d869b603e4cee104a05e1213261c0d6cf225df92fcbcd11"
+    },
+    {
+      "check": "exists:scripts/phase115-write-phase116-test-prompt.ps1",
+      "ok": true,
+      "detail": "4307d67057ca7060d6841ee1e1ba7a4f4228e3d7cda047c86e054f91a45db4eb"
+    },
+    {
+      "check": "exists:scripts/phase115-verify.mjs",
+      "ok": true,
+      "detail": "659cb4bfd5be8ccab8b9129acb7c8f35d29848bc11ac0a35011eac3000c95f16"
+    },
+    {
+      "check": "node_syntax:chatgpt-bridge-submit-download",
+      "ok": true,
+      "detail": "syntax ok"
+    },
+    {
+      "check": "contains:expectedZipNameFromPrompt",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:--expected-zip-name",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:getDownloadCandidates",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:waitForZipCandidate",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:clickDownloadCandidate",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:latestAssistant",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:downloadCandidate",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:downloadCandidates",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:domTroubleshooting",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:12_browser_helper_blocked",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:17_needs_attention",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:allowNewChatFallback",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:allowRandomRecentChatFallback",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "forbidden:allowNewChatFallback = true",
+      "ok": true,
+      "detail": "not found"
+    },
+    {
+      "check": "forbidden:allowRandomRecentChatFallback = true",
+      "ok": true,
+      "detail": "not found"
+    },
+    {
+      "check": "forbidden:SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE !== false",
+      "ok": true,
+      "detail": "not found"
+    },
+    {
+      "check": "wrapper:ExpectedZipName",
+      "ok": true,
+      "detail": "wrapper supports explicit expected ZIP name"
+    },
+    {
+      "check": "phase116_prompt:repo_root",
+      "ok": true,
+      "detail": "Phase 116 prompt enforces repo/ root"
+    },
+    {
+      "check": "phase116_prompt:expected_zip",
+      "ok": true,
+      "detail": "Phase 116 expected ZIP is explicit"
+    }
+  ]
+}

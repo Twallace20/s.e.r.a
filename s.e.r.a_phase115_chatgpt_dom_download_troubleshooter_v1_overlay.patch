@@ -1,0 +1,766 @@
+diff --git ab/.overlay/phase115-manifest.json bb/.overlay/phase115-manifest.json
+new file mode 100644
+index 0000000..46819ad
+--- /dev/null
++++ bb/.overlay/phase115-manifest.json
+@@ -0,0 +1,44 @@
++{
++  "overlay": "s.e.r.a_phase115_chatgpt_dom_download_troubleshooter_v1_overlay",
++  "phase": 115,
++  "phaseName": "ChatGPT DOM Download Troubleshooter v1",
++  "createdAt": "2026-06-28T17:05:00Z",
++  "safetyLevel": "controlled_dom_download_troubleshooting_requires_explicit_execute",
++  "zipRoot": "repo/",
++  "adds": [
++    "docs/phases/PHASE_115_CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTER_V1.md",
++    "docs/autopilot/CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTING.md",
++    "scripts/phase115-write-phase116-test-prompt.ps1",
++    "scripts/phase115-verify.mjs"
++  ],
++  "modifies": [
++    "scripts/chatgpt-bridge-submit-download.mjs",
++    "scripts/sera-chatgpt-submit-download.ps1"
++  ],
++  "validationCommands": [
++    "node scripts/phase115-verify.mjs",
++    "npm run sera:gate"
++  ],
++  "requiresPhase114ClosedCleanly": true,
++  "downloadController": {
++    "searchScope": "latest assistant response first, then document fallback",
++    "candidateTypes": [
++      "a[href]",
++      "a[download]",
++      "button",
++      "[role=button]"
++    ],
++    "expectedZipNameSource": [
++      "--expected-zip-name",
++      "prompt parsing"
++    ],
++    "evidence": "12_browser_helper_state JSON with candidates and DOM snapshot",
++    "failClosedTarget": "12_browser_helper_blocked and 17_needs_attention"
++  },
++  "browserControl": {
++    "usesSavedTargetOnly": true,
++    "requiresExplicitExecutionFlag": "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true",
++    "usesRandomRecentChatFallback": false,
++    "usesNewChatFallback": false
++  }
++}
+\ No newline at end of file
+diff --git ab/.sera-proof/phase115/phase115-verify.json bb/.sera-proof/phase115/phase115-verify.json
+new file mode 100644
+index 0000000..73cc1a3
+--- /dev/null
++++ bb/.sera-proof/phase115/phase115-verify.json
+@@ -0,0 +1,142 @@
++{
++  "phase": "phase115-chatgpt-dom-download-troubleshooter-v1",
++  "status": "PASS",
++  "createdAt": "2026-06-28T16:36:42.102Z",
++  "results": [
++    {
++      "check": "exists:docs/phases/PHASE_115_CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTER_V1.md",
++      "ok": true,
++      "detail": "bae19ba94a805f04952ba6d500b2172fea7a0cfe92e9d919490cdc0648dd10ed"
++    },
++    {
++      "check": "exists:docs/autopilot/CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTING.md",
++      "ok": true,
++      "detail": "0040a280272d4cc9aed4e2ae2d37b3562c4afe8b21b439ad99b328cbfedf144c"
++    },
++    {
++      "check": "exists:scripts/chatgpt-bridge-submit-download.mjs",
++      "ok": true,
++      "detail": "7de2cacbaf1e85b4b93270027866a863d5690ecf9bc3b3aa59a6b18c59fd2b95"
++    },
++    {
++      "check": "exists:scripts/sera-chatgpt-submit-download.ps1",
++      "ok": true,
++      "detail": "456451f45b5f2bf91d869b603e4cee104a05e1213261c0d6cf225df92fcbcd11"
++    },
++    {
++      "check": "exists:scripts/phase115-write-phase116-test-prompt.ps1",
++      "ok": true,
++      "detail": "4307d67057ca7060d6841ee1e1ba7a4f4228e3d7cda047c86e054f91a45db4eb"
++    },
++    {
++      "check": "exists:scripts/phase115-verify.mjs",
++      "ok": true,
++      "detail": "659cb4bfd5be8ccab8b9129acb7c8f35d29848bc11ac0a35011eac3000c95f16"
++    },
++    {
++      "check": "node_syntax:chatgpt-bridge-submit-download",
++      "ok": true,
++      "detail": "syntax ok"
++    },
++    {
++      "check": "contains:expectedZipNameFromPrompt",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:--expected-zip-name",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:getDownloadCandidates",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:waitForZipCandidate",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:clickDownloadCandidate",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:latestAssistant",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:downloadCandidate",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:downloadCandidates",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:domTroubleshooting",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:12_browser_helper_blocked",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:17_needs_attention",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:allowNewChatFallback",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "contains:allowRandomRecentChatFallback",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "forbidden:allowNewChatFallback = true",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "forbidden:allowRandomRecentChatFallback = true",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "forbidden:SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE !== false",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "wrapper:ExpectedZipName",
++      "ok": true,
++      "detail": "wrapper supports explicit expected ZIP name"
++    },
++    {
++      "check": "phase116_prompt:repo_root",
++      "ok": true,
++      "detail": "Phase 116 prompt enforces repo/ root"
++    },
++    {
++      "check": "phase116_prompt:expected_zip",
++      "ok": true,
++      "detail": "Phase 116 expected ZIP is explicit"
++    }
++  ]
++}
+\ No newline at end of file
+diff --git ab/docs/autopilot/CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTING.md bb/docs/autopilot/CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTING.md
+new file mode 100644
+index 0000000..4524494
+--- /dev/null
++++ bb/docs/autopilot/CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTING.md
+@@ -0,0 +1,40 @@
++# ChatGPT DOM Download Troubleshooting
++
++S.E.R.A. uses the saved ChatGPT thread as a controlled bridge target. The laptop must not guess where to click. It should prefer explicit evidence and fail closed when the page state is ambiguous.
++
++## Download candidate priority
++
++1. Candidate appears in the latest assistant response.
++2. Candidate text or href contains the expected ZIP name.
++3. Candidate text or href contains `.zip`.
++4. Candidate is a visible download button or link.
++5. Candidate is not from a random page region.
++
++## Evidence to capture
++
++When a download is found or blocked, evidence should include:
++
++- expected ZIP name,
++- selected DOM candidate,
++- all top candidates,
++- latest assistant text snippet,
++- page title,
++- redacted target URL,
++- downloaded file path when successful,
++- failure reason when blocked.
++
++## Fail-closed rules
++
++Write `NEEDS_ATTENTION` instead of continuing when:
++
++- no saved target tab is found,
++- more than one matching target tab is open,
++- composer cannot be found,
++- no ZIP/download candidate appears before timeout,
++- a click target disappears,
++- the downloaded file does not match the expected ZIP name, or
++- the prompt or page asks for unsafe actions.
++
++## What this does not solve yet
++
++Phase 115 improves the download DOM layer. The next separate step should validate the full continuation loop: latest closed handoff → next prompt → submit → download → route → AutoOps.
+diff --git ab/docs/phases/PHASE_115_CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTER_V1.md bb/docs/phases/PHASE_115_CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTER_V1.md
+new file mode 100644
+index 0000000..a4be1e9
+--- /dev/null
++++ bb/docs/phases/PHASE_115_CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTER_V1.md
+@@ -0,0 +1,81 @@
++# Phase 115 — ChatGPT DOM Download Troubleshooter v1
++
++## Purpose
++
++Phase 115 closes the practical gap found during the Phase 114 bridge test: the prompt/contract layer can be correct while the browser still needs stronger DOM logic to find and download the ZIP from the latest ChatGPT response.
++
++This phase improves the existing Phase 113 submit/download bridge. It does not add unrestricted autonomy. It makes the download side more reliable and more diagnosable.
++
++## What this phase adds
++
++- Expected ZIP name detection from the prompt or `--expected-zip-name`.
++- Latest-assistant-response-first download discovery.
++- DOM candidate scanning for links, download anchors, buttons, and role buttons.
++- Candidate scoring that prefers the expected ZIP name, `.zip` text, and visible download controls.
++- Evidence capture for candidate lists and response text snippets.
++- Fail-closed troubleshooting packets in `12_browser_helper_blocked` and `17_needs_attention` when the bridge cannot find or click a download control.
++- A Phase 116 test prompt writer for the next full continuation smoke test.
++
++## Safety rules
++
++Phase 115 must not:
++
++- use a random recent chat,
++- create a new chat fallback,
++- click arbitrary non-download page elements,
++- submit prompts without `SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true`,
++- approve merges,
++- bypass AutoOps gates,
++- use credentials, tokens, paid services, or GitHub/security settings, or
++- continue if the expected download is ambiguous.
++
++## Intended normal loop after Phase 115
++
++```text
++CLOSED_CLEANLY
++→ prompt builder writes grounded next-phase prompt
++→ bridge submits prompt to saved ChatGPT thread
++→ bridge waits for latest assistant response
++→ bridge finds expected ZIP/download DOM candidate
++→ bridge downloads ZIP to 13_chatgpt_downloads
++→ router sends overlay to 01_apply_approved
++→ AutoOps applies/gates/merges/closes
++```
++
++## Troubleshooting loop
++
++```text
++No ZIP candidate or ambiguous DOM
++→ write evidence JSON to 12_browser_helper_state
++→ write BLOCKED markdown to 12_browser_helper_blocked
++→ write NEEDS_ATTENTION markdown to 17_needs_attention
++→ do not click random elements
++→ do not continue silently
++```
++
++## Commands
++
++Verify static contract:
++
++```powershell
++node scripts/phase115-verify.mjs
++```
++
++Dry run the bridge:
++
++```powershell
++powershell -ExecutionPolicy Bypass -File .\scripts\sera-chatgpt-submit-download.ps1 -DryRun
++```
++
++Execute with an expected ZIP name:
++
++```powershell
++$env:SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE = "true"
++powershell -ExecutionPolicy Bypass -File .\scripts\sera-chatgpt-submit-download.ps1 -Execute -ExpectedZipName "s.e.r.a_phase116_continuation_loop_smoke_test_v1_overlay.zip"
++```
++
++Write the Phase 116 continuation test prompt:
++
++```powershell
++powershell -ExecutionPolicy Bypass -File .\scripts\phase115-write-phase116-test-prompt.ps1
++```
+diff --git aa/scripts/chatgpt-bridge-submit-download.mjs bb/scripts/chatgpt-bridge-submit-download.mjs
+index 37236b1..19b4679 100644
+--- aa/scripts/chatgpt-bridge-submit-download.mjs
++++ bb/scripts/chatgpt-bridge-submit-download.mjs
+@@ -4,7 +4,7 @@ import path from "node:path";
+ import os from "node:os";
+ import crypto from "node:crypto";
+ 
+-const PHASE = "phase113-chatgpt-bridge-submit-download-v1";
++const PHASE = "phase115-chatgpt-dom-download-troubleshooter-v1";
+ const DEFAULT_SELECTORS = [
+   'div#prompt-textarea.ProseMirror[contenteditable="true"][role="textbox"]',
+   'div[contenteditable="true"][role="textbox"]#prompt-textarea',
+@@ -51,13 +51,14 @@ function sha256(value) {
+ }
+ 
+ function parseArgs(argv) {
+-  const args = { mode: "dry-run", promptFile: null, maxWaitMs: 900000 };
++  const args = { mode: "dry-run", promptFile: null, maxWaitMs: 900000, expectedZipName: null };
+   for (let i = 0; i < argv.length; i++) {
+     const arg = argv[i];
+     if (arg === "--execute") args.mode = "execute";
+     else if (arg === "--dry-run") args.mode = "dry-run";
+     else if (arg === "--prompt-file") args.promptFile = argv[++i];
+     else if (arg === "--max-wait-ms") args.maxWaitMs = Number(argv[++i]);
++    else if (arg === "--expected-zip-name") args.expectedZipName = argv[++i];
+   }
+   return args;
+ }
+@@ -122,6 +123,21 @@ function readSafePrompt(promptFile) {
+   return prompt;
+ }
+ 
++
++function expectedZipNameFromPrompt(prompt) {
++  const patterns = [
++    /Return\s+a\s+downloadable\s+ZIP\s+named\s+exactly:\s*`?([^`\s"']+\.zip)`?/i,
++    /downloadable\s+ZIP\s+named\s+exactly\s*:?\s*`?([^`\s"']+\.zip)`?/i,
++    /named\s+exactly\s*:?\s*`?([^`\s"']+\.zip)`?/i,
++    /([A-Za-z0-9._-]+_phase\d+[A-Za-z0-9._-]*\.zip)/i
++  ];
++  for (const rx of patterns) {
++    const match = prompt.match(rx);
++    if (match?.[1]) return match[1].trim();
++  }
++  return null;
++}
++
+ async function fetchJson(url) {
+   const response = await fetch(url, { headers: { accept: "application/json" } });
+   if (!response.ok) throw new Error(`${url} returned HTTP ${response.status}`);
+@@ -307,41 +323,137 @@ async function clickSend(client) {
+   return evaluate(client, js);
+ }
+ 
+-async function waitForZipLink(client, requestedName, maxWaitMs) {
++async function getDownloadCandidates(client, expectedName) {
++  const js = `(() => {
++    const expectedName = (${JSON.stringify(expectedName || "")}).toLowerCase();
++    const visible = (el) => {
++      if (!el) return false;
++      const rect = el.getBoundingClientRect();
++      const style = window.getComputedStyle(el);
++      return rect.width > 4 && rect.height > 4 && style.visibility !== "hidden" && style.display !== "none";
++    };
++    const textOf = (el) => [
++      el.innerText,
++      el.textContent,
++      el.getAttribute("aria-label"),
++      el.getAttribute("title"),
++      el.getAttribute("download"),
++      el.getAttribute("data-testid"),
++      el.id,
++      el.className
++    ].filter(Boolean).join(" ").replace(/\\s+/g, " ").trim();
++    const latestAssistant = Array.from(document.querySelectorAll('[data-message-author-role="assistant"], article, [data-testid*="conversation-turn"]'))
++      .filter(visible)
++      .slice(-1)[0] || null;
++    const allCandidates = [];
++    const addCandidate = (el, query, kind, source) => {
++      const nodes = Array.from(document.querySelectorAll(query));
++      const index = nodes.indexOf(el);
++      if (index < 0) return;
++      const href = el.href || el.getAttribute("href") || "";
++      const text = textOf(el);
++      const haystack = (href + " " + text).toLowerCase();
++      const mentionsZip = haystack.includes(".zip");
++      const mentionsExpected = expectedName && haystack.includes(expectedName);
++      const looksDownload = haystack.includes("download") || haystack.includes("download file") || haystack.includes("download artifact");
++      if (!mentionsZip && !mentionsExpected && !looksDownload) return;
++      let score = 0;
++      if (mentionsExpected) score += 100;
++      if (mentionsZip) score += 40;
++      if (looksDownload) score += 20;
++      if (source === "latestAssistant") score += 20;
++      if (visible(el)) score += 10;
++      if (kind === "link" && href) score += 5;
++      allCandidates.push({
++        kind,
++        query,
++        index,
++        source,
++        score,
++        href,
++        hrefHost: (() => { try { return href ? new URL(href).hostname : null; } catch { return "invalid"; } })(),
++        text: text.slice(0, 300),
++        ariaLabel: el.getAttribute("aria-label") || null,
++        title: el.getAttribute("title") || null,
++        dataTestId: el.getAttribute("data-testid") || null,
++        visible: visible(el)
++      });
++    };
++    const scopes = latestAssistant ? [{ node: latestAssistant, source: "latestAssistant" }, { node: document, source: "document" }] : [{ node: document, source: "document" }];
++    for (const { node, source } of scopes) {
++      for (const el of Array.from(node.querySelectorAll('a[href], a[download]'))) addCandidate(el, 'a[href], a[download]', 'link', source);
++      for (const el of Array.from(node.querySelectorAll('button, [role="button"]'))) addCandidate(el, 'button, [role="button"]', 'button', source);
++    }
++    const deduped = [];
++    const seen = new Set();
++    for (const item of allCandidates.sort((a, b) => b.score - a.score)) {
++      const key = item.kind + ':' + item.query + ':' + item.index + ':' + item.href + ':' + item.text;
++      if (seen.has(key)) continue;
++      seen.add(key);
++      deduped.push(item);
++    }
++    const pageText = (document.body?.innerText || "").replace(/\\s+/g, " ");
++    const zipTextMatches = Array.from(new Set(pageText.match(/[A-Za-z0-9._-]+\\.zip/g) || [])).slice(-20);
++    const latestAssistantText = latestAssistant ? (latestAssistant.innerText || latestAssistant.textContent || "").replace(/\\s+/g, " ").trim().slice(-2000) : null;
++    return {
++      ok: deduped.length > 0,
++      candidate: deduped[0] || null,
++      candidates: deduped.slice(0, 20),
++      snapshot: {
++        expectedName,
++        candidateCount: deduped.length,
++        zipTextMatches,
++        latestAssistantText,
++        assistantNodeFound: Boolean(latestAssistant),
++        pageTitle: document.title,
++        url: location.href
++      }
++    };
++  })()`;
++  return evaluate(client, js);
++}
++
++async function waitForZipCandidate(client, expectedName, maxWaitMs) {
+   const start = Date.now();
+-  const needle = requestedName || ".zip";
++  let last = null;
+   while (Date.now() - start < maxWaitMs) {
+-    const js = `(() => {
+-      const links = Array.from(document.querySelectorAll('a[href]'))
+-        .map((a) => ({ href: a.href, text: (a.innerText || a.textContent || '').trim() }))
+-        .filter((item) => item.href.toLowerCase().includes('.zip') || item.text.toLowerCase().includes('.zip'));
+-      const exact = links.find((item) => item.href.includes(${JSON.stringify(needle)}) || item.text.includes(${JSON.stringify(needle)}));
+-      const any = links[links.length - 1];
+-      return exact || any || null;
+-    })()`;
+-    const link = await evaluate(client, js);
+-    if (link) return link;
++    last = await getDownloadCandidates(client, expectedName);
++    if (last?.ok && last.candidate) return last;
+     await new Promise((resolve) => setTimeout(resolve, 5000));
+   }
+-  throw new Error(`Timed out waiting for ZIP link after ${maxWaitMs}ms.`);
++  const snapshot = last?.snapshot ? JSON.stringify(last.snapshot).slice(0, 4000) : "no DOM snapshot available";
++  throw new Error(`Timed out waiting for a downloadable ZIP candidate after ${maxWaitMs}ms. DOM troubleshooting snapshot: ${snapshot}`);
+ }
+ 
+-async function clickDownloadLink(client, link) {
++async function clickDownloadCandidate(client, candidate) {
+   const js = `(() => {
+-    const targetHref = ${JSON.stringify(link.href)};
+-    const anchors = Array.from(document.querySelectorAll('a[href]'));
+-    const a = anchors.find((node) => node.href === targetHref) || anchors.find((node) => (node.innerText || node.textContent || '').trim() === ${JSON.stringify(link.text)});
+-    if (!a) return { ok: false, reason: "download link disappeared" };
+-    a.click();
+-    return { ok: true, href: a.href, text: (a.innerText || a.textContent || '').trim() };
++    const candidate = ${JSON.stringify(candidate)};
++    const nodes = Array.from(document.querySelectorAll(candidate.query));
++    const el = nodes[candidate.index];
++    if (!el) return { ok: false, reason: "download candidate disappeared", candidate };
++    el.scrollIntoView({ block: "center", inline: "center" });
++    el.click();
++    return {
++      ok: true,
++      kind: candidate.kind,
++      source: candidate.source,
++      score: candidate.score,
++      hrefHost: candidate.hrefHost || null,
++      text: candidate.text || "",
++      ariaLabel: candidate.ariaLabel || null,
++      title: candidate.title || null,
++      dataTestId: candidate.dataTestId || null
++    };
+   })()`;
+   return evaluate(client, js);
+ }
+ 
+-function newestZip(dir, sinceMs) {
++function newestZip(dir, sinceMs, expectedName = null) {
+   if (!fs.existsSync(dir)) return null;
++  const expected = expectedName ? expectedName.toLowerCase() : null;
+   const candidates = fs.readdirSync(dir)
+     .filter((name) => name.toLowerCase().endsWith(".zip"))
++    .filter((name) => !expected || name.toLowerCase().includes(expected.replace(/\.zip$/, "")))
+     .map((name) => path.join(dir, name))
+     .map((file) => ({ file, mtime: fs.statSync(file).mtimeMs, size: fs.statSync(file).size }))
+     .filter((item) => item.mtime >= sinceMs && item.size > 0)
+@@ -349,14 +461,14 @@ function newestZip(dir, sinceMs) {
+   return candidates[0] || null;
+ }
+ 
+-async function waitForDownloadedZip(downloadDir, sinceMs, maxWaitMs) {
++async function waitForDownloadedZip(downloadDir, sinceMs, maxWaitMs, expectedName = null) {
+   const start = Date.now();
+   while (Date.now() - start < maxWaitMs) {
+-    const zip = newestZip(downloadDir, sinceMs);
++    const zip = newestZip(downloadDir, sinceMs, expectedName);
+     if (zip) return zip;
+     await new Promise((resolve) => setTimeout(resolve, 2000));
+   }
+-  throw new Error(`Timed out waiting for downloaded ZIP in ${downloadDir}`);
++  throw new Error(`Timed out waiting for downloaded ZIP in ${downloadDir}${expectedName ? ` matching ${expectedName}` : ""}`);
+ }
+ 
+ async function main() {
+@@ -380,6 +492,7 @@ async function main() {
+     const cdpEndpoint = target.cdpEndpoint || "http://127.0.0.1:9222";
+     const promptFile = findPromptFile(outboxDir, args.promptFile);
+     const prompt = readSafePrompt(promptFile);
++    const expectedZipName = args.expectedZipName || expectedZipNameFromPrompt(prompt) || null;
+     const selectors = Array.isArray(target.composerSelectors) && target.composerSelectors.length > 0 ? target.composerSelectors : DEFAULT_SELECTORS;
+ 
+     const tab = await findTargetTab(cdpEndpoint, targetUrl);
+@@ -397,6 +510,7 @@ async function main() {
+         promptFile,
+         promptSha256: sha256(prompt),
+         promptLength: prompt.length,
++        expectedZipName,
+         cdpEndpoint,
+         tab: { id: tab.id, title: tab.title, url: redactedUrl(tab.url) },
+         composer,
+@@ -425,16 +539,19 @@ async function main() {
+       const sent = await clickSend(client);
+       if (!sent?.ok) throw new Error(`Send click failed: ${sent?.reason || "unknown"}`);
+ 
+-      const link = await waitForZipLink(client, ".zip", args.maxWaitMs);
+-      const clicked = await clickDownloadLink(client, link);
++      const candidateResult = await waitForZipCandidate(client, expectedZipName || ".zip", args.maxWaitMs);
++      const clicked = await clickDownloadCandidate(client, candidateResult.candidate);
+       if (!clicked?.ok) throw new Error(`Download click failed: ${clicked?.reason || "unknown"}`);
+-      const downloaded = await waitForDownloadedZip(downloadsDir, submitStartMs, Math.min(args.maxWaitMs, 300000));
++      const downloaded = await waitForDownloadedZip(downloadsDir, submitStartMs, Math.min(args.maxWaitMs, 300000), expectedZipName);
+ 
+       evidence.status = "EXECUTE_PASS";
+       evidence.downloadBehavior = downloadBehavior;
+       evidence.inserted = inserted;
+       evidence.sent = sent;
+-      evidence.link = { text: link.text, hrefHost: (() => { try { return new URL(link.href).hostname; } catch { return "unknown"; } })() };
++      evidence.downloadCandidate = candidateResult.candidate;
++      evidence.downloadCandidates = candidateResult.candidates;
++      evidence.domTroubleshooting = candidateResult.snapshot;
++      evidence.clicked = clicked;
+       evidence.downloaded = downloaded;
+       writeJson(evidencePath, evidence);
+       console.log(JSON.stringify({ ok: true, status: "execute_pass", downloaded: downloaded.file, evidencePath }, null, 2));
+diff --git ab/scripts/phase115-verify.mjs bb/scripts/phase115-verify.mjs
+new file mode 100644
+index 0000000..316eb91
+--- /dev/null
++++ bb/scripts/phase115-verify.mjs
+@@ -0,0 +1,88 @@
++#!/usr/bin/env node
++import fs from "node:fs";
++import path from "node:path";
++import crypto from "node:crypto";
++import { spawnSync } from "node:child_process";
++
++const phase = "phase115-chatgpt-dom-download-troubleshooter-v1";
++const root = process.cwd();
++const requiredFiles = [
++  "docs/phases/PHASE_115_CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTER_V1.md",
++  "docs/autopilot/CHATGPT_DOM_DOWNLOAD_TROUBLESHOOTING.md",
++  "scripts/chatgpt-bridge-submit-download.mjs",
++  "scripts/sera-chatgpt-submit-download.ps1",
++  "scripts/phase115-write-phase116-test-prompt.ps1",
++  "scripts/phase115-verify.mjs"
++];
++
++function sha256(file) {
++  return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
++}
++function read(rel) {
++  return fs.readFileSync(path.join(root, rel), "utf8");
++}
++
++const results = [];
++for (const rel of requiredFiles) {
++  const file = path.join(root, rel);
++  results.push({ check: `exists:${rel}`, ok: fs.existsSync(file), detail: fs.existsSync(file) ? sha256(file) : "missing" });
++}
++
++const bridge = path.join(root, "scripts/chatgpt-bridge-submit-download.mjs");
++if (fs.existsSync(bridge)) {
++  const syntax = spawnSync(process.execPath, ["--check", bridge], { encoding: "utf8" });
++  results.push({ check: "node_syntax:chatgpt-bridge-submit-download", ok: syntax.status === 0, detail: syntax.stderr || syntax.stdout || "syntax ok" });
++  const source = read("scripts/chatgpt-bridge-submit-download.mjs");
++  const requiredTokens = [
++    "expectedZipNameFromPrompt",
++    "--expected-zip-name",
++    "getDownloadCandidates",
++    "waitForZipCandidate",
++    "clickDownloadCandidate",
++    "latestAssistant",
++    "downloadCandidate",
++    "downloadCandidates",
++    "domTroubleshooting",
++    "12_browser_helper_blocked",
++    "17_needs_attention",
++    "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE",
++    "allowNewChatFallback",
++    "allowRandomRecentChatFallback"
++  ];
++  for (const token of requiredTokens) {
++    results.push({ check: `contains:${token}`, ok: source.includes(token), detail: source.includes(token) ? "found" : "missing" });
++  }
++  const forbidden = [
++    "allowNewChatFallback = true",
++    "allowRandomRecentChatFallback = true",
++    "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE !== false"
++  ];
++  for (const token of forbidden) {
++    results.push({ check: `forbidden:${token}`, ok: !source.includes(token), detail: source.includes(token) ? "found" : "not found" });
++  }
++}
++
++const wrapper = path.join(root, "scripts/sera-chatgpt-submit-download.ps1");
++if (fs.existsSync(wrapper)) {
++  const source = read("scripts/sera-chatgpt-submit-download.ps1");
++  results.push({ check: "wrapper:ExpectedZipName", ok: source.includes("ExpectedZipName") && source.includes("--expected-zip-name"), detail: "wrapper supports explicit expected ZIP name" });
++}
++
++const writer = path.join(root, "scripts/phase115-write-phase116-test-prompt.ps1");
++if (fs.existsSync(writer)) {
++  const source = read("scripts/phase115-write-phase116-test-prompt.ps1");
++  results.push({ check: "phase116_prompt:repo_root", ok: source.includes("ZIP root must be repo/"), detail: "Phase 116 prompt enforces repo/ root" });
++  results.push({ check: "phase116_prompt:expected_zip", ok: source.includes("s.e.r.a_phase116_continuation_loop_smoke_test_v1_overlay.zip"), detail: "Phase 116 expected ZIP is explicit" });
++}
++
++const pass = results.every((result) => result.ok);
++const outDir = path.join(root, ".sera-proof", "phase115");
++fs.mkdirSync(outDir, { recursive: true });
++const report = { phase, status: pass ? "PASS" : "FAIL", createdAt: new Date().toISOString(), results };
++const outFile = path.join(outDir, "phase115-verify.json");
++fs.writeFileSync(outFile, JSON.stringify(report, null, 2), "utf8");
++
++for (const result of results) console.log(`${result.ok ? "✓" : "✗"} ${result.check} — ${result.detail}`);
++console.log(`Phase 115 verify: ${report.status}`);
++console.log(outFile);
++process.exit(pass ? 0 : 1);
+diff --git ab/scripts/phase115-write-phase116-test-prompt.ps1 bb/scripts/phase115-write-phase116-test-prompt.ps1
+new file mode 100644
+index 0000000..e54aca0
+--- /dev/null
++++ bb/scripts/phase115-write-phase116-test-prompt.ps1
+@@ -0,0 +1,43 @@
++$ErrorActionPreference = "Stop"
++
++$AutoOps = if ($env:SERA_AUTOOPS_DIR) { $env:SERA_AUTOOPS_DIR } else { "$env:USERPROFILE\OneDrive\SERA-AutoOps" }
++$Outbox = Join-Path $AutoOps "15_bridge_outbox"
++New-Item -ItemType Directory -Force -Path $Outbox | Out-Null
++
++$Timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
++$PromptPath = Join-Path $Outbox "phase116_continuation_loop_smoke_test_request-$Timestamp.md"
++
++@"
++You are continuing the S.E.R.A. AutoOps build in this same project conversation.
++
++Create Phase 116 as a minimal continuation-loop smoke-test overlay.
++
++Phase name:
++Phase 116 — Continuation Loop Smoke Test v1
++
++Purpose:
++Prove that the laptop can use the grounded prompt contract, submit this request into the saved ChatGPT thread, find the expected ZIP in the latest assistant response DOM, download it, and route it into AutoOps.
++
++Strict package requirements:
++- ZIP root must be repo/
++- Include repo/.overlay/phase116-manifest.json
++- Include repo/.sera-proof/phase116/phase116-verify.json
++- Include repo/docs/phases/PHASE_116_CONTINUATION_LOOP_SMOKE_TEST_V1.md
++- Include repo/scripts/phase116-verify.mjs
++- Include repo/s.e.r.a_phase116_continuation_loop_smoke_test_v1_overlay.patch
++
++Implementation requirements:
++- Keep Phase 116 safe and minimal.
++- It may add documentation and a static verifier only.
++- It must not add new browser automation behavior.
++- It must not use credentials, tokens, paid services, dependency installs, or GitHub/security settings.
++- The patch should add only Phase 116 proof/docs/verify files.
++
++Return a downloadable ZIP named exactly:
++s.e.r.a_phase116_continuation_loop_smoke_test_v1_overlay.zip
++
++Also include the SHA256 checksum.
++"@ | Set-Content -Path $PromptPath -Encoding UTF8
++
++Write-Host "Wrote Phase 116 continuation-loop smoke-test prompt: $PromptPath"
++Get-Content $PromptPath
+diff --git aa/scripts/sera-chatgpt-submit-download.ps1 bb/scripts/sera-chatgpt-submit-download.ps1
+index 23dc216..50ea761 100644
+--- aa/scripts/sera-chatgpt-submit-download.ps1
++++ bb/scripts/sera-chatgpt-submit-download.ps1
+@@ -1,7 +1,8 @@
+ param(
+   [switch]$DryRun,
+   [switch]$Execute,
+-  [string]$PromptFile
++  [string]$PromptFile,
++  [string]$ExpectedZipName
+ )
+ 
+ $ErrorActionPreference = "Stop"
+@@ -18,6 +19,7 @@ $argsList = @()
+ if ($Execute) { $argsList += "--execute" }
+ if ($DryRun) { $argsList += "--dry-run" }
+ if ($PromptFile) { $argsList += @("--prompt-file", $PromptFile) }
++if ($ExpectedZipName) { $argsList += @("--expected-zip-name", $ExpectedZipName) }
+ 
+ node $NodeScript @argsList
+ exit $LASTEXITCODE
