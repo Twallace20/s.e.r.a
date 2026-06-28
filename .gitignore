@@ -205,3 +205,6 @@ packages/*/src/*.d.ts
 .sera-worker-activation-review-queue/
 .sera-worker-activation-review-queue-test/
 .sera-worker-activation-review-queue-test-failure/
+.sera-worker-activation-gate/
+.sera-worker-activation-gate-test/
+.sera-worker-activation-gate-test-failure/

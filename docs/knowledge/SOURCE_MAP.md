@@ -1682,3 +1682,13 @@ Phase 103 reads Phase 102 Worker Capability Cards lineage and creates a manual o
 - `tests/integration/worker-activation-review-queue-v1.test.ts` — Verifies activation queue packet output, Phase 102 lineage readiness, Tyler approval, safe queue items, blocked activation/worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
 - `apps/operator-console/src/worker-activation-review-queue.ts` — Exposes Phase 103 status and safety gates to the operator console.
 
+## Phase 104 — Worker Activation Gate v1
+
+Phase 104 reads Phase 103 Worker Activation Review Queue lineage and creates a manual owner-review activation gate packet. It creates activation gate items, eligibility reviews, activation gate decision drafts, readiness gate checklists, queue evidence references, activation token block evidence, and owner-review manifests while worker activation, activation token issuance, worker execution, worker spawning, autonomous delegation, scheduler/workflow/iPhone automation mutation, away-mode execution, fleet execution, apply execution, patch execution, project repo source mutation, real branch creation, real merge execution, git push, tag creation, arbitrary commands, shell execution, self-approval, self-merge, self-deploy, and production deployment remain blocked.
+
+- `docs/phases/PHASE_104_WORKER_ACTIVATION_GATE_V1.md` — Defines Phase 104 purpose, activation gate boundaries, safety gates, and completion criteria.
+- `scripts/lib/worker-activation-gate-v1.mjs` — Implements Worker Activation Gate with Phase 103 lineage checks, safe gate items, fail-closed validation, and evidence output.
+- `scripts/run-worker-activation-gate-v1.mjs` — Runs the Phase 104 demo and writes Worker Activation Gate output.
+- `tests/integration/worker-activation-gate-v1.test.ts` — Verifies activation gate packet output, Phase 103 lineage readiness, Tyler approval, safe gate items, blocked activation/token/worker/automation/project/Git/shell/fleet/self-governance powers, and validation failure evidence.
+- `apps/operator-console/src/worker-activation-gate.ts` — Exposes Phase 104 status and safety gates to the operator console.
+
