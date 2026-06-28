@@ -1,0 +1,27 @@
+{
+  "overlay": "s.e.r.a_phase117a_chatgpt_artifact_download_hardening_v1_overlay",
+  "phase": "117a",
+  "phaseName": "ChatGPT Artifact Download Hardening v1",
+  "createdAt": "2026-06-28T17:45:00Z",
+  "safetyLevel": "controlled_artifact_download_hardening_requires_explicit_execute",
+  "zipRoot": "repo/",
+  "modifies": [
+    "scripts/chatgpt-bridge-submit-download.mjs"
+  ],
+  "adds": [
+    "docs/phases/PHASE_117A_CHATGPT_ARTIFACT_DOWNLOAD_HARDENING_V1.md",
+    "docs/autopilot/CHATGPT_ARTIFACT_DOWNLOAD_SELECTOR_CONTRACT.md",
+    "scripts/phase117a-verify.mjs"
+  ],
+  "validationCommands": [
+    "node scripts/phase117a-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "requiresPhase116ClosedCleanly": true,
+  "hardens": [
+    "generic ChatGPT Download buttons",
+    "artifact-card ancestor context scoring",
+    "fallback download folder detection",
+    "safe move into 13_chatgpt_downloads"
+  ]
+}
