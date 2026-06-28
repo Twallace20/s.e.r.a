@@ -1,0 +1,162 @@
+{
+  "phase": "phase114-autopilot-end-to-end-validation-harness-v1",
+  "status": "PASS",
+  "createdAt": "2026-06-28T16:26:23.432Z",
+  "results": [
+    {
+      "check": "exists:docs/phases/PHASE_114_AUTOPILOT_END_TO_END_VALIDATION_HARNESS_V1.md",
+      "ok": true,
+      "detail": "9370df500643c1c7c4474220638fc3acd132dc1b5269a8a90477896eee37ad75"
+    },
+    {
+      "check": "exists:docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md",
+      "ok": true,
+      "detail": "03818d09d12f55c3163b9d257fa5b6f15a1f3a114af996b78bc08db9b304566a"
+    },
+    {
+      "check": "exists:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md",
+      "ok": true,
+      "detail": "bb7fb599b274b3ddfce3026b46739074db8735f1feeb7c4271f9bd2a82640d06"
+    },
+    {
+      "check": "exists:docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md",
+      "ok": true,
+      "detail": "0f6e5459f11436d56ef1e07e6b33bf1aa3997cc7b1d6b132b0f2ec220cbdd37a"
+    },
+    {
+      "check": "exists:scripts/phase114-build-bridge-prompt.ps1",
+      "ok": true,
+      "detail": "aebc0d9a6148ef871f682b92b6e310a9fb5bee6c954865c0fcccdc9ae3f6ec40"
+    },
+    {
+      "check": "exists:scripts/phase114-write-phase115-test-prompt.ps1",
+      "ok": true,
+      "detail": "9d9fe8dce13539e3c3ccc8f5e8b3d82296389186da09b4e8bfccf533ae41ead4"
+    },
+    {
+      "check": "exists:scripts/phase114-verify.mjs",
+      "ok": true,
+      "detail": "419467b39eef9b524b8bb98d777fcc5fb28021fa7815e30d074dca674d6f76c8"
+    },
+    {
+      "check": "node_syntax:phase114-verify",
+      "ok": true,
+      "detail": "syntax ok"
+    },
+    {
+      "check": "contains:docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md:The laptop does not ask vague questions",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md:repo/",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md:NEEDS_ATTENTION",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md:must not invent",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:{{CURRENT_STATE}}",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:{{NEXT_PHASE_NUMBER}}",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:ZIP must use this root",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:repo/",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:npm run sera:gate",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:If you cannot determine",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md:{{BLOCKED_PACKET}}",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md:Do not invent",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md:repo/",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:scripts/phase114-build-bridge-prompt.ps1:allowNewChatFallback",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:scripts/phase114-build-bridge-prompt.ps1:allowRandomRecentChatFallback",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:scripts/phase114-build-bridge-prompt.ps1:15_bridge_outbox",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:scripts/phase114-build-bridge-prompt.ps1:CLOSED_CLEANLY",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:scripts/phase114-build-bridge-prompt.ps1:BLOCKED",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:scripts/phase114-write-phase115-test-prompt.ps1:Intentional Blocked Repair Loop Smoke Test v1",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "forbidden:scripts/phase114-build-bridge-prompt.ps1:allowNewChatFallback = $true",
+      "ok": true,
+      "detail": "not found"
+    },
+    {
+      "check": "forbidden:scripts/phase114-build-bridge-prompt.ps1:allowRandomRecentChatFallback = $true",
+      "ok": true,
+      "detail": "not found"
+    },
+    {
+      "check": "forbidden:docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md:s.e.r.a/",
+      "ok": true,
+      "detail": "not found"
+    },
+    {
+      "check": "forbidden:docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md:s.e.r.a/",
+      "ok": true,
+      "detail": "not found"
+    }
+  ]
+}

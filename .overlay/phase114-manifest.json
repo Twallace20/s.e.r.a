@@ -1,0 +1,43 @@
+{
+  "overlay": "s.e.r.a_phase114_autopilot_end_to_end_validation_harness_v1_overlay",
+  "phase": 114,
+  "phaseName": "Autopilot End-to-End Validation Harness v1",
+  "createdAt": "2026-06-28T16:45:00Z",
+  "safetyLevel": "validation_harness_no_new_browser_execution",
+  "zipRoot": "repo/",
+  "adds": [
+    "docs/phases/PHASE_114_AUTOPILOT_END_TO_END_VALIDATION_HARNESS_V1.md",
+    "docs/autopilot/AUTOPILOT_PROMPT_CONTRACT.md",
+    "docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md",
+    "docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md",
+    "scripts/phase114-build-bridge-prompt.ps1",
+    "scripts/phase114-write-phase115-test-prompt.ps1",
+    "scripts/phase114-verify.mjs"
+  ],
+  "validationCommands": [
+    "node scripts/phase114-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "requiresPhase113ClosedCleanly": true,
+  "normalFlow": {
+    "source": "CLOSED_CLEANLY handoff",
+    "template": "docs/autopilot/NORMAL_PHASE_PROMPT_TEMPLATE.md",
+    "outbox": "15_bridge_outbox",
+    "zipRoot": "repo/",
+    "routerTarget": "13_chatgpt_downloads -> 01_apply_approved"
+  },
+  "blockedFlow": {
+    "source": "BLOCKED handoff",
+    "template": "docs/autopilot/REPAIR_HOTFIX_PROMPT_TEMPLATE.md",
+    "outbox": "15_bridge_outbox",
+    "zipRoot": "repo/",
+    "routerTarget": "13_chatgpt_downloads -> 02_hotfix_approved when action_required exists"
+  },
+  "browserControl": {
+    "addsNoNewBrowserExecutor": true,
+    "usesPhase113SubmitDownloadBridge": true,
+    "requiresExplicitExecutionFlag": "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true",
+    "usesRandomRecentChatFallback": false,
+    "usesNewChatFallback": false
+  }
+}
