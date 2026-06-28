@@ -1,0 +1,112 @@
+{
+  "phase": "phase113-chatgpt-bridge-submit-download-v1",
+  "status": "PASS",
+  "createdAt": "2026-06-28T16:13:11.551Z",
+  "results": [
+    {
+      "check": "exists:docs/phases/PHASE_113_CHATGPT_BRIDGE_SUBMIT_DOWNLOAD_V1.md",
+      "ok": true,
+      "detail": "b3150105f31f572717010e0bfd993a79ab943100dbde1f9633b87b8a5357874c"
+    },
+    {
+      "check": "exists:scripts/chatgpt-bridge-submit-download.mjs",
+      "ok": true,
+      "detail": "e67322045b8f4efdc43b436d164df5fae9760f1f937bc90bb230aafa24007f79"
+    },
+    {
+      "check": "exists:scripts/sera-chatgpt-submit-download.ps1",
+      "ok": true,
+      "detail": "521f9c053a06e8a6c55de6cc2922f9c98a99a22b49a4ba1a3fab3e3aa9a3afba"
+    },
+    {
+      "check": "exists:scripts/phase113-write-phase114-test-prompt.ps1",
+      "ok": true,
+      "detail": "225eb2a5678e63687c1d4dc1a0b340a544646de50073ba66a878c40f5f1bb778"
+    },
+    {
+      "check": "node_syntax:chatgpt-bridge-submit-download",
+      "ok": true,
+      "detail": "syntax ok"
+    },
+    {
+      "check": "contains:SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:allowRandomRecentChatFallback",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:allowNewChatFallback",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:15_bridge_outbox",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:13_chatgpt_downloads",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:PAUSE_AUTOPILOT.txt",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:Browser.setDownloadBehavior",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:chatgpt.com",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:sameSavedConversation",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:writeJson(evidencePath",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "contains:NEEDS_ATTENTION",
+      "ok": true,
+      "detail": "found"
+    },
+    {
+      "check": "forbidden-default:allowNewChatFallback = true",
+      "ok": true,
+      "detail": "not found"
+    },
+    {
+      "check": "forbidden-default:allowRandomRecentChatFallback = true",
+      "ok": true,
+      "detail": "not found"
+    },
+    {
+      "check": "forbidden-default:SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE !== false",
+      "ok": true,
+      "detail": "not found"
+    },
+    {
+      "check": "phase114_prompt_mentions_repo_root",
+      "ok": true,
+      "detail": "Phase 114 test prompt enforces repo/ root"
+    },
+    {
+      "check": "phase114_prompt_names_zip",
+      "ok": true,
+      "detail": "Phase 114 output filename is explicit"
+    }
+  ]
+}
