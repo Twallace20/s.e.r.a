@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
 
-const PHASE = "phase117a-chatgpt-artifact-download-hardening-v1";
+const PHASE = "phase118-autopilot-governor-control-center-v1";
 const DEFAULT_SELECTORS = [
   'div#prompt-textarea.ProseMirror[contenteditable="true"][role="textbox"]',
   'div[contenteditable="true"][role="textbox"]#prompt-textarea',
@@ -63,18 +63,35 @@ function parseArgs(argv) {
   return args;
 }
 
-function loadTarget(stateDir) {
-  const targetPath = path.join(stateDir, "chatgpt-bridge-target.json");
-  if (!fs.existsSync(targetPath)) throw new Error(`Missing target config: ${targetPath}`);
+function controlCenterDir(autoOps) {
+  return path.join(autoOps, "00_control_center");
+}
+
+function targetConfigCandidates(autoOps, stateDir) {
+  return [
+    path.join(controlCenterDir(autoOps), "chatgpt-target.json"),
+    path.join(stateDir, "chatgpt-bridge-target.json")
+  ];
+}
+
+function loadTarget(autoOps, stateDir) {
+  const candidates = targetConfigCandidates(autoOps, stateDir);
+  const targetPath = candidates.find((candidate) => fs.existsSync(candidate));
+  if (!targetPath) throw new Error(`Missing target config. Checked: ${candidates.join(", ")}`);
   const target = JSON.parse(fs.readFileSync(targetPath, "utf8"));
-  if (!target.targetUrl) throw new Error("chatgpt-bridge-target.json is missing targetUrl.");
+  if (!target.targetUrl) throw new Error(`${path.basename(targetPath)} is missing targetUrl.`);
   const targetUrl = new URL(target.targetUrl);
   if (!["chatgpt.com", "chat.openai.com"].includes(targetUrl.hostname)) {
     throw new Error(`Target URL must be chatgpt.com or chat.openai.com. Found: ${targetUrl.hostname}`);
   }
-  if (target.allowNewChatFallback !== false) throw new Error("allowNewChatFallback must be false for Phase 113.");
-  if (target.allowRandomRecentChatFallback !== false) throw new Error("allowRandomRecentChatFallback must be false for Phase 113.");
-  return { targetPath, target, targetUrl };
+  if (target.allowNewChatFallback !== false) throw new Error("allowNewChatFallback must be false for the guarded bridge.");
+  if (target.allowRandomRecentChatFallback !== false) throw new Error("allowRandomRecentChatFallback must be false for the guarded bridge.");
+  return {
+    targetPath,
+    target,
+    targetUrl,
+    targetSource: targetPath.includes(`${path.sep}00_control_center${path.sep}`) ? "control_center" : "legacy_state"
+  };
 }
 
 function findPromptFile(outboxDir, explicitPromptFile) {
@@ -596,16 +613,29 @@ async function main() {
   const attentionDir = path.join(autoOps, "17_needs_attention");
   const outboxDir = path.join(autoOps, "15_bridge_outbox");
   const downloadsDir = path.join(autoOps, "13_chatgpt_downloads");
-  const pauseFile = path.join(autoOps, "00_control_center", "pause", "PAUSE_AUTOPILOT.txt");
-  ensureDir(stateDir); ensureDir(blockedDir); ensureDir(attentionDir); ensureDir(outboxDir); ensureDir(downloadsDir);
+  const controlDir = controlCenterDir(autoOps);
+  const stopFiles = [
+    path.join(controlDir, "stop.flag"),
+    path.join(controlDir, "STOP_AUTOPILOT.flag"),
+    path.join(controlDir, "stop", "STOP_AUTOPILOT.txt")
+  ];
+  const pauseFiles = [
+    path.join(controlDir, "pause.flag"),
+    path.join(controlDir, "PAUSE_AUTOPILOT.flag"),
+    path.join(controlDir, "pause", "PAUSE_AUTOPILOT.txt")
+  ];
+  ensureDir(stateDir); ensureDir(blockedDir); ensureDir(attentionDir); ensureDir(outboxDir); ensureDir(downloadsDir); ensureDir(controlDir);
 
   const runId = `${PHASE}-${timestamp()}`;
   const evidencePath = path.join(stateDir, `${runId}.json`);
   const baseEvidence = { phase: PHASE, mode: args.mode, runId, createdAt: new Date().toISOString(), autoOps };
 
   try {
-    if (fs.existsSync(pauseFile)) throw new Error(`Autopilot pause file exists: ${pauseFile}`);
-    const { target, targetUrl } = loadTarget(stateDir);
+    const stopFile = stopFiles.find((file) => fs.existsSync(file));
+    if (stopFile) throw new Error(`Autopilot stop file exists: ${stopFile}`);
+    const pauseFile = pauseFiles.find((file) => fs.existsSync(file));
+    if (pauseFile) throw new Error(`Autopilot pause file exists: ${pauseFile}`);
+    const { targetPath, target, targetUrl, targetSource } = loadTarget(autoOps, stateDir);
     const cdpEndpoint = target.cdpEndpoint || "http://127.0.0.1:9222";
     const promptFile = findPromptFile(outboxDir, args.promptFile);
     const prompt = readSafePrompt(promptFile);
@@ -623,6 +653,8 @@ async function main() {
         ...baseEvidence,
         status: args.mode === "execute" ? "READY_TO_EXECUTE" : "DRY_RUN_PASS",
         targetName: target.targetName || null,
+        targetPath,
+        targetSource,
         targetUrl: redactedUrl(target.targetUrl),
         promptFile,
         promptSha256: sha256(prompt),

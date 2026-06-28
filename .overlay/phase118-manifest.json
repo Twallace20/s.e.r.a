@@ -1,0 +1,30 @@
+{
+  "overlay": "s.e.r.a_phase118_autopilot_governor_control_center_v1_overlay",
+  "phase": "118",
+  "phaseName": "Autopilot Governor + 00 Control Center v1",
+  "createdAt": "2026-06-28T18:20:00Z",
+  "safetyLevel": "guarded_autopilot_control_plane_no_self_approval",
+  "zipRoot": "repo/",
+  "modifies": [
+    "scripts/chatgpt-bridge-submit-download.mjs"
+  ],
+  "adds": [
+    "docs/phases/PHASE_118_AUTOPILOT_GOVERNOR_CONTROL_CENTER_V1.md",
+    "docs/autopilot/CONTROL_CENTER_CONTRACT.md",
+    "scripts/sera-autopilot-governor.mjs",
+    "scripts/sera-control-center-init.ps1",
+    "scripts/phase118-verify.mjs"
+  ],
+  "validationCommands": [
+    "node scripts/phase118-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "requiresPhase117ClosedCleanly": true,
+  "hardens": [
+    "control center target discovery",
+    "stop and pause flags",
+    "phase range control",
+    "needs attention stop rule",
+    "governor status evidence"
+  ]
+}

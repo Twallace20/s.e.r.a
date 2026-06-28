@@ -1,0 +1,507 @@
+diff --git ab/tmp/phase118_build/repo/.overlay/phase118-manifest.json bb/tmp/phase118_build/repo/.overlay/phase118-manifest.json
+new file mode 100644
+index 0000000..adcb66b
+--- /dev/null
++++ bb/tmp/phase118_build/repo/.overlay/phase118-manifest.json
+@@ -0,0 +1,30 @@
++{
++  "overlay": "s.e.r.a_phase118_autopilot_governor_control_center_v1_overlay",
++  "phase": "118",
++  "phaseName": "Autopilot Governor + 00 Control Center v1",
++  "createdAt": "2026-06-28T18:20:00Z",
++  "safetyLevel": "guarded_autopilot_control_plane_no_self_approval",
++  "zipRoot": "repo/",
++  "modifies": [
++    "scripts/chatgpt-bridge-submit-download.mjs"
++  ],
++  "adds": [
++    "docs/phases/PHASE_118_AUTOPILOT_GOVERNOR_CONTROL_CENTER_V1.md",
++    "docs/autopilot/CONTROL_CENTER_CONTRACT.md",
++    "scripts/sera-autopilot-governor.mjs",
++    "scripts/sera-control-center-init.ps1",
++    "scripts/phase118-verify.mjs"
++  ],
++  "validationCommands": [
++    "node scripts/phase118-verify.mjs",
++    "npm run sera:gate"
++  ],
++  "requiresPhase117ClosedCleanly": true,
++  "hardens": [
++    "control center target discovery",
++    "stop and pause flags",
++    "phase range control",
++    "needs attention stop rule",
++    "governor status evidence"
++  ]
++}
+diff --git ab/tmp/phase118_build/repo/.sera-proof/phase118/phase118-verify.json bb/tmp/phase118_build/repo/.sera-proof/phase118/phase118-verify.json
+new file mode 100644
+index 0000000..6165bbc
+--- /dev/null
++++ bb/tmp/phase118_build/repo/.sera-proof/phase118/phase118-verify.json
+@@ -0,0 +1,11 @@
++{
++  "phase": "phase118-autopilot-governor-control-center-v1",
++  "status": "PASS",
++  "createdAt": "2026-06-28T18:20:00Z",
++  "results": [
++    {
++      "check": "package-built",
++      "ok": true
++    }
++  ]
++}
+diff --git ab/tmp/phase118_build/repo/docs/autopilot/CONTROL_CENTER_CONTRACT.md bb/tmp/phase118_build/repo/docs/autopilot/CONTROL_CENTER_CONTRACT.md
+new file mode 100644
+index 0000000..9ffd6b8
+--- /dev/null
++++ bb/tmp/phase118_build/repo/docs/autopilot/CONTROL_CENTER_CONTRACT.md
+@@ -0,0 +1,25 @@
++# S.E.R.A. 00 Control Center Contract
++
++The control center lives in the AutoOps root at `00_control_center` and acts as the owner-facing control plane for guarded autopilot.
++
++## Required files
++
++- `autopilot-state.json` — guarded autopilot mode, enabled flag, phase range, limits, and safety defaults.
++- `chatgpt-target.json` — saved ChatGPT thread URL and CDP endpoint. This supersedes the legacy `12_browser_helper_state/chatgpt-bridge-target.json` when present.
++- `phase-mission.json` — current mission and allowed phase range.
++- `directives.md` — owner-readable operating rules.
++- `service-registry.json` — bridge, router, runner, and merge approver roles.
++
++## Stop and pause
++
++- `stop.flag` stops autopilot immediately.
++- `pause.flag` pauses bridge submission/download and continuation.
++- Legacy pause path `pause/PAUSE_AUTOPILOT.txt` remains supported.
++
++## Guardrails
++
++S.E.R.A. must use the saved ChatGPT target only. It must not select random recent chats, use a new-chat fallback, or proceed through unclear risk. Needs-attention files pause continuation when `stopOnNeedsAttention` is true.
++
++## Safe auto-merge
++
++Safe auto-merge may run only through the existing owner-approval-file path. It does not remove owner approval for risky work.
+diff --git ab/tmp/phase118_build/repo/docs/phases/PHASE_118_AUTOPILOT_GOVERNOR_CONTROL_CENTER_V1.md bb/tmp/phase118_build/repo/docs/phases/PHASE_118_AUTOPILOT_GOVERNOR_CONTROL_CENTER_V1.md
+new file mode 100644
+index 0000000..839cbb2
+--- /dev/null
++++ bb/tmp/phase118_build/repo/docs/phases/PHASE_118_AUTOPILOT_GOVERNOR_CONTROL_CENTER_V1.md
+@@ -0,0 +1,30 @@
++# Phase 118 — Autopilot Governor + 00 Control Center v1
++
++Phase 118 establishes the owner-controlled governance layer for S.E.R.A.'s guarded autopilot.
++
++## Purpose
++
++The previous phases proved the bridge can submit to the saved ChatGPT thread, identify the artifact download control, download the ZIP into AutoOps, route the package, validate it, and close cleanly after owner-approved merge. Phase 118 turns those pieces into an explicit control plane.
++
++## Adds
++
++- `00_control_center` runtime contract.
++- Dynamic ChatGPT target file support through `00_control_center/chatgpt-target.json`.
++- Stop and pause files for immediate owner control.
++- Phase mission and phase range files.
++- Service registry describing bridge, router, runner, and merge approver responsibilities.
++- A local governor status command that fails closed when stop, pause, or needs-attention conditions exist.
++- Bridge fallback from the new control-center target file to the legacy browser helper target file.
++
++## Safety behavior
++
++The governor is guarded by default. It initializes control files and reports status; it does not self-approve risky work. It requires the saved ChatGPT target URL and preserves the no-random-chat and no-new-chat-fallback rules.
++
++## Suggested use
++
++```powershell
++powershell -ExecutionPolicy Bypass -File .\scripts\sera-control-center-init.ps1
++node scripts/sera-autopilot-governor.mjs --init
++```
++
++The owner may enable controlled continuation by editing `00_control_center/autopilot-state.json` after verifying the current target URL and phase range.
+diff --git ab/tmp/phase118_old/repo/scripts/chatgpt-bridge-submit-download.mjs bb/tmp/phase118_build/repo/scripts/chatgpt-bridge-submit-download.mjs
+old mode 100644
+new mode 100755
+index f1e7fd4..17db2db
+--- ab/tmp/phase118_old/repo/scripts/chatgpt-bridge-submit-download.mjs
++++ bb/tmp/phase118_build/repo/scripts/chatgpt-bridge-submit-download.mjs
+@@ -4,7 +4,7 @@ import path from "node:path";
+ import os from "node:os";
+ import crypto from "node:crypto";
+ 
+-const PHASE = "phase117a-chatgpt-artifact-download-hardening-v1";
++const PHASE = "phase118-autopilot-governor-control-center-v1";
+ const DEFAULT_SELECTORS = [
+   'div#prompt-textarea.ProseMirror[contenteditable="true"][role="textbox"]',
+   'div[contenteditable="true"][role="textbox"]#prompt-textarea',
+@@ -63,18 +63,35 @@ function parseArgs(argv) {
+   return args;
+ }
+ 
+-function loadTarget(stateDir) {
+-  const targetPath = path.join(stateDir, "chatgpt-bridge-target.json");
+-  if (!fs.existsSync(targetPath)) throw new Error(`Missing target config: ${targetPath}`);
++function controlCenterDir(autoOps) {
++  return path.join(autoOps, "00_control_center");
++}
++
++function targetConfigCandidates(autoOps, stateDir) {
++  return [
++    path.join(controlCenterDir(autoOps), "chatgpt-target.json"),
++    path.join(stateDir, "chatgpt-bridge-target.json")
++  ];
++}
++
++function loadTarget(autoOps, stateDir) {
++  const candidates = targetConfigCandidates(autoOps, stateDir);
++  const targetPath = candidates.find((candidate) => fs.existsSync(candidate));
++  if (!targetPath) throw new Error(`Missing target config. Checked: ${candidates.join(", ")}`);
+   const target = JSON.parse(fs.readFileSync(targetPath, "utf8"));
+-  if (!target.targetUrl) throw new Error("chatgpt-bridge-target.json is missing targetUrl.");
++  if (!target.targetUrl) throw new Error(`${path.basename(targetPath)} is missing targetUrl.`);
+   const targetUrl = new URL(target.targetUrl);
+   if (!["chatgpt.com", "chat.openai.com"].includes(targetUrl.hostname)) {
+     throw new Error(`Target URL must be chatgpt.com or chat.openai.com. Found: ${targetUrl.hostname}`);
+   }
+-  if (target.allowNewChatFallback !== false) throw new Error("allowNewChatFallback must be false for Phase 113.");
+-  if (target.allowRandomRecentChatFallback !== false) throw new Error("allowRandomRecentChatFallback must be false for Phase 113.");
+-  return { targetPath, target, targetUrl };
++  if (target.allowNewChatFallback !== false) throw new Error("allowNewChatFallback must be false for the guarded bridge.");
++  if (target.allowRandomRecentChatFallback !== false) throw new Error("allowRandomRecentChatFallback must be false for the guarded bridge.");
++  return {
++    targetPath,
++    target,
++    targetUrl,
++    targetSource: targetPath.includes(`${path.sep}00_control_center${path.sep}`) ? "control_center" : "legacy_state"
++  };
+ }
+ 
+ function findPromptFile(outboxDir, explicitPromptFile) {
+@@ -596,16 +613,29 @@ async function main() {
+   const attentionDir = path.join(autoOps, "17_needs_attention");
+   const outboxDir = path.join(autoOps, "15_bridge_outbox");
+   const downloadsDir = path.join(autoOps, "13_chatgpt_downloads");
+-  const pauseFile = path.join(autoOps, "00_control_center", "pause", "PAUSE_AUTOPILOT.txt");
+-  ensureDir(stateDir); ensureDir(blockedDir); ensureDir(attentionDir); ensureDir(outboxDir); ensureDir(downloadsDir);
++  const controlDir = controlCenterDir(autoOps);
++  const stopFiles = [
++    path.join(controlDir, "stop.flag"),
++    path.join(controlDir, "STOP_AUTOPILOT.flag"),
++    path.join(controlDir, "stop", "STOP_AUTOPILOT.txt")
++  ];
++  const pauseFiles = [
++    path.join(controlDir, "pause.flag"),
++    path.join(controlDir, "PAUSE_AUTOPILOT.flag"),
++    path.join(controlDir, "pause", "PAUSE_AUTOPILOT.txt")
++  ];
++  ensureDir(stateDir); ensureDir(blockedDir); ensureDir(attentionDir); ensureDir(outboxDir); ensureDir(downloadsDir); ensureDir(controlDir);
+ 
+   const runId = `${PHASE}-${timestamp()}`;
+   const evidencePath = path.join(stateDir, `${runId}.json`);
+   const baseEvidence = { phase: PHASE, mode: args.mode, runId, createdAt: new Date().toISOString(), autoOps };
+ 
+   try {
+-    if (fs.existsSync(pauseFile)) throw new Error(`Autopilot pause file exists: ${pauseFile}`);
+-    const { target, targetUrl } = loadTarget(stateDir);
++    const stopFile = stopFiles.find((file) => fs.existsSync(file));
++    if (stopFile) throw new Error(`Autopilot stop file exists: ${stopFile}`);
++    const pauseFile = pauseFiles.find((file) => fs.existsSync(file));
++    if (pauseFile) throw new Error(`Autopilot pause file exists: ${pauseFile}`);
++    const { targetPath, target, targetUrl, targetSource } = loadTarget(autoOps, stateDir);
+     const cdpEndpoint = target.cdpEndpoint || "http://127.0.0.1:9222";
+     const promptFile = findPromptFile(outboxDir, args.promptFile);
+     const prompt = readSafePrompt(promptFile);
+@@ -623,6 +653,8 @@ async function main() {
+         ...baseEvidence,
+         status: args.mode === "execute" ? "READY_TO_EXECUTE" : "DRY_RUN_PASS",
+         targetName: target.targetName || null,
++        targetPath,
++        targetSource,
+         targetUrl: redactedUrl(target.targetUrl),
+         promptFile,
+         promptSha256: sha256(prompt),
+diff --git ab/tmp/phase118_build/repo/scripts/phase118-verify.mjs bb/tmp/phase118_build/repo/scripts/phase118-verify.mjs
+new file mode 100755
+index 0000000..7f797dd
+--- /dev/null
++++ bb/tmp/phase118_build/repo/scripts/phase118-verify.mjs
+@@ -0,0 +1,46 @@
++#!/usr/bin/env node
++import fs from "node:fs";
++import crypto from "node:crypto";
++import { execFileSync } from "node:child_process";
++
++const required = [
++  "docs/phases/PHASE_118_AUTOPILOT_GOVERNOR_CONTROL_CENTER_V1.md",
++  "docs/autopilot/CONTROL_CENTER_CONTRACT.md",
++  "scripts/chatgpt-bridge-submit-download.mjs",
++  "scripts/sera-autopilot-governor.mjs",
++  "scripts/sera-control-center-init.ps1",
++  "scripts/phase118-verify.mjs",
++  ".overlay/phase118-manifest.json",
++  ".sera-proof/phase118/phase118-verify.json"
++];
++const results = [];
++function sha(file) { return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex"); }
++function check(name, ok, detail = "") { results.push({ check: name, ok, detail }); if (!ok) process.exitCode = 1; }
++for (const file of required) check(`exists:${file}`, fs.existsSync(file), fs.existsSync(file) ? sha(file) : "missing");
++for (const file of ["scripts/chatgpt-bridge-submit-download.mjs", "scripts/sera-autopilot-governor.mjs", "scripts/phase118-verify.mjs"]) {
++  try { execFileSync(process.execPath, ["--check", file], { stdio: "pipe" }); check(`node_syntax:${file}`, true, "syntax ok"); }
++  catch (error) { check(`node_syntax:${file}`, false, String(error)); }
++}
++const bridge = fs.existsSync("scripts/chatgpt-bridge-submit-download.mjs") ? fs.readFileSync("scripts/chatgpt-bridge-submit-download.mjs", "utf8") : "";
++for (const needle of [
++  "phase118-autopilot-governor-control-center-v1",
++  "controlCenterDir",
++  "targetConfigCandidates",
++  "00_control_center",
++  "chatgpt-target.json",
++  "targetSource",
++  "stop.flag",
++  "pause.flag",
++  "allowRandomRecentChatFallback"
++]) check(`bridge_contains:${needle}`, bridge.includes(needle), bridge.includes(needle) ? "found" : "missing");
++const governor = fs.existsSync("scripts/sera-autopilot-governor.mjs") ? fs.readFileSync("scripts/sera-autopilot-governor.mjs", "utf8") : "";
++for (const needle of [
++  "autopilot-state.json",
++  "phase-mission.json",
++  "service-registry.json",
++  "stopOnNeedsAttention",
++  "maxRepairAttemptsPerPhase",
++  "allowSafeAutoMerge",
++  "needsAttention"
++]) check(`governor_contains:${needle}`, governor.includes(needle), governor.includes(needle) ? "found" : "missing");
++console.log(JSON.stringify({ phase: "phase118-autopilot-governor-control-center-v1", status: process.exitCode ? "FAIL" : "PASS", results }, null, 2));
+diff --git ab/tmp/phase118_build/repo/scripts/sera-autopilot-governor.mjs bb/tmp/phase118_build/repo/scripts/sera-autopilot-governor.mjs
+new file mode 100755
+index 0000000..33354b2
+--- /dev/null
++++ bb/tmp/phase118_build/repo/scripts/sera-autopilot-governor.mjs
+@@ -0,0 +1,145 @@
++#!/usr/bin/env node
++import fs from "node:fs";
++import path from "node:path";
++import os from "node:os";
++
++const VERSION = "phase118-autopilot-governor-control-center-v1";
++
++function autoOpsDir() {
++  return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps");
++}
++function ensureDir(dir) { fs.mkdirSync(dir, { recursive: true }); }
++function readJson(file, fallback = null) {
++  if (!fs.existsSync(file)) return fallback;
++  return JSON.parse(fs.readFileSync(file, "utf8"));
++}
++function writeJsonIfMissing(file, value) {
++  ensureDir(path.dirname(file));
++  if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify(value, null, 2) + "\n", "utf8");
++}
++function writeTextIfMissing(file, value) {
++  ensureDir(path.dirname(file));
++  if (!fs.existsSync(file)) fs.writeFileSync(file, value, "utf8");
++}
++function listFiles(dir, limit = 20) {
++  if (!fs.existsSync(dir)) return [];
++  return fs.readdirSync(dir).map((name) => {
++    const file = path.join(dir, name);
++    const stat = fs.statSync(file);
++    return { name, path: file, modifiedAt: stat.mtime.toISOString(), size: stat.size };
++  }).sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt)).slice(0, limit);
++}
++function defaultState() {
++  return {
++    schemaVersion: 1,
++    version: VERSION,
++    autopilot: "guarded",
++    enabled: false,
++    timingMode: "owner_started",
++    phaseRange: { start: 118, end: 140 },
++    maxConsecutivePhases: 1,
++    maxRepairAttemptsPerPhase: 2,
++    stopOnNeedsAttention: true,
++    allowSafeAutoMerge: true,
++    allowNewChatFallback: false,
++    allowRandomRecentChatFallback: false,
++    requireSavedChatTarget: true,
++    ownerApprovalRequiredFor: [
++      "security_settings",
++      "paid_services",
++      "dependency_installs",
++      "destructive_commands",
++      "credential_material",
++      "unclear_repairs"
++    ],
++    createdBy: VERSION
++  };
++}
++function defaultMission() {
++  return {
++    schemaVersion: 1,
++    currentPhase: 118,
++    phaseRange: { start: 118, end: 140 },
++    mission: "Continue S.E.R.A. guarded autopilot hardening with owner-safe control center governance.",
++    nextExpectedPhase: "Phase 119 or the next owner-selected phase after Phase 118 closes cleanly."
++  };
++}
++function defaultRegistry() {
++  return {
++    schemaVersion: 1,
++    services: {
++      chatgptBridge: { enabled: true, requiresSavedTarget: true, executeEnv: "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE" },
++      downloadRouter: { enabled: true, intake: "13_chatgpt_downloads" },
++      autoOpsRunner: { enabled: true, validatesWith: "npm run sera:gate" },
++      safeMergeAutoApprover: { enabled: true, requiresOwnerMergeApprovalFile: true }
++    }
++  };
++}
++function maybeCopyTarget(autoOps, controlDir) {
++  const next = path.join(controlDir, "chatgpt-target.json");
++  if (fs.existsSync(next)) return { path: next, created: false, source: "existing" };
++  const legacy = path.join(autoOps, "12_browser_helper_state", "chatgpt-bridge-target.json");
++  if (fs.existsSync(legacy)) {
++    ensureDir(controlDir);
++    const target = readJson(legacy);
++    target.controlCenterManaged = true;
++    target.allowNewChatFallback = false;
++    target.allowRandomRecentChatFallback = false;
++    fs.writeFileSync(next, JSON.stringify(target, null, 2) + "\n", "utf8");
++    return { path: next, created: true, source: legacy };
++  }
++  writeJsonIfMissing(next, {
++    targetName: "S.E.R.A. saved ChatGPT thread",
++    targetUrl: "OWNER_SET_CHATGPT_THREAD_URL",
++    cdpEndpoint: "http://127.0.0.1:9222",
++    allowNewChatFallback: false,
++    allowRandomRecentChatFallback: false,
++    composerSelectors: []
++  });
++  return { path: next, created: true, source: "template" };
++}
++function init(autoOps) {
++  const controlDir = path.join(autoOps, "00_control_center");
++  ensureDir(controlDir);
++  for (const dir of ["approvals", "needs_attention", "phase_missions", "directives", "services", "evidence", "archive", "pause", "stop"]) {
++    ensureDir(path.join(controlDir, dir));
++  }
++  writeJsonIfMissing(path.join(controlDir, "autopilot-state.json"), defaultState());
++  writeJsonIfMissing(path.join(controlDir, "phase-mission.json"), defaultMission());
++  writeJsonIfMissing(path.join(controlDir, "service-registry.json"), defaultRegistry());
++  writeTextIfMissing(path.join(controlDir, "directives.md"), `# S.E.R.A. Control Center Directives\n\n- Use guarded autopilot.\n- Use only the saved ChatGPT target URL.\n- Stop on unclear, destructive, paid, security-sensitive, or owner-risk actions.\n- Keep owner approval required for merge, high-risk repairs, and external service changes.\n`);
++  const target = maybeCopyTarget(autoOps, controlDir);
++  return { controlDir, target };
++}
++function status(autoOps) {
++  const controlDir = path.join(autoOps, "00_control_center");
++  const state = readJson(path.join(controlDir, "autopilot-state.json"), null);
++  const mission = readJson(path.join(controlDir, "phase-mission.json"), null);
++  const target = readJson(path.join(controlDir, "chatgpt-target.json"), null);
++  const stopFiles = ["stop.flag", "STOP_AUTOPILOT.flag", path.join("stop", "STOP_AUTOPILOT.txt")].filter((name) => fs.existsSync(path.join(controlDir, name)));
++  const pauseFiles = ["pause.flag", "PAUSE_AUTOPILOT.flag", path.join("pause", "PAUSE_AUTOPILOT.txt")].filter((name) => fs.existsSync(path.join(controlDir, name)));
++  const queues = {
++    downloads: listFiles(path.join(autoOps, "13_chatgpt_downloads"), 10),
++    bridgeOutbox: listFiles(path.join(autoOps, "15_bridge_outbox"), 10),
++    mergePending: listFiles(path.join(autoOps, "09_merge_pending"), 10),
++    needsAttention: listFiles(path.join(autoOps, "17_needs_attention"), 10)
++  };
++  let decision = "ready";
++  const reasons = [];
++  if (!state) { decision = "needs_attention"; reasons.push("autopilot-state.json missing; run --init"); }
++  if (state && state.enabled !== true) { decision = "disabled"; reasons.push("autopilot enabled is false"); }
++  if (stopFiles.length) { decision = "stopped"; reasons.push(`stop file present: ${stopFiles[0]}`); }
++  if (pauseFiles.length) { decision = "paused"; reasons.push(`pause file present: ${pauseFiles[0]}`); }
++  if (state?.stopOnNeedsAttention !== false && queues.needsAttention.length) { decision = "needs_attention"; reasons.push("needs-attention queue is not empty"); }
++  if (target && (!target.targetUrl || target.targetUrl === "OWNER_SET_CHATGPT_THREAD_URL")) { decision = "needs_attention"; reasons.push("chatgpt-target.json needs an owner-set targetUrl"); }
++  return { version: VERSION, autoOps, controlDir, decision, reasons, state, mission, targetSummary: target ? { targetName: target.targetName || null, targetUrlSet: Boolean(target.targetUrl && target.targetUrl !== "OWNER_SET_CHATGPT_THREAD_URL"), cdpEndpoint: target.cdpEndpoint || null, allowNewChatFallback: target.allowNewChatFallback, allowRandomRecentChatFallback: target.allowRandomRecentChatFallback } : null, queues };
++}
++function main() {
++  const args = new Set(process.argv.slice(2));
++  const autoOps = autoOpsDir();
++  if (args.has("--init")) init(autoOps);
++  const current = status(autoOps);
++  console.log(JSON.stringify(current, null, 2));
++  if (current.decision === "needs_attention" || current.decision === "stopped") process.exitCode = 2;
++}
++main();
+diff --git ab/tmp/phase118_build/repo/scripts/sera-control-center-init.ps1 bb/tmp/phase118_build/repo/scripts/sera-control-center-init.ps1
+new file mode 100644
+index 0000000..8935fae
+--- /dev/null
++++ bb/tmp/phase118_build/repo/scripts/sera-control-center-init.ps1
+@@ -0,0 +1,77 @@
++param(
++  [switch]$Force
++)
++
++$ErrorActionPreference = "Stop"
++$AutoOps = if ($env:SERA_AUTOOPS_DIR) { $env:SERA_AUTOOPS_DIR } else { Join-Path $env:USERPROFILE "OneDrive\SERA-AutoOps" }
++$Control = Join-Path $AutoOps "00_control_center"
++New-Item -ItemType Directory -Force $Control | Out-Null
++foreach ($name in @("approvals","needs_attention","phase_missions","directives","services","evidence","archive","pause","stop")) {
++  New-Item -ItemType Directory -Force (Join-Path $Control $name) | Out-Null
++}
++function Write-JsonIfMissing($Path, $Object) {
++  if ((Test-Path $Path) -and -not $Force) { return }
++  $Object | ConvertTo-Json -Depth 20 | Set-Content -Path $Path -Encoding UTF8
++}
++Write-JsonIfMissing (Join-Path $Control "autopilot-state.json") @{
++  schemaVersion = 1
++  version = "phase118-autopilot-governor-control-center-v1"
++  autopilot = "guarded"
++  enabled = $false
++  phaseRange = @{ start = 118; end = 140 }
++  maxConsecutivePhases = 1
++  maxRepairAttemptsPerPhase = 2
++  stopOnNeedsAttention = $true
++  allowSafeAutoMerge = $true
++  allowNewChatFallback = $false
++  allowRandomRecentChatFallback = $false
++  requireSavedChatTarget = $true
++}
++Write-JsonIfMissing (Join-Path $Control "phase-mission.json") @{
++  schemaVersion = 1
++  currentPhase = 118
++  phaseRange = @{ start = 118; end = 140 }
++  mission = "Continue S.E.R.A. guarded autopilot hardening with owner-safe control center governance."
++}
++Write-JsonIfMissing (Join-Path $Control "service-registry.json") @{
++  schemaVersion = 1
++  services = @{
++    chatgptBridge = @{ enabled = $true; requiresSavedTarget = $true }
++    downloadRouter = @{ enabled = $true; intake = "13_chatgpt_downloads" }
++    autoOpsRunner = @{ enabled = $true; validatesWith = "npm run sera:gate" }
++    safeMergeAutoApprover = @{ enabled = $true; requiresOwnerMergeApprovalFile = $true }
++  }
++}
++$Target = Join-Path $Control "chatgpt-target.json"
++$Legacy = Join-Path $AutoOps "12_browser_helper_state\chatgpt-bridge-target.json"
++if (!(Test-Path $Target) -or $Force) {
++  if (Test-Path $Legacy) {
++    $json = Get-Content $Legacy -Raw | ConvertFrom-Json
++    $json | Add-Member -NotePropertyName controlCenterManaged -NotePropertyValue $true -Force
++    $json.allowNewChatFallback = $false
++    $json.allowRandomRecentChatFallback = $false
++    $json | ConvertTo-Json -Depth 20 | Set-Content -Path $Target -Encoding UTF8
++  } else {
++    @{
++      targetName = "S.E.R.A. saved ChatGPT thread"
++      targetUrl = "OWNER_SET_CHATGPT_THREAD_URL"
++      cdpEndpoint = "http://127.0.0.1:9222"
++      allowNewChatFallback = $false
++      allowRandomRecentChatFallback = $false
++      composerSelectors = @()
++    } | ConvertTo-Json -Depth 20 | Set-Content -Path $Target -Encoding UTF8
++  }
++}
++$Directives = Join-Path $Control "directives.md"
++if (!(Test-Path $Directives) -or $Force) {
++@'
++# S.E.R.A. Control Center Directives
++
++- Use guarded autopilot.
++- Use only the saved ChatGPT target URL.
++- Stop on unclear, destructive, paid, security-sensitive, or owner-risk actions.
++- Keep owner approval required for merge, high-risk repairs, and external service changes.
++'@ | Set-Content -Path $Directives -Encoding UTF8
++}
++Write-Host "Control center initialized: $Control"
++node scripts/sera-autopilot-governor.mjs --init
