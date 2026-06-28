@@ -1730,3 +1730,11 @@ Phase 107 reads Phase 106 Worker Activation Token Draft lineage and creates a ma
 - scripts/run-autopilot-reliability-scaffold-v1.mjs
 - tests/integration/autopilot-reliability-scaffold-v1.test.ts
 
+## Phase 109 — Proof-of-Use Simulation Harness v1
+
+- docs/phases/PHASE_109_PROOF_OF_USE_SIMULATION_HARNESS_V1.md
+- apps/operator-console/src/proof-of-use-simulation-harness.ts
+- scripts/lib/proof-of-use-simulation-harness-v1.mjs
+- scripts/run-proof-of-use-simulation-harness-v1.mjs
+- tests/integration/proof-of-use-simulation-harness-v1.test.ts
+
