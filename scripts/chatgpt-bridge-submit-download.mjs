@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
 
-const PHASE = "phase115-chatgpt-dom-download-troubleshooter-v1";
+const PHASE = "phase117a-chatgpt-artifact-download-hardening-v1";
 const DEFAULT_SELECTORS = [
   'div#prompt-textarea.ProseMirror[contenteditable="true"][role="textbox"]',
   'div[contenteditable="true"][role="textbox"]#prompt-textarea',
@@ -227,8 +227,19 @@ async function setDownloadDir(cdpEndpoint, downloadDir) {
   if (!browserWs) return { ok: false, reason: "Browser websocket endpoint unavailable." };
   const browser = await connect(browserWs);
   try {
-    await browser.send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: downloadDir });
-    return { ok: true, downloadDir };
+    await browser.send("Browser.setDownloadBehavior", {
+      behavior: "allow",
+      downloadPath: downloadDir,
+      eventsEnabled: true
+    });
+    return { ok: true, method: "Browser.setDownloadBehavior", downloadDir };
+  } catch (error) {
+    return {
+      ok: false,
+      method: "Browser.setDownloadBehavior",
+      downloadDir,
+      reason: error instanceof Error ? error.message : String(error)
+    };
   } finally {
     browser.close();
   }
@@ -326,13 +337,15 @@ async function clickSend(client) {
 async function getDownloadCandidates(client, expectedName) {
   const js = `(() => {
     const expectedName = (${JSON.stringify(expectedName || "")}).toLowerCase();
+    const expectedStem = expectedName.replace(/\.zip$/i, "");
     const visible = (el) => {
       if (!el) return false;
       const rect = el.getBoundingClientRect();
       const style = window.getComputedStyle(el);
       return rect.width > 4 && rect.height > 4 && style.visibility !== "hidden" && style.display !== "none";
     };
-    const textOf = (el) => [
+    const norm = (value) => String(value || "").replace(/\s+/g, " ").trim();
+    const textOf = (el) => norm([
       el.innerText,
       el.textContent,
       el.getAttribute("aria-label"),
@@ -341,29 +354,56 @@ async function getDownloadCandidates(client, expectedName) {
       el.getAttribute("data-testid"),
       el.id,
       el.className
-    ].filter(Boolean).join(" ").replace(/\\s+/g, " ").trim();
-    const latestAssistant = Array.from(document.querySelectorAll('[data-message-author-role="assistant"], article, [data-testid*="conversation-turn"]'))
-      .filter(visible)
-      .slice(-1)[0] || null;
+    ].filter(Boolean).join(" "));
+    const hrefOf = (el) => el.href || el.getAttribute("href") || "";
+    const ancestorText = (el, maxDepth = 6) => {
+      const parts = [];
+      let cur = el;
+      for (let depth = 0; cur && depth < maxDepth; depth += 1, cur = cur.parentElement) {
+        if (cur.matches?.("pre, code")) break;
+        const text = norm(cur.innerText || cur.textContent || cur.getAttribute?.("aria-label") || "");
+        if (text) parts.push(text.slice(0, 1200));
+      }
+      return norm(parts.join(" ")).slice(0, 4000);
+    };
+    const assistantRoots = Array.from(document.querySelectorAll('[data-message-author-role="assistant"], article, [data-testid*="conversation-turn"]'))
+      .filter(visible);
+    const rootText = (node) => norm(node.innerText || node.textContent || "");
+    const matchingRoots = assistantRoots.filter((node) => {
+      const txt = rootText(node).toLowerCase();
+      return (expectedName && txt.includes(expectedName)) || (expectedStem && txt.includes(expectedStem)) || txt.includes(".zip");
+    });
+    const latestAssistant = assistantRoots.slice(-1)[0] || null;
+    const roots = [];
+    if (matchingRoots.length) roots.push(...matchingRoots.slice(-3).map((node) => ({ node, source: "matchingAssistant" })));
+    if (latestAssistant && !matchingRoots.includes(latestAssistant)) roots.push({ node: latestAssistant, source: "latestAssistant" });
+    roots.push({ node: document, source: "document" });
+
     const allCandidates = [];
     const addCandidate = (el, query, kind, source) => {
       const nodes = Array.from(document.querySelectorAll(query));
       const index = nodes.indexOf(el);
-      if (index < 0) return;
-      const href = el.href || el.getAttribute("href") || "";
-      const text = textOf(el);
-      const haystack = (href + " " + text).toLowerCase();
+      if (index < 0 || !visible(el) || el.closest("pre, code")) return;
+      const href = hrefOf(el);
+      const ownText = textOf(el);
+      const contextText = ancestorText(el);
+      const haystack = norm([href, ownText, contextText].join(" ")).toLowerCase();
+      const mentionsExpected = Boolean(expectedName && haystack.includes(expectedName)) || Boolean(expectedStem && haystack.includes(expectedStem));
       const mentionsZip = haystack.includes(".zip");
-      const mentionsExpected = expectedName && haystack.includes(expectedName);
-      const looksDownload = haystack.includes("download") || haystack.includes("download file") || haystack.includes("download artifact");
-      if (!mentionsZip && !mentionsExpected && !looksDownload) return;
+      const ownLooksDownload = ownText.toLowerCase().includes("download") || (el.getAttribute("aria-label") || "").toLowerCase().includes("download") || (el.getAttribute("download") || "").toLowerCase().includes("download");
+      const contextLooksDownload = haystack.includes("download");
+      const isGenericDownloadButton = (kind === "button" && ownLooksDownload) || (kind === "link" && (ownLooksDownload || href));
+      if (!mentionsExpected && !mentionsZip && !isGenericDownloadButton && !contextLooksDownload) return;
       let score = 0;
-      if (mentionsExpected) score += 100;
-      if (mentionsZip) score += 40;
-      if (looksDownload) score += 20;
+      if (mentionsExpected) score += 140;
+      if (mentionsZip) score += 50;
+      if (ownLooksDownload) score += 35;
+      if (isGenericDownloadButton) score += 25;
+      if (source === "matchingAssistant") score += 40;
       if (source === "latestAssistant") score += 20;
-      if (visible(el)) score += 10;
-      if (kind === "link" && href) score += 5;
+      if (kind === "link" && href) score += 10;
+      if (kind === "button") score += 8;
+      if (!mentionsExpected && ownText.toLowerCase() === "download") score -= 15;
       allCandidates.push({
         kind,
         query,
@@ -372,39 +412,60 @@ async function getDownloadCandidates(client, expectedName) {
         score,
         href,
         hrefHost: (() => { try { return href ? new URL(href).hostname : null; } catch { return "invalid"; } })(),
-        text: text.slice(0, 300),
+        text: ownText.slice(0, 300),
+        contextText: contextText.slice(0, 1000),
         ariaLabel: el.getAttribute("aria-label") || null,
         title: el.getAttribute("title") || null,
         dataTestId: el.getAttribute("data-testid") || null,
-        visible: visible(el)
+        visible: visible(el),
+        mentionsExpected,
+        mentionsZip,
+        ownLooksDownload
       });
     };
-    const scopes = latestAssistant ? [{ node: latestAssistant, source: "latestAssistant" }, { node: document, source: "document" }] : [{ node: document, source: "document" }];
-    for (const { node, source } of scopes) {
-      for (const el of Array.from(node.querySelectorAll('a[href], a[download]'))) addCandidate(el, 'a[href], a[download]', 'link', source);
-      for (const el of Array.from(node.querySelectorAll('button, [role="button"]'))) addCandidate(el, 'button, [role="button"]', 'button', source);
+    const seenElements = new WeakSet();
+    for (const { node, source } of roots) {
+      for (const el of Array.from(node.querySelectorAll('a[href], a[download]'))) {
+        if (seenElements.has(el)) continue;
+        seenElements.add(el);
+        addCandidate(el, 'a[href], a[download]', 'link', source);
+      }
+      for (const el of Array.from(node.querySelectorAll('button, [role="button"]'))) {
+        if (seenElements.has(el)) continue;
+        seenElements.add(el);
+        addCandidate(el, 'button, [role="button"]', 'button', source);
+      }
     }
     const deduped = [];
     const seen = new Set();
     for (const item of allCandidates.sort((a, b) => b.score - a.score)) {
-      const key = item.kind + ':' + item.query + ':' + item.index + ':' + item.href + ':' + item.text;
+      const key = item.kind + ':' + item.query + ':' + item.index + ':' + item.href + ':' + item.text + ':' + item.contextText.slice(0, 120);
       if (seen.has(key)) continue;
       seen.add(key);
       deduped.push(item);
     }
-    const pageText = (document.body?.innerText || "").replace(/\\s+/g, " ");
-    const zipTextMatches = Array.from(new Set(pageText.match(/[A-Za-z0-9._-]+\\.zip/g) || [])).slice(-20);
-    const latestAssistantText = latestAssistant ? (latestAssistant.innerText || latestAssistant.textContent || "").replace(/\\s+/g, " ").trim().slice(-2000) : null;
+    const pageText = (document.body?.innerText || "").replace(/\s+/g, " ");
+    const zipTextMatches = Array.from(new Set(pageText.match(/[A-Za-z0-9._-]+\.zip/g) || [])).slice(-30);
+    const latestAssistantText = latestAssistant ? rootText(latestAssistant).slice(-3000) : null;
+    const matchingAssistantText = matchingRoots.length ? rootText(matchingRoots[matchingRoots.length - 1]).slice(-3000) : null;
+    const visibleClickableText = Array.from(document.querySelectorAll('button, a, [role="button"]'))
+      .filter((el) => visible(el) && !el.closest("pre, code"))
+      .map((el) => norm([textOf(el), ancestorText(el, 3)].join(" | ")).slice(0, 500))
+      .filter(Boolean)
+      .slice(-80);
     return {
       ok: deduped.length > 0,
       candidate: deduped[0] || null,
-      candidates: deduped.slice(0, 20),
+      candidates: deduped.slice(0, 30),
       snapshot: {
         expectedName,
         candidateCount: deduped.length,
         zipTextMatches,
         latestAssistantText,
+        matchingAssistantText,
         assistantNodeFound: Boolean(latestAssistant),
+        matchingAssistantCount: matchingRoots.length,
+        visibleClickableText,
         pageTitle: document.title,
         url: location.href
       }
@@ -431,7 +492,23 @@ async function clickDownloadCandidate(client, candidate) {
     const nodes = Array.from(document.querySelectorAll(candidate.query));
     const el = nodes[candidate.index];
     if (!el) return { ok: false, reason: "download candidate disappeared", candidate };
+    const visible = (node) => {
+      const rect = node.getBoundingClientRect();
+      const style = window.getComputedStyle(node);
+      return rect.width > 4 && rect.height > 4 && style.visibility !== "hidden" && style.display !== "none";
+    };
+    if (!visible(el)) return { ok: false, reason: "download candidate is not visible", candidate };
     el.scrollIntoView({ block: "center", inline: "center" });
+    el.focus?.();
+    const rect = el.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const options = { bubbles: true, cancelable: true, view: window, clientX: x, clientY: y };
+    try { el.dispatchEvent(new PointerEvent("pointerover", { ...options, pointerId: 1, pointerType: "mouse" })); } catch {}
+    try { el.dispatchEvent(new PointerEvent("pointerdown", { ...options, pointerId: 1, pointerType: "mouse" })); } catch {}
+    el.dispatchEvent(new MouseEvent("mousedown", options));
+    try { el.dispatchEvent(new PointerEvent("pointerup", { ...options, pointerId: 1, pointerType: "mouse" })); } catch {}
+    el.dispatchEvent(new MouseEvent("mouseup", options));
     el.click();
     return {
       ok: true,
@@ -440,6 +517,7 @@ async function clickDownloadCandidate(client, candidate) {
       score: candidate.score,
       hrefHost: candidate.hrefHost || null,
       text: candidate.text || "",
+      contextText: candidate.contextText || "",
       ariaLabel: candidate.ariaLabel || null,
       title: candidate.title || null,
       dataTestId: candidate.dataTestId || null
@@ -451,24 +529,63 @@ async function clickDownloadCandidate(client, candidate) {
 function newestZip(dir, sinceMs, expectedName = null) {
   if (!fs.existsSync(dir)) return null;
   const expected = expectedName ? expectedName.toLowerCase() : null;
+  const stem = expected ? expected.replace(/\.zip$/, "") : null;
   const candidates = fs.readdirSync(dir)
     .filter((name) => name.toLowerCase().endsWith(".zip"))
-    .filter((name) => !expected || name.toLowerCase().includes(expected.replace(/\.zip$/, "")))
+    .filter((name) => !expected || name.toLowerCase().includes(stem))
     .map((name) => path.join(dir, name))
-    .map((file) => ({ file, mtime: fs.statSync(file).mtimeMs, size: fs.statSync(file).size }))
+    .map((file) => ({ file, mtime: fs.statSync(file).mtimeMs, size: fs.statSync(file).size, sourceDir: dir }))
     .filter((item) => item.mtime >= sinceMs && item.size > 0)
     .sort((a, b) => b.mtime - a.mtime);
   return candidates[0] || null;
 }
 
+function uniqueExistingDirs(dirs) {
+  const seen = new Set();
+  return dirs
+    .filter(Boolean)
+    .map((dir) => path.resolve(dir))
+    .filter((dir) => {
+      if (seen.has(dir)) return false;
+      seen.add(dir);
+      return fs.existsSync(dir);
+    });
+}
+
+function downloadSearchDirs(primaryDownloadDir) {
+  const homeDownloads = path.join(os.homedir(), "Downloads");
+  const cdpProfile = path.join(autoOpsDir(), "00_control_center", "chrome-cdp-profile");
+  return uniqueExistingDirs([
+    primaryDownloadDir,
+    homeDownloads,
+    path.join(cdpProfile, "Downloads"),
+    path.join(cdpProfile, "Default", "Downloads")
+  ]);
+}
+
+function moveZipIntoDownloadDir(zip, downloadDir, expectedName = null) {
+  ensureDir(downloadDir);
+  const desiredName = expectedName || path.basename(zip.file);
+  const dest = path.join(downloadDir, desiredName);
+  if (path.resolve(zip.file) === path.resolve(dest)) return { ...zip, file: dest, moved: false };
+  fs.copyFileSync(zip.file, dest);
+  try { fs.unlinkSync(zip.file); } catch {}
+  const stat = fs.statSync(dest);
+  return { file: dest, mtime: stat.mtimeMs, size: stat.size, sourceDir: zip.sourceDir, moved: true, movedFrom: zip.file };
+}
+
 async function waitForDownloadedZip(downloadDir, sinceMs, maxWaitMs, expectedName = null) {
   const start = Date.now();
+  const dirs = downloadSearchDirs(downloadDir);
   while (Date.now() - start < maxWaitMs) {
-    const zip = newestZip(downloadDir, sinceMs, expectedName);
-    if (zip) return zip;
+    for (const dir of dirs) {
+      const zip = newestZip(dir, sinceMs, expectedName);
+      if (!zip) continue;
+      return moveZipIntoDownloadDir(zip, downloadDir, expectedName);
+    }
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
-  throw new Error(`Timed out waiting for downloaded ZIP in ${downloadDir}${expectedName ? ` matching ${expectedName}` : ""}`);
+  throw new Error(`Timed out waiting for downloaded ZIP in ${downloadDir}${expectedName ? ` matching ${expectedName}` : ""}. Checked: ${dirs.join(", ")}`);
 }
 
 async function main() {
