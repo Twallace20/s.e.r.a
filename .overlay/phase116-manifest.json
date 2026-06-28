@@ -1,0 +1,36 @@
+{
+  "overlay": "s.e.r.a_phase116_continuation_loop_smoke_test_v1_overlay",
+  "phase": 116,
+  "phaseName": "Continuation Loop Smoke Test v1",
+  "createdAt": "2026-06-28T17:55:00Z",
+  "safetyLevel": "smoke_test_no_new_browser_automation",
+  "zipRoot": "repo/",
+  "adds": [
+    "docs/phases/PHASE_116_CONTINUATION_LOOP_SMOKE_TEST_V1.md",
+    "scripts/phase116-verify.mjs"
+  ],
+  "proof": [
+    ".sera-proof/phase116/phase116-verify.json"
+  ],
+  "validationCommands": [
+    "node scripts/phase116-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "requiresPhase115ClosedCleanly": true,
+  "purpose": "Prove that the Phase 115 ChatGPT DOM download bridge can retrieve this ZIP through the saved conversation and that AutoOps can apply, gate, merge, tag, and clean it without adding more browser automation.",
+  "browserControl": {
+    "addsNewBrowserAutomation": false,
+    "usesExistingPhase115DownloadController": true,
+    "requiresExplicitExecutionFlag": "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true",
+    "usesSavedTargetOnly": true,
+    "usesRandomRecentChatFallback": false,
+    "usesNewChatFallback": false
+  },
+  "successCriteria": [
+    "ZIP arrives through ChatGPT DOM download path, not manual browser click",
+    "AutoOps routes ZIP into 01_apply_approved",
+    "Phase 116 verifier writes .sera-proof/phase116/phase116-verify.json",
+    "npm run sera:gate passes",
+    "phase closes cleanly after owner-approved merge"
+  ]
+}

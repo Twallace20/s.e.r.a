@@ -1,0 +1,329 @@
+diff --git a/.overlay/phase116-manifest.json b/.overlay/phase116-manifest.json
+new file mode 100644
+index 0000000..64f5fca
+--- /dev/null
++++ b/.overlay/phase116-manifest.json
+@@ -0,0 +1,36 @@
++{
++  "overlay": "s.e.r.a_phase116_continuation_loop_smoke_test_v1_overlay",
++  "phase": 116,
++  "phaseName": "Continuation Loop Smoke Test v1",
++  "createdAt": "2026-06-28T17:55:00Z",
++  "safetyLevel": "smoke_test_no_new_browser_automation",
++  "zipRoot": "repo/",
++  "adds": [
++    "docs/phases/PHASE_116_CONTINUATION_LOOP_SMOKE_TEST_V1.md",
++    "scripts/phase116-verify.mjs"
++  ],
++  "proof": [
++    ".sera-proof/phase116/phase116-verify.json"
++  ],
++  "validationCommands": [
++    "node scripts/phase116-verify.mjs",
++    "npm run sera:gate"
++  ],
++  "requiresPhase115ClosedCleanly": true,
++  "purpose": "Prove that the Phase 115 ChatGPT DOM download bridge can retrieve this ZIP through the saved conversation and that AutoOps can apply, gate, merge, tag, and clean it without adding more browser automation.",
++  "browserControl": {
++    "addsNewBrowserAutomation": false,
++    "usesExistingPhase115DownloadController": true,
++    "requiresExplicitExecutionFlag": "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true",
++    "usesSavedTargetOnly": true,
++    "usesRandomRecentChatFallback": false,
++    "usesNewChatFallback": false
++  },
++  "successCriteria": [
++    "ZIP arrives through ChatGPT DOM download path, not manual browser click",
++    "AutoOps routes ZIP into 01_apply_approved",
++    "Phase 116 verifier writes .sera-proof/phase116/phase116-verify.json",
++    "npm run sera:gate passes",
++    "phase closes cleanly after owner-approved merge"
++  ]
++}
+diff --git a/.sera-proof/phase116/phase116-verify.json b/.sera-proof/phase116/phase116-verify.json
+new file mode 100644
+index 0000000..587b4fe
+--- /dev/null
++++ b/.sera-proof/phase116/phase116-verify.json
+@@ -0,0 +1,122 @@
++{
++  "phase": "phase116-continuation-loop-smoke-test-v1",
++  "status": "PASS",
++  "createdAt": "2026-06-28T16:46:39.967Z",
++  "results": [
++    {
++      "check": "exists:.overlay/phase116-manifest.json",
++      "ok": true,
++      "detail": "1cd1c65c14067b9a6ba8e5892adddde46ce0b3e787a6a829e0c1e9adf4017e0f"
++    },
++    {
++      "check": "exists:docs/phases/PHASE_116_CONTINUATION_LOOP_SMOKE_TEST_V1.md",
++      "ok": true,
++      "detail": "e6ea8fb4883603ae72465faeead207bc90d3a891d728647fb2279c52964c4c29"
++    },
++    {
++      "check": "exists:scripts/phase116-verify.mjs",
++      "ok": true,
++      "detail": "0db87ecfbf33fd1e88e611e43b1f3f966d252034b97ef63eb687eeec7fe2554d"
++    },
++    {
++      "check": "node_syntax:phase116-verify",
++      "ok": true,
++      "detail": "syntax ok"
++    },
++    {
++      "check": "manifest:phase",
++      "ok": true,
++      "detail": "116"
++    },
++    {
++      "check": "manifest:zipRoot",
++      "ok": true,
++      "detail": "repo/"
++    },
++    {
++      "check": "manifest:noNewBrowserAutomation",
++      "ok": true,
++      "detail": "{\"addsNewBrowserAutomation\":false,\"usesExistingPhase115DownloadController\":true,\"requiresExplicitExecutionFlag\":\"SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true\",\"usesSavedTargetOnly\":true,\"usesRandomRecentChatFallback\":false,\"usesNewChatFallback\":false}"
++    },
++    {
++      "check": "manifest:usesExistingPhase115DownloadController",
++      "ok": true,
++      "detail": "{\"addsNewBrowserAutomation\":false,\"usesExistingPhase115DownloadController\":true,\"requiresExplicitExecutionFlag\":\"SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true\",\"usesSavedTargetOnly\":true,\"usesRandomRecentChatFallback\":false,\"usesNewChatFallback\":false}"
++    },
++    {
++      "check": "doc_contains:Continuation Loop Smoke Test",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "doc_contains:repo/",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "doc_contains:s.e.r.a_phase116_continuation_loop_smoke_test_v1_overlay.zip",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "doc_contains:13_chatgpt_downloads",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "doc_contains:01_apply_approved",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "doc_contains:npm run sera:gate",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "doc_contains:Phase 117",
++      "ok": true,
++      "detail": "found"
++    },
++    {
++      "check": "doc_forbidden:npm install",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "doc_forbidden:winget install",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "doc_forbidden:api key",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "doc_forbidden:token",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "doc_forbidden:password",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "doc_forbidden:secret",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "doc_forbidden:new chat fallback",
++      "ok": true,
++      "detail": "not found"
++    },
++    {
++      "check": "doc_forbidden:random recent chat fallback",
++      "ok": true,
++      "detail": "not found"
++    }
++  ]
++}
+\ No newline at end of file
+diff --git a/docs/phases/PHASE_116_CONTINUATION_LOOP_SMOKE_TEST_V1.md b/docs/phases/PHASE_116_CONTINUATION_LOOP_SMOKE_TEST_V1.md
+new file mode 100644
+index 0000000..c576ea4
+--- /dev/null
++++ b/docs/phases/PHASE_116_CONTINUATION_LOOP_SMOKE_TEST_V1.md
+@@ -0,0 +1,51 @@
++# Phase 116 — Continuation Loop Smoke Test v1
++
++## Purpose
++
++Phase 116 is the smallest safe proof that the continuation loop can move from a ChatGPT response back into AutoOps without manual ZIP handling.
++
++The intended test path is:
++
++```text
++Phase 115 bridge prompt is written
++→ saved ChatGPT thread receives the request
++→ ChatGPT returns this Phase 116 ZIP
++→ DOM download controller finds the expected ZIP in the latest assistant response
++→ ZIP is downloaded into 13_chatgpt_downloads
++→ router moves it to 01_apply_approved
++→ AutoOps applies the overlay
++→ validation runs
++→ phase is eligible for normal merge/tag/cleanup
++```
++
++## Scope
++
++This phase intentionally adds only static proof and documentation. It does not add new browser behavior, credentials, dependencies, paid services, GitHub/security settings, or broader autonomy.
++
++## Why this phase matters
++
++Phase 113 proved controlled submit/download infrastructure. Phase 114 added the prompt contract and validation harness. Phase 115 added DOM download troubleshooting. Phase 116 proves the pieces can work together on a harmless real overlay.
++
++## Success criteria
++
++Phase 116 is successful when:
++
++- the ZIP uses `repo/` as the root folder;
++- the expected filename is `s.e.r.a_phase116_continuation_loop_smoke_test_v1_overlay.zip`;
++- `node scripts/phase116-verify.mjs` passes;
++- `npm run sera:gate` passes;
++- AutoOps can close the phase cleanly after normal merge approval.
++
++## Guardrails
++
++Phase 116 must fail closed if the ZIP cannot be confidently found or downloaded. It must not switch to a random ChatGPT conversation, create a new chat, download unrelated files, or treat ambiguous DOM candidates as safe.
++
++## Next validation step
++
++After this phase closes cleanly through the bridge path, the next target is a controlled blocked-flow test:
++
++```text
++Phase 117 — Intentional Block + Repair Loop Test v1
++```
++
++That test should verify the repair/hotfix path separately from the normal continuation path.
+diff --git a/scripts/phase116-verify.mjs b/scripts/phase116-verify.mjs
+new file mode 100755
+index 0000000..4c23694
+--- /dev/null
++++ b/scripts/phase116-verify.mjs
+@@ -0,0 +1,95 @@
++#!/usr/bin/env node
++import fs from "node:fs";
++import path from "node:path";
++import crypto from "node:crypto";
++import { spawnSync } from "node:child_process";
++
++const phase = "phase116-continuation-loop-smoke-test-v1";
++const root = process.cwd();
++const requiredFiles = [
++  ".overlay/phase116-manifest.json",
++  "docs/phases/PHASE_116_CONTINUATION_LOOP_SMOKE_TEST_V1.md",
++  "scripts/phase116-verify.mjs"
++];
++
++function sha256(file) {
++  return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
++}
++function read(rel) {
++  return fs.readFileSync(path.join(root, rel), "utf8");
++}
++function exists(rel) {
++  return fs.existsSync(path.join(root, rel));
++}
++
++const results = [];
++for (const rel of requiredFiles) {
++  const file = path.join(root, rel);
++  results.push({
++    check: `exists:${rel}`,
++    ok: fs.existsSync(file),
++    detail: fs.existsSync(file) ? sha256(file) : "missing"
++  });
++}
++
++const verifier = path.join(root, "scripts/phase116-verify.mjs");
++if (fs.existsSync(verifier)) {
++  const syntax = spawnSync(process.execPath, ["--check", verifier], { encoding: "utf8" });
++  results.push({
++    check: "node_syntax:phase116-verify",
++    ok: syntax.status === 0,
++    detail: syntax.stderr || syntax.stdout || "syntax ok"
++  });
++}
++
++if (exists(".overlay/phase116-manifest.json")) {
++  const manifest = JSON.parse(read(".overlay/phase116-manifest.json"));
++  results.push({ check: "manifest:phase", ok: manifest.phase === 116, detail: String(manifest.phase) });
++  results.push({ check: "manifest:zipRoot", ok: manifest.zipRoot === "repo/", detail: manifest.zipRoot || "missing" });
++  results.push({ check: "manifest:noNewBrowserAutomation", ok: manifest.browserControl?.addsNewBrowserAutomation === false, detail: JSON.stringify(manifest.browserControl || {}) });
++  results.push({ check: "manifest:usesExistingPhase115DownloadController", ok: manifest.browserControl?.usesExistingPhase115DownloadController === true, detail: JSON.stringify(manifest.browserControl || {}) });
++}
++
++if (exists("docs/phases/PHASE_116_CONTINUATION_LOOP_SMOKE_TEST_V1.md")) {
++  const doc = read("docs/phases/PHASE_116_CONTINUATION_LOOP_SMOKE_TEST_V1.md");
++  const requiredPhrases = [
++    "Continuation Loop Smoke Test",
++    "repo/",
++    "s.e.r.a_phase116_continuation_loop_smoke_test_v1_overlay.zip",
++    "13_chatgpt_downloads",
++    "01_apply_approved",
++    "npm run sera:gate",
++    "Phase 117"
++  ];
++  for (const phrase of requiredPhrases) {
++    results.push({ check: `doc_contains:${phrase}`, ok: doc.includes(phrase), detail: doc.includes(phrase) ? "found" : "missing" });
++  }
++
++  const forbiddenPhrases = [
++    "npm install",
++    "winget install",
++    "api key",
++    "token",
++    "password",
++    "secret",
++    "new chat fallback",
++    "random recent chat fallback"
++  ];
++  for (const phrase of forbiddenPhrases) {
++    results.push({ check: `doc_forbidden:${phrase}`, ok: !doc.toLowerCase().includes(phrase), detail: doc.toLowerCase().includes(phrase) ? "found" : "not found" });
++  }
++}
++
++const pass = results.every((result) => result.ok);
++const outDir = path.join(root, ".sera-proof", "phase116");
++fs.mkdirSync(outDir, { recursive: true });
++const report = { phase, status: pass ? "PASS" : "FAIL", createdAt: new Date().toISOString(), results };
++const outFile = path.join(outDir, "phase116-verify.json");
++fs.writeFileSync(outFile, JSON.stringify(report, null, 2), "utf8");
++
++for (const result of results) {
++  console.log(`${result.ok ? "✓" : "✗"} ${result.check} — ${result.detail}`);
++}
++console.log(`Phase 116 verify: ${report.status}`);
++console.log(outFile);
++process.exit(pass ? 0 : 1);
