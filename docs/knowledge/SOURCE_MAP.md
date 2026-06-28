@@ -1746,3 +1746,11 @@ Phase 107 reads Phase 106 Worker Activation Token Draft lineage and creates a ma
 - scripts/run-validation-profiles-proof-gate-v1.mjs
 - tests/integration/validation-profiles-proof-gate-v1.test.ts
 
+## Phase 111 — ChatGPT Bridge Dry-Run v1
+
+- docs/phases/PHASE_111_CHATGPT_BRIDGE_DRY_RUN_V1.md
+- apps/operator-console/src/chatgpt-bridge-dry-run.ts
+- scripts/lib/chatgpt-bridge-dry-run-v1.mjs
+- scripts/run-chatgpt-bridge-dry-run-v1.mjs
+- tests/integration/chatgpt-bridge-dry-run-v1.test.ts
+
