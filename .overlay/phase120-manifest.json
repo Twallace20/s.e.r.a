@@ -1,0 +1,40 @@
+{
+  "overlay": "s.e.r.a_phase120_chatgpt_artifact_watcher_scheduler_v1_overlay",
+  "phase": "120",
+  "phaseName": "ChatGPT Artifact Watcher Scheduler v1",
+  "createdAt": "2026-06-28T23:05:00Z",
+  "safetyLevel": "full_safe_autopilot_download_watcher_no_unbounded_self_approval",
+  "zipRoot": "repo/",
+  "adds": [
+    "docs/phases/PHASE_120_CHATGPT_ARTIFACT_WATCHER_SCHEDULER_V1.md",
+    "docs/autopilot/CHATGPT_ARTIFACT_WATCHER_SCHEDULER_CONTRACT.md",
+    "scripts/sera-chatgpt-artifact-watcher.mjs",
+    "scripts/sera-chatgpt-artifact-watch.ps1",
+    "scripts/sera-chatgpt-artifact-watcher-schedule.ps1",
+    "scripts/phase120-verify.mjs"
+  ],
+  "validationCommands": [
+    "node scripts/phase120-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "requiresPhase119ClosedCleanly": true,
+  "enables": [
+    "scheduled artifact watcher",
+    "outbox prompt polling",
+    "saved ChatGPT thread refresh before bridge execution",
+    "exact expected ZIP intake",
+    "normal-overlay versus hotfix route guard",
+    "duplicate-safe ledger",
+    "runner kickoff after safe routing",
+    "needs-attention fail-closed handling"
+  ],
+  "hardStops": [
+    "missing saved ChatGPT target",
+    "unexpected artifact filename",
+    "hotfix requested while repo is on main",
+    "missing expected ZIP after bounded attempts",
+    "prompt blocked by existing bridge safety filter",
+    "stop or pause flag present",
+    "unclear artifact state"
+  ]
+}
