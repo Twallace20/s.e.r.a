@@ -1,0 +1,13 @@
+Phase 119 overlay summary
+
+Adds:
+- scripts/sera-autopilot-loop.mjs
+- scripts/sera-autopilot-continue.ps1
+- scripts/sera-autopilot-repair-orchestrator.mjs
+- scripts/phase119-verify.mjs
+- docs/autopilot/AUTOPILOT_CONTINUATION_LOOP_CONTRACT.md
+- docs/phases/PHASE_119_AUTOPILOT_CONTINUATION_LOOP_REPAIR_ORCHESTRATOR_V1.md
+- .overlay/phase119-manifest.json
+- .sera-proof/phase119/phase119-verify.json
+
+No external dependencies are added. No package install is required. The loop uses the saved ChatGPT target and existing AutoOps scheduled tasks.

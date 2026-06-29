@@ -1,0 +1,38 @@
+{
+  "overlay": "s.e.r.a_phase119_autopilot_continuation_loop_repair_orchestrator_v1_overlay",
+  "phase": "119",
+  "phaseName": "Autopilot Continuation Loop + Repair Orchestrator v1",
+  "createdAt": "2026-06-28T22:10:00Z",
+  "safetyLevel": "full_safe_autopilot_no_unbounded_self_approval",
+  "zipRoot": "repo/",
+  "adds": [
+    "docs/phases/PHASE_119_AUTOPILOT_CONTINUATION_LOOP_REPAIR_ORCHESTRATOR_V1.md",
+    "docs/autopilot/AUTOPILOT_CONTINUATION_LOOP_CONTRACT.md",
+    "scripts/sera-autopilot-loop.mjs",
+    "scripts/sera-autopilot-continue.ps1",
+    "scripts/sera-autopilot-repair-orchestrator.mjs",
+    "scripts/phase119-verify.mjs"
+  ],
+  "validationCommands": [
+    "node scripts/phase119-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "requiresPhase118ClosedCleanly": true,
+  "enables": [
+    "repeatable ChatGPT phase request submission",
+    "artifact download and intake polling",
+    "router and runner orchestration",
+    "safe merge task orchestration",
+    "recoverable repair prompt generation",
+    "needs-attention fail-closed behavior",
+    "bounded batch continuation"
+  ],
+  "hardStops": [
+    "credential material",
+    "paid/external service changes",
+    "GitHub/security settings",
+    "dependency/tool installation",
+    "destructive commands",
+    "unclear or repeated repair failure"
+  ]
+}
