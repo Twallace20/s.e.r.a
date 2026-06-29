@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "command": "run_range",
+  "status": "active",
+  "phaseRange": {
+    "start": 124,
+    "end": 130
+  },
+  "guidance": "Keep the batch focused on safe autopilot hardening and stop if owner judgment is required.",
+  "allowNewChatFallback": false,
+  "allowRandomRecentChatFallback": false
+}

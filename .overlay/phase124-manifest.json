@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "phase": 124,
+  "name": "Autopilot Directive Control Center v1",
+  "expectedZipName": "s.e.r.a_phase124_autopilot_directive_control_center_v1_overlay.zip",
+  "root": "repo/",
+  "type": "overlay",
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowNewChatFallback": false,
+    "allowRandomRecentChatFallback": false,
+    "stopIfOwnerJudgmentRequired": true
+  },
+  "files": [
+    "scripts/sera-autopilot-loop.mjs",
+    "scripts/sera-autopilot-continue.ps1",
+    "scripts/sera-autopilot-directive.mjs",
+    "scripts/sera-autopilot-directive.ps1",
+    "scripts/phase124-verify.mjs",
+    "docs/autopilot/AUTOPILOT_DIRECTIVE_CONTROL_CENTER_V1.md",
+    "docs/phases/PHASE_124_AUTOPILOT_DIRECTIVE_CONTROL_CENTER_V1.md",
+    "00_control_center_templates/autopilot-directive.example.json",
+    "00_control_center_templates/GUIDE_AUTOPILOT.example.md",
+    "00_control_center_templates/RUN_124_TO_130.flag",
+    ".sera-proof/phase124/phase124-verify.json"
+  ]
+}
