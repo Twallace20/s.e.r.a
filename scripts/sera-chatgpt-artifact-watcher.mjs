@@ -5,7 +5,7 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase121-control-center-active-mission-dedupe-hardening-v1";
+const VERSION = "phase122-control-center-handoff-reconciler-next-phase-resolver-v1";
 
 function autoOpsDir() {
   return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps");
@@ -85,6 +85,27 @@ function paths(autoOps) {
     processing: path.join(autoOps, "08_processing")
   };
 }
+
+function phaseNumberFromName(name) {
+  const match = String(name || "").match(/phase[_-]?(\d+)/i);
+  return match ? Number(match[1]) : 0;
+}
+function latestClosedPhase(p) {
+  if (!fs.existsSync(p.handoff)) return null;
+  return fs.readdirSync(p.handoff)
+    .map((name) => ({ name, file: path.join(p.handoff, name), phase: phaseNumberFromName(name) }))
+    .filter((item) => item.phase > 0 && item.name.toLowerCase().includes("closed_cleanly") && isFile(item.file))
+    .sort((a, b) => b.phase - a.phase || fileMtimeMs(b.file) - fileMtimeMs(a.file))[0] || null;
+}
+function archiveArtifactRequest(requestPath, request, status, extra = {}) {
+  const archiveDir = path.join(path.dirname(requestPath), "archive");
+  ensureDir(archiveDir);
+  const archived = path.join(archiveDir, `artifact-watch-request-phase${request?.phase || "unknown"}-${timestamp()}.json`);
+  writeJson(archived, { ...(request || {}), ...extra, active: false, status, archivedAt: new Date().toISOString() });
+  try { fs.unlinkSync(requestPath); } catch {}
+  return archived;
+}
+
 function newestPrompt(outbox) {
   if (!fs.existsSync(outbox)) return null;
   const prompts = fs.readdirSync(outbox)
@@ -95,6 +116,7 @@ function newestPrompt(outbox) {
   return prompts[0] || null;
 }
 function activeArtifactRequest(p) {
+  const closed = latestClosedPhase(p);
   const candidates = [
     path.join(p.control, "artifact-watch-request.json"),
     path.join(p.control, "active-artifact.json")
@@ -103,7 +125,13 @@ function activeArtifactRequest(p) {
     const request = readJson(requestPath, null);
     if (!request) continue;
     if (request.active === false) continue;
-    if (["closed_cleanly", "completed", "routed", "cancelled"].includes(String(request.status || "").toLowerCase())) continue;
+    const status = String(request.status || "").toLowerCase();
+    if (["closed_cleanly", "completed", "routed", "cancelled", "archived_stale_closed_phase"].includes(status)) continue;
+    const requestPhase = Number(request.phase || 0);
+    if (closed?.phase && requestPhase > 0 && requestPhase <= closed.phase) {
+      archiveArtifactRequest(requestPath, request, "archived_stale_closed_phase", { closedPhase: closed.phase, closedHandoff: closed.file });
+      continue;
+    }
     const promptFile = request.promptFile || request.promptPath;
     const expectedZipName = request.expectedZipName || request.zipName;
     if (!promptFile || !expectedZipName) continue;
@@ -162,7 +190,8 @@ function loadTarget(p) {
   const target = readJson(source, null);
   if (!target?.targetUrl || target.targetUrl === "OWNER_SET_CHATGPT_THREAD_URL") throw new Error("Saved ChatGPT target URL is missing.");
   if (target.allowNewChatFallback !== false || target.allowRandomRecentChatFallback !== false) throw new Error("Saved ChatGPT target fallback flags must remain false.");
-  return { target, targetPath: source };
+  if (source === legacyPath && !fs.existsSync(targetPath)) writeJson(targetPath, target);
+  return { target, targetPath: fs.existsSync(targetPath) ? targetPath : source };
 }
 async function fetchJson(url) {
   const response = await fetch(url, { headers: { accept: "application/json" } });
@@ -347,7 +376,9 @@ async function runPass(args, p, passIndex = 0) {
     const ledger = readLedger(p);
     const record = ledger.records[key] || { promptFile, expectedZipName, attempts: 0, firstSeenAt: new Date().toISOString() };
     evidence.ledgerKey = key;
-    const alreadyClosed = completedHandoffFor(p, expectedZipName);
+    const zipPhase = phaseNumberFromName(expectedZipName);
+    const closedPhase = latestClosedPhase(p);
+    const alreadyClosed = completedHandoffFor(p, expectedZipName) || (closedPhase?.phase && zipPhase > 0 && zipPhase <= closedPhase.phase ? closedPhase.file : null);
     if (alreadyClosed) {
       record.status = "closed_cleanly";
       record.handoff = alreadyClosed;
@@ -465,7 +496,7 @@ async function main() {
       process.exitCode = 2;
       return;
     }
-    if (result.status === "idle_no_prompt") idle += 1;
+    if (result.status === "idle_no_active_artifact_request" || result.status === "idle_no_prompt") idle += 1;
     else idle = 0;
     if (idle >= Number(args.idlePasses || 1)) {
       console.log(JSON.stringify({ ok: true, status: "watch_idle", results }, null, 2));

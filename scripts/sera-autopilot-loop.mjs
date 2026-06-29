@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase121-control-center-active-mission-dedupe-hardening-v1";
+const VERSION = "phase122-control-center-handoff-reconciler-next-phase-resolver-v1";
 
 function autoOpsDir() { return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps"); }
 function ensureDir(dir) { fs.mkdirSync(dir, { recursive: true }); }
@@ -75,6 +75,60 @@ function defaultState() {
     ignoreExistingNeedsAttentionAtStart: true
   };
 }
+
+function phaseNumberFromName(name) {
+  const match = String(name || "").match(/phase[_-]?(\d+)/i);
+  return match ? Number(match[1]) : 0;
+}
+function latestClosedPhase(p) {
+  if (!fs.existsSync(p.handoff)) return null;
+  const closed = listFiles(p.handoff)
+    .map((file) => ({ file, name: path.basename(file), phase: phaseNumberFromName(path.basename(file)), mtime: fileMtimeMs(file) }))
+    .filter((item) => item.phase > 0 && item.name.toLowerCase().includes("closed_cleanly"))
+    .sort((a, b) => b.phase - a.phase || b.mtime - a.mtime)[0] || null;
+  return closed;
+}
+function ensureSavedTarget(p) {
+  const targetPath = path.join(p.control, "chatgpt-target.json");
+  const legacyPath = path.join(autoOpsDir(), "12_browser_helper_state", "chatgpt-bridge-target.json");
+  const source = fs.existsSync(targetPath) ? targetPath : legacyPath;
+  if (!fs.existsSync(source)) return null;
+  const target = readJson(source, null);
+  if (!target) return null;
+  if (!fs.existsSync(targetPath) && source === legacyPath) writeJson(targetPath, target);
+  return target;
+}
+function reconcileControlCenter(p, mission) {
+  ensureDir(p.control); ensureDir(path.join(p.control, "archive"));
+  const closed = latestClosedPhase(p);
+  const nextMission = { ...(mission || {}) };
+  const changes = [];
+  if (closed?.phase) {
+    const current = Number(nextMission.currentPhase || 0);
+    const next = Number(nextMission.nextPhase || 0);
+    if (!current || current < closed.phase) { nextMission.currentPhase = closed.phase; changes.push(`currentPhase=${closed.phase}`); }
+    if (!next || next <= closed.phase) { nextMission.nextPhase = closed.phase + 1; changes.push(`nextPhase=${closed.phase + 1}`); }
+    nextMission.lastClosedCleanly = { phase: closed.phase, handoff: closed.file, detectedAt: new Date().toISOString() };
+  }
+  const requestPath = path.join(p.control, "artifact-watch-request.json");
+  const req = readJson(requestPath, null);
+  if (req && closed?.phase && Number(req.phase || 0) <= closed.phase) {
+    const archived = path.join(p.control, "archive", `artifact-watch-request-phase${req.phase || "unknown"}-${timestamp()}.json`);
+    writeJson(archived, { ...req, active: false, status: "archived_stale_closed_phase", archivedAt: new Date().toISOString(), closedPhase: closed.phase });
+    try { fs.unlinkSync(requestPath); } catch {}
+    changes.push(`archived stale artifact request for phase ${req.phase || "unknown"}`);
+  }
+  if (changes.length > 0) {
+    nextMission.updatedAt = new Date().toISOString();
+    nextMission.updatedBy = VERSION;
+    writeJson(path.join(p.control, "phase-mission.json"), nextMission);
+  }
+  const target = ensureSavedTarget(p);
+  const summary = { version: VERSION, changed: changes.length > 0, changes, latestClosedPhase: closed, targetPresent: !!target, mission: nextMission, updatedAt: new Date().toISOString() };
+  writeJson(path.join(p.evidence, `control-center-reconcile-${timestamp()}.json`), summary);
+  return { mission: nextMission, target, summary };
+}
+
 function loadControl(autoOps) {
   const p = paths(autoOps);
   const state = { ...defaultState(), ...(readJson(path.join(p.control, "autopilot-state.json"), {}) || {}) };
@@ -292,6 +346,9 @@ async function main() {
   const autoOps = autoOpsDir();
   const control = loadControl(autoOps);
   for (const dir of Object.values(control.p)) ensureDir(dir);
+  const reconciled = reconcileControlCenter(control.p, control.mission);
+  control.mission = reconciled.mission;
+  control.target = reconciled.target || control.target;
   const gate = stopPauseDecision(control.p, control.state, control.target);
   if (!gate.ok) {
     console.log(JSON.stringify({ ok: false, ...gate }, null, 2));
@@ -300,7 +357,7 @@ async function main() {
   }
   const maxByState = Number(control.state.maxConsecutivePhases || 1);
   const max = Math.max(1, Math.min(Number(args.maxPhases || 1), maxByState));
-  const summary = { version: VERSION, autoOps, maxPhases: max, results: [] };
+  const summary = { version: VERSION, autoOps, maxPhases: max, reconciliation: reconciled.summary, results: [] };
   for (let i = 0; i < max; i += 1) {
     const task = phaseFromMission(control.mission, args, i);
     let result = await runOne(task, args, control, i);

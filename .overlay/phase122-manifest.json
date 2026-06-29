@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "phase": 122,
+  "name": "control-center-handoff-reconciler-next-phase-resolver-v1",
+  "type": "overlay",
+  "root": "repo/",
+  "files": [
+    "scripts/sera-control-center-reconcile.mjs",
+    "scripts/sera-control-center-reconcile.ps1",
+    "scripts/sera-autopilot-loop.mjs",
+    "scripts/sera-autopilot-continue.ps1",
+    "scripts/sera-chatgpt-artifact-watcher.mjs",
+    "scripts/phase122-verify.mjs",
+    "docs/autopilot/CONTROL_CENTER_HANDOFF_RECONCILER_NEXT_PHASE_RESOLVER.md",
+    "docs/phases/PHASE_122_CONTROL_CENTER_HANDOFF_RECONCILER_NEXT_PHASE_RESOLVER_V1.md",
+    ".overlay/phase122-manifest.json",
+    ".sera-proof/phase122/phase122-verify.json",
+    "s.e.r.a_phase122_control_center_handoff_reconciler_next_phase_resolver_v1_overlay.patch"
+  ],
+  "safety": {
+    "usesSavedChatTargetOnly": true,
+    "preventsCompletedPhaseReprocessing": true,
+    "advancesNextPhaseFromClosedHandoff": true,
+    "archivesStaleArtifactRequests": true,
+    "preservesStopPauseNeedsAttention": true,
+    "dependencyInstalls": false,
+    "paidServices": false,
+    "credentialChanges": false,
+    "githubSecuritySettingsChanges": false
+  }
+}
