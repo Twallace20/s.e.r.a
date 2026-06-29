@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase122-control-center-handoff-reconciler-next-phase-resolver-v1";
+const VERSION = "phase124-autopilot-directive-control-center-v1";
 
 function autoOpsDir() { return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps"); }
 function ensureDir(dir) { fs.mkdirSync(dir, { recursive: true }); }
@@ -29,6 +29,7 @@ function readJson(file, fallback = null) {
 }
 function writeJson(file, data) { ensureDir(path.dirname(file)); fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8"); }
 function writeText(file, text) { ensureDir(path.dirname(file)); fs.writeFileSync(file, text, "utf8"); }
+function readText(file, fallback = "") { if (!fs.existsSync(file)) return fallback; return decodeText(fs.readFileSync(file)); }
 function fileMtimeMs(file) { return fs.statSync(file).mtimeMs; }
 function listFiles(dir) { if (!fs.existsSync(dir)) return []; return fs.readdirSync(dir).map((name) => path.join(dir, name)).filter((file) => fs.statSync(file).isFile()); }
 function basenameNoZip(name) { return path.basename(name).replace(/\.zip$/i, ""); }
@@ -136,23 +137,114 @@ function loadControl(autoOps) {
   const target = readJson(path.join(p.control, "chatgpt-target.json"), null);
   return { p, state, mission, target };
 }
-function stopPauseDecision(p, state, target) {
+
+function parsePhaseRange(value) {
+  if (!value && value !== 0) return null;
+  if (typeof value === "object") {
+    const start = Number(value.start || value.from || value.startPhase || value.fromPhase);
+    const end = Number(value.end || value.to || value.endPhase || value.toPhase || start);
+    if (Number.isFinite(start) && start > 0 && Number.isFinite(end) && end >= start) return { start, end };
+    return null;
+  }
+  const match = String(value).trim().match(/^(\d+)\s*(?:-|–|—|\.\.|to)\s*(\d+)$/i) || String(value).trim().match(/^(\d+)$/);
+  if (!match) return null;
+  const start = Number(match[1]);
+  const end = Number(match[2] || match[1]);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start <= 0 || end < start) return null;
+  return { start, end };
+}
+function loadDirective(p) {
+  const directivePath = path.join(p.control, "autopilot-directive.json");
+  let directive = readJson(directivePath, null);
+  const runFlag = listFiles(p.control)
+    .map((file) => ({ file, name: path.basename(file), mtime: fileMtimeMs(file) }))
+    .filter((item) => /^RUN_\d+_TO_\d+\.flag$/i.test(item.name))
+    .sort((a, b) => b.mtime - a.mtime)[0] || null;
+  if (!directive && runFlag) {
+    const m = runFlag.name.match(/^RUN_(\d+)_TO_(\d+)\.flag$/i);
+    directive = { schemaVersion: 1, command: "run_range", status: "active", phaseRange: { start: Number(m[1]), end: Number(m[2]) }, source: "flag", flag: runFlag.file };
+  }
+  const guidePath = path.join(p.control, "GUIDE_AUTOPILOT.md");
+  const guidance = readText(guidePath, "").trim();
+  if (directive && guidance && !directive.guidance) directive.guidance = guidance;
+  return directive;
+}
+function directiveRange(directive) {
+  if (!directive) return null;
+  return parsePhaseRange(directive.phaseRange || directive.range || directive.runRange || directive.phases);
+}
+function directiveMode(directive) {
+  if (!directive) return "none";
+  return String(directive.command || directive.status || directive.mode || "").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+}
+function applyDirective(control) {
+  const directive = loadDirective(control.p);
+  control.directive = directive;
+  if (!directive) return null;
+  const mode = directiveMode(directive);
+  const range = directiveRange(directive);
+  if ((mode === "run_range" || mode === "run" || directive.status === "active") && range) {
+    control.state.phaseRange = { ...(control.state.phaseRange || {}), start: range.start, end: range.end };
+    const count = Math.max(1, range.end - range.start + 1);
+    control.state.maxConsecutivePhases = Math.max(Number(control.state.maxConsecutivePhases || 1), count);
+    const next = Number(control.mission.nextPhase || 0);
+    if (!next || next < range.start || next > range.end) control.mission.nextPhase = range.start;
+    control.mission.directive = { command: "run_range", phaseRange: range, guidance: directive.guidance || "", source: directive.source || "autopilot-directive.json" };
+  }
+  return directive;
+}
+function directiveMaxPhases(directive, mission) {
+  const range = directiveRange(directive);
+  if (!range) return null;
+  const start = Number(mission.nextPhase || range.start);
+  if (start > range.end) return 0;
+  return Math.max(1, range.end - Math.max(start, range.start) + 1);
+}
+function statusMarkdown(data) {
+  const lines = [];
+  lines.push("# S.E.R.A. Autopilot Status");
+  lines.push("");
+  lines.push(`Updated: ${new Date().toISOString()}`);
+  lines.push("");
+  lines.push(`State: ${data.state || "unknown"}`);
+  if (data.currentPhase) lines.push(`Current Phase: ${data.currentPhase}`);
+  if (data.nextPhase) lines.push(`Next Phase: ${data.nextPhase}`);
+  if (data.directive) lines.push(`Directive: ${JSON.stringify(data.directive)}`);
+  if (data.message) { lines.push(""); lines.push(data.message); }
+  lines.push("");
+  return lines.join("\n");
+}
+function writeStatus(p, data) {
+  writeText(path.join(p.control, "AUTOPILOT_STATUS.md"), statusMarkdown(data));
+  writeJson(path.join(p.control, "autopilot-status.json"), { ...data, updatedAt: new Date().toISOString(), version: VERSION });
+}
+function stopPauseDecision(p, state, target, directive = null) {
   const stopCandidates = ["stop.flag", "STOP_AUTOPILOT.flag", path.join("stop", "STOP_AUTOPILOT.txt")].map((name) => path.join(p.control, name));
   const pauseCandidates = ["pause.flag", "PAUSE_AUTOPILOT.flag", path.join("pause", "PAUSE_AUTOPILOT.txt")].map((name) => path.join(p.control, name));
   const stop = stopCandidates.find((file) => fs.existsSync(file));
   const pause = pauseCandidates.find((file) => fs.existsSync(file));
-  if (stop) return { ok: false, status: "stopped", reason: `stop file present: ${stop}` };
-  if (pause) return { ok: false, status: "paused", reason: `pause file present: ${pause}` };
+  const mode = directiveMode(directive);
+  if (stop || mode === "stop" || mode === "emergency_stop" || directive?.status === "stopped") return { ok: false, status: "stopped", reason: stop ? `stop file present: ${stop}` : `directive requested ${mode || directive?.status}` };
+  if (pause || mode === "pause" || directive?.status === "paused") return { ok: false, status: "paused", reason: pause ? `pause file present: ${pause}` : "directive requested pause" };
   if (state.enabled !== true) return { ok: false, status: "disabled", reason: "autopilot-state.json enabled is not true" };
   if (!target || !target.targetUrl || target.targetUrl === "OWNER_SET_CHATGPT_THREAD_URL") return { ok: false, status: "needs_attention", reason: "saved ChatGPT target is missing" };
   if (target.allowNewChatFallback !== false || target.allowRandomRecentChatFallback !== false) return { ok: false, status: "needs_attention", reason: "ChatGPT fallback flags must remain false" };
   return { ok: true };
 }
-function phaseFromMission(mission, args, index) {
+function phaseFromMission(mission, args, index, directive = null) {
   if (args.phase) {
     const title = args.title || `Phase ${args.phase} Safe Autopilot Continuation v1`;
     const expectedZipName = args.expectedZipName || `s.e.r.a_phase${args.phase}_${slugify(title)}_overlay.zip`;
     return { phase: args.phase, title, expectedZipName, purpose: `Complete ${title} as a guarded S.E.R.A. overlay.`, requirements: [] };
+  }
+  const range = directiveRange(directive || mission.directive);
+  if (range) {
+    const missionNext = Number(mission.nextPhase || 0);
+    const base = missionNext && missionNext >= range.start && missionNext <= range.end ? missionNext : range.start;
+    const phase = base + index;
+    const title = (directive && directive.titlePrefix) ? `${directive.titlePrefix} ${phase}` : (mission.nextPhaseTitle || `Phase ${phase} Safe Autopilot Continuation v1`);
+    const expectedZipName = `s.e.r.a_phase${phase}_${slugify(title)}_overlay.zip`;
+    return { phase, title, expectedZipName, purpose: mission.mission || `Continue S.E.R.A. guarded autopilot hardening with ${title}.`, requirements: mission.requirements || [], guidance: directive?.guidance || mission.directive?.guidance || "" };
   }
   const queue = Array.isArray(mission.phaseQueue) ? mission.phaseQueue : [];
   if (queue[index]) {
@@ -197,6 +289,7 @@ function buildPrompt(task) {
     "Purpose:",
     task.purpose,
     "",
+    ...(task.guidance ? ["Owner guidance:", task.guidance, ""] : []),
     "Requirements:",
     ...reqs.map((line) => `- ${line}`),
     ""
@@ -349,17 +442,28 @@ async function main() {
   const reconciled = reconcileControlCenter(control.p, control.mission);
   control.mission = reconciled.mission;
   control.target = reconciled.target || control.target;
-  const gate = stopPauseDecision(control.p, control.state, control.target);
+  const directive = applyDirective(control);
+  writeStatus(control.p, { state: "starting", currentPhase: control.mission.currentPhase, nextPhase: control.mission.nextPhase, directive });
+  const gate = stopPauseDecision(control.p, control.state, control.target, directive);
   if (!gate.ok) {
     console.log(JSON.stringify({ ok: false, ...gate }, null, 2));
     process.exitCode = gate.status === "paused" || gate.status === "disabled" ? 0 : 2;
     return;
   }
   const maxByState = Number(control.state.maxConsecutivePhases || 1);
-  const max = Math.max(1, Math.min(Number(args.maxPhases || 1), maxByState));
+  const maxByDirective = directiveMaxPhases(control.directive, control.mission);
+  if (maxByDirective === 0) {
+    writeStatus(control.p, { state: "complete", currentPhase: control.mission.currentPhase, nextPhase: control.mission.nextPhase, directive: control.directive, message: "Requested directive range is already complete." });
+    console.log(JSON.stringify({ ok: true, status: "directive_range_complete" }, null, 2));
+    return;
+  }
+  const maxCandidates = [Number(args.maxPhases || 1), maxByState];
+  if (maxByDirective) maxCandidates.push(maxByDirective);
+  const max = Math.max(1, Math.min(...maxCandidates));
   const summary = { version: VERSION, autoOps, maxPhases: max, reconciliation: reconciled.summary, results: [] };
   for (let i = 0; i < max; i += 1) {
-    const task = phaseFromMission(control.mission, args, i);
+    const task = phaseFromMission(control.mission, args, i, control.directive);
+    writeStatus(control.p, { state: "running", currentPhase: task.phase, nextPhase: task.phase, directive: control.directive, message: `Running Phase ${task.phase}: ${task.title}` });
     let result = await runOne(task, args, control, i);
     let attempt = 0;
     while (!result.ok && result.status === "blocked" && result.classification?.recoverable && attempt < Number(control.state.maxRepairAttemptsPerPhase || 0)) {
@@ -370,6 +474,7 @@ async function main() {
       result.repairAttempt = attempt;
     }
     summary.results.push(result);
+    if (result.ok) writeStatus(control.p, { state: result.status || "phase_complete", currentPhase: task.phase, nextPhase: task.phase + 1, directive: control.directive, message: `Phase ${task.phase} completed with ${result.status}.` });
     if (!result.ok) {
       const attentionPath = writeAttention(control.p, `AUTOPILOT_STOPPED-phase${task.phase}`, `# S.E.R.A. Autopilot Stopped\n\nPhase: ${task.phase}\n\n## Result\n\n${JSON.stringify(result, null, 2)}\n`);
       summary.stopped = true;
@@ -379,6 +484,7 @@ async function main() {
   }
   const summaryPath = path.join(control.p.evidence, `autopilot-summary-${timestamp()}.json`);
   writeJson(summaryPath, summary);
+  if (!summary.stopped) writeStatus(control.p, { state: "complete", currentPhase: summary.results.at(-1)?.status === "closed_cleanly" ? summary.results.at(-1)?.handoff : control.mission.currentPhase, nextPhase: control.mission.nextPhase, directive: control.directive, message: `Autopilot completed ${summary.results.length} phase(s).` });
   console.log(JSON.stringify({ ok: !summary.stopped, summaryPath, results: summary.results }, null, 2));
   if (summary.stopped) process.exitCode = 2;
 }

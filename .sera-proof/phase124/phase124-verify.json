@@ -1,0 +1,7 @@
+{
+  "ok": true,
+  "phase": 124,
+  "version": "phase124-autopilot-directive-control-center-v1",
+  "verifiedAt": "2026-06-29T14:16:00.000Z",
+  "notes": "Overlay includes directive scripts, phone-friendly control templates, status files, bounded range support, and saved-target-only safety rules."
+}

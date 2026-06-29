@@ -1,0 +1,6 @@
+Phase 124 overlay summary:
+- Add Autopilot Directive Control Center helper scripts.
+- Add phone-friendly run/pause/stop/guide/status control files.
+- Add bounded phase range support, e.g. 124-130.
+- Update autopilot loop to read directives and write status.
+- Preserve saved ChatGPT target only; no random or new-chat fallback.

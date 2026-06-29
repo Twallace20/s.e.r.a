@@ -6,6 +6,10 @@ param(
   [string]$Title = "",
   [string]$ExpectedZipName = "",
   [string]$PromptFile = "",
+  [string]$RunRange = "",
+  [int]$StartPhase = 0,
+  [int]$EndPhase = 0,
+  [string]$Guide = "",
   [switch]$InitControlCenter,
   [switch]$EnableAutopilotForThisRun
 )
@@ -45,6 +49,27 @@ if ($EnableAutopilotForThisRun) {
   $json = ($state | ConvertTo-Json -Depth 20)
   $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
   [System.IO.File]::WriteAllText($StatePath, $json + [Environment]::NewLine, $utf8NoBom)
+}
+
+$DirectiveScript = Join-Path $Repo "scripts\sera-autopilot-directive.ps1"
+if (Test-Path $DirectiveScript) {
+  if ($RunRange.Trim().Length -gt 0) {
+    powershell -ExecutionPolicy Bypass -File $DirectiveScript -RunRange $RunRange -Guide $Guide | Out-Host
+    if ($RunRange -match "^(\d+)\s*(?:-|–|—|\.\.|to)\s*(\d+)$") {
+      $rangeCount = [int]$Matches[2] - [int]$Matches[1] + 1
+      if ($MaxPhases -lt $rangeCount) { $MaxPhases = $rangeCount }
+    }
+  } elseif ($StartPhase -gt 0) {
+    $directiveArgs = @("-StartPhase", [string]$StartPhase)
+    if ($EndPhase -gt 0) { $directiveArgs += @("-EndPhase", [string]$EndPhase) }
+    if ($Guide.Trim().Length -gt 0) { $directiveArgs += @("-Guide", $Guide) }
+    powershell -ExecutionPolicy Bypass -File $DirectiveScript @directiveArgs | Out-Host
+    $end = if ($EndPhase -gt 0) { $EndPhase } else { $StartPhase }
+    $rangeCount = $end - $StartPhase + 1
+    if ($MaxPhases -lt $rangeCount) { $MaxPhases = $rangeCount }
+  } elseif ($Guide.Trim().Length -gt 0) {
+    powershell -ExecutionPolicy Bypass -File $DirectiveScript -Guide $Guide | Out-Host
+  }
 }
 
 $argsList = @()
