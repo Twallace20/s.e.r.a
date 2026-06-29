@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "enabled": false,
+  "action": "idle",
+  "status": "ready",
+  "phaseStart": 129,
+  "phaseEnd": 130,
+  "maxPhases": 2,
+  "guide": "Continue guarded autopilot hardening. Use exact Download Phase X overlay ZIP link text. Preserve saved ChatGPT target only. Stop on blocked, unclear, risky, or owner-decision work.",
+  "stopAfterRange": true,
+  "pauseAfterCurrentPhase": false,
+  "emergencyStop": false,
+  "updatedBy": "owner",
+  "updatedReason": "phone control test"
+}

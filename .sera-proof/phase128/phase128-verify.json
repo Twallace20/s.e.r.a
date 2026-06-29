@@ -1,0 +1,19 @@
+{
+  "phaseId": "phase128-phone-control-center-job-file-v1",
+  "status": "proof_ready",
+  "zipRoot": "repo/",
+  "expectedZipName": "s.e.r.a_phase128_phone_control_center_job_file_v1_overlay.zip",
+  "verifications": [
+    "node --check scripts/sera-phone-control-job.mjs",
+    "node --check scripts/phase128-verify.mjs",
+    "node scripts/phase128-verify.mjs"
+  ],
+  "safety": {
+    "savedChatTargetOnly": true,
+    "newChatFallbackAllowed": false,
+    "randomRecentChatFallbackAllowed": false,
+    "phoneRangeMaxPhases": 5,
+    "ownerDecisionStop": true,
+    "usesExistingSafetyGates": true
+  }
+}

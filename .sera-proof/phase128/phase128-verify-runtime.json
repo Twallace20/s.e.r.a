@@ -1,0 +1,43 @@
+{
+  "phaseId": "phase128-phone-control-center-job-file-v1",
+  "ok": true,
+  "checks": [
+    {
+      "name": "phone-control-job-script-exists",
+      "ok": true
+    },
+    {
+      "name": "phone-control-ps-wrapper-exists",
+      "ok": true
+    },
+    {
+      "name": "phone-control-validates-range",
+      "ok": true
+    },
+    {
+      "name": "phone-control-writes-command-file",
+      "ok": true
+    },
+    {
+      "name": "phone-control-calls-existing-autopilot",
+      "ok": true
+    },
+    {
+      "name": "template-exists",
+      "ok": true
+    },
+    {
+      "name": "docs-exist",
+      "ok": true
+    },
+    {
+      "name": "manifest-exists",
+      "ok": true
+    },
+    {
+      "name": "proof-exists",
+      "ok": true
+    }
+  ],
+  "createdAt": "2026-06-29T16:42:56.287Z"
+}
