@@ -1,0 +1,12 @@
+{
+  "phaseId": "phase133-bridge-contextual-risk-filter-active-command-isolation-v1",
+  "valid": true,
+  "checks": {
+    "missing": [],
+    "contextualRiskFilterInstalled": true,
+    "negativeSafetyLanguageAllowed": true,
+    "phoneBlockedReasonIncludesRunnerDetail": true,
+    "bridgePhaseVersionUpdated": true
+  },
+  "createdAt": "2026-06-29T20:42:18.489Z"
+}

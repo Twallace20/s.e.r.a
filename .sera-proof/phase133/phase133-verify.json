@@ -1,0 +1,11 @@
+{
+  "phaseId": "phase133-bridge-contextual-risk-filter-active-command-isolation-v1",
+  "valid": true,
+  "checks": {
+    "zipRootIsRepo": true,
+    "contextualRiskFilterInstalled": true,
+    "phoneBlockedReasonIncludesRunnerDetail": true,
+    "realLifeBlockerAddressed": "Phase 133 phone test blocked when safe safety-language prompt matched the Phase 113 literal risk filter."
+  },
+  "createdAt": "2026-06-29T20:45:00.000Z"
+}

@@ -6,7 +6,7 @@ import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-const VERSION = "phase132-phone-autopilot-real-life-proof-harness-v1";
+const VERSION = "phase133-bridge-contextual-risk-filter-active-command-isolation-v1";
 const MAX_PHONE_PHASES = 5;
 
 function autoOpsDir() { return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps"); }
@@ -395,7 +395,13 @@ function main() {
       message = "Phone-controlled bounded run completed with CLOSED_CLEANLY handoff and commandStatus was updated to complete.";
       updateCommandFile(p, { enabled: false, commandStatus: "complete", status: "completed", lastRunFinishedAt: new Date().toISOString(), completedAt: new Date().toISOString(), latestHandoffPath: latestHandoff.path, latestHandoffStatus: latestHandoff.status, lastEvidencePath: evidencePath, lastExitCode: exitCode, blockedReason: undefined });
     } else {
-      const reason = run.error ? String(run.error.message || run.error) : latestHandoff ? `Latest handoff status is ${latestHandoff.status}.` : "Missing final handoff. Autopilot did not produce CLOSED_CLEANLY or BLOCKED evidence.";
+      const runnerDetail = [String(run.stdout || "").slice(-3000), String(run.stderr || "").slice(-3000)].filter(Boolean).join("
+").trim();
+      const reason = run.error
+        ? String(run.error.message || run.error)
+        : latestHandoff
+          ? `Latest handoff status is ${latestHandoff.status}.`
+          : `Missing final handoff. Autopilot did not produce CLOSED_CLEANLY or BLOCKED evidence.${runnerDetail ? ` Runner detail: ${runnerDetail}` : ""}`;
       updateCommandFile(p, { enabled: false, commandStatus: "blocked", status: "blocked", lastRunFinishedAt: new Date().toISOString(), blockedAt: new Date().toISOString(), latestHandoffPath: latestHandoff?.path, latestHandoffStatus: latestHandoff?.status, lastEvidencePath: evidencePath, lastExitCode: exitCode, blockedReason: reason });
       message = `Phone-controlled run blocked: ${reason}`;
     }

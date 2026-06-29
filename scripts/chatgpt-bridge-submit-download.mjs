@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
 
-const PHASE = "phase126-artifact-download-routing-idempotency-v1";
+const PHASE = "phase133-bridge-contextual-risk-filter-active-command-isolation-v1";
 const DEFAULT_SELECTORS = [
   'div#prompt-textarea.ProseMirror[contenteditable="true"][role="textbox"]',
   'div[contenteditable="true"][role="textbox"]#prompt-textarea',
@@ -102,27 +102,44 @@ function findPromptFile(outboxDir, explicitPromptFile) {
   return candidates[0].file;
 }
 
+function riskMatches(prompt) {
+  const risky = [
+    { label: "password", rx: /password/i },
+    { label: "secret", rx: /secret/i },
+    { label: "token", rx: /token/i },
+    { label: "api key", rx: /api[_ -]?key/i },
+    { label: "credential", rx: /credential/i },
+    { label: "paid service", rx: /paid service/i },
+    { label: "billing", rx: /billing/i },
+    { label: "github security", rx: /github security/i },
+    { label: "repository settings", rx: /repository settings/i },
+    { label: "install dependency", rx: /install dependency/i },
+    { label: "npm install", rx: /npm install/i },
+    { label: "winget install", rx: /winget install/i }
+  ];
+  const allowSafetyContext = /(do not|don't|must not|should not|without|avoid|never|no\s+|stop on|stop before|owner judgment|required approval|approval required|forbid|disallow|no random|no new-chat|no manual)/i;
+  const lines = String(prompt || "").split(/?
+/);
+  const matches = [];
+  for (const item of risky) {
+    for (const [index, line] of lines.entries()) {
+      if (!item.rx.test(line)) continue;
+      if (allowSafetyContext.test(line)) continue;
+      matches.push({ label: item.label, line: index + 1, excerpt: line.slice(0, 240) });
+    }
+  }
+  return matches;
+}
+
 function readSafePrompt(promptFile) {
   const prompt = fs.readFileSync(promptFile, "utf8").trim();
   if (prompt.length < 20) throw new Error("Prompt is too short to submit safely.");
-  if (prompt.length > 25000) throw new Error("Prompt is too long for the Phase 113 bridge safety limit.");
+  if (prompt.length > 25000) throw new Error("Prompt is too long for the bridge safety limit.");
 
-  const risky = [
-    /password/i,
-    /secret/i,
-    /token/i,
-    /api[_ -]?key/i,
-    /credential/i,
-    /paid service/i,
-    /billing/i,
-    /github security/i,
-    /repository settings/i,
-    /install dependency/i,
-    /npm install/i,
-    /winget install/i
-  ];
-  const matched = risky.find((rx) => rx.test(prompt));
-  if (matched) throw new Error(`Prompt blocked by Phase 113 risk filter: ${matched}`);
+  const matches = riskMatches(prompt);
+  if (matches.length) {
+    throw new Error(`Prompt blocked by contextual bridge risk filter: ${JSON.stringify(matches.slice(0, 5))}`);
+  }
   return prompt;
 }
 
