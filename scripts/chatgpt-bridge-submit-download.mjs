@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
 
-const PHASE = "phase133-bridge-contextual-risk-filter-active-command-isolation-v1";
+const PHASE = "phase136-chatgpt-bridge-regex-syntax-hotfix-v1";
 const DEFAULT_SELECTORS = [
   'div#prompt-textarea.ProseMirror[contenteditable="true"][role="textbox"]',
   'div[contenteditable="true"][role="textbox"]#prompt-textarea',
@@ -118,8 +118,7 @@ function riskMatches(prompt) {
     { label: "winget install", rx: /winget install/i }
   ];
   const allowSafetyContext = /(do not|don't|must not|should not|without|avoid|never|no\s+|stop on|stop before|owner judgment|required approval|approval required|forbid|disallow|no random|no new-chat|no manual)/i;
-  const lines = String(prompt || "").split(/?
-/);
+  const lines = String(prompt || "").split(/\r?\n/);
   const matches = [];
   for (const item of risky) {
     for (const [index, line] of lines.entries()) {

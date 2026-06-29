@@ -1,0 +1,10 @@
+{
+  "phaseId": "phase136-chatgpt-bridge-regex-syntax-hotfix-v1",
+  "status": "ready",
+  "targetExists": true,
+  "nodeSyntaxCheckPassed": true,
+  "regexSplitEscaped": true,
+  "phaseMarkerReady": true,
+  "stderrTail": "",
+  "createdAt": "2026-06-29T21:29:01.447Z"
+}

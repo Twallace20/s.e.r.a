@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "phase": 136,
+  "phaseId": "phase136-chatgpt-bridge-regex-syntax-hotfix-v1",
+  "title": "ChatGPT Bridge Regex Syntax Hotfix v1",
+  "type": "overlay",
+  "rootRequired": "repo/",
+  "summary": "Fixes a JavaScript regular expression newline escaping regression in scripts/chatgpt-bridge-submit-download.mjs discovered by the Phase 135 phone proof run.",
+  "files": [
+    "scripts/chatgpt-bridge-submit-download.mjs",
+    "scripts/phase136-verify.mjs",
+    "docs/phases/PHASE_136_CHATGPT_BRIDGE_REGEX_SYNTAX_HOTFIX_V1.md",
+    "docs/autopilot/CHATGPT_BRIDGE_REGEX_SYNTAX_HOTFIX_V1.md",
+    ".overlay/phase136-manifest.json",
+    ".sera-proof/phase136/phase136-verify.json"
+  ],
+  "validation": [
+    "node --check scripts/chatgpt-bridge-submit-download.mjs",
+    "node scripts/phase136-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "safety": {
+    "noDependencyInstall": true,
+    "noCredentialChanges": true,
+    "noPaidServiceChanges": true,
+    "ownerMergeRequired": true
+  }
+}
