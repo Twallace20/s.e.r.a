@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase124-autopilot-directive-control-center-v1";
+const VERSION = "phase125-blocked-phase-hotfix-overlay-protocol-v1";
 
 function autoOpsDir() { return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps"); }
 function ensureDir(dir) { fs.mkdirSync(dir, { recursive: true }); }
@@ -311,10 +311,17 @@ function writeArtifactWatchRequest(p, task, promptFile) {
     title: task.title,
     promptFile,
     expectedZipName: task.expectedZipName,
+    artifactMode: task.artifactMode || task.mode || "phase_overlay",
+    repairOfPhase: task.repairOfPhase || null,
+    repairAttempt: task.repairAttempt || null,
+    routeHint: task.routeHint || null,
     createdAt: new Date().toISOString(),
     source: VERSION
   };
   writeJson(requestPath, request);
+  if (request.artifactMode === "hotfix_overlay") {
+    writeJson(path.join(p.control, "active-hotfix-request.json"), request);
+  }
   return requestPath;
 }
 function run(command, args, options = {}) {
@@ -390,7 +397,7 @@ async function runOne(task, args, control, index) {
   const evidencePath = path.join(p.evidence, `phase${task.phase}-autopilot-${timestamp()}.json`);
   try {
     if (!inRange(task, state)) throw new Error(`Phase ${task.phase} is outside allowed phase range.`);
-    const promptFile = args.promptFile ? path.resolve(args.promptFile) : writePhasePrompt(p, task);
+    const promptFile = task.promptFile ? path.resolve(task.promptFile) : (args.promptFile ? path.resolve(args.promptFile) : writePhasePrompt(p, task));
     evidence.promptFile = promptFile;
     evidence.expectedZipName = task.expectedZipName;
     evidence.artifactWatchRequest = writeArtifactWatchRequest(p, task, promptFile);
@@ -469,9 +476,25 @@ async function main() {
     while (!result.ok && result.status === "blocked" && result.classification?.recoverable && attempt < Number(control.state.maxRepairAttemptsPerPhase || 0)) {
       attempt += 1;
       const repair = runRepair(task, attempt, result.reasonFile);
-      const repairTask = { phase: task.phase, title: `${task.title} Repair Attempt ${attempt}`, expectedZipName: repair.expectedZipName, purpose: `Repair Phase ${task.phase} blocked state.`, requirements: [] };
-      result = await runOne(repairTask, args, control, i);
-      result.repairAttempt = attempt;
+      const repairTask = {
+        phase: task.phase,
+        title: `${task.title} Hotfix Attempt ${attempt}`,
+        expectedZipName: repair.expectedZipName,
+        promptFile: repair.promptFile,
+        purpose: `Repair Phase ${task.phase} blocked state using a guarded hotfix overlay.`,
+        requirements: [],
+        artifactMode: "hotfix_overlay",
+        repairOfPhase: task.phase,
+        repairAttempt: attempt,
+        routeHint: "02_hotfix_approved"
+      };
+      const repairResult = await runOne(repairTask, args, control, i);
+      if (!repairResult.ok) {
+        result = { ...repairResult, repairAttempt: attempt, originalBlockedResult: result };
+        break;
+      }
+      const retryResult = await runOne({ ...task, retryAfterHotfixAttempt: attempt }, args, control, i);
+      result = { ...retryResult, repairAttempt: attempt, hotfixResult: repairResult };
     }
     summary.results.push(result);
     if (result.ok) writeStatus(control.p, { state: result.status || "phase_complete", currentPhase: task.phase, nextPhase: task.phase + 1, directive: control.directive, message: `Phase ${task.phase} completed with ${result.status}.` });

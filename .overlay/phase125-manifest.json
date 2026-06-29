@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "phase": 125,
+  "name": "Blocked Phase Hotfix Overlay Protocol v1",
+  "expectedZipName": "s.e.r.a_phase125_blocked_phase_hotfix_overlay_protocol_v1_overlay.zip",
+  "root": "repo/",
+  "type": "overlay",
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowNewChatFallback": false,
+    "allowRandomRecentChatFallback": false,
+    "stopIfOwnerJudgmentRequired": true
+  },
+  "files": [
+    "scripts/sera-autopilot-loop.mjs",
+    "scripts/sera-autopilot-repair-orchestrator.mjs",
+    "scripts/sera-hotfix-overlay-protocol.mjs",
+    "scripts/sera-hotfix-overlay-protocol.ps1",
+    "scripts/phase125-verify.mjs",
+    "docs/autopilot/BLOCKED_PHASE_HOTFIX_OVERLAY_PROTOCOL_V1.md",
+    "docs/phases/PHASE_125_BLOCKED_PHASE_HOTFIX_OVERLAY_PROTOCOL_V1.md",
+    ".sera-proof/phase125/phase125-verify.json"
+  ],
+  "validationCommands": [
+    "node scripts/phase125-verify.mjs",
+    "npm run sera:gate"
+  ]
+}
