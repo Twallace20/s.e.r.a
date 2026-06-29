@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "phase": 132,
+  "name": "phone_autopilot_real_life_proof_harness_v1",
+  "version": "phase132-phone-autopilot-real-life-proof-harness-v1",
+  "overlayType": "standard",
+  "createdAt": "2026-06-29T20:21:52Z",
+  "summary": "Fixes Windows path resolution for phone autopilot job launch, quarantines invalid phone command JSON files, and prevents commands from remaining stuck at running when the job launch fails.",
+  "files": [
+    "scripts/sera-phone-control-scheduled-watcher.mjs",
+    "scripts/sera-phone-control-job.mjs",
+    "scripts/sera-phone-control-scheduled-watcher.ps1",
+    "scripts/sera-phone-control-job.ps1",
+    "scripts/phase132-verify.mjs",
+    "docs/phases/PHASE_132_PHONE_AUTOPILOT_REAL_LIFE_PROOF_HARNESS_V1.md",
+    "docs/autopilot/PHONE_AUTOPILOT_REAL_LIFE_PROOF_HARNESS_V1.md",
+    "00_control_center_templates/autopilot-command.phase132-real-life-proof.example.json"
+  ],
+  "verification": [
+    "node scripts/phase132-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "safety": {
+    "requiresOwnerJudgment": false,
+    "touchesCredentials": false,
+    "installsDependencies": false,
+    "changesGitHubSettings": false,
+    "usesPaidServices": false
+  }
+}

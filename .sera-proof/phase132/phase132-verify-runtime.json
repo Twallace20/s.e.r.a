@@ -1,0 +1,43 @@
+{
+  "ok": true,
+  "phase": 132,
+  "version": "phase132-phone-autopilot-real-life-proof-harness-v1",
+  "checks": [
+    {
+      "name": "watcher uses fileURLToPath for Windows-safe repoRoot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "job uses fileURLToPath for Windows-safe repoRoot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "watcher no longer uses URL pathname repoRoot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "job no longer uses URL pathname repoRoot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "watcher quarantines invalid command files instead of blocking queue",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "watcher converts job-launch exceptions into blocked command outcomes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phase132 version marker present",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "verifiedAt": "2026-06-29T20:21:53.028Z"
+}
