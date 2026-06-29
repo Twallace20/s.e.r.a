@@ -1,0 +1,5 @@
+Phase 121 overlay patch summary:
+- Replace artifact watcher with active control-center request gating and duplicate CLOSED_CLEANLY detection.
+- Replace autopilot loop with JSON decode hardening and artifact-watch-request creation.
+- Replace autopilot PowerShell wrapper state write with UTF-8 no-BOM output.
+- Add phase docs, manifest, and verification script.

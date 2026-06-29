@@ -5,7 +5,7 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase120-chatgpt-artifact-watcher-scheduler-v1";
+const VERSION = "phase121-control-center-active-mission-dedupe-hardening-v1";
 
 function autoOpsDir() {
   return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps");
@@ -16,8 +16,24 @@ function repoDir() {
 function ensureDir(dir) { fs.mkdirSync(dir, { recursive: true }); }
 function timestamp() { return new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z").replace("T", "_"); }
 function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
-function readText(file, fallback = "") { return file && fs.existsSync(file) ? fs.readFileSync(file, "utf8") : fallback; }
-function readJson(file, fallback = null) { if (!fs.existsSync(file)) return fallback; return JSON.parse(fs.readFileSync(file, "utf8")); }
+function decodeText(buffer) {
+  if (!buffer || buffer.length === 0) return "";
+  let text = "";
+  if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) text = buffer.toString("utf16le");
+  else {
+    text = buffer.toString("utf8");
+    const nullCount = (text.match(/\u0000/g) || []).length;
+    if (nullCount > 0 && nullCount > Math.max(2, text.length / 20)) text = buffer.toString("utf16le");
+  }
+  return text.replace(/^\uFEFF/, "").replace(/\u0000/g, "");
+}
+function readText(file, fallback = "") { return file && fs.existsSync(file) ? decodeText(fs.readFileSync(file)) : fallback; }
+function readJson(file, fallback = null) {
+  if (!fs.existsSync(file)) return fallback;
+  const text = decodeText(fs.readFileSync(file)).trim();
+  if (!text) return fallback;
+  return JSON.parse(text);
+}
 function writeJson(file, data) { ensureDir(path.dirname(file)); fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8"); }
 function writeText(file, text) { ensureDir(path.dirname(file)); fs.writeFileSync(file, text, "utf8"); }
 function sha256(value) { return crypto.createHash("sha256").update(value).digest("hex").toUpperCase(); }
@@ -77,6 +93,43 @@ function newestPrompt(outbox) {
     .filter(isFile)
     .sort((a, b) => fileMtimeMs(b) - fileMtimeMs(a));
   return prompts[0] || null;
+}
+function activeArtifactRequest(p) {
+  const candidates = [
+    path.join(p.control, "artifact-watch-request.json"),
+    path.join(p.control, "active-artifact.json")
+  ];
+  for (const requestPath of candidates) {
+    const request = readJson(requestPath, null);
+    if (!request) continue;
+    if (request.active === false) continue;
+    if (["closed_cleanly", "completed", "routed", "cancelled"].includes(String(request.status || "").toLowerCase())) continue;
+    const promptFile = request.promptFile || request.promptPath;
+    const expectedZipName = request.expectedZipName || request.zipName;
+    if (!promptFile || !expectedZipName) continue;
+    return { ...request, requestPath, promptFile, expectedZipName };
+  }
+  return null;
+}
+function updateArtifactRequest(request, status, extra = {}) {
+  if (!request?.requestPath) return;
+  const next = { ...request, ...extra, active: false, status, updatedAt: new Date().toISOString() };
+  delete next.requestPath;
+  writeJson(request.requestPath, next);
+}
+function completedHandoffFor(p, expectedZipName) {
+  if (!fs.existsSync(p.handoff)) return null;
+  const stem = path.basename(expectedZipName).replace(/\.zip$/i, "").toLowerCase();
+  const phaseMatch = stem.match(/phase\d+/i)?.[0]?.toLowerCase();
+  return fs.readdirSync(p.handoff)
+    .filter((name) => name.toLowerCase().includes("closed_cleanly"))
+    .filter((name) => {
+      const lower = name.toLowerCase();
+      return lower.includes(stem) || (phaseMatch && lower.includes(phaseMatch));
+    })
+    .map((name) => path.join(p.handoff, name))
+    .filter(isFile)
+    .sort((a, b) => fileMtimeMs(b) - fileMtimeMs(a))[0] || null;
 }
 function expectedZipNameFromPrompt(prompt) {
   const patterns = [
@@ -273,24 +326,40 @@ async function runPass(args, p, passIndex = 0) {
     }
     const { targetPath } = loadTarget(p);
     evidence.targetPath = targetPath;
-    const promptFile = args.promptFile ? path.resolve(args.promptFile) : newestPrompt(p.outbox);
+    const activeRequest = (!args.promptFile && !args.expectedZipName) ? activeArtifactRequest(p) : null;
+    const promptFile = args.promptFile ? path.resolve(args.promptFile) : (activeRequest?.promptFile ? path.resolve(activeRequest.promptFile) : null);
     if (!promptFile) {
-      evidence.status = "idle_no_prompt";
+      evidence.status = "idle_no_active_artifact_request";
+      evidence.reason = "No explicit prompt was supplied and 00_control_center/artifact-watch-request.json has no active request.";
       writeJson(evidencePath, evidence);
-      return { ok: true, status: "idle_no_prompt", evidencePath };
+      return { ok: true, status: "idle_no_active_artifact_request", evidencePath };
     }
     if (!path.resolve(promptFile).startsWith(path.resolve(p.outbox) + path.sep)) throw new Error(`Prompt file must be inside 15_bridge_outbox: ${promptFile}`);
     const promptText = readText(promptFile).trim();
-    const expectedZipName = args.expectedZipName || expectedZipNameFromPrompt(promptText);
+    const expectedZipName = args.expectedZipName || activeRequest?.expectedZipName || expectedZipNameFromPrompt(promptText);
     if (!expectedZipName) throw new Error(`Could not determine expected ZIP name from ${promptFile}`);
     evidence.promptFile = promptFile;
     evidence.promptSha256 = sha256(promptText);
     evidence.expectedZipName = expectedZipName;
+    evidence.activeRequestPath = activeRequest?.requestPath || null;
     evidence.routeMode = args.routeMode;
     const key = recordKey(promptFile, promptText, expectedZipName);
     const ledger = readLedger(p);
     const record = ledger.records[key] || { promptFile, expectedZipName, attempts: 0, firstSeenAt: new Date().toISOString() };
     evidence.ledgerKey = key;
+    const alreadyClosed = completedHandoffFor(p, expectedZipName);
+    if (alreadyClosed) {
+      record.status = "closed_cleanly";
+      record.handoff = alreadyClosed;
+      record.updatedAt = new Date().toISOString();
+      ledger.records[key] = record;
+      writeLedger(p, ledger);
+      updateArtifactRequest(activeRequest, "closed_cleanly", { handoff: alreadyClosed });
+      evidence.status = "already_closed_cleanly";
+      evidence.handoff = alreadyClosed;
+      writeJson(evidencePath, evidence);
+      return { ok: true, status: "already_closed_cleanly", handoff: alreadyClosed, evidencePath };
+    }
     const existing = findExistingZipInQueues(p, expectedZipName);
     if (existing) {
       evidence.existingZip = existing;
@@ -301,6 +370,7 @@ async function runPass(args, p, passIndex = 0) {
       record.updatedAt = new Date().toISOString();
       ledger.records[key] = record;
       writeLedger(p, ledger);
+      updateArtifactRequest(activeRequest, "routed_existing", { routed });
       evidence.status = "routed_existing";
       evidence.routed = routed;
       if (args.startRunner) evidence.runner = startRunner();
@@ -348,6 +418,7 @@ async function runPass(args, p, passIndex = 0) {
     record.updatedAt = new Date().toISOString();
     ledger.records[key] = record;
     writeLedger(p, ledger);
+    updateArtifactRequest(activeRequest, "routed", { routed });
     evidence.status = "routed";
     evidence.routed = routed;
     if (args.startRunner) evidence.runner = startRunner();
