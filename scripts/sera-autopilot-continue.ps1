@@ -17,6 +17,7 @@ Set-Location $Repo
 
 $AutoOps = if ($env:SERA_AUTOOPS_DIR) { $env:SERA_AUTOOPS_DIR } else { Join-Path $env:USERPROFILE "OneDrive\SERA-AutoOps" }
 $Control = Join-Path $AutoOps "00_control_center"
+$ReconcileScript = Join-Path $Repo "scripts\sera-control-center-reconcile.mjs"
 
 if ($InitControlCenter -and (Test-Path ".\scripts\sera-control-center-init.ps1")) {
   powershell -ExecutionPolicy Bypass -File ".\scripts\sera-control-center-init.ps1"
@@ -54,5 +55,9 @@ if ($Phase -gt 0) { $argsList += @("--phase", [string]$Phase) }
 if ($Title.Trim().Length -gt 0) { $argsList += @("--title", $Title) }
 if ($ExpectedZipName.Trim().Length -gt 0) { $argsList += @("--expected-zip-name", $ExpectedZipName) }
 if ($PromptFile.Trim().Length -gt 0) { $argsList += @("--prompt-file", $PromptFile) }
+
+if (Test-Path $ReconcileScript) {
+  node $ReconcileScript | Out-Host
+}
 
 node ".\scripts\sera-autopilot-loop.mjs" @argsList

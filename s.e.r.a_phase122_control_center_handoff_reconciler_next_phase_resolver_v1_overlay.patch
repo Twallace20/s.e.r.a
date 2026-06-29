@@ -1,0 +1,7 @@
+Phase 122 overlay patch summary:
+- Add control-center reconciliation script.
+- Update autopilot loop to reconcile CLOSED_CLEANLY handoffs before selecting the next phase.
+- Update autopilot loop to copy/read saved ChatGPT target from legacy bridge state when needed.
+- Update watcher to archive stale artifact requests whose phase is already CLOSED_CLEANLY.
+- Update watcher to ignore old artifacts/prompts whose phase number is already closed.
+- Update PowerShell continuation wrapper to run reconciliation before autopilot execution.
