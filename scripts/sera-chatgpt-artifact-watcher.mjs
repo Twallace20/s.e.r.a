@@ -5,7 +5,7 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase126-artifact-download-routing-idempotency-v1";
+const VERSION = "phase127-closed-phase-reprocessing-guard-v1";
 
 function autoOpsDir() {
   return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps");
@@ -96,6 +96,34 @@ function latestClosedPhase(p) {
     .map((name) => ({ name, file: path.join(p.handoff, name), phase: phaseNumberFromName(name) }))
     .filter((item) => item.phase > 0 && item.name.toLowerCase().includes("closed_cleanly") && isFile(item.file))
     .sort((a, b) => b.phase - a.phase || fileMtimeMs(b.file) - fileMtimeMs(a.file))[0] || null;
+}
+function closedHandoffForPhase(p, phase) {
+  const n = Number(phase || 0);
+  if (!n || !fs.existsSync(p.handoff)) return null;
+  const needles = [`phase${n}_`, `phase${n}-`, `phase_${n}_`, `phase-${n}-`];
+  return fs.readdirSync(p.handoff)
+    .map((name) => ({ name: name.toLowerCase(), file: path.join(p.handoff, name) }))
+    .filter((item) => item.name.includes("closed_cleanly") && needles.some((needle) => item.name.includes(needle)) && isFile(item.file))
+    .sort((a, b) => fileMtimeMs(b.file) - fileMtimeMs(a.file))[0]?.file || null;
+}
+function archiveClosedPhaseZipIfQueued(p, expectedZipName) {
+  const phase = phaseNumberFromName(expectedZipName);
+  const handoff = closedHandoffForPhase(p, phase);
+  if (!handoff) return null;
+  const dirs = [p.applyApproved, p.hotfixApproved, p.processing, p.downloads];
+  const archiveDir = path.join(p.control, "archive", `closed-phase-artifact-${timestamp()}`);
+  const archived = [];
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
+    for (const file of files(dir)) {
+      if (phaseNumberFromName(path.basename(file)) === phase) {
+        ensureDir(archiveDir);
+        const dest = path.join(archiveDir, file.replace(/[:\\/]/g, "_"));
+        try { fs.renameSync(file, dest); archived.push({ from: file, to: dest }); } catch {}
+      }
+    }
+  }
+  return { handoff, archived };
 }
 function archiveArtifactRequest(requestPath, request, status, extra = {}) {
   const archiveDir = path.join(path.dirname(requestPath), "archive");
@@ -386,8 +414,10 @@ async function runPass(args, p, passIndex = 0) {
     evidence.ledgerKey = key;
     const zipPhase = phaseNumberFromName(expectedZipName);
     const closedPhase = latestClosedPhase(p);
-    const alreadyClosed = completedHandoffFor(p, expectedZipName) || (closedPhase?.phase && zipPhase > 0 && zipPhase <= closedPhase.phase ? closedPhase.file : null);
+    const archiveGuard = archiveClosedPhaseZipIfQueued(p, expectedZipName);
+    const alreadyClosed = archiveGuard?.handoff || completedHandoffFor(p, expectedZipName) || (closedPhase?.phase && zipPhase > 0 && zipPhase <= closedPhase.phase ? closedPhase.file : null);
     if (alreadyClosed) {
+      evidence.archivedClosedPhaseArtifacts = archiveGuard?.archived || [];
       record.status = "closed_cleanly";
       record.handoff = alreadyClosed;
       record.updatedAt = new Date().toISOString();

@@ -1,0 +1,7 @@
+Phase 127 overlay patch summary
+
+- Adds exact closed-phase detection before autopilot writes or submits a new phase request.
+- Archives already-closed phase artifacts from active queues before runner start.
+- Extends artifact watcher routing guard so a closed phase artifact returns already_closed_cleanly.
+- Sanitizes repair classifier evidence to avoid false owner-decision triggers from boilerplate.
+- Adds scripts/sera-closed-phase-reprocessing-guard.mjs for queue cleanup evidence.

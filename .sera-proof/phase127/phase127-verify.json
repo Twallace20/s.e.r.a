@@ -1,0 +1,15 @@
+{
+  "phaseId": "phase127-closed-phase-reprocessing-guard-v1",
+  "status": "proof_ready",
+  "zipRoot": "repo/",
+  "expectedZipName": "s.e.r.a_phase127_closed_phase_reprocessing_guard_v1_overlay.zip",
+  "verifications": [
+    "node --check scripts/sera-autopilot-loop.mjs",
+    "node --check scripts/sera-chatgpt-artifact-watcher.mjs",
+    "node --check scripts/sera-autopilot-repair-orchestrator.mjs",
+    "node --check scripts/sera-closed-phase-reprocessing-guard.mjs",
+    "node --check scripts/phase127-verify.mjs",
+    "node scripts/phase127-verify.mjs"
+  ],
+  "createdAt": "2026-06-29T16:03:58.508388Z"
+}

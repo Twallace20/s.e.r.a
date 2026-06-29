@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "phase": 127,
+  "name": "Closed Phase Reprocessing Guard v1",
+  "version": "phase127-closed-phase-reprocessing-guard-v1",
+  "type": "overlay",
+  "zipRoot": "repo/",
+  "expectedZipName": "s.e.r.a_phase127_closed_phase_reprocessing_guard_v1_overlay.zip",
+  "summary": "Prevent already-closed phases from being reprocessed and archive stale duplicate artifacts before they can trigger new work.",
+  "files": [
+    "scripts/sera-autopilot-loop.mjs",
+    "scripts/sera-chatgpt-artifact-watcher.mjs",
+    "scripts/sera-autopilot-repair-orchestrator.mjs",
+    "scripts/sera-closed-phase-reprocessing-guard.mjs",
+    "scripts/sera-closed-phase-reprocessing-guard.ps1",
+    "scripts/phase127-verify.mjs",
+    "docs/autopilot/CLOSED_PHASE_REPROCESSING_GUARD_V1.md",
+    "docs/phases/PHASE_127_CLOSED_PHASE_REPROCESSING_GUARD_V1.md",
+    ".overlay/phase127-manifest.json",
+    ".sera-proof/phase127/phase127-verify.json",
+    "s.e.r.a_phase127_closed_phase_reprocessing_guard_v1_overlay.patch"
+  ],
+  "safety": {
+    "savedChatTargetOnly": true,
+    "newChatFallbackAllowed": false,
+    "randomRecentChatFallbackAllowed": false,
+    "ownerDecisionStop": true,
+    "usesExistingSafetyGates": true
+  }
+}
