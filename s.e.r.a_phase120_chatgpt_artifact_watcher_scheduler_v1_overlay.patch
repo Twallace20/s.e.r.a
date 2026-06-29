@@ -1,0 +1,13 @@
+Phase 120 overlay summary
+
+Adds:
+- scripts/sera-chatgpt-artifact-watcher.mjs
+- scripts/sera-chatgpt-artifact-watch.ps1
+- scripts/sera-chatgpt-artifact-watcher-schedule.ps1
+- scripts/phase120-verify.mjs
+- docs/autopilot/CHATGPT_ARTIFACT_WATCHER_SCHEDULER_CONTRACT.md
+- docs/phases/PHASE_120_CHATGPT_ARTIFACT_WATCHER_SCHEDULER_V1.md
+- .overlay/phase120-manifest.json
+- .sera-proof/phase120/phase120-verify.json
+
+No external dependencies are added. No package install is required. The scheduler is owner-installed and never registered silently during overlay application.
