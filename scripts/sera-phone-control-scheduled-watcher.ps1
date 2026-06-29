@@ -38,7 +38,7 @@ if ($Install) {
   $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File `"$PSCommandPath`" -RunOnce"
   $Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes $EveryMinutes)
   $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew -StartWhenAvailable
-  Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings -Description "Checks SERA autopilot-command.json and starts bounded guarded work when enabled." -Force | Out-Null
+  Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings -Description "Checks SERA command_inbox/autopilot-command*.json and starts bounded guarded work when commandStatus is new." -Force | Out-Null
   Write-Host "Installed $TaskName to check every $EveryMinutes minutes."
   if ($RunOnce) { Invoke-PhoneWatcher @("--run-once", "--json") }
   return

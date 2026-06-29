@@ -1,0 +1,17 @@
+{
+  "phaseId": "phase130-phone-command-queue-status-lifecycle-v1",
+  "valid": true,
+  "missing": [],
+  "checks": {
+    "queueFolderMentioned": true,
+    "wildcardSupported": true,
+    "commandStatusLifecycle": true,
+    "acceptsNewOnly": true,
+    "updatesComplete": true,
+    "singleRunLock": true,
+    "statusMarkdown": true,
+    "savedTargetPreservedByDelegation": true
+  },
+  "failures": [],
+  "createdAt": "2026-06-29T18:12:46.491Z"
+}

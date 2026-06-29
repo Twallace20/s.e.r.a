@@ -1,0 +1,6 @@
+Phase 130 overlay patch summary:
+- Replace the phone control job and scheduled watcher with queue-aware versions.
+- Add command_inbox support for autopilot-command*.json files.
+- Add commandId and commandStatus lifecycle updates.
+- Add single phone-control run lock.
+- Add documentation, template, proof, and verification assets.
