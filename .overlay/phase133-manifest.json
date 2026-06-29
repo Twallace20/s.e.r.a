@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "phase": 133,
+  "phaseId": "phase133-bridge-contextual-risk-filter-active-command-isolation-v1",
+  "title": "Phase 133 — Bridge Contextual Risk Filter + Active Command Isolation v1",
+  "type": "overlay",
+  "root": "repo/",
+  "expectedZipName": "s.e.r.a_phase133_bridge_contextual_risk_filter_active_command_isolation_v1_overlay.zip",
+  "summary": "Fixes the real-life phone autopilot blocker where the ChatGPT bridge risk filter blocked safe negative safety language and improves missing-handoff evidence.",
+  "files": [
+    "scripts/chatgpt-bridge-submit-download.mjs",
+    "scripts/sera-chatgpt-submit-download.ps1",
+    "scripts/sera-phone-control-job.mjs",
+    "scripts/phase133-verify.mjs",
+    "docs/phases/PHASE_133_BRIDGE_CONTEXTUAL_RISK_FILTER_ACTIVE_COMMAND_ISOLATION_V1.md",
+    "docs/autopilot/BRIDGE_CONTEXTUAL_RISK_FILTER_ACTIVE_COMMAND_ISOLATION_V1.md",
+    ".overlay/phase133-manifest.json",
+    ".sera-proof/phase133/phase133-verify.json",
+    ".sera-proof/phase133/phase133-verify-runtime.json"
+  ],
+  "createdAt": "2026-06-29T20:45:00.000Z"
+}
