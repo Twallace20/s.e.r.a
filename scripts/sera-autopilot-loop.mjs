@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase125-blocked-phase-hotfix-overlay-protocol-v1";
+const VERSION = "phase126-artifact-download-routing-idempotency-v1";
 
 function autoOpsDir() { return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps"); }
 function ensureDir(dir) { fs.mkdirSync(dir, { recursive: true }); }
@@ -73,7 +73,8 @@ function defaultState() {
     allowNewChatFallback: false,
     allowRandomRecentChatFallback: false,
     requireSavedChatTarget: true,
-    ignoreExistingNeedsAttentionAtStart: true
+    ignoreExistingNeedsAttentionAtStart: true,
+    useArtifactWatcherForDownloads: true
   };
 }
 
@@ -406,11 +407,19 @@ async function runOne(task, args, control, index) {
       writeJson(evidencePath, evidence);
       return { ok: true, status: "dry_run_ready", evidencePath };
     }
-    const bridge = runOrThrow(psExe(), bridgeArgs(promptFile, task.expectedZipName, args), { env: { SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE: "true" } });
-    evidence.bridge = bridge;
-    evidence.downloadRouterStarted = startTask("SERA Download Router");
-    await sleep(15000);
-    evidence.autoOpsRunnerStarted = startTask("SERA AutoOps Runner");
+    if (state.useArtifactWatcherForDownloads !== false) {
+      evidence.artifactAcquisitionMode = "watcher_idempotent";
+      evidence.artifactWatcherStarted = startTask("SERA ChatGPT Artifact Watcher");
+      await sleep(15000);
+      evidence.autoOpsRunnerStarted = startTask("SERA AutoOps Runner");
+    } else {
+      evidence.artifactAcquisitionMode = "direct_bridge_compatibility";
+      const bridge = runOrThrow(psExe(), bridgeArgs(promptFile, task.expectedZipName, args), { env: { SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE: "true" } });
+      evidence.bridge = bridge;
+      evidence.downloadRouterStarted = startTask("SERA Download Router");
+      await sleep(15000);
+      evidence.autoOpsRunnerStarted = startTask("SERA AutoOps Runner");
+    }
     const outcome = await waitForHandoff(p, task, startMs, { ...state, runnerWaitMs: args.runnerWaitMs }, evidence);
     evidence.outcome = outcome;
     if (outcome.status === "closed_cleanly") {

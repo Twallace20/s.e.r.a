@@ -1,0 +1,6 @@
+Phase 126 overlay patch summary
+
+- Updates ChatGPT bridge to detect a visible standardized artifact link before resubmitting prompts.
+- Updates autopilot loop to use the artifact watcher as the default acquisition path.
+- Updates artifact watcher route logic so normal phase overlays route to 01_apply_approved and hotfix artifacts require a phase branch.
+- Adds idempotency evidence helper, docs, manifest, and proof.

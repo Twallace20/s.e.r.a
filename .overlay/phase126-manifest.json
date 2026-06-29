@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "phase": 126,
+  "phaseId": "phase126-artifact-download-routing-idempotency-v1",
+  "name": "Artifact Download Routing Idempotency v1",
+  "type": "overlay",
+  "zipRoot": "repo/",
+  "expectedZipName": "s.e.r.a_phase126_artifact_download_routing_idempotency_v1_overlay.zip",
+  "safety": {
+    "preserveSavedChatGptTargetOnly": true,
+    "allowNewChatFallback": false,
+    "allowRandomRecentChatFallback": false,
+    "stopIfOwnerJudgmentRequired": true
+  },
+  "files": [
+    "docs/autopilot/ARTIFACT_DOWNLOAD_ROUTING_IDEMPOTENCY_V1.md",
+    "docs/phases/PHASE_126_ARTIFACT_DOWNLOAD_ROUTING_IDEMPOTENCY_V1.md",
+    "scripts/chatgpt-bridge-submit-download.mjs",
+    "scripts/phase126-verify.mjs",
+    "scripts/sera-artifact-download-routing-idempotency.mjs",
+    "scripts/sera-artifact-download-routing-idempotency.ps1",
+    "scripts/sera-autopilot-loop.mjs",
+    "scripts/sera-chatgpt-artifact-watcher.mjs",
+    "scripts/sera-chatgpt-submit-download.ps1"
+  ],
+  "createdAt": "2026-06-29T00:00:00.000Z"
+}

@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
 
-const PHASE = "phase123-safe-autopilot-continuation-v1";
+const PHASE = "phase126-artifact-download-routing-idempotency-v1";
 const DEFAULT_SELECTORS = [
   'div#prompt-textarea.ProseMirror[contenteditable="true"][role="textbox"]',
   'div[contenteditable="true"][role="textbox"]#prompt-textarea',
@@ -357,6 +357,8 @@ async function getDownloadCandidates(client, expectedName) {
   const js = `(() => {
     const expectedName = (${JSON.stringify(expectedName || "")}).toLowerCase();
     const expectedStem = expectedName.replace(/\.zip$/i, "");
+    const expectedPhase = (expectedName.match(/phase[_-]?(\d+)/i) || [])[1] || "";
+    const expectedLinkText = expectedPhase ? ("download phase " + expectedPhase + " overlay zip") : "";
     const visible = (el) => {
       if (!el) return false;
       const rect = el.getBoundingClientRect();
@@ -390,7 +392,7 @@ async function getDownloadCandidates(client, expectedName) {
     const rootText = (node) => norm(node.innerText || node.textContent || "");
     const matchingRoots = assistantRoots.filter((node) => {
       const txt = rootText(node).toLowerCase();
-      return (expectedName && txt.includes(expectedName)) || (expectedStem && txt.includes(expectedStem)) || txt.includes(".zip");
+      return (expectedName && txt.includes(expectedName)) || (expectedStem && txt.includes(expectedStem)) || (expectedLinkText && txt.includes(expectedLinkText)) || txt.includes(".zip");
     });
     const latestAssistant = assistantRoots.slice(-1)[0] || null;
     const roots = [];
@@ -408,12 +410,14 @@ async function getDownloadCandidates(client, expectedName) {
       const contextText = ancestorText(el);
       const haystack = norm([href, ownText, contextText].join(" ")).toLowerCase();
       const mentionsExpected = Boolean(expectedName && haystack.includes(expectedName)) || Boolean(expectedStem && haystack.includes(expectedStem));
+      const mentionsStandardLink = Boolean(expectedLinkText && haystack.includes(expectedLinkText));
       const mentionsZip = haystack.includes(".zip");
       const ownLooksDownload = ownText.toLowerCase().includes("download") || (el.getAttribute("aria-label") || "").toLowerCase().includes("download") || (el.getAttribute("download") || "").toLowerCase().includes("download");
       const contextLooksDownload = haystack.includes("download");
       const isGenericDownloadButton = (kind === "button" && ownLooksDownload) || (kind === "link" && (ownLooksDownload || href));
-      if (!mentionsExpected && !mentionsZip && !isGenericDownloadButton && !contextLooksDownload) return;
+      if (!mentionsExpected && !mentionsStandardLink && !mentionsZip && !isGenericDownloadButton && !contextLooksDownload) return;
       let score = 0;
+      if (mentionsStandardLink) score += 260;
       if (mentionsExpected) score += 140;
       if (mentionsZip) score += 50;
       if (ownLooksDownload) score += 35;
@@ -438,6 +442,7 @@ async function getDownloadCandidates(client, expectedName) {
         dataTestId: el.getAttribute("data-testid") || null,
         visible: visible(el),
         mentionsExpected,
+        mentionsStandardLink,
         mentionsZip,
         ownLooksDownload
       });
@@ -478,6 +483,7 @@ async function getDownloadCandidates(client, expectedName) {
       candidates: deduped.slice(0, 30),
       snapshot: {
         expectedName,
+        expectedLinkText,
         candidateCount: deduped.length,
         zipTextMatches,
         latestAssistantText,
@@ -503,6 +509,17 @@ async function waitForZipCandidate(client, expectedName, maxWaitMs) {
   }
   const snapshot = last?.snapshot ? JSON.stringify(last.snapshot).slice(0, 4000) : "no DOM snapshot available";
   throw new Error(`Timed out waiting for a downloadable ZIP candidate after ${maxWaitMs}ms. DOM troubleshooting snapshot: ${snapshot}`);
+}
+
+async function existingArtifactCandidate(client, expectedName) {
+  if (!expectedName) return null;
+  const result = await getDownloadCandidates(client, expectedName);
+  const candidate = result?.candidate || null;
+  if (!candidate) return null;
+  if (candidate.mentionsStandardLink || candidate.mentionsExpected || candidate.score >= 180) {
+    return result;
+  }
+  return null;
 }
 
 async function clickDownloadCandidate(client, candidate) {
@@ -669,6 +686,28 @@ async function main() {
       }
 
       const downloadBehavior = await setDownloadDir(cdpEndpoint, downloadsDir);
+      const preexistingStartMs = Date.now();
+      const preexistingCandidate = await existingArtifactCandidate(client, expectedZipName || ".zip");
+      if (preexistingCandidate?.candidate) {
+        const clickedExisting = await clickDownloadCandidate(client, preexistingCandidate.candidate);
+        if (!clickedExisting?.ok) throw new Error(`Existing artifact download click failed: ${clickedExisting?.reason || "unknown"}`);
+        const downloadedExisting = await waitForDownloadedZip(downloadsDir, preexistingStartMs, Math.min(args.maxWaitMs, 300000), expectedZipName);
+        evidence.status = "EXECUTE_PASS_EXISTING_ARTIFACT";
+        evidence.downloadBehavior = downloadBehavior;
+        evidence.idempotency = {
+          skippedPromptSubmission: true,
+          reason: "Matching artifact link was already visible in the saved ChatGPT thread.",
+          candidate: preexistingCandidate.candidate
+        };
+        evidence.downloadCandidate = preexistingCandidate.candidate;
+        evidence.downloadCandidates = preexistingCandidate.candidates;
+        evidence.domTroubleshooting = preexistingCandidate.snapshot;
+        evidence.clicked = clickedExisting;
+        evidence.downloaded = downloadedExisting;
+        writeJson(evidencePath, evidence);
+        console.log(JSON.stringify({ ok: true, status: "execute_pass_existing_artifact", downloaded: downloadedExisting.file, evidencePath }, null, 2));
+        return;
+      }
       const submitStartMs = Date.now();
       const inserted = await insertPrompt(client, selectors, prompt);
       if (!inserted?.ok) throw new Error(`Prompt insertion failed: ${inserted?.reason || "unknown"}`);
