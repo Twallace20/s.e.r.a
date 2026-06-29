@@ -1,0 +1,12 @@
+{
+  "phaseId": "phase126-artifact-download-routing-idempotency-v1",
+  "status": "ready",
+  "valid": true,
+  "checks": [
+    "bridge-visible-artifact-idempotency",
+    "normal-hotfix-route-separation",
+    "autopilot-watcher-acquisition-mode",
+    "saved-target-only-preserved"
+  ],
+  "createdAt": "2026-06-29T00:00:00.000Z"
+}

@@ -5,7 +5,7 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase123-safe-autopilot-continuation-v1";
+const VERSION = "phase126-artifact-download-routing-idempotency-v1";
 
 function autoOpsDir() {
   return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps");
@@ -198,16 +198,6 @@ async function fetchJson(url) {
   if (!response.ok) throw new Error(`${url} returned HTTP ${response.status}`);
   return response.json();
 }
-function conversationIdFromUrl(value) {
-  try {
-    const url = value instanceof URL ? value : new URL(value);
-    const parts = url.pathname.split("/").filter(Boolean);
-    const cIndex = parts.indexOf("c");
-    if (cIndex >= 0 && parts[cIndex + 1]) return parts[cIndex + 1];
-    return null;
-  } catch { return null; }
-}
-
 function sameSavedConversation(tabUrl, targetUrl) {
   try {
     const tab = new URL(tabUrl);
@@ -215,10 +205,7 @@ function sameSavedConversation(tabUrl, targetUrl) {
     if (tab.hostname !== target.hostname) return false;
     const tabPath = tab.pathname.replace(/\/$/, "");
     const targetPath = target.pathname.replace(/\/$/, "");
-    if (tabPath === targetPath || tab.href.split("?")[0] === target.href.split("?")[0]) return true;
-    const tabConversationId = conversationIdFromUrl(tab);
-    const targetConversationId = conversationIdFromUrl(target);
-    return !!tabConversationId && !!targetConversationId && tabConversationId === targetConversationId;
+    return tabPath === targetPath || tab.href.split("?")[0] === target.href.split("?")[0];
   } catch { return false; }
 }
 async function connect(wsUrl) {
@@ -310,23 +297,31 @@ function runGitBranch() {
   const result = run("git", ["branch", "--show-current"], { cwd: repoDir() });
   return result.status === 0 ? result.stdout.trim() : "";
 }
-function hotfixLike(name) {
-  const lower = name.toLowerCase();
-  return lower.includes("hotfix") || lower.includes("repair_attempt") || lower.includes("repair-attempt");
+function normalPhaseOverlayLike(expectedZipName) {
+  const name = String(expectedZipName || "").toLowerCase();
+  return /s\.e\.r\.a_phase\d+_/.test(name) && name.endsWith("_overlay.zip") && !name.includes("hotfix_attempt") && !name.includes("_hotfix_");
+}
+function hotfixLike(expectedZipName) {
+  const name = String(expectedZipName || "").toLowerCase();
+  return name.includes("hotfix") || name.includes("repair") || name.includes("patch_attempt");
 }
 function routeDestination(p, expectedZipName, routeMode) {
-  if (routeMode === "normal") return { ok: true, mode: "normal", dir: p.applyApproved, reason: "forced normal route" };
-  if (routeMode === "hotfix") {
+  const mode = String(routeMode || "auto").toLowerCase();
+  if (mode === "normal") return { ok: true, mode: "normal", dir: p.applyApproved, reason: "explicit normal route" };
+  if (mode === "hotfix") {
     const branch = runGitBranch();
     if (!branch || branch === "main" || !branch.startsWith("work/phase")) return { ok: false, reason: `hotfix route requested but current branch is ${branch || "unknown"}` };
-    return { ok: true, mode: "hotfix", dir: p.hotfixApproved, reason: `hotfix route on ${branch}` };
+    return { ok: true, mode: "hotfix", dir: p.hotfixApproved, reason: `explicit hotfix route on ${branch}` };
+  }
+  if (normalPhaseOverlayLike(expectedZipName)) {
+    return { ok: true, mode: "normal", dir: p.applyApproved, reason: "normal phase overlay artifact" };
   }
   if (hotfixLike(expectedZipName)) {
     const branch = runGitBranch();
     if (!branch || branch === "main" || !branch.startsWith("work/phase")) return { ok: false, reason: `hotfix-shaped artifact cannot be routed while current branch is ${branch || "unknown"}` };
     return { ok: true, mode: "hotfix", dir: p.hotfixApproved, reason: `hotfix-shaped artifact routed on ${branch}` };
   }
-  return { ok: true, mode: "normal", dir: p.applyApproved, reason: "normal overlay artifact" };
+  return { ok: true, mode: "normal", dir: p.applyApproved, reason: "default normal overlay artifact" };
 }
 function routeZip(p, zipPath, expectedZipName, routeMode) {
   const route = routeDestination(p, expectedZipName, routeMode);
