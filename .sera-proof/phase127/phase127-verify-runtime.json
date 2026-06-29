@@ -1,0 +1,31 @@
+{
+  "phaseId": "phase127-closed-phase-reprocessing-guard-v1",
+  "ok": true,
+  "checks": [
+    {
+      "name": "autopilot-loop-has-phase127-version",
+      "ok": true
+    },
+    {
+      "name": "artifact-watcher-has-closed-phase-guard",
+      "ok": true
+    },
+    {
+      "name": "repair-orchestrator-sanitized",
+      "ok": true
+    },
+    {
+      "name": "closed-phase-guard-helper-exists",
+      "ok": true
+    },
+    {
+      "name": "overlay-manifest-exists",
+      "ok": true
+    },
+    {
+      "name": "proof-exists",
+      "ok": true
+    }
+  ],
+  "createdAt": "2026-06-29T16:03:58.790Z"
+}
