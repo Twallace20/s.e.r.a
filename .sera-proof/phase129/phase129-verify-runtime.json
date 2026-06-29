@@ -1,0 +1,47 @@
+{
+  "phaseId": "phase129-phone-control-scheduled-watcher-v1",
+  "ok": true,
+  "checks": [
+    {
+      "name": "scheduled-watcher-mjs-exists",
+      "ok": true
+    },
+    {
+      "name": "scheduled-watcher-ps-wrapper-exists",
+      "ok": true
+    },
+    {
+      "name": "scheduled-watcher-task-name",
+      "ok": true
+    },
+    {
+      "name": "scheduled-watcher-calls-phase128-job",
+      "ok": true
+    },
+    {
+      "name": "scheduled-watcher-status-file",
+      "ok": true
+    },
+    {
+      "name": "scheduled-watcher-stop-controls",
+      "ok": true
+    },
+    {
+      "name": "scheduled-task-installer",
+      "ok": true
+    },
+    {
+      "name": "docs-exist",
+      "ok": true
+    },
+    {
+      "name": "manifest-exists",
+      "ok": true
+    },
+    {
+      "name": "proof-exists",
+      "ok": true
+    }
+  ],
+  "createdAt": "2026-06-29T17:01:46.958Z"
+}

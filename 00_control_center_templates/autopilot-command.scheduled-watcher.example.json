@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "action": "run_range",
+  "phaseStart": 130,
+  "phaseEnd": 132,
+  "maxPhases": 3,
+  "guide": "Continue guarded autopilot hardening. Stop on unclear work, owner judgment, browser issues, or validation failure.",
+  "stopAfterRange": true,
+  "pauseAfterCurrentPhase": false,
+  "emergencyStop": false,
+  "updatedBy": "owner",
+  "updatedReason": "phone scheduled watcher test"
+}
