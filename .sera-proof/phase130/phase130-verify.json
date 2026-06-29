@@ -1,0 +1,15 @@
+{
+  "phaseId": "phase130-phone-command-queue-status-lifecycle-v1",
+  "mode": "static-overlay-proof",
+  "valid": true,
+  "assertions": [
+    "Adds phone-friendly command_inbox support.",
+    "Supports autopilot-command*.json files.",
+    "Adds commandId and commandStatus lifecycle.",
+    "Runs only commands where enabled=true and commandStatus=new.",
+    "Updates the consumed JSON command file automatically after use.",
+    "Adds single-runner lock to reduce duplicate runner/log-file conflicts.",
+    "Writes phone-readable status to AUTOPILOT_STATUS.md."
+  ],
+  "createdAt": "2026-06-29T18:30:00.000Z"
+}

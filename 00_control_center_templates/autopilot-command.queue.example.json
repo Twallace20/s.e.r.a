@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "commandId": "phase131-example-001",
+  "commandStatus": "new",
+  "enabled": true,
+  "action": "run_range",
+  "phaseStart": 131,
+  "phaseEnd": 131,
+  "maxPhases": 1,
+  "guide": "Build the next guarded phase. Stop on unclear work, owner judgment, browser failure, or validation failure.",
+  "stopAfterRange": true,
+  "pauseAfterCurrentPhase": false,
+  "emergencyStop": false,
+  "updatedBy": "owner",
+  "updatedReason": "phone command queue example"
+}
