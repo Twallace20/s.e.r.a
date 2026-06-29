@@ -1,0 +1,1928 @@
+diff -ruN /tmp/phase130/repo/.overlay/phase130-manifest.json /tmp/phase131/repo/.overlay/phase130-manifest.json
+--- /tmp/phase130/repo/.overlay/phase130-manifest.json	2026-06-29 18:12:43.000000000 +0000
++++ /tmp/phase131/repo/.overlay/phase130-manifest.json	1970-01-01 00:00:00.000000000 +0000
+@@ -1,51 +0,0 @@
+-{
+-  "schemaVersion": 1,
+-  "phase": 130,
+-  "name": "Phone Command Queue + Status Lifecycle v1",
+-  "version": "phase130-phone-command-queue-status-lifecycle-v1",
+-  "type": "overlay",
+-  "zipRoot": "repo/",
+-  "expectedZipName": "s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.zip",
+-  "summary": "Upgrade phone control from one mutable file to a queue of autopilot-command*.json files with commandId and commandStatus lifecycle updates.",
+-  "files": [
+-    "scripts/sera-phone-control-scheduled-watcher.mjs",
+-    "scripts/sera-phone-control-scheduled-watcher.ps1",
+-    "scripts/sera-phone-control-job.mjs",
+-    "scripts/sera-phone-control-job.ps1",
+-    "scripts/phase130-verify.mjs",
+-    "00_control_center_templates/autopilot-command.queue.example.json",
+-    "docs/autopilot/PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md",
+-    "docs/phases/PHASE_130_PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md",
+-    ".overlay/phase130-manifest.json",
+-    ".sera-proof/phase130/phase130-verify.json",
+-    "s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.patch"
+-  ],
+-  "safety": {
+-    "savedChatTargetOnly": true,
+-    "newChatFallbackAllowed": false,
+-    "randomRecentChatFallbackAllowed": false,
+-    "phoneRangeMaxPhases": 5,
+-    "ownerDecisionStop": true,
+-    "usesExistingSafetyGates": true,
+-    "singleWatcherLock": true,
+-    "singleRunLock": true,
+-    "runsOnlyNewCommands": true,
+-    "updatesCommandFileAfterUse": true
+-  },
+-  "phoneControl": {
+-    "queueDirectory": "00_control_center/command_inbox",
+-    "supportedFilePattern": "autopilot-command*.json",
+-    "requiredRunFields": {
+-      "enabled": true,
+-      "commandStatus": "new"
+-    },
+-    "lifecycle": ["new", "accepted", "running", "complete", "blocked", "ignored"],
+-    "defaultCurrentCommandFile": "00_control_center/autopilot-command.json",
+-    "statusFile": "00_control_center/AUTOPILOT_STATUS.md"
+-  },
+-  "longTermPlan": {
+-    "phase131": "Phone status dashboard and receipts",
+-    "phase132": "Roadmap job queue",
+-    "phase133": "Certified phone autopilot flow"
+-  }
+-}
+diff -ruN /tmp/phase130/repo/.overlay/phase131-manifest.json /tmp/phase131/repo/.overlay/phase131-manifest.json
+--- /tmp/phase130/repo/.overlay/phase131-manifest.json	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/phase131/repo/.overlay/phase131-manifest.json	2026-06-29 19:34:48.623342241 +0000
+@@ -0,0 +1,54 @@
++{
++  "schemaVersion": 1,
++  "phase": 131,
++  "name": "Phone Autopilot End-to-End Orchestrator v1",
++  "version": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
++  "type": "overlay",
++  "zipRoot": "repo/",
++  "expectedZipName": "s.e.r.a_phase131_phone_autopilot_end_to_end_orchestrator_v1_overlay.zip",
++  "summary": "Upgrade phone JSON control from detection/accepted status into a complete end-to-end orchestrator that moves commands to running and completes or blocks based on actual handoff output.",
++  "files": [
++    "scripts/sera-phone-control-scheduled-watcher.mjs",
++    "scripts/sera-phone-control-scheduled-watcher.ps1",
++    "scripts/sera-phone-control-job.mjs",
++    "scripts/sera-phone-control-job.ps1",
++    "scripts/phase131-verify.mjs",
++    "00_control_center_templates/autopilot-command.phase131-e2e.example.json",
++    "docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md",
++    "docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md",
++    ".overlay/phase131-manifest.json",
++    ".sera-proof/phase131/phase131-verify.json",
++    "s.e.r.a_phase131_phone_autopilot_end_to_end_orchestrator_v1_overlay.patch"
++  ],
++  "safety": {
++    "savedChatTargetOnly": true,
++    "newChatFallbackAllowed": false,
++    "randomRecentChatFallbackAllowed": false,
++    "phoneRangeMaxPhases": 5,
++    "ownerDecisionStop": true,
++    "usesExistingSafetyGates": true,
++    "singleWatcherLock": true,
++    "singleRunLock": true,
++    "runsOnlyNewCommands": true,
++    "updatesCommandFileAfterUse": true,
++    "missingHandoffBlocks": true
++  },
++  "phoneControl": {
++    "checkEveryMinutes": 2,
++    "queueDirectory": "00_control_center/command_inbox",
++    "supportedFilePattern": "autopilot-command*.json",
++    "requiredRunFields": {
++      "enabled": true,
++      "commandStatus": "new"
++    },
++    "lifecycle": ["new", "accepted", "running", "complete", "blocked", "ignored"],
++    "defaultCurrentCommandFile": "00_control_center/autopilot-command.json",
++    "statusFile": "00_control_center/AUTOPILOT_STATUS.md",
++    "handoffDirectory": "06_handoff"
++  },
++  "proof": {
++    "simulatedClosedCleanlyLifecycle": true,
++    "staleAcceptedBlocks": true,
++    "latestHandoffSurfaced": true
++  }
++}
+diff -ruN /tmp/phase130/repo/.sera-proof/phase130/phase130-verify-runtime.json /tmp/phase131/repo/.sera-proof/phase130/phase130-verify-runtime.json
+--- /tmp/phase130/repo/.sera-proof/phase130/phase130-verify-runtime.json	2026-06-29 18:12:46.000000000 +0000
++++ /tmp/phase131/repo/.sera-proof/phase130/phase130-verify-runtime.json	1970-01-01 00:00:00.000000000 +0000
+@@ -1,17 +0,0 @@
+-{
+-  "phaseId": "phase130-phone-command-queue-status-lifecycle-v1",
+-  "valid": true,
+-  "missing": [],
+-  "checks": {
+-    "queueFolderMentioned": true,
+-    "wildcardSupported": true,
+-    "commandStatusLifecycle": true,
+-    "acceptsNewOnly": true,
+-    "updatesComplete": true,
+-    "singleRunLock": true,
+-    "statusMarkdown": true,
+-    "savedTargetPreservedByDelegation": true
+-  },
+-  "failures": [],
+-  "createdAt": "2026-06-29T18:12:46.491Z"
+-}
+diff -ruN /tmp/phase130/repo/.sera-proof/phase130/phase130-verify.json /tmp/phase131/repo/.sera-proof/phase130/phase130-verify.json
+--- /tmp/phase130/repo/.sera-proof/phase130/phase130-verify.json	2026-06-29 18:12:36.000000000 +0000
++++ /tmp/phase131/repo/.sera-proof/phase130/phase130-verify.json	1970-01-01 00:00:00.000000000 +0000
+@@ -1,15 +0,0 @@
+-{
+-  "phaseId": "phase130-phone-command-queue-status-lifecycle-v1",
+-  "mode": "static-overlay-proof",
+-  "valid": true,
+-  "assertions": [
+-    "Adds phone-friendly command_inbox support.",
+-    "Supports autopilot-command*.json files.",
+-    "Adds commandId and commandStatus lifecycle.",
+-    "Runs only commands where enabled=true and commandStatus=new.",
+-    "Updates the consumed JSON command file automatically after use.",
+-    "Adds single-runner lock to reduce duplicate runner/log-file conflicts.",
+-    "Writes phone-readable status to AUTOPILOT_STATUS.md."
+-  ],
+-  "createdAt": "2026-06-29T18:30:00.000Z"
+-}
+diff -ruN /tmp/phase130/repo/.sera-proof/phase131/phase131-verify-runtime.json /tmp/phase131/repo/.sera-proof/phase131/phase131-verify-runtime.json
+--- /tmp/phase130/repo/.sera-proof/phase131/phase131-verify-runtime.json	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/phase131/repo/.sera-proof/phase131/phase131-verify-runtime.json	2026-06-29 19:35:15.901480280 +0000
+@@ -0,0 +1,78 @@
++{
++  "phaseId": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
++  "valid": true,
++  "missing": [],
++  "checks": {
++    "requiredFilesPresent": true,
++    "defaultTwoMinuteSchedule": true,
++    "scansDefaultCommand": true,
++    "scansCommandInboxWildcard": true,
++    "acceptsNewOnly": true,
++    "immediatelyMovesToRunning": true,
++    "jobMovesToRunning": true,
++    "missingHandoffBlocks": true,
++    "latestHandoffSurfaced": true,
++    "staleAcceptedBlocks": true,
++    "e2eClosedCommandComplete": true,
++    "e2eClosedHandoffWritten": true,
++    "statusMentionsLatestHandoff": true
++  },
++  "failures": [],
++  "proof": {
++    "tempAutoOps": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps",
++    "closedCommand": {
++      "schemaVersion": 2,
++      "commandId": "phase131-verify-closed-001",
++      "commandStatus": "complete",
++      "enabled": false,
++      "action": "run_range",
++      "phaseStart": 931,
++      "phaseEnd": 931,
++      "maxPhases": 1,
++      "guide": "Verifier: prove phone command goes from new to running to complete based on CLOSED_CLEANLY handoff.",
++      "stopAfterRange": true,
++      "pauseAfterCurrentPhase": false,
++      "emergencyStop": false,
++      "updatedBy": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
++      "updatedReason": "e2e lifecycle proof",
++      "status": "completed",
++      "acceptedAt": "2026-06-29T19:35:15.711Z",
++      "lastSignature": "BA2ACAA6C7FBF4B2D554EFB6CCC52ABA14538DD3C21B57ACC063C3BFCF53413C",
++      "updatedAt": "2026-06-29T19:35:15.804Z",
++      "lastRunStartedAt": "2026-06-29T19:35:15.786Z",
++      "lastRunFinishedAt": "2026-06-29T19:35:15.788Z",
++      "completedAt": "2026-06-29T19:35:15.803Z",
++      "latestHandoffPath": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps/06_handoff/s.e.r.a_phase931_phase131_e2e_test-19700101_000000-CLOSED_CLEANLY.md",
++      "latestHandoffStatus": "CLOSED_CLEANLY",
++      "lastEvidencePath": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps/00_control_center/evidence/phone-control-watcher-20260629_193515Z.json",
++      "lastExitCode": 0
++    },
++    "staleCommand": {
++      "schemaVersion": 2,
++      "commandId": "phase131-verify-stale-accepted-001",
++      "commandStatus": "blocked",
++      "status": "blocked",
++      "enabled": false,
++      "action": "run_range",
++      "phaseStart": 932,
++      "phaseEnd": 932,
++      "maxPhases": 1,
++      "guide": "Verifier: prove stale accepted command blocks when no handoff exists.",
++      "acceptedAt": "2000-01-01T00:00:00.000Z",
++      "stopAfterRange": true,
++      "pauseAfterCurrentPhase": false,
++      "emergencyStop": false,
++      "updatedBy": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
++      "updatedReason": "stale accepted proof",
++      "blockedAt": "2026-06-29T19:35:15.882Z",
++      "blockedReason": "Command stayed accepted longer than 0 minutes without moving to running or producing a handoff.",
++      "updatedAt": "2026-06-29T19:35:15.882Z"
++    },
++    "closedHandoffs": [
++      "s.e.r.a_phase931_phase131_e2e_test-19700101_000000-CLOSED_CLEANLY.md"
++    ],
++    "firstExitCode": 0,
++    "secondExitCode": 2
++  },
++  "createdAt": "2026-06-29T19:35:15.900Z"
++}
+diff -ruN /tmp/phase130/repo/.sera-proof/phase131/phase131-verify.json /tmp/phase131/repo/.sera-proof/phase131/phase131-verify.json
+--- /tmp/phase130/repo/.sera-proof/phase131/phase131-verify.json	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/phase131/repo/.sera-proof/phase131/phase131-verify.json	2026-06-29 19:35:19.793058356 +0000
+@@ -0,0 +1,78 @@
++{
++  "phaseId": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
++  "valid": true,
++  "missing": [],
++  "checks": {
++    "requiredFilesPresent": true,
++    "defaultTwoMinuteSchedule": true,
++    "scansDefaultCommand": true,
++    "scansCommandInboxWildcard": true,
++    "acceptsNewOnly": true,
++    "immediatelyMovesToRunning": true,
++    "jobMovesToRunning": true,
++    "missingHandoffBlocks": true,
++    "latestHandoffSurfaced": true,
++    "staleAcceptedBlocks": true,
++    "e2eClosedCommandComplete": true,
++    "e2eClosedHandoffWritten": true,
++    "statusMentionsLatestHandoff": true
++  },
++  "failures": [],
++  "proof": {
++    "tempAutoOps": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps",
++    "closedCommand": {
++      "schemaVersion": 2,
++      "commandId": "phase131-verify-closed-001",
++      "commandStatus": "complete",
++      "enabled": false,
++      "action": "run_range",
++      "phaseStart": 931,
++      "phaseEnd": 931,
++      "maxPhases": 1,
++      "guide": "Verifier: prove phone command goes from new to running to complete based on CLOSED_CLEANLY handoff.",
++      "stopAfterRange": true,
++      "pauseAfterCurrentPhase": false,
++      "emergencyStop": false,
++      "updatedBy": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
++      "updatedReason": "e2e lifecycle proof",
++      "status": "completed",
++      "acceptedAt": "2026-06-29T19:35:15.711Z",
++      "lastSignature": "BA2ACAA6C7FBF4B2D554EFB6CCC52ABA14538DD3C21B57ACC063C3BFCF53413C",
++      "updatedAt": "2026-06-29T19:35:15.804Z",
++      "lastRunStartedAt": "2026-06-29T19:35:15.786Z",
++      "lastRunFinishedAt": "2026-06-29T19:35:15.788Z",
++      "completedAt": "2026-06-29T19:35:15.803Z",
++      "latestHandoffPath": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps/06_handoff/s.e.r.a_phase931_phase131_e2e_test-19700101_000000-CLOSED_CLEANLY.md",
++      "latestHandoffStatus": "CLOSED_CLEANLY",
++      "lastEvidencePath": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps/00_control_center/evidence/phone-control-watcher-20260629_193515Z.json",
++      "lastExitCode": 0
++    },
++    "staleCommand": {
++      "schemaVersion": 2,
++      "commandId": "phase131-verify-stale-accepted-001",
++      "commandStatus": "blocked",
++      "status": "blocked",
++      "enabled": false,
++      "action": "run_range",
++      "phaseStart": 932,
++      "phaseEnd": 932,
++      "maxPhases": 1,
++      "guide": "Verifier: prove stale accepted command blocks when no handoff exists.",
++      "acceptedAt": "2000-01-01T00:00:00.000Z",
++      "stopAfterRange": true,
++      "pauseAfterCurrentPhase": false,
++      "emergencyStop": false,
++      "updatedBy": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
++      "updatedReason": "stale accepted proof",
++      "blockedAt": "2026-06-29T19:35:15.882Z",
++      "blockedReason": "Command stayed accepted longer than 0 minutes without moving to running or producing a handoff.",
++      "updatedAt": "2026-06-29T19:35:15.882Z"
++    },
++    "closedHandoffs": [
++      "s.e.r.a_phase931_phase131_e2e_test-19700101_000000-CLOSED_CLEANLY.md"
++    ],
++    "firstExitCode": 0,
++    "secondExitCode": 2
++  },
++  "createdAt": "2026-06-29T19:35:15.900Z"
++}
+diff -ruN /tmp/phase130/repo/00_control_center_templates/autopilot-command.phase131-e2e.example.json /tmp/phase131/repo/00_control_center_templates/autopilot-command.phase131-e2e.example.json
+--- /tmp/phase130/repo/00_control_center_templates/autopilot-command.phase131-e2e.example.json	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/phase131/repo/00_control_center_templates/autopilot-command.phase131-e2e.example.json	2026-06-29 19:34:48.600934076 +0000
+@@ -0,0 +1,16 @@
++{
++  "schemaVersion": 2,
++  "commandId": "phase132-phone-e2e-test-001",
++  "commandStatus": "new",
++  "enabled": true,
++  "action": "run_range",
++  "phaseStart": 132,
++  "phaseEnd": 132,
++  "maxPhases": 1,
++  "guide": "Build the next guarded phase from a phone-saved command. Continue only through CLOSED_CLEANLY or BLOCKED handoff. Stop on unclear work, owner judgment, browser failure, download failure, validation failure, or missing handoff.",
++  "stopAfterRange": true,
++  "pauseAfterCurrentPhase": false,
++  "emergencyStop": false,
++  "updatedBy": "owner",
++  "updatedReason": "phone end-to-end orchestrator test"
++}
+diff -ruN /tmp/phase130/repo/00_control_center_templates/autopilot-command.queue.example.json /tmp/phase131/repo/00_control_center_templates/autopilot-command.queue.example.json
+--- /tmp/phase130/repo/00_control_center_templates/autopilot-command.queue.example.json	2026-06-29 18:12:24.000000000 +0000
++++ /tmp/phase131/repo/00_control_center_templates/autopilot-command.queue.example.json	1970-01-01 00:00:00.000000000 +0000
+@@ -1,16 +0,0 @@
+-{
+-  "schemaVersion": 2,
+-  "commandId": "phase131-example-001",
+-  "commandStatus": "new",
+-  "enabled": true,
+-  "action": "run_range",
+-  "phaseStart": 131,
+-  "phaseEnd": 131,
+-  "maxPhases": 1,
+-  "guide": "Build the next guarded phase. Stop on unclear work, owner judgment, browser failure, or validation failure.",
+-  "stopAfterRange": true,
+-  "pauseAfterCurrentPhase": false,
+-  "emergencyStop": false,
+-  "updatedBy": "owner",
+-  "updatedReason": "phone command queue example"
+-}
+diff -ruN /tmp/phase130/repo/docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md /tmp/phase131/repo/docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md
+--- /tmp/phase130/repo/docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/phase131/repo/docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md	2026-06-29 19:34:48.610038927 +0000
+@@ -0,0 +1,31 @@
++# Phone Autopilot End-to-End Orchestrator v1
++
++Phase 131 upgrades phone control from command detection into an end-to-end guarded workflow.
++
++## What changed
++
++- The phone watcher checks command files every two minutes when installed with the default schedule.
++- The watcher scans both `00_control_center/autopilot-command.json` and `00_control_center/command_inbox/autopilot-command*.json`.
++- Only commands with `enabled: true` and `commandStatus: "new"` are eligible to run.
++- The same JSON file is updated automatically as it is used.
++- Commands now move through the lifecycle: `new → accepted → running → complete` or `blocked`.
++- Stale accepted/running commands are detected and marked blocked with `blockedReason` instead of silently sitting forever.
++- `00_control_center/AUTOPILOT_STATUS.md` surfaces command ID, command file, runner result, latest handoff, and evidence path.
++
++## End-to-end completion rule
++
++A phone command is complete only when the delegated runner produces a `CLOSED_CLEANLY` handoff for the requested phase range and exits successfully.
++
++A command is blocked when the runner fails, the latest handoff is `BLOCKED`, a final handoff is missing, or the command stays accepted/running beyond the safe timeout.
++
++## Two-minute schedule
++
++After this overlay is applied, refresh the local scheduled task with:
++
++```powershell
++powershell -ExecutionPolicy Bypass -File .\scripts\sera-phone-control-scheduled-watcher.ps1 -Install -EveryMinutes 2 -RunOnce
++```
++
++## Real-life test requirement
++
++The feature is considered proven only when the owner saves a command JSON from the phone, S.E.R.A. moves it beyond `accepted` into `running`, and then records either `complete` or `blocked` based on actual handoff output.
+diff -ruN /tmp/phase130/repo/docs/autopilot/PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md /tmp/phase131/repo/docs/autopilot/PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md
+--- /tmp/phase130/repo/docs/autopilot/PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md	2026-06-29 18:12:24.000000000 +0000
++++ /tmp/phase131/repo/docs/autopilot/PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md	1970-01-01 00:00:00.000000000 +0000
+@@ -1,57 +0,0 @@
+-# Phone Command Queue + Status Lifecycle v1
+-
+-Phase 130 upgrades phone control from a single mutable command file to a small command queue that is easier to operate from a phone.
+-
+-## Owner-facing model
+-
+-Preferred folder:
+-
+-```text
+-00_control_center/command_inbox/
+-```
+-
+-Supported files:
+-
+-```text
+-autopilot-command*.json
+-```
+-
+-A phone command is runnable only when:
+-
+-```json
+-{
+-  "enabled": true,
+-  "commandStatus": "new"
+-}
+-```
+-
+-S.E.R.A. updates the same JSON file as it is consumed:
+-
+-```text
+-new -> accepted -> running -> complete
+-```
+-
+-If work cannot safely continue, the file is updated to:
+-
+-```text
+-blocked
+-```
+-
+-Non-runnable or old files may remain in the folder with `complete`, `blocked`, `ignored`, or `idle`.
+-
+-## Why this exists
+-
+-The previous scheduled watcher could notice a command, mark it as handled, and then get stuck if no phase handoff was produced. The command file did not show a clear lifecycle from the phone. Phase 130 fixes this by making the command itself the durable receipt.
+-
+-## Compatibility
+-
+-`00_control_center/autopilot-command.json` remains the default current-command file. Queue commands are mirrored there while running so the existing control center has a single current-command view.
+-
+-## Safety behavior
+-
+-- Only files with `commandStatus: "new"` are started.
+-- Duplicate runner attempts are blocked by `phone-control-run.lock.json`.
+-- Watcher overlap is blocked by `phone-control-watcher.lock.json`.
+-- Every consumed command is updated automatically to `complete` or `blocked`.
+-- `AUTOPILOT_STATUS.md` is written for phone-readable progress.
+-- Saved ChatGPT target rules and existing S.E.R.A. gates are preserved.
+diff -ruN /tmp/phase130/repo/docs/phases/PHASE_130_PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md /tmp/phase131/repo/docs/phases/PHASE_130_PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md
+--- /tmp/phase130/repo/docs/phases/PHASE_130_PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md	2026-06-29 18:12:24.000000000 +0000
++++ /tmp/phase131/repo/docs/phases/PHASE_130_PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md	1970-01-01 00:00:00.000000000 +0000
+@@ -1,19 +0,0 @@
+-# Phase 130 — Phone Command Queue + Status Lifecycle v1
+-
+-## Purpose
+-
+-Create a phone-friendly command queue so owner commands can be submitted as JSON files, consumed exactly once, and updated automatically with a visible lifecycle.
+-
+-## Adds
+-
+-- `00_control_center/command_inbox` workflow support.
+-- Support for `autopilot-command*.json` files.
+-- `commandId` and `commandStatus` lifecycle fields.
+-- Command lifecycle: `new`, `accepted`, `running`, `complete`, `blocked`, `ignored`.
+-- Automatic status update on the same JSON file after S.E.R.A. uses it.
+-- Single-runner lock to reduce overlapping runner/log-file conflict risk.
+-- Phone-readable status output in `AUTOPILOT_STATUS.md`.
+-
+-## Acceptance
+-
+-A command file with `enabled: true` and `commandStatus: "new"` is selected by the watcher, passed to the phone-control job, updated through its lifecycle, and finally marked `complete` or `blocked`.
+diff -ruN /tmp/phase130/repo/docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md /tmp/phase131/repo/docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md
+--- /tmp/phase130/repo/docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/phase131/repo/docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md	2026-06-29 19:34:48.617160136 +0000
+@@ -0,0 +1,21 @@
++# Phase 131 — Phone Autopilot End-to-End Orchestrator v1
++
++## Purpose
++
++Turn phone-saved JSON commands into a complete guarded autopilot workflow, not just a detected command.
++
++## Success criteria
++
++- `autopilot-command.json` remains supported.
++- `command_inbox/autopilot-command*.json` remains supported.
++- Watcher default schedule is two minutes.
++- New commands are accepted and immediately moved to running when the runner starts.
++- Final command state is based on handoff evidence.
++- Missing handoff blocks the command.
++- Latest handoff path appears in `AUTOPILOT_STATUS.md`.
++- Stale accepted/running commands are reconciled or blocked.
++- A simulated e2e proof verifies lifecycle progression without relying on brittle browser state during unit verification.
++
++## Safety
++
++The delegated autopilot still uses existing S.E.R.A. gates. It preserves the saved ChatGPT target and does not enable random or new-chat fallback.
+diff -ruN /tmp/phase130/repo/s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.patch /tmp/phase131/repo/s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.patch
+--- /tmp/phase130/repo/s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.patch	2026-06-29 18:12:24.000000000 +0000
++++ /tmp/phase131/repo/s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.patch	1970-01-01 00:00:00.000000000 +0000
+@@ -1,6 +0,0 @@
+-Phase 130 overlay patch summary:
+-- Replace the phone control job and scheduled watcher with queue-aware versions.
+-- Add command_inbox support for autopilot-command*.json files.
+-- Add commandId and commandStatus lifecycle updates.
+-- Add single phone-control run lock.
+-- Add documentation, template, proof, and verification assets.
+diff -ruN /tmp/phase130/repo/s.e.r.a_phase131_phone_autopilot_end_to_end_orchestrator_v1_overlay.patch /tmp/phase131/repo/s.e.r.a_phase131_phone_autopilot_end_to_end_orchestrator_v1_overlay.patch
+--- /tmp/phase130/repo/s.e.r.a_phase131_phone_autopilot_end_to_end_orchestrator_v1_overlay.patch	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/phase131/repo/s.e.r.a_phase131_phone_autopilot_end_to_end_orchestrator_v1_overlay.patch	2026-06-29 19:35:23.679418500 +0000
+@@ -0,0 +1,511 @@
++diff -ruN /tmp/phase130/repo/.overlay/phase130-manifest.json /tmp/phase131/repo/.overlay/phase130-manifest.json
++--- /tmp/phase130/repo/.overlay/phase130-manifest.json	2026-06-29 18:12:43.000000000 +0000
+++++ /tmp/phase131/repo/.overlay/phase130-manifest.json	1970-01-01 00:00:00.000000000 +0000
++@@ -1,51 +0,0 @@
++-{
++-  "schemaVersion": 1,
++-  "phase": 130,
++-  "name": "Phone Command Queue + Status Lifecycle v1",
++-  "version": "phase130-phone-command-queue-status-lifecycle-v1",
++-  "type": "overlay",
++-  "zipRoot": "repo/",
++-  "expectedZipName": "s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.zip",
++-  "summary": "Upgrade phone control from one mutable file to a queue of autopilot-command*.json files with commandId and commandStatus lifecycle updates.",
++-  "files": [
++-    "scripts/sera-phone-control-scheduled-watcher.mjs",
++-    "scripts/sera-phone-control-scheduled-watcher.ps1",
++-    "scripts/sera-phone-control-job.mjs",
++-    "scripts/sera-phone-control-job.ps1",
++-    "scripts/phase130-verify.mjs",
++-    "00_control_center_templates/autopilot-command.queue.example.json",
++-    "docs/autopilot/PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md",
++-    "docs/phases/PHASE_130_PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md",
++-    ".overlay/phase130-manifest.json",
++-    ".sera-proof/phase130/phase130-verify.json",
++-    "s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.patch"
++-  ],
++-  "safety": {
++-    "savedChatTargetOnly": true,
++-    "newChatFallbackAllowed": false,
++-    "randomRecentChatFallbackAllowed": false,
++-    "phoneRangeMaxPhases": 5,
++-    "ownerDecisionStop": true,
++-    "usesExistingSafetyGates": true,
++-    "singleWatcherLock": true,
++-    "singleRunLock": true,
++-    "runsOnlyNewCommands": true,
++-    "updatesCommandFileAfterUse": true
++-  },
++-  "phoneControl": {
++-    "queueDirectory": "00_control_center/command_inbox",
++-    "supportedFilePattern": "autopilot-command*.json",
++-    "requiredRunFields": {
++-      "enabled": true,
++-      "commandStatus": "new"
++-    },
++-    "lifecycle": ["new", "accepted", "running", "complete", "blocked", "ignored"],
++-    "defaultCurrentCommandFile": "00_control_center/autopilot-command.json",
++-    "statusFile": "00_control_center/AUTOPILOT_STATUS.md"
++-  },
++-  "longTermPlan": {
++-    "phase131": "Phone status dashboard and receipts",
++-    "phase132": "Roadmap job queue",
++-    "phase133": "Certified phone autopilot flow"
++-  }
++-}
++diff -ruN /tmp/phase130/repo/.overlay/phase131-manifest.json /tmp/phase131/repo/.overlay/phase131-manifest.json
++--- /tmp/phase130/repo/.overlay/phase131-manifest.json	1970-01-01 00:00:00.000000000 +0000
+++++ /tmp/phase131/repo/.overlay/phase131-manifest.json	2026-06-29 19:34:48.623342241 +0000
++@@ -0,0 +1,54 @@
+++{
+++  "schemaVersion": 1,
+++  "phase": 131,
+++  "name": "Phone Autopilot End-to-End Orchestrator v1",
+++  "version": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
+++  "type": "overlay",
+++  "zipRoot": "repo/",
+++  "expectedZipName": "s.e.r.a_phase131_phone_autopilot_end_to_end_orchestrator_v1_overlay.zip",
+++  "summary": "Upgrade phone JSON control from detection/accepted status into a complete end-to-end orchestrator that moves commands to running and completes or blocks based on actual handoff output.",
+++  "files": [
+++    "scripts/sera-phone-control-scheduled-watcher.mjs",
+++    "scripts/sera-phone-control-scheduled-watcher.ps1",
+++    "scripts/sera-phone-control-job.mjs",
+++    "scripts/sera-phone-control-job.ps1",
+++    "scripts/phase131-verify.mjs",
+++    "00_control_center_templates/autopilot-command.phase131-e2e.example.json",
+++    "docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md",
+++    "docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md",
+++    ".overlay/phase131-manifest.json",
+++    ".sera-proof/phase131/phase131-verify.json",
+++    "s.e.r.a_phase131_phone_autopilot_end_to_end_orchestrator_v1_overlay.patch"
+++  ],
+++  "safety": {
+++    "savedChatTargetOnly": true,
+++    "newChatFallbackAllowed": false,
+++    "randomRecentChatFallbackAllowed": false,
+++    "phoneRangeMaxPhases": 5,
+++    "ownerDecisionStop": true,
+++    "usesExistingSafetyGates": true,
+++    "singleWatcherLock": true,
+++    "singleRunLock": true,
+++    "runsOnlyNewCommands": true,
+++    "updatesCommandFileAfterUse": true,
+++    "missingHandoffBlocks": true
+++  },
+++  "phoneControl": {
+++    "checkEveryMinutes": 2,
+++    "queueDirectory": "00_control_center/command_inbox",
+++    "supportedFilePattern": "autopilot-command*.json",
+++    "requiredRunFields": {
+++      "enabled": true,
+++      "commandStatus": "new"
+++    },
+++    "lifecycle": ["new", "accepted", "running", "complete", "blocked", "ignored"],
+++    "defaultCurrentCommandFile": "00_control_center/autopilot-command.json",
+++    "statusFile": "00_control_center/AUTOPILOT_STATUS.md",
+++    "handoffDirectory": "06_handoff"
+++  },
+++  "proof": {
+++    "simulatedClosedCleanlyLifecycle": true,
+++    "staleAcceptedBlocks": true,
+++    "latestHandoffSurfaced": true
+++  }
+++}
++diff -ruN /tmp/phase130/repo/.sera-proof/phase130/phase130-verify-runtime.json /tmp/phase131/repo/.sera-proof/phase130/phase130-verify-runtime.json
++--- /tmp/phase130/repo/.sera-proof/phase130/phase130-verify-runtime.json	2026-06-29 18:12:46.000000000 +0000
+++++ /tmp/phase131/repo/.sera-proof/phase130/phase130-verify-runtime.json	1970-01-01 00:00:00.000000000 +0000
++@@ -1,17 +0,0 @@
++-{
++-  "phaseId": "phase130-phone-command-queue-status-lifecycle-v1",
++-  "valid": true,
++-  "missing": [],
++-  "checks": {
++-    "queueFolderMentioned": true,
++-    "wildcardSupported": true,
++-    "commandStatusLifecycle": true,
++-    "acceptsNewOnly": true,
++-    "updatesComplete": true,
++-    "singleRunLock": true,
++-    "statusMarkdown": true,
++-    "savedTargetPreservedByDelegation": true
++-  },
++-  "failures": [],
++-  "createdAt": "2026-06-29T18:12:46.491Z"
++-}
++diff -ruN /tmp/phase130/repo/.sera-proof/phase130/phase130-verify.json /tmp/phase131/repo/.sera-proof/phase130/phase130-verify.json
++--- /tmp/phase130/repo/.sera-proof/phase130/phase130-verify.json	2026-06-29 18:12:36.000000000 +0000
+++++ /tmp/phase131/repo/.sera-proof/phase130/phase130-verify.json	1970-01-01 00:00:00.000000000 +0000
++@@ -1,15 +0,0 @@
++-{
++-  "phaseId": "phase130-phone-command-queue-status-lifecycle-v1",
++-  "mode": "static-overlay-proof",
++-  "valid": true,
++-  "assertions": [
++-    "Adds phone-friendly command_inbox support.",
++-    "Supports autopilot-command*.json files.",
++-    "Adds commandId and commandStatus lifecycle.",
++-    "Runs only commands where enabled=true and commandStatus=new.",
++-    "Updates the consumed JSON command file automatically after use.",
++-    "Adds single-runner lock to reduce duplicate runner/log-file conflicts.",
++-    "Writes phone-readable status to AUTOPILOT_STATUS.md."
++-  ],
++-  "createdAt": "2026-06-29T18:30:00.000Z"
++-}
++diff -ruN /tmp/phase130/repo/.sera-proof/phase131/phase131-verify-runtime.json /tmp/phase131/repo/.sera-proof/phase131/phase131-verify-runtime.json
++--- /tmp/phase130/repo/.sera-proof/phase131/phase131-verify-runtime.json	1970-01-01 00:00:00.000000000 +0000
+++++ /tmp/phase131/repo/.sera-proof/phase131/phase131-verify-runtime.json	2026-06-29 19:35:15.901480280 +0000
++@@ -0,0 +1,78 @@
+++{
+++  "phaseId": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
+++  "valid": true,
+++  "missing": [],
+++  "checks": {
+++    "requiredFilesPresent": true,
+++    "defaultTwoMinuteSchedule": true,
+++    "scansDefaultCommand": true,
+++    "scansCommandInboxWildcard": true,
+++    "acceptsNewOnly": true,
+++    "immediatelyMovesToRunning": true,
+++    "jobMovesToRunning": true,
+++    "missingHandoffBlocks": true,
+++    "latestHandoffSurfaced": true,
+++    "staleAcceptedBlocks": true,
+++    "e2eClosedCommandComplete": true,
+++    "e2eClosedHandoffWritten": true,
+++    "statusMentionsLatestHandoff": true
+++  },
+++  "failures": [],
+++  "proof": {
+++    "tempAutoOps": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps",
+++    "closedCommand": {
+++      "schemaVersion": 2,
+++      "commandId": "phase131-verify-closed-001",
+++      "commandStatus": "complete",
+++      "enabled": false,
+++      "action": "run_range",
+++      "phaseStart": 931,
+++      "phaseEnd": 931,
+++      "maxPhases": 1,
+++      "guide": "Verifier: prove phone command goes from new to running to complete based on CLOSED_CLEANLY handoff.",
+++      "stopAfterRange": true,
+++      "pauseAfterCurrentPhase": false,
+++      "emergencyStop": false,
+++      "updatedBy": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
+++      "updatedReason": "e2e lifecycle proof",
+++      "status": "completed",
+++      "acceptedAt": "2026-06-29T19:35:15.711Z",
+++      "lastSignature": "BA2ACAA6C7FBF4B2D554EFB6CCC52ABA14538DD3C21B57ACC063C3BFCF53413C",
+++      "updatedAt": "2026-06-29T19:35:15.804Z",
+++      "lastRunStartedAt": "2026-06-29T19:35:15.786Z",
+++      "lastRunFinishedAt": "2026-06-29T19:35:15.788Z",
+++      "completedAt": "2026-06-29T19:35:15.803Z",
+++      "latestHandoffPath": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps/06_handoff/s.e.r.a_phase931_phase131_e2e_test-19700101_000000-CLOSED_CLEANLY.md",
+++      "latestHandoffStatus": "CLOSED_CLEANLY",
+++      "lastEvidencePath": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps/00_control_center/evidence/phone-control-watcher-20260629_193515Z.json",
+++      "lastExitCode": 0
+++    },
+++    "staleCommand": {
+++      "schemaVersion": 2,
+++      "commandId": "phase131-verify-stale-accepted-001",
+++      "commandStatus": "blocked",
+++      "status": "blocked",
+++      "enabled": false,
+++      "action": "run_range",
+++      "phaseStart": 932,
+++      "phaseEnd": 932,
+++      "maxPhases": 1,
+++      "guide": "Verifier: prove stale accepted command blocks when no handoff exists.",
+++      "acceptedAt": "2000-01-01T00:00:00.000Z",
+++      "stopAfterRange": true,
+++      "pauseAfterCurrentPhase": false,
+++      "emergencyStop": false,
+++      "updatedBy": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
+++      "updatedReason": "stale accepted proof",
+++      "blockedAt": "2026-06-29T19:35:15.882Z",
+++      "blockedReason": "Command stayed accepted longer than 0 minutes without moving to running or producing a handoff.",
+++      "updatedAt": "2026-06-29T19:35:15.882Z"
+++    },
+++    "closedHandoffs": [
+++      "s.e.r.a_phase931_phase131_e2e_test-19700101_000000-CLOSED_CLEANLY.md"
+++    ],
+++    "firstExitCode": 0,
+++    "secondExitCode": 2
+++  },
+++  "createdAt": "2026-06-29T19:35:15.900Z"
+++}
++diff -ruN /tmp/phase130/repo/.sera-proof/phase131/phase131-verify.json /tmp/phase131/repo/.sera-proof/phase131/phase131-verify.json
++--- /tmp/phase130/repo/.sera-proof/phase131/phase131-verify.json	1970-01-01 00:00:00.000000000 +0000
+++++ /tmp/phase131/repo/.sera-proof/phase131/phase131-verify.json	2026-06-29 19:35:19.793058356 +0000
++@@ -0,0 +1,78 @@
+++{
+++  "phaseId": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
+++  "valid": true,
+++  "missing": [],
+++  "checks": {
+++    "requiredFilesPresent": true,
+++    "defaultTwoMinuteSchedule": true,
+++    "scansDefaultCommand": true,
+++    "scansCommandInboxWildcard": true,
+++    "acceptsNewOnly": true,
+++    "immediatelyMovesToRunning": true,
+++    "jobMovesToRunning": true,
+++    "missingHandoffBlocks": true,
+++    "latestHandoffSurfaced": true,
+++    "staleAcceptedBlocks": true,
+++    "e2eClosedCommandComplete": true,
+++    "e2eClosedHandoffWritten": true,
+++    "statusMentionsLatestHandoff": true
+++  },
+++  "failures": [],
+++  "proof": {
+++    "tempAutoOps": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps",
+++    "closedCommand": {
+++      "schemaVersion": 2,
+++      "commandId": "phase131-verify-closed-001",
+++      "commandStatus": "complete",
+++      "enabled": false,
+++      "action": "run_range",
+++      "phaseStart": 931,
+++      "phaseEnd": 931,
+++      "maxPhases": 1,
+++      "guide": "Verifier: prove phone command goes from new to running to complete based on CLOSED_CLEANLY handoff.",
+++      "stopAfterRange": true,
+++      "pauseAfterCurrentPhase": false,
+++      "emergencyStop": false,
+++      "updatedBy": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
+++      "updatedReason": "e2e lifecycle proof",
+++      "status": "completed",
+++      "acceptedAt": "2026-06-29T19:35:15.711Z",
+++      "lastSignature": "BA2ACAA6C7FBF4B2D554EFB6CCC52ABA14538DD3C21B57ACC063C3BFCF53413C",
+++      "updatedAt": "2026-06-29T19:35:15.804Z",
+++      "lastRunStartedAt": "2026-06-29T19:35:15.786Z",
+++      "lastRunFinishedAt": "2026-06-29T19:35:15.788Z",
+++      "completedAt": "2026-06-29T19:35:15.803Z",
+++      "latestHandoffPath": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps/06_handoff/s.e.r.a_phase931_phase131_e2e_test-19700101_000000-CLOSED_CLEANLY.md",
+++      "latestHandoffStatus": "CLOSED_CLEANLY",
+++      "lastEvidencePath": "/tmp/sera-phase131-e2e-7sVhDk/SERA-AutoOps/00_control_center/evidence/phone-control-watcher-20260629_193515Z.json",
+++      "lastExitCode": 0
+++    },
+++    "staleCommand": {
+++      "schemaVersion": 2,
+++      "commandId": "phase131-verify-stale-accepted-001",
+++      "commandStatus": "blocked",
+++      "status": "blocked",
+++      "enabled": false,
+++      "action": "run_range",
+++      "phaseStart": 932,
+++      "phaseEnd": 932,
+++      "maxPhases": 1,
+++      "guide": "Verifier: prove stale accepted command blocks when no handoff exists.",
+++      "acceptedAt": "2000-01-01T00:00:00.000Z",
+++      "stopAfterRange": true,
+++      "pauseAfterCurrentPhase": false,
+++      "emergencyStop": false,
+++      "updatedBy": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
+++      "updatedReason": "stale accepted proof",
+++      "blockedAt": "2026-06-29T19:35:15.882Z",
+++      "blockedReason": "Command stayed accepted longer than 0 minutes without moving to running or producing a handoff.",
+++      "updatedAt": "2026-06-29T19:35:15.882Z"
+++    },
+++    "closedHandoffs": [
+++      "s.e.r.a_phase931_phase131_e2e_test-19700101_000000-CLOSED_CLEANLY.md"
+++    ],
+++    "firstExitCode": 0,
+++    "secondExitCode": 2
+++  },
+++  "createdAt": "2026-06-29T19:35:15.900Z"
+++}
++diff -ruN /tmp/phase130/repo/00_control_center_templates/autopilot-command.phase131-e2e.example.json /tmp/phase131/repo/00_control_center_templates/autopilot-command.phase131-e2e.example.json
++--- /tmp/phase130/repo/00_control_center_templates/autopilot-command.phase131-e2e.example.json	1970-01-01 00:00:00.000000000 +0000
+++++ /tmp/phase131/repo/00_control_center_templates/autopilot-command.phase131-e2e.example.json	2026-06-29 19:34:48.600934076 +0000
++@@ -0,0 +1,16 @@
+++{
+++  "schemaVersion": 2,
+++  "commandId": "phase132-phone-e2e-test-001",
+++  "commandStatus": "new",
+++  "enabled": true,
+++  "action": "run_range",
+++  "phaseStart": 132,
+++  "phaseEnd": 132,
+++  "maxPhases": 1,
+++  "guide": "Build the next guarded phase from a phone-saved command. Continue only through CLOSED_CLEANLY or BLOCKED handoff. Stop on unclear work, owner judgment, browser failure, download failure, validation failure, or missing handoff.",
+++  "stopAfterRange": true,
+++  "pauseAfterCurrentPhase": false,
+++  "emergencyStop": false,
+++  "updatedBy": "owner",
+++  "updatedReason": "phone end-to-end orchestrator test"
+++}
++diff -ruN /tmp/phase130/repo/00_control_center_templates/autopilot-command.queue.example.json /tmp/phase131/repo/00_control_center_templates/autopilot-command.queue.example.json
++--- /tmp/phase130/repo/00_control_center_templates/autopilot-command.queue.example.json	2026-06-29 18:12:24.000000000 +0000
+++++ /tmp/phase131/repo/00_control_center_templates/autopilot-command.queue.example.json	1970-01-01 00:00:00.000000000 +0000
++@@ -1,16 +0,0 @@
++-{
++-  "schemaVersion": 2,
++-  "commandId": "phase131-example-001",
++-  "commandStatus": "new",
++-  "enabled": true,
++-  "action": "run_range",
++-  "phaseStart": 131,
++-  "phaseEnd": 131,
++-  "maxPhases": 1,
++-  "guide": "Build the next guarded phase. Stop on unclear work, owner judgment, browser failure, or validation failure.",
++-  "stopAfterRange": true,
++-  "pauseAfterCurrentPhase": false,
++-  "emergencyStop": false,
++-  "updatedBy": "owner",
++-  "updatedReason": "phone command queue example"
++-}
++diff -ruN /tmp/phase130/repo/docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md /tmp/phase131/repo/docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md
++--- /tmp/phase130/repo/docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md	1970-01-01 00:00:00.000000000 +0000
+++++ /tmp/phase131/repo/docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md	2026-06-29 19:34:48.610038927 +0000
++@@ -0,0 +1,31 @@
+++# Phone Autopilot End-to-End Orchestrator v1
+++
+++Phase 131 upgrades phone control from command detection into an end-to-end guarded workflow.
+++
+++## What changed
+++
+++- The phone watcher checks command files every two minutes when installed with the default schedule.
+++- The watcher scans both `00_control_center/autopilot-command.json` and `00_control_center/command_inbox/autopilot-command*.json`.
+++- Only commands with `enabled: true` and `commandStatus: "new"` are eligible to run.
+++- The same JSON file is updated automatically as it is used.
+++- Commands now move through the lifecycle: `new → accepted → running → complete` or `blocked`.
+++- Stale accepted/running commands are detected and marked blocked with `blockedReason` instead of silently sitting forever.
+++- `00_control_center/AUTOPILOT_STATUS.md` surfaces command ID, command file, runner result, latest handoff, and evidence path.
+++
+++## End-to-end completion rule
+++
+++A phone command is complete only when the delegated runner produces a `CLOSED_CLEANLY` handoff for the requested phase range and exits successfully.
+++
+++A command is blocked when the runner fails, the latest handoff is `BLOCKED`, a final handoff is missing, or the command stays accepted/running beyond the safe timeout.
+++
+++## Two-minute schedule
+++
+++After this overlay is applied, refresh the local scheduled task with:
+++
+++```powershell
+++powershell -ExecutionPolicy Bypass -File .\scripts\sera-phone-control-scheduled-watcher.ps1 -Install -EveryMinutes 2 -RunOnce
+++```
+++
+++## Real-life test requirement
+++
+++The feature is considered proven only when the owner saves a command JSON from the phone, S.E.R.A. moves it beyond `accepted` into `running`, and then records either `complete` or `blocked` based on actual handoff output.
++diff -ruN /tmp/phase130/repo/docs/autopilot/PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md /tmp/phase131/repo/docs/autopilot/PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md
++--- /tmp/phase130/repo/docs/autopilot/PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md	2026-06-29 18:12:24.000000000 +0000
+++++ /tmp/phase131/repo/docs/autopilot/PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md	1970-01-01 00:00:00.000000000 +0000
++@@ -1,57 +0,0 @@
++-# Phone Command Queue + Status Lifecycle v1
++-
++-Phase 130 upgrades phone control from a single mutable command file to a small command queue that is easier to operate from a phone.
++-
++-## Owner-facing model
++-
++-Preferred folder:
++-
++-```text
++-00_control_center/command_inbox/
++-```
++-
++-Supported files:
++-
++-```text
++-autopilot-command*.json
++-```
++-
++-A phone command is runnable only when:
++-
++-```json
++-{
++-  "enabled": true,
++-  "commandStatus": "new"
++-}
++-```
++-
++-S.E.R.A. updates the same JSON file as it is consumed:
++-
++-```text
++-new -> accepted -> running -> complete
++-```
++-
++-If work cannot safely continue, the file is updated to:
++-
++-```text
++-blocked
++-```
++-
++-Non-runnable or old files may remain in the folder with `complete`, `blocked`, `ignored`, or `idle`.
++-
++-## Why this exists
++-
++-The previous scheduled watcher could notice a command, mark it as handled, and then get stuck if no phase handoff was produced. The command file did not show a clear lifecycle from the phone. Phase 130 fixes this by making the command itself the durable receipt.
++-
++-## Compatibility
++-
++-`00_control_center/autopilot-command.json` remains the default current-command file. Queue commands are mirrored there while running so the existing control center has a single current-command view.
++-
++-## Safety behavior
++-
++-- Only files with `commandStatus: "new"` are started.
++-- Duplicate runner attempts are blocked by `phone-control-run.lock.json`.
++-- Watcher overlap is blocked by `phone-control-watcher.lock.json`.
++-- Every consumed command is updated automatically to `complete` or `blocked`.
++-- `AUTOPILOT_STATUS.md` is written for phone-readable progress.
++-- Saved ChatGPT target rules and existing S.E.R.A. gates are preserved.
++diff -ruN /tmp/phase130/repo/docs/phases/PHASE_130_PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md /tmp/phase131/repo/docs/phases/PHASE_130_PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md
++--- /tmp/phase130/repo/docs/phases/PHASE_130_PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md	2026-06-29 18:12:24.000000000 +0000
+++++ /tmp/phase131/repo/docs/phases/PHASE_130_PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md	1970-01-01 00:00:00.000000000 +0000
++@@ -1,19 +0,0 @@
++-# Phase 130 — Phone Command Queue + Status Lifecycle v1
++-
++-## Purpose
++-
++-Create a phone-friendly command queue so owner commands can be submitted as JSON files, consumed exactly once, and updated automatically with a visible lifecycle.
++-
++-## Adds
++-
++-- `00_control_center/command_inbox` workflow support.
++-- Support for `autopilot-command*.json` files.
++-- `commandId` and `commandStatus` lifecycle fields.
++-- Command lifecycle: `new`, `accepted`, `running`, `complete`, `blocked`, `ignored`.
++-- Automatic status update on the same JSON file after S.E.R.A. uses it.
++-- Single-runner lock to reduce overlapping runner/log-file conflict risk.
++-- Phone-readable status output in `AUTOPILOT_STATUS.md`.
++-
++-## Acceptance
++-
++-A command file with `enabled: true` and `commandStatus: "new"` is selected by the watcher, passed to the phone-control job, updated through its lifecycle, and finally marked `complete` or `blocked`.
++diff -ruN /tmp/phase130/repo/docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md /tmp/phase131/repo/docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md
++--- /tmp/phase130/repo/docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md	1970-01-01 00:00:00.000000000 +0000
+++++ /tmp/phase131/repo/docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md	2026-06-29 19:34:48.617160136 +0000
++@@ -0,0 +1,21 @@
+++# Phase 131 — Phone Autopilot End-to-End Orchestrator v1
+++
+++## Purpose
+++
+++Turn phone-saved JSON commands into a complete guarded autopilot workflow, not just a detected command.
+++
+++## Success criteria
+++
+++- `autopilot-command.json` remains supported.
+++- `command_inbox/autopilot-command*.json` remains supported.
+++- Watcher default schedule is two minutes.
+++- New commands are accepted and immediately moved to running when the runner starts.
+++- Final command state is based on handoff evidence.
+++- Missing handoff blocks the command.
+++- Latest handoff path appears in `AUTOPILOT_STATUS.md`.
+++- Stale accepted/running commands are reconciled or blocked.
+++- A simulated e2e proof verifies lifecycle progression without relying on brittle browser state during unit verification.
+++
+++## Safety
+++
+++The delegated autopilot still uses existing S.E.R.A. gates. It preserves the saved ChatGPT target and does not enable random or new-chat fallback.
++diff -ruN /tmp/phase130/repo/s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.patch /tmp/phase131/repo/s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.patch
++--- /tmp/phase130/repo/s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.patch	2026-06-29 18:12:24.000000000 +0000
+++++ /tmp/phase131/repo/s.e.r.a_phase130_phone_command_queue_status_lifecycle_v1_overlay.patch	1970-01-01 00:00:00.000000000 +0000
++@@ -1,6 +0,0 @@
++-Phase 130 overlay patch summary:
++-- Replace the phone control job and scheduled watcher with queue-aware versions.
++-- Add command_inbox support for autopilot-command*.json files.
++-- Add commandId and commandStatus lifecycle updates.
++-- Add single phone-control run lock.
++-- Add documentation, template, proof, and verification assets.
+diff -ruN /tmp/phase130/repo/scripts/phase130-verify.mjs /tmp/phase131/repo/scripts/phase130-verify.mjs
+--- /tmp/phase130/repo/scripts/phase130-verify.mjs	2026-06-29 18:12:36.000000000 +0000
++++ /tmp/phase131/repo/scripts/phase130-verify.mjs	1970-01-01 00:00:00.000000000 +0000
+@@ -1,45 +0,0 @@
+-#!/usr/bin/env node
+-import fs from "node:fs";
+-import path from "node:path";
+-
+-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+-const required = [
+-  "scripts/sera-phone-control-scheduled-watcher.mjs",
+-  "scripts/sera-phone-control-scheduled-watcher.ps1",
+-  "scripts/sera-phone-control-job.mjs",
+-  "scripts/sera-phone-control-job.ps1",
+-  "00_control_center_templates/autopilot-command.queue.example.json",
+-  "docs/autopilot/PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md",
+-  "docs/phases/PHASE_130_PHONE_COMMAND_QUEUE_STATUS_LIFECYCLE_V1.md",
+-  ".overlay/phase130-manifest.json",
+-  ".sera-proof/phase130/phase130-verify.json"
+-];
+-const missing = required.filter(file => !fs.existsSync(path.join(root, file)));
+-const watcher = fs.existsSync(path.join(root, "scripts/sera-phone-control-scheduled-watcher.mjs")) ? fs.readFileSync(path.join(root, "scripts/sera-phone-control-scheduled-watcher.mjs"), "utf8") : "";
+-const job = fs.existsSync(path.join(root, "scripts/sera-phone-control-job.mjs")) ? fs.readFileSync(path.join(root, "scripts/sera-phone-control-job.mjs"), "utf8") : "";
+-const checks = {
+-  queueFolderMentioned: watcher.includes("command_inbox"),
+-  wildcardSupported: watcher.includes("autopilot-command") && watcher.includes(".json"),
+-  commandStatusLifecycle: watcher.includes("commandStatus") && job.includes("commandStatus"),
+-  acceptsNewOnly: watcher.includes('command.commandStatus === "new"'),
+-  updatesComplete: job.includes('commandStatus: ok ? "complete" : "blocked"'),
+-  singleRunLock: job.includes("phone-control-run.lock.json"),
+-  statusMarkdown: watcher.includes("AUTOPILOT_STATUS.md") || job.includes("AUTOPILOT_STATUS.md"),
+-  savedTargetPreservedByDelegation: job.includes("sera-autopilot-continue.ps1") && job.includes("-EnableAutopilotForThisRun")
+-};
+-const failures = [];
+-if (missing.length) failures.push(`Missing files: ${missing.join(", ")}`);
+-for (const [name, ok] of Object.entries(checks)) if (!ok) failures.push(`Check failed: ${name}`);
+-const result = {
+-  phaseId: "phase130-phone-command-queue-status-lifecycle-v1",
+-  valid: failures.length === 0,
+-  missing,
+-  checks,
+-  failures,
+-  createdAt: new Date().toISOString()
+-};
+-const out = path.join(root, ".sera-proof", "phase130", "phase130-verify-runtime.json");
+-fs.mkdirSync(path.dirname(out), { recursive: true });
+-fs.writeFileSync(out, JSON.stringify(result, null, 2) + "\n");
+-console.log(JSON.stringify(result, null, 2));
+-if (!result.valid) process.exitCode = 1;
+diff -ruN /tmp/phase130/repo/scripts/phase131-verify.mjs /tmp/phase131/repo/scripts/phase131-verify.mjs
+--- /tmp/phase130/repo/scripts/phase131-verify.mjs	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/phase131/repo/scripts/phase131-verify.mjs	2026-06-29 19:35:10.004018981 +0000
+@@ -0,0 +1,118 @@
++#!/usr/bin/env node
++import fs from "node:fs";
++import path from "node:path";
++import os from "node:os";
++import { spawnSync } from "node:child_process";
++
++const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
++const required = [
++  "scripts/sera-phone-control-scheduled-watcher.mjs",
++  "scripts/sera-phone-control-scheduled-watcher.ps1",
++  "scripts/sera-phone-control-job.mjs",
++  "scripts/sera-phone-control-job.ps1",
++  "00_control_center_templates/autopilot-command.phase131-e2e.example.json",
++  "docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md",
++  "docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md",
++  ".overlay/phase131-manifest.json",
++  ".sera-proof/phase131/phase131-verify.json"
++];
++function ensureDir(dir) { fs.mkdirSync(dir, { recursive: true }); }
++function writeJson(file, data) { ensureDir(path.dirname(file)); fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8"); }
++function readJson(file) { return JSON.parse(fs.readFileSync(file, "utf8")); }
++function runNode(script, env) {
++  return spawnSync("node", [script, "--run-once", "--json", "--force"], { cwd: root, encoding: "utf8", env: { ...process.env, ...env }, maxBuffer: 1024 * 1024 * 20 });
++}
++const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "sera-phase131-e2e-"));
++const autoOps = path.join(tmp, "SERA-AutoOps");
++const control = path.join(autoOps, "00_control_center");
++const inbox = path.join(control, "command_inbox");
++const handoff = path.join(autoOps, "06_handoff");
++ensureDir(inbox); ensureDir(handoff);
++const commandFile = path.join(control, "autopilot-command.json");
++writeJson(commandFile, {
++  schemaVersion: 2,
++  commandId: "phase131-verify-closed-001",
++  commandStatus: "new",
++  enabled: true,
++  action: "run_range",
++  phaseStart: 931,
++  phaseEnd: 931,
++  maxPhases: 1,
++  guide: "Verifier: prove phone command goes from new to running to complete based on CLOSED_CLEANLY handoff.",
++  stopAfterRange: true,
++  pauseAfterCurrentPhase: false,
++  emergencyStop: false,
++  updatedBy: "phase131-verify",
++  updatedReason: "e2e lifecycle proof"
++});
++const watcher = path.join(root, "scripts", "sera-phone-control-scheduled-watcher.mjs");
++const first = runNode(watcher, { SERA_AUTOOPS_DIR: autoOps, SERA_PHONE_E2E_TEST_MODE: "closed" });
++const closedCommand = readJson(commandFile);
++const statusMd = fs.existsSync(path.join(control, "AUTOPILOT_STATUS.md")) ? fs.readFileSync(path.join(control, "AUTOPILOT_STATUS.md"), "utf8") : "";
++const closedHandoffs = fs.readdirSync(handoff).filter(name => /CLOSED_CLEANLY/.test(name));
++const staleFile = path.join(inbox, "autopilot-command-stale-accepted.json");
++writeJson(staleFile, {
++  schemaVersion: 2,
++  commandId: "phase131-verify-stale-accepted-001",
++  commandStatus: "accepted",
++  status: "accepted",
++  enabled: true,
++  action: "run_range",
++  phaseStart: 932,
++  phaseEnd: 932,
++  maxPhases: 1,
++  guide: "Verifier: prove stale accepted command blocks when no handoff exists.",
++  acceptedAt: "2000-01-01T00:00:00.000Z",
++  stopAfterRange: true,
++  pauseAfterCurrentPhase: false,
++  emergencyStop: false,
++  updatedBy: "phase131-verify",
++  updatedReason: "stale accepted proof"
++});
++const second = runNode(watcher, { SERA_AUTOOPS_DIR: autoOps, SERA_PHONE_ACCEPTED_STALE_MS: "1" });
++const staleCommand = readJson(staleFile);
++const scheduledPs1 = fs.readFileSync(path.join(root, "scripts", "sera-phone-control-scheduled-watcher.ps1"), "utf8");
++const watcherText = fs.readFileSync(watcher, "utf8");
++const jobText = fs.readFileSync(path.join(root, "scripts", "sera-phone-control-job.mjs"), "utf8");
++const missing = required.filter(file => !fs.existsSync(path.join(root, file)));
++const checks = {
++  requiredFilesPresent: missing.length === 0,
++  defaultTwoMinuteSchedule: /EveryMinutes\s*=\s*2/.test(scheduledPs1),
++  scansDefaultCommand: watcherText.includes("autopilot-command.json"),
++  scansCommandInboxWildcard: watcherText.includes("command_inbox") && watcherText.includes("autopilot-command") && watcherText.includes(".json"),
++  acceptsNewOnly: watcherText.includes('command.commandStatus === "new"'),
++  immediatelyMovesToRunning: watcherText.includes('commandStatus: "running"') && watcherText.includes("lastRunStartedAt"),
++  jobMovesToRunning: jobText.includes('commandStatus: "running"') && jobText.includes("lastRunStartedAt"),
++  missingHandoffBlocks: watcherText.includes("No handoff was produced") && jobText.includes("Missing final handoff"),
++  latestHandoffSurfaced: watcherText.includes("Latest Handoff") && jobText.includes("Latest Handoff"),
++  staleAcceptedBlocks: staleCommand.commandStatus === "blocked" && String(staleCommand.blockedReason || "").includes("accepted"),
++  e2eClosedCommandComplete: closedCommand.commandStatus === "complete" && closedCommand.enabled === false && closedCommand.latestHandoffStatus === "CLOSED_CLEANLY",
++  e2eClosedHandoffWritten: closedHandoffs.length > 0,
++  statusMentionsLatestHandoff: statusMd.includes("Latest Handoff") || Boolean(closedCommand.latestHandoffPath)
++};
++const failures = [];
++if (missing.length) failures.push(`Missing files: ${missing.join(", ")}`);
++for (const [name, ok] of Object.entries(checks)) if (!ok) failures.push(`Check failed: ${name}`);
++if (first.status !== 0) failures.push(`Closed e2e run exited ${first.status}: ${first.stderr || first.stdout}`);
++if (second.status === null) failures.push(`Stale recovery run did not exit cleanly: ${second.stderr || second.stdout}`);
++const result = {
++  phaseId: "phase131-phone-autopilot-end-to-end-orchestrator-v1",
++  valid: failures.length === 0,
++  missing,
++  checks,
++  failures,
++  proof: {
++    tempAutoOps: autoOps,
++    closedCommand,
++    staleCommand,
++    closedHandoffs,
++    firstExitCode: first.status,
++    secondExitCode: second.status
++  },
++  createdAt: new Date().toISOString()
++};
++const out = path.join(root, ".sera-proof", "phase131", "phase131-verify-runtime.json");
++ensureDir(path.dirname(out));
++fs.writeFileSync(out, JSON.stringify(result, null, 2) + "\n");
++console.log(JSON.stringify(result, null, 2));
++if (!result.valid) process.exitCode = 1;
+diff -ruN /tmp/phase130/repo/scripts/sera-phone-control-job.mjs /tmp/phase131/repo/scripts/sera-phone-control-job.mjs
+--- /tmp/phase130/repo/scripts/sera-phone-control-job.mjs	2026-06-29 18:11:23.000000000 +0000
++++ /tmp/phase131/repo/scripts/sera-phone-control-job.mjs	2026-06-29 19:34:21.849673049 +0000
+@@ -5,7 +5,7 @@
+ import crypto from "node:crypto";
+ import { spawnSync } from "node:child_process";
+ 
+-const VERSION = "phase130-phone-command-queue-status-lifecycle-v1";
++const VERSION = "phase131-phone-autopilot-end-to-end-orchestrator-v1";
+ const MAX_PHONE_PHASES = 5;
+ 
+ function autoOpsDir() { return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps"); }
+@@ -44,7 +44,7 @@
+   return args;
+ }
+ function defaultGuide() {
+-  return "Continue guarded autopilot hardening. Use exact Download Phase X overlay ZIP link text. Preserve saved ChatGPT target only. Stop on blocked, unclear, risky, or owner-decision work.";
++  return "Continue guarded autopilot hardening. Use exact Download Phase X overlay ZIP link text. Preserve saved ChatGPT target only. Stop on blocked, unclear, risky, owner-decision, browser, download, validation, or missing-handoff work.";
+ }
+ function defaultCommand() {
+   return {
+@@ -54,15 +54,15 @@
+     enabled: false,
+     action: "idle",
+     status: "ready",
+-    phaseStart: 130,
+-    phaseEnd: 130,
++    phaseStart: 131,
++    phaseEnd: 131,
+     maxPhases: 1,
+     guide: defaultGuide(),
+     stopAfterRange: true,
+     pauseAfterCurrentPhase: false,
+     emergencyStop: false,
+     updatedBy: "owner",
+-    updatedReason: "phone command queue ready"
++    updatedReason: "phone end-to-end orchestrator ready"
+   };
+ }
+ function paths(commandFileArg = null) {
+@@ -75,6 +75,7 @@
+     autoOps,
+     control,
+     inbox,
++    handoff: path.join(autoOps, "06_handoff"),
+     evidence: path.join(control, "evidence"),
+     command,
+     defaultCommand: defaultCommandFile,
+@@ -88,7 +89,7 @@
+   };
+ }
+ function ensureCommandFile(p) {
+-  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence);
++  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); ensureDir(p.handoff);
+   if (!fs.existsSync(p.defaultCommand)) writeJson(p.defaultCommand, defaultCommand());
+   if (!fs.existsSync(p.command)) writeJson(p.command, defaultCommand());
+   return readJson(p.command, defaultCommand()) || defaultCommand();
+@@ -100,6 +101,7 @@
+   base.enabled = normalizeBool(base.enabled);
+   base.emergencyStop = normalizeBool(base.emergencyStop);
+   base.pauseAfterCurrentPhase = normalizeBool(base.pauseAfterCurrentPhase);
++  base.stopAfterRange = base.stopAfterRange !== false;
+   base.phaseStart = Number(base.phaseStart || 0);
+   base.phaseEnd = Number(base.phaseEnd || base.phaseStart || 0);
+   base.maxPhases = Number(base.maxPhases || Math.max(1, base.phaseEnd - base.phaseStart + 1));
+@@ -122,13 +124,11 @@
+   if (command.maxPhases > MAX_PHONE_PHASES) errors.push(`maxPhases may not exceed ${MAX_PHONE_PHASES} from phone control.`);
+   if (count > MAX_PHONE_PHASES) errors.push(`phone control range may not exceed ${MAX_PHONE_PHASES} phases.`);
+   if (!command.guide || command.guide.length < 20) errors.push("guide must describe the bounded work and stop conditions.");
+-  if (!["new", "accepted", "running"].includes(command.commandStatus) && command.action === "run_range") {
+-    errors.push("commandStatus must be new, accepted, or running for a runnable command.");
+-  }
++  if (!["new", "accepted", "running"].includes(command.commandStatus) && command.action === "run_range") errors.push("commandStatus must be new, accepted, or running for a runnable command.");
+   return errors;
+ }
+ function signature(command) {
+-  const signed = {
++  return sha(JSON.stringify({
+     commandId: command.commandId,
+     action: command.action,
+     phaseStart: command.phaseStart,
+@@ -136,13 +136,14 @@
+     maxPhases: command.maxPhases,
+     guide: command.guide,
+     stopAfterRange: command.stopAfterRange !== false
+-  };
+-  return sha(JSON.stringify(signed));
++  }));
+ }
+ function clearFile(file) { try { if (fs.existsSync(file)) fs.rmSync(file, { force: true }); } catch {} }
+ function mergeCommandFile(file, patch) {
+   const current = readJson(file, {}) || {};
+-  writeJson(file, { ...current, ...patch, updatedAt: new Date().toISOString(), updatedBy: VERSION });
++  const cleaned = { ...current, ...patch, updatedAt: new Date().toISOString(), updatedBy: VERSION };
++  for (const [key, value] of Object.entries(cleaned)) if (value === undefined) delete cleaned[key];
++  writeJson(file, cleaned);
+ }
+ function updateCommandFile(p, patch) {
+   mergeCommandFile(p.command, patch);
+@@ -164,9 +165,7 @@
+   const existing = readJson(p.runLock, null);
+   if (existing && !args.force) {
+     const created = Date.parse(existing.createdAt || "");
+-    if (Number.isFinite(created) && now - created < staleMs) {
+-      return { ok: false, existing };
+-    }
++    if (Number.isFinite(created) && now - created < staleMs) return { ok: false, existing };
+   }
+   writeJson(p.runLock, { version: VERSION, pid: process.pid, createdAt: new Date().toISOString(), host: os.hostname(), commandFile: p.command });
+   return { ok: true };
+@@ -177,6 +176,29 @@
+     if (current && Number(current.pid) === process.pid) fs.rmSync(p.runLock, { force: true });
+   } catch {}
+ }
++function phasePattern(phase) { return new RegExp(`phase[-_ ]?${phase}(?:\\D|$)`, "i"); }
++function handoffStatusFromName(name) {
++  if (/CLOSED_CLEANLY/i.test(name)) return "CLOSED_CLEANLY";
++  if (/BLOCKED/i.test(name)) return "BLOCKED";
++  if (/PASS/i.test(name)) return "PASS";
++  return "UNKNOWN";
++}
++function latestHandoffForCommand(p, command) {
++  if (!fs.existsSync(p.handoff)) return null;
++  const phases = [];
++  for (let n = command.phaseStart; n <= command.phaseEnd; n++) phases.push(n);
++  const matches = [];
++  for (const entry of fs.readdirSync(p.handoff, { withFileTypes: true })) {
++    if (!entry.isFile()) continue;
++    if (!entry.name.toLowerCase().endsWith(".md")) continue;
++    if (!phases.some(phase => phasePattern(phase).test(entry.name))) continue;
++    const full = path.join(p.handoff, entry.name);
++    const stat = fs.statSync(full);
++    matches.push({ path: full, name: entry.name, status: handoffStatusFromName(entry.name), mtimeMs: stat.mtimeMs, mtime: new Date(stat.mtimeMs).toISOString() });
++  }
++  matches.sort((a, b) => b.mtimeMs - a.mtimeMs);
++  return matches[0] || null;
++}
+ function writePhoneStatus(p, payload) {
+   writeJson(p.lastResult, { ...payload, version: VERSION, updatedAt: new Date().toISOString() });
+   const command = payload.command || {};
+@@ -189,9 +211,14 @@
+   if (payload.commandFile) lines.push(`Command File: ${payload.commandFile}`);
+   if (command.commandId) lines.push(`Command ID: ${command.commandId}`);
+   if (command.commandStatus) lines.push(`Command Status: ${command.commandStatus}`);
++  if (command.status) lines.push(`Machine Status: ${command.status}`);
+   if (command.action) lines.push(`Action: ${command.action}`);
+   if (command.phaseStart && command.phaseEnd) lines.push(`Range: ${command.phaseStart}-${command.phaseEnd}`);
+   if (payload.runnerExitCode !== undefined) lines.push(`Runner Exit Code: ${payload.runnerExitCode}`);
++  if (payload.latestHandoff?.path) {
++    lines.push(`Latest Handoff: ${payload.latestHandoff.path}`);
++    lines.push(`Latest Handoff Status: ${payload.latestHandoff.status}`);
++  }
+   if (payload.evidencePath) lines.push(`Evidence: ${payload.evidencePath}`);
+   lines.push("");
+   lines.push("## Phone command queue");
+@@ -233,6 +260,7 @@
+     source: path.basename(p.command),
+     sourceCommandFile: p.command,
+     commandId: command.commandId,
++    requireFinalHandoff: true,
+     updatedBy: VERSION,
+     updatedAt: new Date().toISOString()
+   };
+@@ -244,7 +272,25 @@
+   clearFile(path.join(p.control, "EMERGENCY_STOP_AUTOPILOT.flag"));
+   return { state: nextState, directive };
+ }
+-function runAutopilot(command) {
++function simulateAutopilotForE2ETest(p, command) {
++  const mode = String(process.env.SERA_PHONE_E2E_TEST_MODE || "").toLowerCase();
++  if (!mode) return null;
++  ensureDir(p.handoff);
++  if (mode === "closed") {
++    const file = path.join(p.handoff, `s.e.r.a_phase${command.phaseStart}_phase131_e2e_test-19700101_000000-CLOSED_CLEANLY.md`);
++    writeText(file, `# S.E.R.A. AutoOps Packet\n\nStatus: CLOSED_CLEANLY\nPhase: phase${command.phaseStart}-phase131-e2e-test\n\n## Summary\n\nSimulated real end-to-end lifecycle proof generated by ${VERSION}.\n`);
++    return { status: 0, stdout: `Simulated CLOSED_CLEANLY handoff: ${file}\n`, stderr: "" };
++  }
++  if (mode === "blocked") {
++    const file = path.join(p.handoff, `s.e.r.a_phase${command.phaseStart}_phase131_e2e_test-19700101_000000-BLOCKED.md`);
++    writeText(file, `# S.E.R.A. AutoOps Packet\n\nStatus: BLOCKED\nPhase: phase${command.phaseStart}-phase131-e2e-test\n\n## Summary\n\nSimulated blocked lifecycle proof generated by ${VERSION}.\n`);
++    return { status: 2, stdout: "", stderr: `Simulated BLOCKED handoff: ${file}\n` };
++  }
++  return null;
++}
++function runAutopilot(p, command) {
++  const simulated = simulateAutopilotForE2ETest(p, command);
++  if (simulated) return simulated;
+   const repo = repoRoot();
+   const script = path.join(repo, "scripts", "sera-autopilot-continue.ps1");
+   if (!fs.existsSync(script)) throw new Error(`Missing autopilot continuation script: ${script}`);
+@@ -257,7 +303,7 @@
+     "-Guide", command.guide,
+     "-EnableAutopilotForThisRun"
+   ];
+-  return spawnSync(psExe(), args, { cwd: repo, encoding: "utf8", maxBuffer: 1024 * 1024 * 20 });
++  return spawnSync(psExe(), args, { cwd: repo, encoding: "utf8", maxBuffer: 1024 * 1024 * 20, timeout: Number(process.env.SERA_PHONE_RUN_TIMEOUT_MS || 1000 * 60 * 95) });
+ }
+ function handleStopLike(p, command, kind) {
+   const fileName = kind === "pause" ? "PAUSE_AUTOPILOT.flag" : kind === "emergency" ? "EMERGENCY_STOP_AUTOPILOT.flag" : "STOP_AUTOPILOT.flag";
+@@ -271,33 +317,26 @@
+ function main() {
+   const args = parseArgs(process.argv.slice(2));
+   const p = paths(args.commandFile);
+-  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence);
++  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); ensureDir(p.handoff);
+   const raw = ensureCommandFile(p);
+   let command = normalizeCommand(raw, p.command);
+   const sig = signature(command);
+-
+-  if (args.init) {
+-    writeJson(p.defaultCommand, { ...defaultCommand(), updatedAt: new Date().toISOString(), updatedBy: VERSION });
+-  }
+-
++  if (args.init) writeJson(p.defaultCommand, { ...defaultCommand(), updatedAt: new Date().toISOString(), updatedBy: VERSION });
+   if (args.status || !args.run) {
+-    const payload = { ok: true, status: "ready", command, commandFile: p.command, message: "Phone control status read." };
++    const payload = { ok: true, status: "ready", command, commandFile: p.command, latestHandoff: latestHandoffForCommand(p, command), message: "Phone control status read." };
+     writePhoneStatus(p, payload);
+     return output(payload, args);
+   }
+-
+   const lock = acquireRunLock(p, args);
+   if (!lock.ok) {
+     const payload = { ok: true, status: "already_running", command, commandFile: p.command, lock: lock.existing, message: "A phone-controlled run is already active. No duplicate runner started." };
+     writePhoneStatus(p, payload);
+     return output(payload, args);
+   }
+-
+   try {
+     if (command.emergencyStop || command.action === "emergency_stop") return output(handleStopLike(p, command, "emergency"), args);
+     if (command.pauseAfterCurrentPhase || command.action === "pause") return output(handleStopLike(p, command, "pause"), args);
+     if (command.action === "stop") return output(handleStopLike(p, command, "stop"), args);
+-
+     if (!command.enabled) {
+       const payload = { ok: true, status: "disabled", command, commandFile: p.command, message: "Phone command is disabled. Set enabled=true and commandStatus=new to run." };
+       writePhoneStatus(p, payload);
+@@ -309,32 +348,29 @@
+       writePhoneStatus(p, payload);
+       return output(payload, args);
+     }
+-
+     const validationErrors = validateRange(command);
+     if (validationErrors.length) {
+-      updateCommandFile(p, { commandStatus: "blocked", status: "invalid_command", blockedAt: new Date().toISOString(), blockedReason: validationErrors.join("; ") });
++      updateCommandFile(p, { enabled: false, commandStatus: "blocked", status: "invalid_command", blockedAt: new Date().toISOString(), blockedReason: validationErrors.join("; ") });
+       command = normalizeCommand(readJson(p.command, command), p.command);
+       const payload = { ok: false, status: "invalid_command", command, commandFile: p.command, errors: validationErrors, message: "Phone command did not pass validation." };
+       writePhoneStatus(p, payload);
+       return output(payload, args, 2);
+     }
+-
+     const controlPayload = writeControlForRange(p, command);
+-    updateCommandFile(p, { commandStatus: "running", status: "running", lastRunStartedAt: new Date().toISOString(), lastSignature: sig, acceptedAt: command.acceptedAt || new Date().toISOString() });
++    updateCommandFile(p, { commandStatus: "running", status: "running", lastRunStartedAt: new Date().toISOString(), lastSignature: sig, acceptedAt: command.acceptedAt || new Date().toISOString(), latestHandoffPath: undefined, latestHandoffStatus: undefined, blockedReason: undefined });
+     writeJson(p.commandState, { lastProcessedSignature: sig, commandId: command.commandId, status: "running", startedAt: new Date().toISOString(), command, commandFile: p.command });
+     command = normalizeCommand(readJson(p.command, command), p.command);
+-
+     if (args.dryRun) {
+-      updateCommandFile(p, { commandStatus: "complete", status: "dry_run_complete", completedAt: new Date().toISOString() });
++      updateCommandFile(p, { enabled: false, commandStatus: "complete", status: "dry_run_complete", completedAt: new Date().toISOString() });
+       command = normalizeCommand(readJson(p.command, command), p.command);
+       const payload = { ok: true, status: "dry_run_complete", command, commandFile: p.command, controlPayload, message: "Phone command validated and lifecycle completed in dry-run mode." };
+       writePhoneStatus(p, payload);
+       return output(payload, args);
+     }
+-
+-    const run = runAutopilot(command);
++    const run = runAutopilot(p, command);
+     const evidencePath = path.join(p.evidence, `phone-control-run-${timestamp()}.json`);
+-    const exitCode = run.status ?? 0;
++    const exitCode = run.error ? 2 : (run.status ?? 0);
++    const latestHandoff = latestHandoffForCommand(p, command);
+     const runnerEvidence = {
+       version: VERSION,
+       command,
+@@ -342,25 +378,29 @@
+       signature: sig,
+       controlPayload,
+       runnerExitCode: exitCode,
++      runnerError: run.error ? String(run.error.message || run.error) : null,
++      latestHandoff,
+       stdoutTail: String(run.stdout || "").slice(-12000),
+       stderrTail: String(run.stderr || "").slice(-12000),
+       finishedAt: new Date().toISOString()
+     };
+     writeJson(evidencePath, runnerEvidence);
+-
+-    const ok = exitCode === 0;
+-    updateCommandFile(p, {
+-      enabled: false,
+-      commandStatus: ok ? "complete" : "blocked",
+-      status: ok ? "completed" : "blocked",
+-      lastRunFinishedAt: new Date().toISOString(),
+-      lastEvidencePath: evidencePath,
+-      lastExitCode: exitCode,
+-      blockedReason: ok ? undefined : "Runner returned non-zero exit code. Review evidence."
+-    });
++    let ok = false;
++    let status = "blocked";
++    let message = "Phone-controlled run blocked.";
++    if (exitCode === 0 && latestHandoff?.status === "CLOSED_CLEANLY") {
++      ok = true;
++      status = "complete";
++      message = "Phone-controlled bounded run completed with CLOSED_CLEANLY handoff and commandStatus was updated to complete.";
++      updateCommandFile(p, { enabled: false, commandStatus: "complete", status: "completed", lastRunFinishedAt: new Date().toISOString(), completedAt: new Date().toISOString(), latestHandoffPath: latestHandoff.path, latestHandoffStatus: latestHandoff.status, lastEvidencePath: evidencePath, lastExitCode: exitCode, blockedReason: undefined });
++    } else {
++      const reason = run.error ? String(run.error.message || run.error) : latestHandoff ? `Latest handoff status is ${latestHandoff.status}.` : "Missing final handoff. Autopilot did not produce CLOSED_CLEANLY or BLOCKED evidence.";
++      updateCommandFile(p, { enabled: false, commandStatus: "blocked", status: "blocked", lastRunFinishedAt: new Date().toISOString(), blockedAt: new Date().toISOString(), latestHandoffPath: latestHandoff?.path, latestHandoffStatus: latestHandoff?.status, lastEvidencePath: evidencePath, lastExitCode: exitCode, blockedReason: reason });
++      message = `Phone-controlled run blocked: ${reason}`;
++    }
+     command = normalizeCommand(readJson(p.command, command), p.command);
+-    writeJson(p.commandState, { lastProcessedSignature: sig, commandId: command.commandId, status: ok ? "complete" : "blocked", finishedAt: new Date().toISOString(), command, commandFile: p.command, evidencePath });
+-    const payload = { ok, status: ok ? "complete" : "blocked", command, commandFile: p.command, runnerExitCode: exitCode, evidencePath, message: ok ? "Phone-controlled bounded run completed and commandStatus was updated to complete." : "Phone-controlled run blocked and commandStatus was updated to blocked." };
++    writeJson(p.commandState, { lastProcessedSignature: sig, commandId: command.commandId, status, finishedAt: new Date().toISOString(), command, commandFile: p.command, evidencePath, latestHandoff });
++    const payload = { ok, status, command, commandFile: p.command, runnerExitCode: exitCode, latestHandoff, evidencePath, message };
+     writePhoneStatus(p, payload);
+     return output(payload, args, ok ? 0 : 2);
+   } finally {
+@@ -381,7 +421,7 @@
+   try {
+     writePhoneStatus(p, payload);
+     writeJson(path.join(p.evidence, `phone-control-error-${timestamp()}.json`), payload);
+-    if (fs.existsSync(p.command)) mergeCommandFile(p.command, { commandStatus: "blocked", status: "error", blockedAt: new Date().toISOString(), blockedReason: payload.error, updatedBy: VERSION });
++    if (fs.existsSync(p.command)) mergeCommandFile(p.command, { enabled: false, commandStatus: "blocked", status: "error", blockedAt: new Date().toISOString(), blockedReason: payload.error, updatedBy: VERSION });
+   } catch {}
+   console.error(JSON.stringify(payload, null, 2));
+   process.exitCode = 2;
+diff -ruN /tmp/phase130/repo/scripts/sera-phone-control-scheduled-watcher.mjs /tmp/phase131/repo/scripts/sera-phone-control-scheduled-watcher.mjs
+--- /tmp/phase130/repo/scripts/sera-phone-control-scheduled-watcher.mjs	2026-06-29 18:12:03.000000000 +0000
++++ /tmp/phase131/repo/scripts/sera-phone-control-scheduled-watcher.mjs	2026-06-29 19:33:31.748578164 +0000
+@@ -5,8 +5,10 @@
+ import crypto from "node:crypto";
+ import { spawnSync } from "node:child_process";
+ 
+-const VERSION = "phase130-phone-command-queue-status-lifecycle-v1";
++const VERSION = "phase131-phone-autopilot-end-to-end-orchestrator-v1";
+ const TASK_NAME = "SERA Phone Control Watcher";
++const ACCEPTED_STALE_MS = Number(process.env.SERA_PHONE_ACCEPTED_STALE_MS || 1000 * 60 * 10);
++const RUNNING_STALE_MS = Number(process.env.SERA_PHONE_RUNNING_STALE_MS || 1000 * 60 * 90);
+ 
+ function autoOpsDir() { return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps"); }
+ function repoRoot() { return path.resolve(path.dirname(new URL(import.meta.url).pathname), ".."); }
+@@ -33,12 +35,13 @@
+ function writeText(file, text) { ensureDir(path.dirname(file)); fs.writeFileSync(file, text, "utf8"); }
+ function sha(value) { return crypto.createHash("sha256").update(String(value)).digest("hex").toUpperCase(); }
+ function parseArgs(argv) {
+-  const args = { runOnce: false, status: false, json: false, force: false };
++  const args = { runOnce: false, status: false, json: false, force: false, recoverStale: true };
+   for (const arg of argv) {
+     if (arg === "--run-once") args.runOnce = true;
+     else if (arg === "--status") args.status = true;
+     else if (arg === "--json") args.json = true;
+     else if (arg === "--force") args.force = true;
++    else if (arg === "--no-recover-stale") args.recoverStale = false;
+   }
+   return args;
+ }
+@@ -50,6 +53,7 @@
+     autoOps,
+     control,
+     inbox,
++    handoff: path.join(autoOps, "06_handoff"),
+     evidence: path.join(control, "evidence"),
+     command: path.join(control, "autopilot-command.json"),
+     statusMd: path.join(control, "AUTOPILOT_STATUS.md"),
+@@ -69,15 +73,15 @@
+     enabled: false,
+     action: "idle",
+     status: "ready",
+-    phaseStart: 130,
+-    phaseEnd: 130,
++    phaseStart: 131,
++    phaseEnd: 131,
+     maxPhases: 1,
+-    guide: "Continue guarded autopilot hardening. Stop on unclear work, owner judgment, browser issues, or validation failure.",
++    guide: "Continue guarded autopilot hardening. Stop on unclear work, owner judgment, browser issues, download failure, validation failure, or missing handoff.",
+     stopAfterRange: true,
+     pauseAfterCurrentPhase: false,
+     emergencyStop: false,
+     updatedBy: "owner",
+-    updatedReason: "phone command queue ready"
++    updatedReason: "phone end-to-end orchestrator ready"
+   };
+ }
+ function normalizeBool(value) { return value === true || String(value).toLowerCase() === "true"; }
+@@ -89,6 +93,7 @@
+   base.enabled = normalizeBool(base.enabled);
+   base.emergencyStop = normalizeBool(base.emergencyStop);
+   base.pauseAfterCurrentPhase = normalizeBool(base.pauseAfterCurrentPhase);
++  base.stopAfterRange = base.stopAfterRange !== false;
+   base.phaseStart = Number(base.phaseStart || 0);
+   base.phaseEnd = Number(base.phaseEnd || base.phaseStart || 0);
+   base.maxPhases = Number(base.maxPhases || Math.max(1, base.phaseEnd - base.phaseStart + 1));
+@@ -99,18 +104,18 @@
+   return base;
+ }
+ function maybeEnsureCommand(p) {
+-  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence);
++  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); ensureDir(p.handoff);
+   if (!fs.existsSync(p.command)) writeJson(p.command, defaultCommand());
+-  const example = path.join(p.inbox, "autopilot-command-phase130.example.json");
++  const example = path.join(p.inbox, "autopilot-command-phase131.example.json");
+   if (!fs.existsSync(example)) {
+     writeJson(example, {
+       schemaVersion: 2,
+-      commandId: "phase130-example-do-not-run",
++      commandId: "phase131-example-do-not-run",
+       commandStatus: "ignored",
+       enabled: false,
+       action: "run_range",
+-      phaseStart: 130,
+-      phaseEnd: 130,
++      phaseStart: 131,
++      phaseEnd: 131,
+       maxPhases: 1,
+       guide: "Example only. Copy this file, change commandId, set commandStatus to new, and set enabled to true.",
+       stopAfterRange: true,
+@@ -144,6 +149,40 @@
+ function runnableCommand(items) {
+   return items.find(item => item.command && item.command.enabled === true && item.command.commandStatus === "new");
+ }
++function counts(items) {
++  const result = { total: items.length, new: 0, accepted: 0, running: 0, complete: 0, blocked: 0, ignored: 0, idle: 0, missing: 0, invalid: 0 };
++  for (const item of items) {
++    if (item.parseError) { result.invalid++; continue; }
++    const status = item.command?.commandStatus || "missing";
++    result[status] = (result[status] || 0) + 1;
++  }
++  return result;
++}
++function phasePattern(phase) {
++  return new RegExp(`phase[-_ ]?${phase}(?:\\D|$)`, "i");
++}
++function handoffStatusFromName(name) {
++  if (/CLOSED_CLEANLY/i.test(name)) return "CLOSED_CLEANLY";
++  if (/BLOCKED/i.test(name)) return "BLOCKED";
++  if (/PASS/i.test(name)) return "PASS";
++  return "UNKNOWN";
++}
++function latestHandoffForCommand(p, command) {
++  if (!fs.existsSync(p.handoff)) return null;
++  const phases = [];
++  for (let n = command.phaseStart; n <= command.phaseEnd; n++) phases.push(n);
++  const matches = [];
++  for (const entry of fs.readdirSync(p.handoff, { withFileTypes: true })) {
++    if (!entry.isFile()) continue;
++    if (!entry.name.toLowerCase().endsWith(".md")) continue;
++    if (!phases.some(phase => phasePattern(phase).test(entry.name))) continue;
++    const full = path.join(p.handoff, entry.name);
++    const stat = fs.statSync(full);
++    matches.push({ path: full, name: entry.name, status: handoffStatusFromName(entry.name), mtimeMs: stat.mtimeMs, mtime: new Date(stat.mtimeMs).toISOString() });
++  }
++  matches.sort((a, b) => b.mtimeMs - a.mtimeMs);
++  return matches[0] || null;
++}
+ function writeStatus(p, payload) {
+   const now = new Date().toISOString();
+   const status = { ...payload, version: VERSION, taskName: TASK_NAME, updatedAt: now };
+@@ -160,9 +199,14 @@
+   if (payload.commandFile) lines.push(`Command File: ${payload.commandFile}`);
+   if (command.commandId) lines.push(`Command ID: ${command.commandId}`);
+   if (command.commandStatus) lines.push(`Command Status: ${command.commandStatus}`);
++  if (command.status) lines.push(`Machine Status: ${command.status}`);
+   if (command.action) lines.push(`Command Action: ${command.action}`);
+   if (command.phaseStart && command.phaseEnd) lines.push(`Command Range: ${command.phaseStart}-${command.phaseEnd}`);
+   if (payload.runnerExitCode !== undefined) lines.push(`Runner Exit Code: ${payload.runnerExitCode}`);
++  if (payload.latestHandoff?.path) {
++    lines.push(`Latest Handoff: ${payload.latestHandoff.path}`);
++    lines.push(`Latest Handoff Status: ${payload.latestHandoff.status}`);
++  }
+   if (payload.evidencePath) lines.push(`Evidence: ${payload.evidencePath}`);
+   if (payload.commandCounts) {
+     lines.push("");
+@@ -178,7 +222,7 @@
+   lines.push("To start work from your phone, create or edit a command file with:");
+   lines.push("");
+   lines.push("```json");
+-  lines.push(`{ "commandStatus": "new", "enabled": true, "action": "run_range", "phaseStart": 131, "phaseEnd": 131, "maxPhases": 1 }`);
++  lines.push(`{ "commandStatus": "new", "enabled": true, "action": "run_range", "phaseStart": 132, "phaseEnd": 132, "maxPhases": 1 }`);
+   lines.push("```");
+   lines.push("");
+   lines.push("S.E.R.A. updates the same JSON automatically: `new → accepted → running → complete` or `blocked`.");
+@@ -188,13 +232,11 @@
+ }
+ function acquireLock(p, args) {
+   const now = Date.now();
+-  const staleMs = 1000 * 60 * 60;
++  const staleMs = 1000 * 60 * 20;
+   const existing = readJson(p.watcherLock, null);
+   if (existing && !args.force) {
+     const created = Date.parse(existing.createdAt || "");
+-    if (Number.isFinite(created) && now - created < staleMs) {
+-      return { ok: false, stale: false, existing };
+-    }
++    if (Number.isFinite(created) && now - created < staleMs) return { ok: false, stale: false, existing };
+   }
+   writeJson(p.watcherLock, { version: VERSION, pid: process.pid, createdAt: new Date().toISOString(), host: os.hostname() });
+   return { ok: true };
+@@ -207,58 +249,80 @@
+ }
+ function mergeCommandFile(file, patch) {
+   const current = readJson(file, {}) || {};
+-  writeJson(file, { ...current, ...patch, updatedAt: new Date().toISOString(), updatedBy: VERSION });
+-}
+-function writeFlag(file, message) {
+-  writeText(file, `${message}\nCreated: ${new Date().toISOString()}\nSource: ${VERSION}\n`);
++  const cleaned = { ...current, ...patch, updatedAt: new Date().toISOString(), updatedBy: VERSION };
++  for (const [key, value] of Object.entries(cleaned)) if (value === undefined) delete cleaned[key];
++  writeJson(file, cleaned);
+ }
++function writeFlag(file, message) { writeText(file, `${message}\nCreated: ${new Date().toISOString()}\nSource: ${VERSION}\n`); }
+ function runPhoneControlJob(commandFile) {
+   const repo = repoRoot();
+   const script = path.join(repo, "scripts", "sera-phone-control-job.mjs");
+   if (!fs.existsSync(script)) throw new Error(`Missing phone control job script: ${script}`);
+   const env = { ...process.env, SERA_PHONE_COMMAND_PATH: commandFile };
+-  const run = spawnSync("node", [script, "--run", "--json", "--command-file", commandFile], { cwd: repo, encoding: "utf8", env, maxBuffer: 1024 * 1024 * 20 });
++  const run = spawnSync("node", [script, "--run", "--json", "--command-file", commandFile], { cwd: repo, encoding: "utf8", env, maxBuffer: 1024 * 1024 * 20, timeout: Number(process.env.SERA_PHONE_RUNNER_TIMEOUT_MS || 1000 * 60 * 100) });
+   return {
+-    exitCode: run.status ?? 0,
++    exitCode: run.error ? 2 : (run.status ?? 0),
++    error: run.error ? String(run.error.message || run.error) : null,
+     stdout: String(run.stdout || ""),
+     stderr: String(run.stderr || "")
+   };
+ }
+-function counts(items) {
+-  const result = { total: items.length, new: 0, accepted: 0, running: 0, complete: 0, blocked: 0, ignored: 0, missing: 0, invalid: 0 };
+-  for (const item of items) {
+-    if (item.parseError) { result.invalid++; continue; }
+-    const status = item.command?.commandStatus || "missing";
+-    result[status] = (result[status] || 0) + 1;
+-  }
+-  return result;
+-}
+-function consumeControlCommand(p, command, sig) {
++function consumeControlCommand(p, command, sig, selectedFile) {
+   if (command.emergencyStop || command.action === "emergency_stop") {
+     writeFlag(p.emergency, "Emergency stop requested by phone command.");
++    mergeCommandFile(selectedFile, { enabled: false, commandStatus: "complete", status: "emergency_stop", completedAt: new Date().toISOString(), lastSignature: sig });
+     return { ok: true, status: "emergency_stop", command, message: "Emergency stop flag written. No new work started." };
+   }
+   if (command.pauseAfterCurrentPhase || command.action === "pause") {
+     writeFlag(p.pause, "Pause requested by phone command.");
++    mergeCommandFile(selectedFile, { enabled: false, commandStatus: "complete", status: "pause", completedAt: new Date().toISOString(), lastSignature: sig });
+     return { ok: true, status: "pause", command, message: "Pause flag written. No new run started." };
+   }
+   if (command.action === "stop") {
+     writeFlag(p.stop, "Stop requested by phone command.");
++    mergeCommandFile(selectedFile, { enabled: false, commandStatus: "complete", status: "stop", completedAt: new Date().toISOString(), lastSignature: sig });
+     return { ok: true, status: "stop", command, message: "Stop flag written. No new run started." };
+   }
+   return null;
+ }
++function msSince(value) {
++  const t = Date.parse(value || "");
++  if (!Number.isFinite(t)) return Number.POSITIVE_INFINITY;
++  return Date.now() - t;
++}
++function reconcileExistingCommand(p, item) {
++  const command = item.command;
++  if (!command || !command.enabled) return null;
++  if (!["accepted", "running"].includes(command.commandStatus)) return null;
++  const latestHandoff = latestHandoffForCommand(p, command);
++  if (latestHandoff?.status === "CLOSED_CLEANLY") {
++    mergeCommandFile(item.file, { enabled: false, commandStatus: "complete", status: "completed", completedAt: new Date().toISOString(), latestHandoffPath: latestHandoff.path, latestHandoffStatus: latestHandoff.status });
++    return { ok: true, status: "complete", command: normalizeCommand(readJson(item.file, command), item.file), commandFile: item.file, latestHandoff, message: "Existing phone command was reconciled to complete from CLOSED_CLEANLY handoff." };
++  }
++  if (latestHandoff?.status === "BLOCKED") {
++    mergeCommandFile(item.file, { enabled: false, commandStatus: "blocked", status: "blocked", blockedAt: new Date().toISOString(), latestHandoffPath: latestHandoff.path, latestHandoffStatus: latestHandoff.status, blockedReason: "Latest handoff is BLOCKED. Repair before continuing." });
++    return { ok: false, status: "blocked", command: normalizeCommand(readJson(item.file, command), item.file), commandFile: item.file, latestHandoff, message: "Existing phone command was reconciled to blocked from BLOCKED handoff." };
++  }
++  const age = command.commandStatus === "accepted" ? msSince(command.acceptedAt) : msSince(command.lastRunStartedAt || command.startedAt || command.acceptedAt);
++  const threshold = command.commandStatus === "accepted" ? ACCEPTED_STALE_MS : RUNNING_STALE_MS;
++  if (age > threshold) {
++    const reason = command.commandStatus === "accepted"
++      ? `Command stayed accepted longer than ${Math.round(ACCEPTED_STALE_MS / 60000)} minutes without moving to running or producing a handoff.`
++      : `Command stayed running longer than ${Math.round(RUNNING_STALE_MS / 60000)} minutes without producing a final handoff.`;
++    mergeCommandFile(item.file, { enabled: false, commandStatus: "blocked", status: "blocked", blockedAt: new Date().toISOString(), latestHandoffPath: latestHandoff?.path, latestHandoffStatus: latestHandoff?.status, blockedReason: reason });
++    return { ok: false, status: "blocked", command: normalizeCommand(readJson(item.file, command), item.file), commandFile: item.file, latestHandoff, message: reason };
++  }
++  return { ok: true, status: command.commandStatus, command, commandFile: item.file, latestHandoff, message: `Command is already ${command.commandStatus}. Waiting for current run or handoff before starting another.` };
++}
+ function checkOnce(args) {
+   const p = paths();
+-  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); maybeEnsureCommand(p);
+-
++  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); ensureDir(p.handoff); maybeEnsureCommand(p);
+   const lock = acquireLock(p, args);
+   if (!lock.ok) {
+     const payload = { ok: true, status: "already_running", message: "Phone control watcher skipped because another watcher instance is active.", lock: lock.existing };
+     writeStatus(p, payload);
+     return payload;
+   }
+-
+   try {
+     const items = readCommands(p);
+     const bad = items.find(item => item.parseError);
+@@ -267,45 +331,67 @@
+       writeStatus(p, payload);
+       return payload;
+     }
+-
++    if (args.recoverStale) {
++      const active = items.find(item => item.command && item.command.enabled === true && ["accepted", "running"].includes(item.command.commandStatus));
++      if (active) {
++        const reconciled = reconcileExistingCommand(p, active);
++        if (reconciled) {
++          const payload = { ...reconciled, commandCounts: counts(readCommands(p)) };
++          writeStatus(p, payload);
++          return payload;
++        }
++      }
++    }
+     const selected = runnableCommand(items);
+     if (!selected) {
+       const payload = { ok: true, status: "idle", commandCounts: counts(items), message: "No enabled command with commandStatus=new found. No run started." };
+       writeStatus(p, payload);
+       return payload;
+     }
+-
+     const command = selected.command;
+-    const sig = sha(JSON.stringify({ commandId: command.commandId, file: selected.file, phaseStart: command.phaseStart, phaseEnd: command.phaseEnd, guide: command.guide }));
+-    const controlResult = consumeControlCommand(p, command, sig);
++    const sig = sha(JSON.stringify({ commandId: command.commandId, file: selected.file, phaseStart: command.phaseStart, phaseEnd: command.phaseEnd, maxPhases: command.maxPhases, guide: command.guide }));
++    const controlResult = consumeControlCommand(p, command, sig, selected.file);
+     if (controlResult) {
+-      mergeCommandFile(selected.file, { enabled: false, commandStatus: "complete", status: controlResult.status, completedAt: new Date().toISOString(), lastSignature: sig });
+       const payload = { ...controlResult, commandFile: selected.file, command: normalizeCommand(readJson(selected.file, command), selected.file), commandCounts: counts(readCommands(p)) };
+       writeStatus(p, payload);
+       return payload;
+     }
+-
+-    mergeCommandFile(selected.file, { commandId: command.commandId, commandStatus: "accepted", status: "accepted", acceptedAt: new Date().toISOString(), lastSignature: sig });
+-    writeJson(p.watcherState, { lastSignature: sig, commandId: command.commandId, commandFile: selected.file, status: "accepted", acceptedAt: new Date().toISOString(), command });
+-
++    const now = new Date().toISOString();
++    mergeCommandFile(selected.file, { commandId: command.commandId, commandStatus: "accepted", status: "accepted", acceptedAt: now, lastSignature: sig });
++    mergeCommandFile(selected.file, { commandStatus: "running", status: "running", lastRunStartedAt: new Date().toISOString(), lastSignature: sig });
++    writeJson(p.watcherState, { lastSignature: sig, commandId: command.commandId, commandFile: selected.file, status: "running", startedAt: new Date().toISOString(), command: normalizeCommand(readJson(selected.file, command), selected.file) });
+     const run = runPhoneControlJob(selected.file);
+     const evidencePath = path.join(p.evidence, `phone-control-watcher-${timestamp()}.json`);
++    const updatedAfterRun = normalizeCommand(readJson(selected.file, command), selected.file);
++    const latestHandoff = latestHandoffForCommand(p, updatedAfterRun);
+     writeJson(evidencePath, {
+       version: VERSION,
+       taskName: TASK_NAME,
+       commandFile: selected.file,
+-      command,
++      command: updatedAfterRun,
+       signature: sig,
+       runnerExitCode: run.exitCode,
++      runnerError: run.error,
++      latestHandoff,
+       stdoutTail: run.stdout.slice(-12000),
+       stderrTail: run.stderr.slice(-12000),
+       finishedAt: new Date().toISOString()
+     });
+-    const updated = normalizeCommand(readJson(selected.file, command), selected.file);
+-    const ok = run.exitCode === 0;
+-    const status = ok ? "complete" : "blocked";
+-    writeJson(p.watcherState, { lastSignature: sig, commandId: updated.commandId, commandFile: selected.file, status, finishedAt: new Date().toISOString(), command: updated, evidencePath, exitCode: run.exitCode });
+-    const payload = { ok, status, command: updated, commandFile: selected.file, runnerExitCode: run.exitCode, evidencePath, commandCounts: counts(readCommands(p)), message: ok ? "Phone command completed and commandStatus was updated automatically." : "Phone command blocked and commandStatus was updated automatically." };
++    const finalCommand = normalizeCommand(readJson(selected.file, updatedAfterRun), selected.file);
++    let ok = false;
++    let status = "blocked";
++    let message = "Phone-controlled run blocked.";
++    if (latestHandoff?.status === "CLOSED_CLEANLY" && run.exitCode === 0) {
++      ok = true; status = "complete"; message = "Phone command completed from real CLOSED_CLEANLY handoff and commandStatus was updated automatically.";
++      mergeCommandFile(selected.file, { enabled: false, commandStatus: "complete", status: "completed", completedAt: new Date().toISOString(), latestHandoffPath: latestHandoff.path, latestHandoffStatus: latestHandoff.status, lastEvidencePath: evidencePath, lastExitCode: run.exitCode, blockedReason: undefined });
++    } else {
++      const reason = run.error || (latestHandoff ? `Latest handoff status is ${latestHandoff.status}.` : "No handoff was produced by the autopilot runner.");
++      mergeCommandFile(selected.file, { enabled: false, commandStatus: "blocked", status: "blocked", blockedAt: new Date().toISOString(), latestHandoffPath: latestHandoff?.path, latestHandoffStatus: latestHandoff?.status, lastEvidencePath: evidencePath, lastExitCode: run.exitCode, blockedReason: reason });
++      message = `Phone command blocked: ${reason}`;
++    }
++    const commandAfterFinal = normalizeCommand(readJson(selected.file, finalCommand), selected.file);
++    writeJson(p.watcherState, { lastSignature: sig, commandId: commandAfterFinal.commandId, commandFile: selected.file, status, finishedAt: new Date().toISOString(), command: commandAfterFinal, evidencePath, latestHandoff, exitCode: run.exitCode });
++    const payload = { ok, status, command: commandAfterFinal, commandFile: selected.file, runnerExitCode: run.exitCode, latestHandoff, evidencePath, commandCounts: counts(readCommands(p)), message };
+     writeStatus(p, payload);
+     return payload;
+   } finally {
+@@ -314,15 +400,17 @@
+ }
+ function statusOnly() {
+   const p = paths();
+-  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); maybeEnsureCommand(p);
++  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); ensureDir(p.handoff); maybeEnsureCommand(p);
+   const items = readCommands(p);
+   const latest = items.slice().sort((a, b) => b.mtimeMs - a.mtimeMs)[0];
++  const command = latest?.command || normalizeCommand(readJson(p.command, defaultCommand()), p.command);
+   const payload = {
+     ok: true,
+     status: "status",
+     message: "Phone scheduled watcher status read.",
+-    command: latest?.command || normalizeCommand(readJson(p.command, defaultCommand()), p.command),
++    command,
+     commandFile: latest?.file || p.command,
++    latestHandoff: latestHandoffForCommand(p, command),
+     commandCounts: counts(items),
+     watcherState: readJson(p.watcherState, {}) || {},
+     lock: readJson(p.watcherLock, null)
+diff -ruN /tmp/phase130/repo/scripts/sera-phone-control-scheduled-watcher.ps1 /tmp/phase131/repo/scripts/sera-phone-control-scheduled-watcher.ps1
+--- /tmp/phase130/repo/scripts/sera-phone-control-scheduled-watcher.ps1	2026-06-29 18:12:10.000000000 +0000
++++ /tmp/phase131/repo/scripts/sera-phone-control-scheduled-watcher.ps1	2026-06-29 19:34:31.587105526 +0000
+@@ -4,7 +4,7 @@
+   [switch]$RunOnce,
+   [switch]$Status,
+   [switch]$Force,
+-  [int]$EveryMinutes = 5
++  [int]$EveryMinutes = 2
+ )
+ 
+ $ErrorActionPreference = "Stop"
+@@ -38,7 +38,7 @@
+   $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File `"$PSCommandPath`" -RunOnce"
+   $Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes $EveryMinutes)
+   $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew -StartWhenAvailable
+-  Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings -Description "Checks SERA command_inbox/autopilot-command*.json and starts bounded guarded work when commandStatus is new." -Force | Out-Null
++  Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings -Description "Checks SERA phone command JSON files every $EveryMinutes minutes and runs bounded guarded work end to end." -Force | Out-Null
+   Write-Host "Installed $TaskName to check every $EveryMinutes minutes."
+   if ($RunOnce) { Invoke-PhoneWatcher @("--run-once", "--json") }
+   return
+@@ -57,7 +57,7 @@
+ }
+ 
+ Write-Host "Usage:"
+-Write-Host "  .\scripts\sera-phone-control-scheduled-watcher.ps1 -Install -EveryMinutes 5"
++Write-Host "  .\scripts\sera-phone-control-scheduled-watcher.ps1 -Install -EveryMinutes 2"
+ Write-Host "  .\scripts\sera-phone-control-scheduled-watcher.ps1 -RunOnce"
+ Write-Host "  .\scripts\sera-phone-control-scheduled-watcher.ps1 -Status"
+ Write-Host "  .\scripts\sera-phone-control-scheduled-watcher.ps1 -Uninstall"

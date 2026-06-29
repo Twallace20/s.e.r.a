@@ -5,7 +5,7 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase130-phone-command-queue-status-lifecycle-v1";
+const VERSION = "phase131-phone-autopilot-end-to-end-orchestrator-v1";
 const MAX_PHONE_PHASES = 5;
 
 function autoOpsDir() { return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps"); }
@@ -44,7 +44,7 @@ function parseArgs(argv) {
   return args;
 }
 function defaultGuide() {
-  return "Continue guarded autopilot hardening. Use exact Download Phase X overlay ZIP link text. Preserve saved ChatGPT target only. Stop on blocked, unclear, risky, or owner-decision work.";
+  return "Continue guarded autopilot hardening. Use exact Download Phase X overlay ZIP link text. Preserve saved ChatGPT target only. Stop on blocked, unclear, risky, owner-decision, browser, download, validation, or missing-handoff work.";
 }
 function defaultCommand() {
   return {
@@ -54,15 +54,15 @@ function defaultCommand() {
     enabled: false,
     action: "idle",
     status: "ready",
-    phaseStart: 130,
-    phaseEnd: 130,
+    phaseStart: 131,
+    phaseEnd: 131,
     maxPhases: 1,
     guide: defaultGuide(),
     stopAfterRange: true,
     pauseAfterCurrentPhase: false,
     emergencyStop: false,
     updatedBy: "owner",
-    updatedReason: "phone command queue ready"
+    updatedReason: "phone end-to-end orchestrator ready"
   };
 }
 function paths(commandFileArg = null) {
@@ -75,6 +75,7 @@ function paths(commandFileArg = null) {
     autoOps,
     control,
     inbox,
+    handoff: path.join(autoOps, "06_handoff"),
     evidence: path.join(control, "evidence"),
     command,
     defaultCommand: defaultCommandFile,
@@ -88,7 +89,7 @@ function paths(commandFileArg = null) {
   };
 }
 function ensureCommandFile(p) {
-  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence);
+  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); ensureDir(p.handoff);
   if (!fs.existsSync(p.defaultCommand)) writeJson(p.defaultCommand, defaultCommand());
   if (!fs.existsSync(p.command)) writeJson(p.command, defaultCommand());
   return readJson(p.command, defaultCommand()) || defaultCommand();
@@ -100,6 +101,7 @@ function normalizeCommand(raw, commandFile = null) {
   base.enabled = normalizeBool(base.enabled);
   base.emergencyStop = normalizeBool(base.emergencyStop);
   base.pauseAfterCurrentPhase = normalizeBool(base.pauseAfterCurrentPhase);
+  base.stopAfterRange = base.stopAfterRange !== false;
   base.phaseStart = Number(base.phaseStart || 0);
   base.phaseEnd = Number(base.phaseEnd || base.phaseStart || 0);
   base.maxPhases = Number(base.maxPhases || Math.max(1, base.phaseEnd - base.phaseStart + 1));
@@ -122,13 +124,11 @@ function validateRange(command) {
   if (command.maxPhases > MAX_PHONE_PHASES) errors.push(`maxPhases may not exceed ${MAX_PHONE_PHASES} from phone control.`);
   if (count > MAX_PHONE_PHASES) errors.push(`phone control range may not exceed ${MAX_PHONE_PHASES} phases.`);
   if (!command.guide || command.guide.length < 20) errors.push("guide must describe the bounded work and stop conditions.");
-  if (!["new", "accepted", "running"].includes(command.commandStatus) && command.action === "run_range") {
-    errors.push("commandStatus must be new, accepted, or running for a runnable command.");
-  }
+  if (!["new", "accepted", "running"].includes(command.commandStatus) && command.action === "run_range") errors.push("commandStatus must be new, accepted, or running for a runnable command.");
   return errors;
 }
 function signature(command) {
-  const signed = {
+  return sha(JSON.stringify({
     commandId: command.commandId,
     action: command.action,
     phaseStart: command.phaseStart,
@@ -136,13 +136,14 @@ function signature(command) {
     maxPhases: command.maxPhases,
     guide: command.guide,
     stopAfterRange: command.stopAfterRange !== false
-  };
-  return sha(JSON.stringify(signed));
+  }));
 }
 function clearFile(file) { try { if (fs.existsSync(file)) fs.rmSync(file, { force: true }); } catch {} }
 function mergeCommandFile(file, patch) {
   const current = readJson(file, {}) || {};
-  writeJson(file, { ...current, ...patch, updatedAt: new Date().toISOString(), updatedBy: VERSION });
+  const cleaned = { ...current, ...patch, updatedAt: new Date().toISOString(), updatedBy: VERSION };
+  for (const [key, value] of Object.entries(cleaned)) if (value === undefined) delete cleaned[key];
+  writeJson(file, cleaned);
 }
 function updateCommandFile(p, patch) {
   mergeCommandFile(p.command, patch);
@@ -164,9 +165,7 @@ function acquireRunLock(p, args) {
   const existing = readJson(p.runLock, null);
   if (existing && !args.force) {
     const created = Date.parse(existing.createdAt || "");
-    if (Number.isFinite(created) && now - created < staleMs) {
-      return { ok: false, existing };
-    }
+    if (Number.isFinite(created) && now - created < staleMs) return { ok: false, existing };
   }
   writeJson(p.runLock, { version: VERSION, pid: process.pid, createdAt: new Date().toISOString(), host: os.hostname(), commandFile: p.command });
   return { ok: true };
@@ -176,6 +175,29 @@ function releaseRunLock(p) {
     const current = readJson(p.runLock, null);
     if (current && Number(current.pid) === process.pid) fs.rmSync(p.runLock, { force: true });
   } catch {}
+}
+function phasePattern(phase) { return new RegExp(`phase[-_ ]?${phase}(?:\\D|$)`, "i"); }
+function handoffStatusFromName(name) {
+  if (/CLOSED_CLEANLY/i.test(name)) return "CLOSED_CLEANLY";
+  if (/BLOCKED/i.test(name)) return "BLOCKED";
+  if (/PASS/i.test(name)) return "PASS";
+  return "UNKNOWN";
+}
+function latestHandoffForCommand(p, command) {
+  if (!fs.existsSync(p.handoff)) return null;
+  const phases = [];
+  for (let n = command.phaseStart; n <= command.phaseEnd; n++) phases.push(n);
+  const matches = [];
+  for (const entry of fs.readdirSync(p.handoff, { withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+    if (!entry.name.toLowerCase().endsWith(".md")) continue;
+    if (!phases.some(phase => phasePattern(phase).test(entry.name))) continue;
+    const full = path.join(p.handoff, entry.name);
+    const stat = fs.statSync(full);
+    matches.push({ path: full, name: entry.name, status: handoffStatusFromName(entry.name), mtimeMs: stat.mtimeMs, mtime: new Date(stat.mtimeMs).toISOString() });
+  }
+  matches.sort((a, b) => b.mtimeMs - a.mtimeMs);
+  return matches[0] || null;
 }
 function writePhoneStatus(p, payload) {
   writeJson(p.lastResult, { ...payload, version: VERSION, updatedAt: new Date().toISOString() });
@@ -189,9 +211,14 @@ function writePhoneStatus(p, payload) {
   if (payload.commandFile) lines.push(`Command File: ${payload.commandFile}`);
   if (command.commandId) lines.push(`Command ID: ${command.commandId}`);
   if (command.commandStatus) lines.push(`Command Status: ${command.commandStatus}`);
+  if (command.status) lines.push(`Machine Status: ${command.status}`);
   if (command.action) lines.push(`Action: ${command.action}`);
   if (command.phaseStart && command.phaseEnd) lines.push(`Range: ${command.phaseStart}-${command.phaseEnd}`);
   if (payload.runnerExitCode !== undefined) lines.push(`Runner Exit Code: ${payload.runnerExitCode}`);
+  if (payload.latestHandoff?.path) {
+    lines.push(`Latest Handoff: ${payload.latestHandoff.path}`);
+    lines.push(`Latest Handoff Status: ${payload.latestHandoff.status}`);
+  }
   if (payload.evidencePath) lines.push(`Evidence: ${payload.evidencePath}`);
   lines.push("");
   lines.push("## Phone command queue");
@@ -233,6 +260,7 @@ function writeControlForRange(p, command) {
     source: path.basename(p.command),
     sourceCommandFile: p.command,
     commandId: command.commandId,
+    requireFinalHandoff: true,
     updatedBy: VERSION,
     updatedAt: new Date().toISOString()
   };
@@ -244,7 +272,25 @@ function writeControlForRange(p, command) {
   clearFile(path.join(p.control, "EMERGENCY_STOP_AUTOPILOT.flag"));
   return { state: nextState, directive };
 }
-function runAutopilot(command) {
+function simulateAutopilotForE2ETest(p, command) {
+  const mode = String(process.env.SERA_PHONE_E2E_TEST_MODE || "").toLowerCase();
+  if (!mode) return null;
+  ensureDir(p.handoff);
+  if (mode === "closed") {
+    const file = path.join(p.handoff, `s.e.r.a_phase${command.phaseStart}_phase131_e2e_test-19700101_000000-CLOSED_CLEANLY.md`);
+    writeText(file, `# S.E.R.A. AutoOps Packet\n\nStatus: CLOSED_CLEANLY\nPhase: phase${command.phaseStart}-phase131-e2e-test\n\n## Summary\n\nSimulated real end-to-end lifecycle proof generated by ${VERSION}.\n`);
+    return { status: 0, stdout: `Simulated CLOSED_CLEANLY handoff: ${file}\n`, stderr: "" };
+  }
+  if (mode === "blocked") {
+    const file = path.join(p.handoff, `s.e.r.a_phase${command.phaseStart}_phase131_e2e_test-19700101_000000-BLOCKED.md`);
+    writeText(file, `# S.E.R.A. AutoOps Packet\n\nStatus: BLOCKED\nPhase: phase${command.phaseStart}-phase131-e2e-test\n\n## Summary\n\nSimulated blocked lifecycle proof generated by ${VERSION}.\n`);
+    return { status: 2, stdout: "", stderr: `Simulated BLOCKED handoff: ${file}\n` };
+  }
+  return null;
+}
+function runAutopilot(p, command) {
+  const simulated = simulateAutopilotForE2ETest(p, command);
+  if (simulated) return simulated;
   const repo = repoRoot();
   const script = path.join(repo, "scripts", "sera-autopilot-continue.ps1");
   if (!fs.existsSync(script)) throw new Error(`Missing autopilot continuation script: ${script}`);
@@ -257,7 +303,7 @@ function runAutopilot(command) {
     "-Guide", command.guide,
     "-EnableAutopilotForThisRun"
   ];
-  return spawnSync(psExe(), args, { cwd: repo, encoding: "utf8", maxBuffer: 1024 * 1024 * 20 });
+  return spawnSync(psExe(), args, { cwd: repo, encoding: "utf8", maxBuffer: 1024 * 1024 * 20, timeout: Number(process.env.SERA_PHONE_RUN_TIMEOUT_MS || 1000 * 60 * 95) });
 }
 function handleStopLike(p, command, kind) {
   const fileName = kind === "pause" ? "PAUSE_AUTOPILOT.flag" : kind === "emergency" ? "EMERGENCY_STOP_AUTOPILOT.flag" : "STOP_AUTOPILOT.flag";
@@ -271,33 +317,26 @@ function handleStopLike(p, command, kind) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const p = paths(args.commandFile);
-  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence);
+  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); ensureDir(p.handoff);
   const raw = ensureCommandFile(p);
   let command = normalizeCommand(raw, p.command);
   const sig = signature(command);
-
-  if (args.init) {
-    writeJson(p.defaultCommand, { ...defaultCommand(), updatedAt: new Date().toISOString(), updatedBy: VERSION });
-  }
-
+  if (args.init) writeJson(p.defaultCommand, { ...defaultCommand(), updatedAt: new Date().toISOString(), updatedBy: VERSION });
   if (args.status || !args.run) {
-    const payload = { ok: true, status: "ready", command, commandFile: p.command, message: "Phone control status read." };
+    const payload = { ok: true, status: "ready", command, commandFile: p.command, latestHandoff: latestHandoffForCommand(p, command), message: "Phone control status read." };
     writePhoneStatus(p, payload);
     return output(payload, args);
   }
-
   const lock = acquireRunLock(p, args);
   if (!lock.ok) {
     const payload = { ok: true, status: "already_running", command, commandFile: p.command, lock: lock.existing, message: "A phone-controlled run is already active. No duplicate runner started." };
     writePhoneStatus(p, payload);
     return output(payload, args);
   }
-
   try {
     if (command.emergencyStop || command.action === "emergency_stop") return output(handleStopLike(p, command, "emergency"), args);
     if (command.pauseAfterCurrentPhase || command.action === "pause") return output(handleStopLike(p, command, "pause"), args);
     if (command.action === "stop") return output(handleStopLike(p, command, "stop"), args);
-
     if (!command.enabled) {
       const payload = { ok: true, status: "disabled", command, commandFile: p.command, message: "Phone command is disabled. Set enabled=true and commandStatus=new to run." };
       writePhoneStatus(p, payload);
@@ -309,32 +348,29 @@ function main() {
       writePhoneStatus(p, payload);
       return output(payload, args);
     }
-
     const validationErrors = validateRange(command);
     if (validationErrors.length) {
-      updateCommandFile(p, { commandStatus: "blocked", status: "invalid_command", blockedAt: new Date().toISOString(), blockedReason: validationErrors.join("; ") });
+      updateCommandFile(p, { enabled: false, commandStatus: "blocked", status: "invalid_command", blockedAt: new Date().toISOString(), blockedReason: validationErrors.join("; ") });
       command = normalizeCommand(readJson(p.command, command), p.command);
       const payload = { ok: false, status: "invalid_command", command, commandFile: p.command, errors: validationErrors, message: "Phone command did not pass validation." };
       writePhoneStatus(p, payload);
       return output(payload, args, 2);
     }
-
     const controlPayload = writeControlForRange(p, command);
-    updateCommandFile(p, { commandStatus: "running", status: "running", lastRunStartedAt: new Date().toISOString(), lastSignature: sig, acceptedAt: command.acceptedAt || new Date().toISOString() });
+    updateCommandFile(p, { commandStatus: "running", status: "running", lastRunStartedAt: new Date().toISOString(), lastSignature: sig, acceptedAt: command.acceptedAt || new Date().toISOString(), latestHandoffPath: undefined, latestHandoffStatus: undefined, blockedReason: undefined });
     writeJson(p.commandState, { lastProcessedSignature: sig, commandId: command.commandId, status: "running", startedAt: new Date().toISOString(), command, commandFile: p.command });
     command = normalizeCommand(readJson(p.command, command), p.command);
-
     if (args.dryRun) {
-      updateCommandFile(p, { commandStatus: "complete", status: "dry_run_complete", completedAt: new Date().toISOString() });
+      updateCommandFile(p, { enabled: false, commandStatus: "complete", status: "dry_run_complete", completedAt: new Date().toISOString() });
       command = normalizeCommand(readJson(p.command, command), p.command);
       const payload = { ok: true, status: "dry_run_complete", command, commandFile: p.command, controlPayload, message: "Phone command validated and lifecycle completed in dry-run mode." };
       writePhoneStatus(p, payload);
       return output(payload, args);
     }
-
-    const run = runAutopilot(command);
+    const run = runAutopilot(p, command);
     const evidencePath = path.join(p.evidence, `phone-control-run-${timestamp()}.json`);
-    const exitCode = run.status ?? 0;
+    const exitCode = run.error ? 2 : (run.status ?? 0);
+    const latestHandoff = latestHandoffForCommand(p, command);
     const runnerEvidence = {
       version: VERSION,
       command,
@@ -342,25 +378,29 @@ function main() {
       signature: sig,
       controlPayload,
       runnerExitCode: exitCode,
+      runnerError: run.error ? String(run.error.message || run.error) : null,
+      latestHandoff,
       stdoutTail: String(run.stdout || "").slice(-12000),
       stderrTail: String(run.stderr || "").slice(-12000),
       finishedAt: new Date().toISOString()
     };
     writeJson(evidencePath, runnerEvidence);
-
-    const ok = exitCode === 0;
-    updateCommandFile(p, {
-      enabled: false,
-      commandStatus: ok ? "complete" : "blocked",
-      status: ok ? "completed" : "blocked",
-      lastRunFinishedAt: new Date().toISOString(),
-      lastEvidencePath: evidencePath,
-      lastExitCode: exitCode,
-      blockedReason: ok ? undefined : "Runner returned non-zero exit code. Review evidence."
-    });
+    let ok = false;
+    let status = "blocked";
+    let message = "Phone-controlled run blocked.";
+    if (exitCode === 0 && latestHandoff?.status === "CLOSED_CLEANLY") {
+      ok = true;
+      status = "complete";
+      message = "Phone-controlled bounded run completed with CLOSED_CLEANLY handoff and commandStatus was updated to complete.";
+      updateCommandFile(p, { enabled: false, commandStatus: "complete", status: "completed", lastRunFinishedAt: new Date().toISOString(), completedAt: new Date().toISOString(), latestHandoffPath: latestHandoff.path, latestHandoffStatus: latestHandoff.status, lastEvidencePath: evidencePath, lastExitCode: exitCode, blockedReason: undefined });
+    } else {
+      const reason = run.error ? String(run.error.message || run.error) : latestHandoff ? `Latest handoff status is ${latestHandoff.status}.` : "Missing final handoff. Autopilot did not produce CLOSED_CLEANLY or BLOCKED evidence.";
+      updateCommandFile(p, { enabled: false, commandStatus: "blocked", status: "blocked", lastRunFinishedAt: new Date().toISOString(), blockedAt: new Date().toISOString(), latestHandoffPath: latestHandoff?.path, latestHandoffStatus: latestHandoff?.status, lastEvidencePath: evidencePath, lastExitCode: exitCode, blockedReason: reason });
+      message = `Phone-controlled run blocked: ${reason}`;
+    }
     command = normalizeCommand(readJson(p.command, command), p.command);
-    writeJson(p.commandState, { lastProcessedSignature: sig, commandId: command.commandId, status: ok ? "complete" : "blocked", finishedAt: new Date().toISOString(), command, commandFile: p.command, evidencePath });
-    const payload = { ok, status: ok ? "complete" : "blocked", command, commandFile: p.command, runnerExitCode: exitCode, evidencePath, message: ok ? "Phone-controlled bounded run completed and commandStatus was updated to complete." : "Phone-controlled run blocked and commandStatus was updated to blocked." };
+    writeJson(p.commandState, { lastProcessedSignature: sig, commandId: command.commandId, status, finishedAt: new Date().toISOString(), command, commandFile: p.command, evidencePath, latestHandoff });
+    const payload = { ok, status, command, commandFile: p.command, runnerExitCode: exitCode, latestHandoff, evidencePath, message };
     writePhoneStatus(p, payload);
     return output(payload, args, ok ? 0 : 2);
   } finally {
@@ -381,7 +421,7 @@ catch (error) {
   try {
     writePhoneStatus(p, payload);
     writeJson(path.join(p.evidence, `phone-control-error-${timestamp()}.json`), payload);
-    if (fs.existsSync(p.command)) mergeCommandFile(p.command, { commandStatus: "blocked", status: "error", blockedAt: new Date().toISOString(), blockedReason: payload.error, updatedBy: VERSION });
+    if (fs.existsSync(p.command)) mergeCommandFile(p.command, { enabled: false, commandStatus: "blocked", status: "error", blockedAt: new Date().toISOString(), blockedReason: payload.error, updatedBy: VERSION });
   } catch {}
   console.error(JSON.stringify(payload, null, 2));
   process.exitCode = 2;

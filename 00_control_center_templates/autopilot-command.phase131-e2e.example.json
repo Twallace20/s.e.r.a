@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "commandId": "phase132-phone-e2e-test-001",
+  "commandStatus": "new",
+  "enabled": true,
+  "action": "run_range",
+  "phaseStart": 132,
+  "phaseEnd": 132,
+  "maxPhases": 1,
+  "guide": "Build the next guarded phase from a phone-saved command. Continue only through CLOSED_CLEANLY or BLOCKED handoff. Stop on unclear work, owner judgment, browser failure, download failure, validation failure, or missing handoff.",
+  "stopAfterRange": true,
+  "pauseAfterCurrentPhase": false,
+  "emergencyStop": false,
+  "updatedBy": "owner",
+  "updatedReason": "phone end-to-end orchestrator test"
+}
