@@ -1,0 +1,15 @@
+{
+  "phase": 129,
+  "name": "Phone Control Scheduled Watcher v1",
+  "version": "phase129-phone-control-scheduled-watcher-v1",
+  "zipRoot": "repo/",
+  "expectedZipName": "s.e.r.a_phase129_phone_control_scheduled_watcher_v1_overlay.zip",
+  "checks": [
+    "scheduled watcher script is present",
+    "PowerShell install wrapper is present",
+    "watcher uses lock file to avoid duplicate execution",
+    "watcher calls Phase 128 phone-control job script",
+    "watcher respects pause/stop/emergency fields",
+    "watcher writes phone readable status"
+  ]
+}

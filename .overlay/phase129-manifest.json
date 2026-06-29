@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "phase": 129,
+  "name": "Phone Control Scheduled Watcher v1",
+  "version": "phase129-phone-control-scheduled-watcher-v1",
+  "type": "overlay",
+  "zipRoot": "repo/",
+  "expectedZipName": "s.e.r.a_phase129_phone_control_scheduled_watcher_v1_overlay.zip",
+  "summary": "Add a scheduled laptop checker that reads the phone-editable autopilot-command.json and starts bounded guarded S.E.R.A. jobs automatically.",
+  "files": [
+    "scripts/sera-phone-control-scheduled-watcher.mjs",
+    "scripts/sera-phone-control-scheduled-watcher.ps1",
+    "scripts/phase129-verify.mjs",
+    "00_control_center_templates/autopilot-command.scheduled-watcher.example.json",
+    "docs/autopilot/PHONE_CONTROL_SCHEDULED_WATCHER_V1.md",
+    "docs/phases/PHASE_129_PHONE_CONTROL_SCHEDULED_WATCHER_V1.md",
+    ".overlay/phase129-manifest.json",
+    ".sera-proof/phase129/phase129-verify.json",
+    "s.e.r.a_phase129_phone_control_scheduled_watcher_v1_overlay.patch"
+  ],
+  "safety": {
+    "savedChatTargetOnly": true,
+    "newChatFallbackAllowed": false,
+    "randomRecentChatFallbackAllowed": false,
+    "phoneRangeMaxPhases": 5,
+    "ownerDecisionStop": true,
+    "usesExistingSafetyGates": true,
+    "singleWatcherLock": true,
+    "taskMultipleInstances": "IgnoreNew"
+  },
+  "longTermPlan": {
+    "phase130": "Single runner lock plus browser visibility guard",
+    "phase131": "Phone status dashboard and receipts",
+    "roadmapBatches": "After guards close cleanly, phone control can run bounded roadmap batches."
+  }
+}
