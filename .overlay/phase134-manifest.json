@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "phase": 134,
+  "phaseId": "phase134-phone-control-job-syntax-hotfix-v1",
+  "title": "Phone Control Job Syntax Hotfix v1",
+  "type": "overlay",
+  "rootRequired": "repo/",
+  "summary": "Fixes a JavaScript syntax regression in scripts/sera-phone-control-job.mjs discovered by the Phase 134 real phone command test.",
+  "files": [
+    "scripts/sera-phone-control-job.mjs",
+    "scripts/phase134-verify.mjs",
+    "docs/phases/PHASE_134_PHONE_CONTROL_JOB_SYNTAX_HOTFIX_V1.md",
+    "docs/autopilot/PHONE_CONTROL_JOB_SYNTAX_HOTFIX_V1.md",
+    ".overlay/phase134-manifest.json",
+    ".sera-proof/phase134/phase134-verify.json"
+  ],
+  "validation": [
+    "node --check scripts/sera-phone-control-job.mjs",
+    "node scripts/phase134-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "safety": {
+    "noDependencyInstall": true,
+    "noCredentialChanges": true,
+    "noPaidServiceChanges": true,
+    "ownerMergeRequired": true
+  }
+}

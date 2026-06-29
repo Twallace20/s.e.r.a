@@ -395,8 +395,7 @@ function main() {
       message = "Phone-controlled bounded run completed with CLOSED_CLEANLY handoff and commandStatus was updated to complete.";
       updateCommandFile(p, { enabled: false, commandStatus: "complete", status: "completed", lastRunFinishedAt: new Date().toISOString(), completedAt: new Date().toISOString(), latestHandoffPath: latestHandoff.path, latestHandoffStatus: latestHandoff.status, lastEvidencePath: evidencePath, lastExitCode: exitCode, blockedReason: undefined });
     } else {
-      const runnerDetail = [String(run.stdout || "").slice(-3000), String(run.stderr || "").slice(-3000)].filter(Boolean).join("
-").trim();
+      const runnerDetail = [String(run.stdout || "").slice(-3000), String(run.stderr || "").slice(-3000)].filter(Boolean).join("\r\n").trim();
       const reason = run.error
         ? String(run.error.message || run.error)
         : latestHandoff

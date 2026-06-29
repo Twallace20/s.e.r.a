@@ -1,0 +1,7 @@
+{
+  "phaseId": "phase134-phone-control-job-syntax-hotfix-v1",
+  "proofType": "static-overlay-proof",
+  "expectedFix": "scripts/sera-phone-control-job.mjs uses an escaped CRLF join separator and passes node --check.",
+  "realLifeTrigger": "Phone-saved Phase 134 command exited immediately with SyntaxError before bridge outbox or handoff creation.",
+  "createdAt": "2026-06-29T21:08:00.000Z"
+}

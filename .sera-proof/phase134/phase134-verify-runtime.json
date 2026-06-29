@@ -1,0 +1,10 @@
+{
+  "phaseId": "phase134-phone-control-job-syntax-hotfix-v1",
+  "status": "ready",
+  "targetExists": true,
+  "nodeSyntaxCheckPassed": true,
+  "runnerDetailJoinEscaped": true,
+  "noLiteralNewlineJoinRegression": true,
+  "stderrTail": "",
+  "createdAt": "2026-06-29T21:03:46.372Z"
+}
