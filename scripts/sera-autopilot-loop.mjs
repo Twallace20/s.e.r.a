@@ -4,13 +4,29 @@ import path from "node:path";
 import os from "node:os";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase119-autopilot-continuation-loop-v1";
+const VERSION = "phase121-control-center-active-mission-dedupe-hardening-v1";
 
 function autoOpsDir() { return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps"); }
 function ensureDir(dir) { fs.mkdirSync(dir, { recursive: true }); }
 function timestamp() { return new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z").replace("T", "_"); }
 function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
-function readJson(file, fallback = null) { if (!fs.existsSync(file)) return fallback; return JSON.parse(fs.readFileSync(file, "utf8")); }
+function decodeText(buffer) {
+  if (!buffer || buffer.length === 0) return "";
+  let text = "";
+  if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) text = buffer.toString("utf16le");
+  else {
+    text = buffer.toString("utf8");
+    const nullCount = (text.match(/\u0000/g) || []).length;
+    if (nullCount > 0 && nullCount > Math.max(2, text.length / 20)) text = buffer.toString("utf16le");
+  }
+  return text.replace(/^\uFEFF/, "").replace(/\u0000/g, "");
+}
+function readJson(file, fallback = null) {
+  if (!fs.existsSync(file)) return fallback;
+  const text = decodeText(fs.readFileSync(file)).trim();
+  if (!text) return fallback;
+  return JSON.parse(text);
+}
 function writeJson(file, data) { ensureDir(path.dirname(file)); fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8"); }
 function writeText(file, text) { ensureDir(path.dirname(file)); fs.writeFileSync(file, text, "utf8"); }
 function fileMtimeMs(file) { return fs.statSync(file).mtimeMs; }
@@ -138,6 +154,22 @@ function writePhasePrompt(p, task) {
   writeText(file, buildPrompt(task));
   return file;
 }
+function writeArtifactWatchRequest(p, task, promptFile) {
+  const requestPath = path.join(p.control, "artifact-watch-request.json");
+  const request = {
+    schemaVersion: 1,
+    active: true,
+    status: "waiting_for_artifact",
+    phase: task.phase,
+    title: task.title,
+    promptFile,
+    expectedZipName: task.expectedZipName,
+    createdAt: new Date().toISOString(),
+    source: VERSION
+  };
+  writeJson(requestPath, request);
+  return requestPath;
+}
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { encoding: "utf8", shell: false, ...options, env: { ...process.env, ...(options.env || {}) } });
   return { command, args, status: result.status, signal: result.signal, stdout: result.stdout || "", stderr: result.stderr || "" };
@@ -214,6 +246,7 @@ async function runOne(task, args, control, index) {
     const promptFile = args.promptFile ? path.resolve(args.promptFile) : writePhasePrompt(p, task);
     evidence.promptFile = promptFile;
     evidence.expectedZipName = task.expectedZipName;
+    evidence.artifactWatchRequest = writeArtifactWatchRequest(p, task, promptFile);
     if (args.mode === "dry-run") {
       evidence.status = "dry_run_ready";
       writeJson(evidencePath, evidence);

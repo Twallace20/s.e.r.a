@@ -41,7 +41,9 @@ if ($EnableAutopilotForThisRun) {
     }
   }
   $state.enabled = $true
-  $state | ConvertTo-Json -Depth 20 | Set-Content -Path $StatePath -Encoding UTF8
+  $json = ($state | ConvertTo-Json -Depth 20)
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText($StatePath, $json + [Environment]::NewLine, $utf8NoBom)
 }
 
 $argsList = @()
