@@ -1,0 +1,5 @@
+{
+  "phaseId": "phase123-safe-autopilot-continuation-v1",
+  "valid": true,
+  "proof": "Overlay includes manifest, verification script, saved-target-only bridge hardening, conversation-id target matching, target normalizer, and documentation."
+}

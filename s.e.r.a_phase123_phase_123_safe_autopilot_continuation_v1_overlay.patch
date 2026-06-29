@@ -1,0 +1,10 @@
+Phase 123 Safe Autopilot Continuation v1
+
+Summary:
+- Harden ChatGPT bridge saved-target matching against ChatGPT URL slug normalization.
+- Match saved ChatGPT targets by `/c/<conversation-id>` when host matches.
+- Prefer control-center target config while preserving legacy bridge compatibility.
+- Add a target normalizer that writes the CDP-visible S.E.R.A. URL to both target configs.
+- Keep all fallback behavior disabled and stop for owner judgment.
+
+Files are delivered as overlay replacements/additions under repo/.

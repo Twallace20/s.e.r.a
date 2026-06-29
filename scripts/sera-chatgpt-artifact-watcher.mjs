@@ -5,7 +5,7 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase122-control-center-handoff-reconciler-next-phase-resolver-v1";
+const VERSION = "phase123-safe-autopilot-continuation-v1";
 
 function autoOpsDir() {
   return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps");
@@ -198,6 +198,16 @@ async function fetchJson(url) {
   if (!response.ok) throw new Error(`${url} returned HTTP ${response.status}`);
   return response.json();
 }
+function conversationIdFromUrl(value) {
+  try {
+    const url = value instanceof URL ? value : new URL(value);
+    const parts = url.pathname.split("/").filter(Boolean);
+    const cIndex = parts.indexOf("c");
+    if (cIndex >= 0 && parts[cIndex + 1]) return parts[cIndex + 1];
+    return null;
+  } catch { return null; }
+}
+
 function sameSavedConversation(tabUrl, targetUrl) {
   try {
     const tab = new URL(tabUrl);
@@ -205,7 +215,10 @@ function sameSavedConversation(tabUrl, targetUrl) {
     if (tab.hostname !== target.hostname) return false;
     const tabPath = tab.pathname.replace(/\/$/, "");
     const targetPath = target.pathname.replace(/\/$/, "");
-    return tabPath === targetPath || tab.href.split("?")[0] === target.href.split("?")[0];
+    if (tabPath === targetPath || tab.href.split("?")[0] === target.href.split("?")[0]) return true;
+    const tabConversationId = conversationIdFromUrl(tab);
+    const targetConversationId = conversationIdFromUrl(target);
+    return !!tabConversationId && !!targetConversationId && tabConversationId === targetConversationId;
   } catch { return false; }
 }
 async function connect(wsUrl) {
