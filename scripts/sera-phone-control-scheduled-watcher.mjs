@@ -4,14 +4,15 @@ import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
-const VERSION = "phase131-phone-autopilot-end-to-end-orchestrator-v1";
+const VERSION = "phase132-phone-autopilot-real-life-proof-harness-v1";
 const TASK_NAME = "SERA Phone Control Watcher";
 const ACCEPTED_STALE_MS = Number(process.env.SERA_PHONE_ACCEPTED_STALE_MS || 1000 * 60 * 10);
 const RUNNING_STALE_MS = Number(process.env.SERA_PHONE_RUNNING_STALE_MS || 1000 * 60 * 90);
 
 function autoOpsDir() { return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps"); }
-function repoRoot() { return path.resolve(path.dirname(new URL(import.meta.url).pathname), ".."); }
+function repoRoot() { return path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."); }
 function ensureDir(dir) { fs.mkdirSync(dir, { recursive: true }); }
 function timestamp() { return new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z").replace("T", "_"); }
 function decode(buffer) {
@@ -157,6 +158,50 @@ function counts(items) {
     result[status] = (result[status] || 0) + 1;
   }
   return result;
+}
+function sameFile(a, b) { return path.resolve(String(a || "")).toLowerCase() === path.resolve(String(b || "")).toLowerCase(); }
+function quarantineInvalidCommands(p, badItems) {
+  if (!badItems.length) return [];
+  const dir = path.join(p.control, "archive", "invalid_commands", timestamp());
+  ensureDir(dir);
+  const receipts = [];
+  for (const item of badItems) {
+    const base = path.basename(item.file);
+    const archivedPath = path.join(dir, base);
+    const receipt = {
+      version: VERSION,
+      status: "invalid_json_quarantined",
+      commandFile: item.file,
+      archivedPath,
+      parseError: item.parseError,
+      quarantinedAt: new Date().toISOString()
+    };
+    try {
+      if (sameFile(item.file, p.command)) {
+        if (fs.existsSync(item.file)) fs.copyFileSync(item.file, archivedPath);
+        writeJson(item.file, {
+          ...defaultCommand(),
+          commandId: "invalid-root-command-quarantined",
+          commandStatus: "blocked",
+          enabled: false,
+          action: "idle",
+          status: "invalid_json",
+          blockedReason: `Root command file could not be parsed and was reset: ${item.parseError}`,
+          archivedPath,
+          updatedBy: VERSION,
+          updatedAt: new Date().toISOString()
+        });
+      } else {
+        if (fs.existsSync(item.file)) fs.renameSync(item.file, archivedPath);
+      }
+    } catch (error) {
+      receipt.status = "invalid_json_quarantine_failed";
+      receipt.error = error instanceof Error ? error.message : String(error);
+    }
+    receipts.push(receipt);
+  }
+  writeJson(path.join(p.evidence, `invalid-command-quarantine-${timestamp()}.json`), { version: VERSION, receipts });
+  return receipts;
 }
 function phasePattern(phase) {
   return new RegExp(`phase[-_ ]?${phase}(?:\\D|$)`, "i");
@@ -324,13 +369,10 @@ function checkOnce(args) {
     return payload;
   }
   try {
-    const items = readCommands(p);
-    const bad = items.find(item => item.parseError);
-    if (bad) {
-      const payload = { ok: false, status: "invalid_json", commandFile: bad.file, message: `Command file could not be parsed: ${bad.parseError}`, commandCounts: counts(items) };
-      writeStatus(p, payload);
-      return payload;
-    }
+    let items = readCommands(p);
+    const badItems = items.filter(item => item.parseError);
+    const invalidReceipts = badItems.length ? quarantineInvalidCommands(p, badItems) : [];
+    if (badItems.length) items = readCommands(p);
     if (args.recoverStale) {
       const active = items.find(item => item.command && item.command.enabled === true && ["accepted", "running"].includes(item.command.commandStatus));
       if (active) {
@@ -360,7 +402,17 @@ function checkOnce(args) {
     mergeCommandFile(selected.file, { commandId: command.commandId, commandStatus: "accepted", status: "accepted", acceptedAt: now, lastSignature: sig });
     mergeCommandFile(selected.file, { commandStatus: "running", status: "running", lastRunStartedAt: new Date().toISOString(), lastSignature: sig });
     writeJson(p.watcherState, { lastSignature: sig, commandId: command.commandId, commandFile: selected.file, status: "running", startedAt: new Date().toISOString(), command: normalizeCommand(readJson(selected.file, command), selected.file) });
-    const run = runPhoneControlJob(selected.file);
+    let run;
+    try {
+      run = runPhoneControlJob(selected.file);
+    } catch (error) {
+      run = {
+        exitCode: 2,
+        error: error instanceof Error ? error.message : String(error),
+        stdout: "",
+        stderr: ""
+      };
+    }
     const evidencePath = path.join(p.evidence, `phone-control-watcher-${timestamp()}.json`);
     const updatedAfterRun = normalizeCommand(readJson(selected.file, command), selected.file);
     const latestHandoff = latestHandoffForCommand(p, updatedAfterRun);
@@ -373,6 +425,7 @@ function checkOnce(args) {
       runnerExitCode: run.exitCode,
       runnerError: run.error,
       latestHandoff,
+      invalidReceipts,
       stdoutTail: run.stdout.slice(-12000),
       stderrTail: run.stderr.slice(-12000),
       finishedAt: new Date().toISOString()

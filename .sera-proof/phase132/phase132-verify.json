@@ -1,0 +1,8 @@
+{
+  "phase": 132,
+  "version": "phase132-phone-autopilot-real-life-proof-harness-v1",
+  "verifyExitCode": 0,
+  "stdout": "{\n  \"ok\": true,\n  \"phase\": 132,\n  \"version\": \"phase132-phone-autopilot-real-life-proof-harness-v1\",\n  \"checks\": [\n    {\n      \"name\": \"watcher uses fileURLToPath for Windows-safe repoRoot\",\n      \"ok\": true,\n      \"detail\": \"\"\n    },\n    {\n      \"name\": \"job uses fileURLToPath for Windows-safe repoRoot\",\n      \"ok\": true,\n      \"detail\": \"\"\n    },\n    {\n      \"name\": \"watcher no longer uses URL pathname repoRoot\",\n      \"ok\": true,\n      \"detail\": \"\"\n    },\n    {\n      \"name\": \"job no longer uses URL pathname repoRoot\",\n      \"ok\": true,\n      \"detail\": \"\"\n    },\n    {\n      \"name\": \"watcher quarantines invalid command files instead of blocking queue\",\n      \"ok\": true,\n      \"detail\": \"\"\n    },\n    {\n      \"name\": \"watcher converts job-launch exceptions into blocked command outcomes\",\n      \"ok\": true,\n      \"detail\": \"\"\n    },\n    {\n      \"name\": \"phase132 version marker present\",\n      \"ok\": true,\n      \"detail\": \"\"\n    }\n  ],\n  \"verifiedAt\": \"2026-06-29T20:21:53.028Z\"\n}\n",
+  "stderr": "",
+  "createdAt": "2026-06-29T20:21:52Z"
+}

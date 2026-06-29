@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "commandId": "phase132-phone-proof-example-001",
+  "commandStatus": "new",
+  "enabled": true,
+  "action": "run_range",
+  "phaseStart": 132,
+  "phaseEnd": 132,
+  "maxPhases": 1,
+  "guide": "Build Phone Autopilot Real-Life Proof Harness v1. Prove the phone-saved command can move through new, accepted, running, artifact request, download, apply, validate, handoff, and complete or blocked without manual download. Add receipts showing each step. Stop on unclear work, owner judgment, browser failure, download failure, validation failure, or missing handoff.",
+  "stopAfterRange": true,
+  "pauseAfterCurrentPhase": false,
+  "emergencyStop": false,
+  "updatedBy": "owner",
+  "updatedReason": "Real-life phone autopilot proof test"
+}
