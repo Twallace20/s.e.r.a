@@ -5,8 +5,10 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 
-const VERSION = "phase130-phone-command-queue-status-lifecycle-v1";
+const VERSION = "phase131-phone-autopilot-end-to-end-orchestrator-v1";
 const TASK_NAME = "SERA Phone Control Watcher";
+const ACCEPTED_STALE_MS = Number(process.env.SERA_PHONE_ACCEPTED_STALE_MS || 1000 * 60 * 10);
+const RUNNING_STALE_MS = Number(process.env.SERA_PHONE_RUNNING_STALE_MS || 1000 * 60 * 90);
 
 function autoOpsDir() { return process.env.SERA_AUTOOPS_DIR || path.join(os.homedir(), "OneDrive", "SERA-AutoOps"); }
 function repoRoot() { return path.resolve(path.dirname(new URL(import.meta.url).pathname), ".."); }
@@ -33,12 +35,13 @@ function writeJson(file, data) { ensureDir(path.dirname(file)); fs.writeFileSync
 function writeText(file, text) { ensureDir(path.dirname(file)); fs.writeFileSync(file, text, "utf8"); }
 function sha(value) { return crypto.createHash("sha256").update(String(value)).digest("hex").toUpperCase(); }
 function parseArgs(argv) {
-  const args = { runOnce: false, status: false, json: false, force: false };
+  const args = { runOnce: false, status: false, json: false, force: false, recoverStale: true };
   for (const arg of argv) {
     if (arg === "--run-once") args.runOnce = true;
     else if (arg === "--status") args.status = true;
     else if (arg === "--json") args.json = true;
     else if (arg === "--force") args.force = true;
+    else if (arg === "--no-recover-stale") args.recoverStale = false;
   }
   return args;
 }
@@ -50,6 +53,7 @@ function paths() {
     autoOps,
     control,
     inbox,
+    handoff: path.join(autoOps, "06_handoff"),
     evidence: path.join(control, "evidence"),
     command: path.join(control, "autopilot-command.json"),
     statusMd: path.join(control, "AUTOPILOT_STATUS.md"),
@@ -69,15 +73,15 @@ function defaultCommand() {
     enabled: false,
     action: "idle",
     status: "ready",
-    phaseStart: 130,
-    phaseEnd: 130,
+    phaseStart: 131,
+    phaseEnd: 131,
     maxPhases: 1,
-    guide: "Continue guarded autopilot hardening. Stop on unclear work, owner judgment, browser issues, or validation failure.",
+    guide: "Continue guarded autopilot hardening. Stop on unclear work, owner judgment, browser issues, download failure, validation failure, or missing handoff.",
     stopAfterRange: true,
     pauseAfterCurrentPhase: false,
     emergencyStop: false,
     updatedBy: "owner",
-    updatedReason: "phone command queue ready"
+    updatedReason: "phone end-to-end orchestrator ready"
   };
 }
 function normalizeBool(value) { return value === true || String(value).toLowerCase() === "true"; }
@@ -89,6 +93,7 @@ function normalizeCommand(raw, file) {
   base.enabled = normalizeBool(base.enabled);
   base.emergencyStop = normalizeBool(base.emergencyStop);
   base.pauseAfterCurrentPhase = normalizeBool(base.pauseAfterCurrentPhase);
+  base.stopAfterRange = base.stopAfterRange !== false;
   base.phaseStart = Number(base.phaseStart || 0);
   base.phaseEnd = Number(base.phaseEnd || base.phaseStart || 0);
   base.maxPhases = Number(base.maxPhases || Math.max(1, base.phaseEnd - base.phaseStart + 1));
@@ -99,18 +104,18 @@ function normalizeCommand(raw, file) {
   return base;
 }
 function maybeEnsureCommand(p) {
-  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence);
+  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); ensureDir(p.handoff);
   if (!fs.existsSync(p.command)) writeJson(p.command, defaultCommand());
-  const example = path.join(p.inbox, "autopilot-command-phase130.example.json");
+  const example = path.join(p.inbox, "autopilot-command-phase131.example.json");
   if (!fs.existsSync(example)) {
     writeJson(example, {
       schemaVersion: 2,
-      commandId: "phase130-example-do-not-run",
+      commandId: "phase131-example-do-not-run",
       commandStatus: "ignored",
       enabled: false,
       action: "run_range",
-      phaseStart: 130,
-      phaseEnd: 130,
+      phaseStart: 131,
+      phaseEnd: 131,
       maxPhases: 1,
       guide: "Example only. Copy this file, change commandId, set commandStatus to new, and set enabled to true.",
       stopAfterRange: true,
@@ -144,6 +149,40 @@ function readCommands(p) {
 function runnableCommand(items) {
   return items.find(item => item.command && item.command.enabled === true && item.command.commandStatus === "new");
 }
+function counts(items) {
+  const result = { total: items.length, new: 0, accepted: 0, running: 0, complete: 0, blocked: 0, ignored: 0, idle: 0, missing: 0, invalid: 0 };
+  for (const item of items) {
+    if (item.parseError) { result.invalid++; continue; }
+    const status = item.command?.commandStatus || "missing";
+    result[status] = (result[status] || 0) + 1;
+  }
+  return result;
+}
+function phasePattern(phase) {
+  return new RegExp(`phase[-_ ]?${phase}(?:\\D|$)`, "i");
+}
+function handoffStatusFromName(name) {
+  if (/CLOSED_CLEANLY/i.test(name)) return "CLOSED_CLEANLY";
+  if (/BLOCKED/i.test(name)) return "BLOCKED";
+  if (/PASS/i.test(name)) return "PASS";
+  return "UNKNOWN";
+}
+function latestHandoffForCommand(p, command) {
+  if (!fs.existsSync(p.handoff)) return null;
+  const phases = [];
+  for (let n = command.phaseStart; n <= command.phaseEnd; n++) phases.push(n);
+  const matches = [];
+  for (const entry of fs.readdirSync(p.handoff, { withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+    if (!entry.name.toLowerCase().endsWith(".md")) continue;
+    if (!phases.some(phase => phasePattern(phase).test(entry.name))) continue;
+    const full = path.join(p.handoff, entry.name);
+    const stat = fs.statSync(full);
+    matches.push({ path: full, name: entry.name, status: handoffStatusFromName(entry.name), mtimeMs: stat.mtimeMs, mtime: new Date(stat.mtimeMs).toISOString() });
+  }
+  matches.sort((a, b) => b.mtimeMs - a.mtimeMs);
+  return matches[0] || null;
+}
 function writeStatus(p, payload) {
   const now = new Date().toISOString();
   const status = { ...payload, version: VERSION, taskName: TASK_NAME, updatedAt: now };
@@ -160,9 +199,14 @@ function writeStatus(p, payload) {
   if (payload.commandFile) lines.push(`Command File: ${payload.commandFile}`);
   if (command.commandId) lines.push(`Command ID: ${command.commandId}`);
   if (command.commandStatus) lines.push(`Command Status: ${command.commandStatus}`);
+  if (command.status) lines.push(`Machine Status: ${command.status}`);
   if (command.action) lines.push(`Command Action: ${command.action}`);
   if (command.phaseStart && command.phaseEnd) lines.push(`Command Range: ${command.phaseStart}-${command.phaseEnd}`);
   if (payload.runnerExitCode !== undefined) lines.push(`Runner Exit Code: ${payload.runnerExitCode}`);
+  if (payload.latestHandoff?.path) {
+    lines.push(`Latest Handoff: ${payload.latestHandoff.path}`);
+    lines.push(`Latest Handoff Status: ${payload.latestHandoff.status}`);
+  }
   if (payload.evidencePath) lines.push(`Evidence: ${payload.evidencePath}`);
   if (payload.commandCounts) {
     lines.push("");
@@ -178,7 +222,7 @@ function writeStatus(p, payload) {
   lines.push("To start work from your phone, create or edit a command file with:");
   lines.push("");
   lines.push("```json");
-  lines.push(`{ "commandStatus": "new", "enabled": true, "action": "run_range", "phaseStart": 131, "phaseEnd": 131, "maxPhases": 1 }`);
+  lines.push(`{ "commandStatus": "new", "enabled": true, "action": "run_range", "phaseStart": 132, "phaseEnd": 132, "maxPhases": 1 }`);
   lines.push("```");
   lines.push("");
   lines.push("S.E.R.A. updates the same JSON automatically: `new → accepted → running → complete` or `blocked`.");
@@ -188,13 +232,11 @@ function writeStatus(p, payload) {
 }
 function acquireLock(p, args) {
   const now = Date.now();
-  const staleMs = 1000 * 60 * 60;
+  const staleMs = 1000 * 60 * 20;
   const existing = readJson(p.watcherLock, null);
   if (existing && !args.force) {
     const created = Date.parse(existing.createdAt || "");
-    if (Number.isFinite(created) && now - created < staleMs) {
-      return { ok: false, stale: false, existing };
-    }
+    if (Number.isFinite(created) && now - created < staleMs) return { ok: false, stale: false, existing };
   }
   writeJson(p.watcherLock, { version: VERSION, pid: process.pid, createdAt: new Date().toISOString(), host: os.hostname() });
   return { ok: true };
@@ -207,58 +249,80 @@ function releaseLock(p) {
 }
 function mergeCommandFile(file, patch) {
   const current = readJson(file, {}) || {};
-  writeJson(file, { ...current, ...patch, updatedAt: new Date().toISOString(), updatedBy: VERSION });
+  const cleaned = { ...current, ...patch, updatedAt: new Date().toISOString(), updatedBy: VERSION };
+  for (const [key, value] of Object.entries(cleaned)) if (value === undefined) delete cleaned[key];
+  writeJson(file, cleaned);
 }
-function writeFlag(file, message) {
-  writeText(file, `${message}\nCreated: ${new Date().toISOString()}\nSource: ${VERSION}\n`);
-}
+function writeFlag(file, message) { writeText(file, `${message}\nCreated: ${new Date().toISOString()}\nSource: ${VERSION}\n`); }
 function runPhoneControlJob(commandFile) {
   const repo = repoRoot();
   const script = path.join(repo, "scripts", "sera-phone-control-job.mjs");
   if (!fs.existsSync(script)) throw new Error(`Missing phone control job script: ${script}`);
   const env = { ...process.env, SERA_PHONE_COMMAND_PATH: commandFile };
-  const run = spawnSync("node", [script, "--run", "--json", "--command-file", commandFile], { cwd: repo, encoding: "utf8", env, maxBuffer: 1024 * 1024 * 20 });
+  const run = spawnSync("node", [script, "--run", "--json", "--command-file", commandFile], { cwd: repo, encoding: "utf8", env, maxBuffer: 1024 * 1024 * 20, timeout: Number(process.env.SERA_PHONE_RUNNER_TIMEOUT_MS || 1000 * 60 * 100) });
   return {
-    exitCode: run.status ?? 0,
+    exitCode: run.error ? 2 : (run.status ?? 0),
+    error: run.error ? String(run.error.message || run.error) : null,
     stdout: String(run.stdout || ""),
     stderr: String(run.stderr || "")
   };
 }
-function counts(items) {
-  const result = { total: items.length, new: 0, accepted: 0, running: 0, complete: 0, blocked: 0, ignored: 0, missing: 0, invalid: 0 };
-  for (const item of items) {
-    if (item.parseError) { result.invalid++; continue; }
-    const status = item.command?.commandStatus || "missing";
-    result[status] = (result[status] || 0) + 1;
-  }
-  return result;
-}
-function consumeControlCommand(p, command, sig) {
+function consumeControlCommand(p, command, sig, selectedFile) {
   if (command.emergencyStop || command.action === "emergency_stop") {
     writeFlag(p.emergency, "Emergency stop requested by phone command.");
+    mergeCommandFile(selectedFile, { enabled: false, commandStatus: "complete", status: "emergency_stop", completedAt: new Date().toISOString(), lastSignature: sig });
     return { ok: true, status: "emergency_stop", command, message: "Emergency stop flag written. No new work started." };
   }
   if (command.pauseAfterCurrentPhase || command.action === "pause") {
     writeFlag(p.pause, "Pause requested by phone command.");
+    mergeCommandFile(selectedFile, { enabled: false, commandStatus: "complete", status: "pause", completedAt: new Date().toISOString(), lastSignature: sig });
     return { ok: true, status: "pause", command, message: "Pause flag written. No new run started." };
   }
   if (command.action === "stop") {
     writeFlag(p.stop, "Stop requested by phone command.");
+    mergeCommandFile(selectedFile, { enabled: false, commandStatus: "complete", status: "stop", completedAt: new Date().toISOString(), lastSignature: sig });
     return { ok: true, status: "stop", command, message: "Stop flag written. No new run started." };
   }
   return null;
 }
+function msSince(value) {
+  const t = Date.parse(value || "");
+  if (!Number.isFinite(t)) return Number.POSITIVE_INFINITY;
+  return Date.now() - t;
+}
+function reconcileExistingCommand(p, item) {
+  const command = item.command;
+  if (!command || !command.enabled) return null;
+  if (!["accepted", "running"].includes(command.commandStatus)) return null;
+  const latestHandoff = latestHandoffForCommand(p, command);
+  if (latestHandoff?.status === "CLOSED_CLEANLY") {
+    mergeCommandFile(item.file, { enabled: false, commandStatus: "complete", status: "completed", completedAt: new Date().toISOString(), latestHandoffPath: latestHandoff.path, latestHandoffStatus: latestHandoff.status });
+    return { ok: true, status: "complete", command: normalizeCommand(readJson(item.file, command), item.file), commandFile: item.file, latestHandoff, message: "Existing phone command was reconciled to complete from CLOSED_CLEANLY handoff." };
+  }
+  if (latestHandoff?.status === "BLOCKED") {
+    mergeCommandFile(item.file, { enabled: false, commandStatus: "blocked", status: "blocked", blockedAt: new Date().toISOString(), latestHandoffPath: latestHandoff.path, latestHandoffStatus: latestHandoff.status, blockedReason: "Latest handoff is BLOCKED. Repair before continuing." });
+    return { ok: false, status: "blocked", command: normalizeCommand(readJson(item.file, command), item.file), commandFile: item.file, latestHandoff, message: "Existing phone command was reconciled to blocked from BLOCKED handoff." };
+  }
+  const age = command.commandStatus === "accepted" ? msSince(command.acceptedAt) : msSince(command.lastRunStartedAt || command.startedAt || command.acceptedAt);
+  const threshold = command.commandStatus === "accepted" ? ACCEPTED_STALE_MS : RUNNING_STALE_MS;
+  if (age > threshold) {
+    const reason = command.commandStatus === "accepted"
+      ? `Command stayed accepted longer than ${Math.round(ACCEPTED_STALE_MS / 60000)} minutes without moving to running or producing a handoff.`
+      : `Command stayed running longer than ${Math.round(RUNNING_STALE_MS / 60000)} minutes without producing a final handoff.`;
+    mergeCommandFile(item.file, { enabled: false, commandStatus: "blocked", status: "blocked", blockedAt: new Date().toISOString(), latestHandoffPath: latestHandoff?.path, latestHandoffStatus: latestHandoff?.status, blockedReason: reason });
+    return { ok: false, status: "blocked", command: normalizeCommand(readJson(item.file, command), item.file), commandFile: item.file, latestHandoff, message: reason };
+  }
+  return { ok: true, status: command.commandStatus, command, commandFile: item.file, latestHandoff, message: `Command is already ${command.commandStatus}. Waiting for current run or handoff before starting another.` };
+}
 function checkOnce(args) {
   const p = paths();
-  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); maybeEnsureCommand(p);
-
+  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); ensureDir(p.handoff); maybeEnsureCommand(p);
   const lock = acquireLock(p, args);
   if (!lock.ok) {
     const payload = { ok: true, status: "already_running", message: "Phone control watcher skipped because another watcher instance is active.", lock: lock.existing };
     writeStatus(p, payload);
     return payload;
   }
-
   try {
     const items = readCommands(p);
     const bad = items.find(item => item.parseError);
@@ -267,45 +331,67 @@ function checkOnce(args) {
       writeStatus(p, payload);
       return payload;
     }
-
+    if (args.recoverStale) {
+      const active = items.find(item => item.command && item.command.enabled === true && ["accepted", "running"].includes(item.command.commandStatus));
+      if (active) {
+        const reconciled = reconcileExistingCommand(p, active);
+        if (reconciled) {
+          const payload = { ...reconciled, commandCounts: counts(readCommands(p)) };
+          writeStatus(p, payload);
+          return payload;
+        }
+      }
+    }
     const selected = runnableCommand(items);
     if (!selected) {
       const payload = { ok: true, status: "idle", commandCounts: counts(items), message: "No enabled command with commandStatus=new found. No run started." };
       writeStatus(p, payload);
       return payload;
     }
-
     const command = selected.command;
-    const sig = sha(JSON.stringify({ commandId: command.commandId, file: selected.file, phaseStart: command.phaseStart, phaseEnd: command.phaseEnd, guide: command.guide }));
-    const controlResult = consumeControlCommand(p, command, sig);
+    const sig = sha(JSON.stringify({ commandId: command.commandId, file: selected.file, phaseStart: command.phaseStart, phaseEnd: command.phaseEnd, maxPhases: command.maxPhases, guide: command.guide }));
+    const controlResult = consumeControlCommand(p, command, sig, selected.file);
     if (controlResult) {
-      mergeCommandFile(selected.file, { enabled: false, commandStatus: "complete", status: controlResult.status, completedAt: new Date().toISOString(), lastSignature: sig });
       const payload = { ...controlResult, commandFile: selected.file, command: normalizeCommand(readJson(selected.file, command), selected.file), commandCounts: counts(readCommands(p)) };
       writeStatus(p, payload);
       return payload;
     }
-
-    mergeCommandFile(selected.file, { commandId: command.commandId, commandStatus: "accepted", status: "accepted", acceptedAt: new Date().toISOString(), lastSignature: sig });
-    writeJson(p.watcherState, { lastSignature: sig, commandId: command.commandId, commandFile: selected.file, status: "accepted", acceptedAt: new Date().toISOString(), command });
-
+    const now = new Date().toISOString();
+    mergeCommandFile(selected.file, { commandId: command.commandId, commandStatus: "accepted", status: "accepted", acceptedAt: now, lastSignature: sig });
+    mergeCommandFile(selected.file, { commandStatus: "running", status: "running", lastRunStartedAt: new Date().toISOString(), lastSignature: sig });
+    writeJson(p.watcherState, { lastSignature: sig, commandId: command.commandId, commandFile: selected.file, status: "running", startedAt: new Date().toISOString(), command: normalizeCommand(readJson(selected.file, command), selected.file) });
     const run = runPhoneControlJob(selected.file);
     const evidencePath = path.join(p.evidence, `phone-control-watcher-${timestamp()}.json`);
+    const updatedAfterRun = normalizeCommand(readJson(selected.file, command), selected.file);
+    const latestHandoff = latestHandoffForCommand(p, updatedAfterRun);
     writeJson(evidencePath, {
       version: VERSION,
       taskName: TASK_NAME,
       commandFile: selected.file,
-      command,
+      command: updatedAfterRun,
       signature: sig,
       runnerExitCode: run.exitCode,
+      runnerError: run.error,
+      latestHandoff,
       stdoutTail: run.stdout.slice(-12000),
       stderrTail: run.stderr.slice(-12000),
       finishedAt: new Date().toISOString()
     });
-    const updated = normalizeCommand(readJson(selected.file, command), selected.file);
-    const ok = run.exitCode === 0;
-    const status = ok ? "complete" : "blocked";
-    writeJson(p.watcherState, { lastSignature: sig, commandId: updated.commandId, commandFile: selected.file, status, finishedAt: new Date().toISOString(), command: updated, evidencePath, exitCode: run.exitCode });
-    const payload = { ok, status, command: updated, commandFile: selected.file, runnerExitCode: run.exitCode, evidencePath, commandCounts: counts(readCommands(p)), message: ok ? "Phone command completed and commandStatus was updated automatically." : "Phone command blocked and commandStatus was updated automatically." };
+    const finalCommand = normalizeCommand(readJson(selected.file, updatedAfterRun), selected.file);
+    let ok = false;
+    let status = "blocked";
+    let message = "Phone-controlled run blocked.";
+    if (latestHandoff?.status === "CLOSED_CLEANLY" && run.exitCode === 0) {
+      ok = true; status = "complete"; message = "Phone command completed from real CLOSED_CLEANLY handoff and commandStatus was updated automatically.";
+      mergeCommandFile(selected.file, { enabled: false, commandStatus: "complete", status: "completed", completedAt: new Date().toISOString(), latestHandoffPath: latestHandoff.path, latestHandoffStatus: latestHandoff.status, lastEvidencePath: evidencePath, lastExitCode: run.exitCode, blockedReason: undefined });
+    } else {
+      const reason = run.error || (latestHandoff ? `Latest handoff status is ${latestHandoff.status}.` : "No handoff was produced by the autopilot runner.");
+      mergeCommandFile(selected.file, { enabled: false, commandStatus: "blocked", status: "blocked", blockedAt: new Date().toISOString(), latestHandoffPath: latestHandoff?.path, latestHandoffStatus: latestHandoff?.status, lastEvidencePath: evidencePath, lastExitCode: run.exitCode, blockedReason: reason });
+      message = `Phone command blocked: ${reason}`;
+    }
+    const commandAfterFinal = normalizeCommand(readJson(selected.file, finalCommand), selected.file);
+    writeJson(p.watcherState, { lastSignature: sig, commandId: commandAfterFinal.commandId, commandFile: selected.file, status, finishedAt: new Date().toISOString(), command: commandAfterFinal, evidencePath, latestHandoff, exitCode: run.exitCode });
+    const payload = { ok, status, command: commandAfterFinal, commandFile: selected.file, runnerExitCode: run.exitCode, latestHandoff, evidencePath, commandCounts: counts(readCommands(p)), message };
     writeStatus(p, payload);
     return payload;
   } finally {
@@ -314,15 +400,17 @@ function checkOnce(args) {
 }
 function statusOnly() {
   const p = paths();
-  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); maybeEnsureCommand(p);
+  ensureDir(p.control); ensureDir(p.inbox); ensureDir(p.evidence); ensureDir(p.handoff); maybeEnsureCommand(p);
   const items = readCommands(p);
   const latest = items.slice().sort((a, b) => b.mtimeMs - a.mtimeMs)[0];
+  const command = latest?.command || normalizeCommand(readJson(p.command, defaultCommand()), p.command);
   const payload = {
     ok: true,
     status: "status",
     message: "Phone scheduled watcher status read.",
-    command: latest?.command || normalizeCommand(readJson(p.command, defaultCommand()), p.command),
+    command,
     commandFile: latest?.file || p.command,
+    latestHandoff: latestHandoffForCommand(p, command),
     commandCounts: counts(items),
     watcherState: readJson(p.watcherState, {}) || {},
     lock: readJson(p.watcherLock, null)

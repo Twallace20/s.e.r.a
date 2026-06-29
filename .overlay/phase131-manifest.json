@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "phase": 131,
+  "name": "Phone Autopilot End-to-End Orchestrator v1",
+  "version": "phase131-phone-autopilot-end-to-end-orchestrator-v1",
+  "type": "overlay",
+  "zipRoot": "repo/",
+  "expectedZipName": "s.e.r.a_phase131_phone_autopilot_end_to_end_orchestrator_v1_overlay.zip",
+  "summary": "Upgrade phone JSON control from detection/accepted status into a complete end-to-end orchestrator that moves commands to running and completes or blocks based on actual handoff output.",
+  "files": [
+    "scripts/sera-phone-control-scheduled-watcher.mjs",
+    "scripts/sera-phone-control-scheduled-watcher.ps1",
+    "scripts/sera-phone-control-job.mjs",
+    "scripts/sera-phone-control-job.ps1",
+    "scripts/phase131-verify.mjs",
+    "00_control_center_templates/autopilot-command.phase131-e2e.example.json",
+    "docs/autopilot/PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md",
+    "docs/phases/PHASE_131_PHONE_AUTOPILOT_END_TO_END_ORCHESTRATOR_V1.md",
+    ".overlay/phase131-manifest.json",
+    ".sera-proof/phase131/phase131-verify.json",
+    "s.e.r.a_phase131_phone_autopilot_end_to_end_orchestrator_v1_overlay.patch"
+  ],
+  "safety": {
+    "savedChatTargetOnly": true,
+    "newChatFallbackAllowed": false,
+    "randomRecentChatFallbackAllowed": false,
+    "phoneRangeMaxPhases": 5,
+    "ownerDecisionStop": true,
+    "usesExistingSafetyGates": true,
+    "singleWatcherLock": true,
+    "singleRunLock": true,
+    "runsOnlyNewCommands": true,
+    "updatesCommandFileAfterUse": true,
+    "missingHandoffBlocks": true
+  },
+  "phoneControl": {
+    "checkEveryMinutes": 2,
+    "queueDirectory": "00_control_center/command_inbox",
+    "supportedFilePattern": "autopilot-command*.json",
+    "requiredRunFields": {
+      "enabled": true,
+      "commandStatus": "new"
+    },
+    "lifecycle": ["new", "accepted", "running", "complete", "blocked", "ignored"],
+    "defaultCurrentCommandFile": "00_control_center/autopilot-command.json",
+    "statusFile": "00_control_center/AUTOPILOT_STATUS.md",
+    "handoffDirectory": "06_handoff"
+  },
+  "proof": {
+    "simulatedClosedCleanlyLifecycle": true,
+    "staleAcceptedBlocks": true,
+    "latestHandoffSurfaced": true
+  }
+}
