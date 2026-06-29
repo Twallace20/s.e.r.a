@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "phase": 125,
+  "version": "phase125-blocked-phase-hotfix-overlay-protocol-v1",
+  "verifiedBy": "artifact-generation",
+  "notes": [
+    "Adds standardized hotfix overlay request generation.",
+    "Preserves saved-target-only safety gates.",
+    "Updates autopilot loop to use generated hotfix prompts and retry the original blocked phase after hotfix success."
+  ]
+}

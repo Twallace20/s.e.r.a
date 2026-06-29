@@ -1,0 +1,9 @@
+Phase 125 — Blocked Phase Hotfix Overlay Protocol v1
+
+Adds a standardized, ZIP-first hotfix protocol for blocked phases:
+- Writes hotfix prompts tied to the blocked handoff/evidence.
+- Creates active-hotfix-request.json in the control center.
+- Routes hotfix artifacts with a 02_hotfix_approved route hint.
+- Updates the autopilot loop to use generated hotfix prompts.
+- Retries the original blocked phase after hotfix success.
+- Stops for owner-required or unclear repair states.
