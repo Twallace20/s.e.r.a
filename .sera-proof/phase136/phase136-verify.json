@@ -1,0 +1,12 @@
+{
+  "phaseId": "phase136-chatgpt-bridge-regex-syntax-hotfix-v1",
+  "status": "ready",
+  "fix": "Replace malformed literal newline regex split in chatgpt bridge submit/download script with an escaped CRLF/LF split regex.",
+  "target": "scripts/chatgpt-bridge-submit-download.mjs",
+  "validation": [
+    "node --check scripts/chatgpt-bridge-submit-download.mjs",
+    "node scripts/phase136-verify.mjs",
+    "npm run sera:gate"
+  ],
+  "createdAt": "2026-06-29T21:30:00.000Z"
+}
