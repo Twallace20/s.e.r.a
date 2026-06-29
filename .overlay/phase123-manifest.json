@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "phase": 123,
+  "name": "phase-123-safe-autopilot-continuation-v1",
+  "type": "overlay",
+  "root": "repo/",
+  "files": [
+    "scripts/chatgpt-bridge-submit-download.mjs",
+    "scripts/sera-chatgpt-submit-download.ps1",
+    "scripts/sera-chatgpt-artifact-watcher.mjs",
+    "scripts/sera-chatgpt-target-normalize.mjs",
+    "scripts/sera-chatgpt-target-normalize.ps1",
+    "scripts/phase123-verify.mjs",
+    "docs/autopilot/SAFE_AUTOPILOT_CONTINUATION_V1.md",
+    "docs/phases/PHASE_123_SAFE_AUTOPILOT_CONTINUATION_V1.md",
+    ".overlay/phase123-manifest.json",
+    ".sera-proof/phase123/phase123-verify.json",
+    "s.e.r.a_phase123_phase_123_safe_autopilot_continuation_v1_overlay.patch"
+  ],
+  "safety": {
+    "usesSavedChatTargetOnly": true,
+    "matchesSavedConversationByConversationId": true,
+    "allowsNewChatFallback": false,
+    "allowsRandomRecentChatFallback": false,
+    "automatesAccountLogin": false,
+    "dependencyInstalls": false,
+    "paidServices": false,
+    "credentialChanges": false,
+    "githubSecuritySettingsChanges": false,
+    "stopsForOwnerJudgment": true
+  }
+}
