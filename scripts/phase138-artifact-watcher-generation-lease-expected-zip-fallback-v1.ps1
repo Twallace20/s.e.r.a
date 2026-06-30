@@ -107,12 +107,21 @@ function Test-SavedChatGptTargetContract {
     if ($target.PSObject.Properties.Name.Contains('targetUrl') -and $target.targetUrl -and ([string]$target.targetUrl) -notlike 'https://chatgpt.com/*') { $issues.Add('targetUrl must point to chatgpt.com') }
   }
 
+  $allowNewChatFallbackValue = $null
+  $allowRandomRecentChatFallbackValue = $null
+  if ($null -ne $target -and $target.PSObject.Properties.Name.Contains('allowNewChatFallback')) {
+    $allowNewChatFallbackValue = $target.allowNewChatFallback
+  }
+  if ($null -ne $target -and $target.PSObject.Properties.Name.Contains('allowRandomRecentChatFallback')) {
+    $allowRandomRecentChatFallbackValue = $target.allowRandomRecentChatFallback
+  }
+
   [pscustomobject]@{
     ok = ($issues.Count -eq 0)
     targetPath = $paths.Target
     targetUrlPresent = ($null -ne $target -and $target.PSObject.Properties.Name.Contains('targetUrl') -and ![string]::IsNullOrWhiteSpace([string]$target.targetUrl))
-    allowNewChatFallback = if ($null -ne $target -and $target.PSObject.Properties.Name.Contains('allowNewChatFallback')) { $target.allowNewChatFallback } else { $null }
-    allowRandomRecentChatFallback = if ($null -ne $target -and $target.PSObject.Properties.Name.Contains('allowRandomRecentChatFallback')) { $target.allowRandomRecentChatFallback } else { $null }
+    allowNewChatFallback = $allowNewChatFallbackValue
+    allowRandomRecentChatFallback = $allowRandomRecentChatFallbackValue
     issues = @($issues)
   }
 }
@@ -435,14 +444,23 @@ function Install-RuntimeGuard {
       [System.IO.File]::WriteAllText($vbsPath, $wrappedCommand + [Environment]::NewLine, $utf8NoBom)
     }
 
-    $results += [pscustomobject]@{ role = $launcher.role; launcher = $vbsPath; backup = $backupPath; status = if ($alreadyWrapped) { 'already_wrapped' } else { if ($DoApply) { 'wrapped' } else { 'dry_run_would_wrap' } } }
+    if ($alreadyWrapped) {
+      $launcherStatus = 'already_wrapped'
+    } elseif ($DoApply) {
+      $launcherStatus = 'wrapped'
+    } else {
+      $launcherStatus = 'dry_run_would_wrap'
+    }
+    $results += [pscustomobject]@{ role = $launcher.role; launcher = $vbsPath; backup = $backupPath; status = $launcherStatus }
   }
+
+  if ($DoApply) { $configMode = 'installed' } else { $configMode = 'dry_run' }
 
   $config = [ordered]@{
     schemaVersion = 1
     phase = 138
     guard = 'artifact-watcher-generation-lease-expected-zip-fallback-v1'
-    mode = if ($DoApply) { 'installed' } else { 'dry_run' }
+    mode = $configMode
     defaultExpectedZipFilename = $DefaultExpectedZip
     leaseMinutes = $Minutes
     doNotRefreshWhileLeaseActive = $true
@@ -460,7 +478,8 @@ function Install-RuntimeGuard {
 
   $configPath = Join-Path $paths.RuntimeGuardDir 'phase138-runtime-guard-config.json'
   if ($DoApply) { Write-JsonNoBom -Path $configPath -Value $config }
-  $evidencePath = Write-GuardEvidence -AutoOpsRoot $AutoOpsRoot -Role 'installer' -Decision (if ($DoApply) { 'installed' } else { 'dry_run' }) -Details $config
+  if ($DoApply) { $installDecision = 'installed' } else { $installDecision = 'dry_run' }
+  $evidencePath = Write-GuardEvidence -AutoOpsRoot $AutoOpsRoot -Role 'installer' -Decision $installDecision -Details $config
 
   [pscustomobject]@{ ok = $true; apply = $DoApply; configPath = $configPath; evidencePath = $evidencePath; launchers = $results }
 }
@@ -478,12 +497,14 @@ function Uninstall-RuntimeGuard {
     $backupPath = Join-Path $paths.RuntimeGuardDir ($item.file + '.phase138-original.vbs')
     if ((Test-Path $backupPath) -and (Test-Path $vbsPath)) {
       if ($DoApply) { Copy-Item $backupPath $vbsPath -Force }
-      $results += [pscustomobject]@{ role = $item.role; launcher = $vbsPath; backup = $backupPath; status = if ($DoApply) { 'restored' } else { 'dry_run_would_restore' } }
+      if ($DoApply) { $restoreStatus = 'restored' } else { $restoreStatus = 'dry_run_would_restore' }
+      $results += [pscustomobject]@{ role = $item.role; launcher = $vbsPath; backup = $backupPath; status = $restoreStatus }
     } else {
       $results += [pscustomobject]@{ role = $item.role; launcher = $vbsPath; backup = $backupPath; status = 'backup_missing_or_launcher_missing' }
     }
   }
-  $evidencePath = Write-GuardEvidence -AutoOpsRoot $AutoOpsRoot -Role 'installer' -Decision (if ($DoApply) { 'uninstalled' } else { 'dry_run_uninstall' }) -Details ([ordered]@{ launchers = $results })
+  if ($DoApply) { $uninstallDecision = 'uninstalled' } else { $uninstallDecision = 'dry_run_uninstall' }
+  $evidencePath = Write-GuardEvidence -AutoOpsRoot $AutoOpsRoot -Role 'installer' -Decision $uninstallDecision -Details ([ordered]@{ launchers = $results })
   [pscustomobject]@{ ok = $true; apply = $DoApply; evidencePath = $evidencePath; launchers = $results }
 }
 
@@ -495,6 +516,15 @@ function Invoke-Status {
   $zip = Find-ExpectedZipCandidate -AutoOpsRoot $AutoOpsRoot -ExpectedName $expected.expectedZipFilename
   $lease = Get-ActiveGenerationLease -AutoOpsRoot $AutoOpsRoot
   $wrapper = Join-Path $paths.RuntimeGuardDir 'phase138-artifact-watcher-safe-wrapper.ps1'
+  $activeLeaseValue = $null
+  if ($null -ne $lease) {
+    $activeLeaseValue = [pscustomobject]@{
+      path = $lease.path
+      leaseUntil = $lease.leaseUntil.ToString('o')
+      expectedZipFilename = $lease.lease.expectedZipFilename
+    }
+  }
+
   [pscustomobject]@{
     ok = $targetCheck.ok
     phase = 138
@@ -503,7 +533,7 @@ function Invoke-Status {
     target = $targetCheck
     expectedZip = $expected
     zipCandidate = $zip
-    activeLease = if ($null -eq $lease) { $null } else { [pscustomobject]@{ path = $lease.path; leaseUntil = $lease.leaseUntil.ToString('o'); expectedZipFilename = $lease.lease.expectedZipFilename } }
+    activeLease = $activeLeaseValue
     runtimeGuardInstalled = (Test-Path $wrapper)
     wrapperPath = $wrapper
   }

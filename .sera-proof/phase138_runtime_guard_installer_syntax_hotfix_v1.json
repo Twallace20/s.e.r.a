@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "phase": 138,
+  "hotfix": "runtime-guard-installer-syntax-hotfix-v1",
+  "ok": true,
+  "covers": [
+    "removes inline if expression patterns from runtime guard installer",
+    "preserves generation lease behavior",
+    "preserves expected ZIP exact fallback behavior",
+    "preserves saved-target-only safety gates",
+    "keeps runtime guard installation owner-triggered"
+  ],
+  "createdAt": "2026-06-30T16:32:35Z"
+}
