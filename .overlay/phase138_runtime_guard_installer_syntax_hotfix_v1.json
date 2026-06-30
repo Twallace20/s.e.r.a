@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "phase": 138,
+  "name": "Runtime Guard Installer Syntax Hotfix v1",
+  "type": "hotfix",
+  "repairs": "Phase 138 runtime guard installer failed because PowerShell inline if expressions were used where statements are required.",
+  "expectedZipFilename": "s.e.r.a_phase138_runtime_guard_installer_syntax_hotfix_v1_overlay.zip",
+  "files": [
+    "scripts/phase138-artifact-watcher-generation-lease-expected-zip-fallback-v1.ps1",
+    ".overlay/phase138_runtime_guard_installer_syntax_hotfix_v1.json",
+    ".sera-proof/phase138_runtime_guard_installer_syntax_hotfix_v1.json",
+    "docs/phase138-runtime-guard-installer-syntax-hotfix-v1.md",
+    "scripts/verify-phase138-runtime-guard-installer-syntax-hotfix-v1.ps1"
+  ],
+  "safety": [
+    "saved ChatGPT target only",
+    "no random/new-chat fallback",
+    "no credentials/tokens/paid services/external account changes",
+    "owner-control boundaries preserved",
+    "runtime guard install remains explicit owner-run command"
+  ],
+  "createdAt": "2026-06-30T16:32:35Z"
+}
