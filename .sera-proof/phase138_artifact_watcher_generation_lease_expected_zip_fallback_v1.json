@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "phase": 138,
+  "proofName": "phase138-artifact-watcher-generation-lease-expected-zip-fallback-v1",
+  "expectedZipFilename": "s.e.r.a_phase138_artifact_watcher_generation_lease_expected_zip_fallback_v1_overlay.zip",
+  "createdAt": "2026-06-30T15:55:00Z",
+  "assertions": {
+    "usesGenerationLease": true,
+    "preventsRefreshDuringActiveLease": true,
+    "preventsResubmitDuringActiveLease": true,
+    "prefersExactExpectedZipFilename": true,
+    "archivesStalePromptReferences": true,
+    "preservesSavedChatGptTargetOnly": true,
+    "doesNotChangeCredentialsTokensExternalAccountsPaidServicesGitHubSettingsOrOwnerControl": true
+  },
+  "manualRuntimeInstallRequired": true,
+  "manualRuntimeInstallCommand": "powershell -ExecutionPolicy Bypass -File .\\scripts\\phase138-artifact-watcher-generation-lease-expected-zip-fallback-v1.ps1 -InstallRuntimeGuard -Apply"
+}
