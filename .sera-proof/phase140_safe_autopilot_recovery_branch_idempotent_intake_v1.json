@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "phase": 140,
+  "phaseId": "phase140-safe-autopilot-recovery-branch-idempotent-intake-v1",
+  "status": "ready-for-application",
+  "proofType": "recovery-and-intake-hardening",
+  "observedFailuresAddressed": [
+    "Phase 139 browser artifact generated twice and did not download deterministically.",
+    "Phase 139 command was falsely marked complete from a stale CLOSED_CLEANLY hotfix handoff.",
+    "Phase 139 normal overlay blocked because the work branch already existed from the hotfix attempt.",
+    "Manual routing copied ZIP from 13_chatgpt_downloads into 01_apply_approved, leaving the source capture copy behind."
+  ],
+  "requiredRuntimeRules": {
+    "branchIdempotency": "If the intended work branch already exists, switch to it when safe or require a unique rerun branch; do not fail solely because git switch -c reports branch exists.",
+    "staleHandoffIsolation": "A command may only be completed by a handoff that matches the current command id, phase id, expected ZIP, and run evidence.",
+    "duplicateGenerationHandling": "Duplicate artifact generation must create a blocked evidence packet and stop resubmission.",
+    "downloadRoutingSemantics": "13_chatgpt_downloads is a capture/source folder. Copying to 01_apply_approved does not remove the source copy unless a move policy is explicitly selected."
+  },
+  "safetyGates": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "credentialsAllowed": false,
+    "tokensAllowed": false,
+    "paidServicesAllowed": false,
+    "githubSettingsMutationAllowed": false,
+    "ownerControlBoundaryChangesAllowed": false,
+    "selfMergeAllowed": false,
+    "productionDeploymentAllowed": false
+  },
+  "verificationCommand": "powershell -ExecutionPolicy Bypass -File .\\scripts\\verify-phase140-safe-autopilot-recovery-branch-idempotent-intake-v1.ps1 -RepoRoot <repo>",
+  "createdAt": "2026-06-30T20:10:00.000Z"
+}
