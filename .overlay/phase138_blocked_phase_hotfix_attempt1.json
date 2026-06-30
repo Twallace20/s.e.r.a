@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "overlayType": "hotfix",
+  "phase": 138,
+  "phaseName": "Phase 138 Safe Autopilot Continuation v1 Hotfix Attempt 1",
+  "expectedZipFilename": "s.e.r.a_phase138_blocked_phase_hotfix_attempt1_overlay.zip",
+  "blockedPhaseZipFilename": "s.e.r.a_phase138_phase_138_safe_autopilot_continuation_v1_overlay.zip",
+  "blockedEvidenceSource": "C:\\Users\\18123\\OneDrive\\SERA-AutoOps\\17_needs_attention\\CHATGPT_ARTIFACT_WATCHER_NEEDS_ATTENTION-20260630_150656Z.md",
+  "failureReason": "Max watcher attempts reached for s.e.r.a_phase138_phase_138_safe_autopilot_continuation_v1_overlay.zip",
+  "purpose": "Repair the recoverable Phase 138 blocked state by creating a safe retry lease and stale watcher marker without changing credentials, external accounts, GitHub settings, paid services, or owner-control boundaries.",
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "externalAccountsChanged": false,
+    "credentialsOrTokensChanged": false,
+    "paidServicesChanged": false,
+    "ownerControlBoundariesChanged": false,
+    "stopIfOwnerDecisionRequired": true
+  },
+  "files": [
+    ".overlay/phase138_blocked_phase_hotfix_attempt1.json",
+    ".sera-proof/phase138_blocked_phase_hotfix_attempt1.json",
+    "docs/phase138-blocked-phase-hotfix-attempt1.md",
+    "scripts/phase138-blocked-phase-hotfix-attempt1.ps1",
+    "scripts/verify-phase138-blocked-phase-hotfix-attempt1.ps1"
+  ],
+  "createdAt": "2026-06-30T15:09:21Z"
+}
