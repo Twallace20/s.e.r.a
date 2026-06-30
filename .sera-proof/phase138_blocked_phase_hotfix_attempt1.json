@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "phase": 138,
+  "hotfixAttempt": 1,
+  "name": "Phase 138 Safe Autopilot Continuation v1 Hotfix Attempt 1",
+  "expectedZipFilename": "s.e.r.a_phase138_blocked_phase_hotfix_attempt1_overlay.zip",
+  "blockedCondition": "Max watcher attempts reached for s.e.r.a_phase138_phase_138_safe_autopilot_continuation_v1_overlay.zip",
+  "proofAssertions": [
+    "ZIP root is repo/.",
+    "Overlay manifest is present.",
+    "SERA proof verification file is present.",
+    "Hotfix is additive and can be routed to 02_hotfix_approved.",
+    "Hotfix preserves saved ChatGPT target only.",
+    "Hotfix does not enable random recent chat fallback.",
+    "Hotfix does not enable new-chat fallback.",
+    "Hotfix does not alter credentials, tokens, external accounts, paid services, GitHub settings, or owner-control boundaries.",
+    "Hotfix provides a safe retry lease helper for recoverable artifact watcher max-attempt blocks."
+  ],
+  "createdAt": "2026-06-30T15:09:21Z"
+}
