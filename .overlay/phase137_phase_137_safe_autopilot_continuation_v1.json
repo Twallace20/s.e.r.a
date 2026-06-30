@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "phase": 137,
+  "name": "Phase 137 Safe Autopilot Continuation v1",
+  "overlayId": "phase137-phase-137-safe-autopilot-continuation-v1",
+  "overlayType": "phase",
+  "expectedZip": "s.e.r.a_phase137_phase_137_safe_autopilot_continuation_v1_overlay.zip",
+  "createdAt": "2026-06-30T14:35:00Z",
+  "purpose": "Continue guarded autopilot hardening by adding phone-autopilot proof helpers, safety preflight validation, and receipt capture for Phase 137.",
+  "routing": {
+    "preferredQueue": "01_apply_approved",
+    "hotfix": false
+  },
+  "safety": {
+    "preserveExistingSafetyGates": true,
+    "savedChatGptTargetOnly": true,
+    "allowNewChatFallback": false,
+    "allowRandomRecentChatFallback": false,
+    "externalAccountsChanged": false,
+    "projectSettingsChanged": false,
+    "paidServicesChanged": false,
+    "ownerControlBoundariesChanged": false,
+    "stopIfOwnerJudgmentRequired": true
+  },
+  "files": [
+    "scripts/phase137-safe-autopilot-continuation-v1.ps1",
+    "scripts/verify-phase137-safe-autopilot-continuation-v1.ps1",
+    "docs/phase137-safe-autopilot-continuation-v1.md",
+    ".sera-proof/phase137_phase_137_safe_autopilot_continuation_v1.json"
+  ],
+  "verification": {
+    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-phase137-safe-autopilot-continuation-v1.ps1",
+    "expectedResult": "ok:true"
+  }
+}
