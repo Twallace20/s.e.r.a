@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "phase": 137,
+  "proofId": "phase137-safe-autopilot-continuation-v1-proof",
+  "status": "provided",
+  "createdAt": "2026-06-30T14:35:00Z",
+  "assertions": [
+    "ZIP root is repo/.",
+    "Overlay manifest is present under repo/.overlay/.",
+    "SERA proof file is present under repo/.sera-proof/.",
+    "Patch is additive and avoids credentials, tokens, paid services, external accounts, or GitHub/security settings.",
+    "Saved ChatGPT target-only behavior is preserved; no random/new-chat fallback is introduced.",
+    "Phase 137 helper writes phone-readable receipts without bypassing existing gates.",
+    "Verification script checks package integrity and safety guardrails."
+  ],
+  "ownerGuidanceCovered": {
+    "newAcceptedRunningCompleteBlockedReceipts": true,
+    "phoneReadableAutopilotStatusSupport": true,
+    "closedCleanlyOrBlockedStopRule": true,
+    "noManualArtifactHandlingAssumption": true,
+    "stopOnUnclearOrOwnerJudgment": true
+  },
+  "manualBoundary": "This overlay does not alter external accounts, project settings, paid services, browser credentials, or owner-control boundaries."
+}
