@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "phase": 142,
+  "phaseSlug": "phase142_autoops_extraction_intake_self_test_continuation_queue_v1",
+  "status": "proof-ready",
+  "expectedZipFilename": "s.e.r.a_phase142_autoops_extraction_intake_self_test_continuation_queue_v1_overlay.zip",
+  "proofClaims": [
+    "ZIP extraction self-test is required before branch creation or file application.",
+    "The overlay manifest must be found under repo/.overlay before git branch mutation.",
+    "Branch-exists handling must switch to and reuse a clean branch instead of failing.",
+    "Only one active command may run at a time.",
+    "Sequential/batch queue execution must stop on BLOCKED and require CLOSED_CLEANLY before starting the next phase.",
+    "A blocked handoff must produce a continuation packet that can be pasted or uploaded to ChatGPT for clean closeout.",
+    "Fresh commands cannot be completed by stale handoffs; matching requires commandId, expectedZipFilename, runNonce, and phaseSlug.",
+    "Phone autopilot is allowed only as guarded single-phase or stop-on-block sequential batch until additional unattended proof exists."
+  ],
+  "continuationModel": {
+    "blockedHandoffStatus": "BLOCKED",
+    "nextConversationAction": "Upload or paste the blocked handoff into ChatGPT.",
+    "allowedRecoveryTypes": [
+      "fixed_overlay",
+      "hotfix_overlay",
+      "manual_rescue",
+      "rollback_only_when_required"
+    ],
+    "queueBehavior": "pause_until_closed_cleanly"
+  },
+  "batchJsonExample": {
+    "mode": "phase_batch",
+    "phases": [
+      142,
+      143,
+      144
+    ],
+    "stopOnBlocked": true,
+    "requireClosedCleanlyBeforeNext": true,
+    "oneActiveCommandOnly": true
+  },
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "noRandomChatFallback": true,
+    "noNewChatFallback": true,
+    "noCredentials": true,
+    "noTokens": true,
+    "noPaidServices": true,
+    "noGithubSettingsChanges": true,
+    "noSelfMerge": true,
+    "noProductionDeployment": true
+  },
+  "validation": {
+    "verifier": "scripts/verify-phase142-autoops-extraction-intake-self-test-continuation-queue-v1.ps1",
+    "requiresOverlayManifest": true,
+    "requiresProofFile": true,
+    "requiresDoc": true,
+    "requiresRuntimeScript": true,
+    "requiresZipExtractionSelfTestPolicy": true,
+    "requiresContinuationQueuePolicy": true
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "phase": 142,
+  "phaseSlug": "phase142_autoops_extraction_intake_self_test_continuation_queue_v1",
+  "title": "Phase 142 \u2014 AutoOps Extraction Intake Self-Test + Continuation Queue v1",
+  "createdAt": "2026-06-30T20:42:00Z",
+  "expectedZipFilename": "s.e.r.a_phase142_autoops_extraction_intake_self_test_continuation_queue_v1_overlay.zip",
+  "purpose": "Make phone-driven AutoOps safe for one-at-a-time and queued phase execution by adding ZIP extraction self-test, idempotent intake behavior, continuation packets after blocked handoffs, and stop-on-blocked sequential queue rules.",
+  "userRequestsCovered": [
+    "Run autopilot from the phone safely.",
+    "Continue the same conversation/workflow when a blocked handoff is produced.",
+    "Close blocked phases cleanly before continuing.",
+    "Support multiple JSON commands or phase batches in succession.",
+    "Pause the queue on blocked states and require CLOSED_CLEANLY before the next phase starts.",
+    "Avoid stale handoff false-completions, duplicate prompt submissions, and branch-exists failures."
+  ],
+  "intakeGuards": {
+    "zipExtractionSelfTestBeforeBranchCreation": true,
+    "manifestLookupRequiredBeforeGitBranchMutation": true,
+    "expectedRoot": "repo/",
+    "expectedManifest": "repo/.overlay/phase142_autoops_extraction_intake_self_test_continuation_queue_v1.json",
+    "badZipOutcome": "BLOCKED_PACKET_WITH_EXTRACTED_CONTENT_LIST",
+    "branchExistsOutcome": "SWITCH_AND_REUSE_BRANCH_IF_CLEAN",
+    "dirtyBranchOutcome": "BLOCKED_PACKET",
+    "staleHandoffCompletionAllowed": false,
+    "handoffMatchRequires": [
+      "commandId",
+      "expectedZipFilename",
+      "runNonce",
+      "phaseSlug"
+    ],
+    "oneActiveCommandOnly": true,
+    "stopOnBlocked": true,
+    "requireClosedCleanlyBeforeNext": true,
+    "batchJsonSupport": true,
+    "sequentialQueueSupport": true,
+    "continuationPacketRequiredOnBlocked": true
+  },
+  "phoneAutopilotPolicy": {
+    "allowedMode": "guarded_single_or_sequential_batch",
+    "unattendedMultiPhaseAllowed": false,
+    "ownerApprovalRequiredForMergeOrSafeAutoMergePolicy": true,
+    "browserPromptSubmissionAllowedOnlyWithSavedTarget": true,
+    "downloadCompletionEvidenceRequired": true
+  },
+  "safetyGates": {
+    "savedChatGptTargetOnly": true,
+    "randomRecentChatFallbackAllowed": false,
+    "newChatFallbackAllowed": false,
+    "credentialUseAllowed": false,
+    "tokenExposureAllowed": false,
+    "paidServiceActivationAllowed": false,
+    "githubSettingsMutationAllowed": false,
+    "ownerControlBoundaryMutationAllowed": false,
+    "selfMergeAllowed": false,
+    "productionDeploymentAllowed": false,
+    "silentAutoMergeAllowed": false
+  },
+  "files": [
+    "repo/.overlay/phase142_autoops_extraction_intake_self_test_continuation_queue_v1.json",
+    "repo/.sera-proof/phase142_autoops_extraction_intake_self_test_continuation_queue_v1.json",
+    "repo/docs/phase142-autoops-extraction-intake-self-test-continuation-queue-v1.md",
+    "repo/scripts/phase142-autoops-extraction-intake-self-test-continuation-queue-v1.ps1",
+    "repo/scripts/verify-phase142-autoops-extraction-intake-self-test-continuation-queue-v1.ps1"
+  ]
+}
