@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "phase": 140,
+  "phaseId": "phase140-safe-autopilot-recovery-branch-idempotent-intake-v1",
+  "title": "Phase 140 \u2014 Safe Autopilot Recovery + Branch-Idempotent Intake v1",
+  "overlayType": "normal",
+  "expectedZipFilename": "s.e.r.a_phase140_safe_autopilot_recovery_branch_idempotent_intake_v1_overlay.zip",
+  "branch": "work/phase140-safe-autopilot-recovery-branch-idempotent-intake-v1",
+  "tag": "phase-140-safe-autopilot-recovery-branch-idempotent-intake-v1",
+  "purpose": "Move the next reliability step out of the polluted Phase 139 namespace and formalize recovery rules for duplicate generation, stale handoffs, branch re-use conflicts, and copy-vs-move routing confusion.",
+  "safetyGates": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "credentialsAllowed": false,
+    "tokensAllowed": false,
+    "paidServicesAllowed": false,
+    "githubSettingsMutationAllowed": false,
+    "ownerControlBoundaryChangesAllowed": false,
+    "selfMergeAllowed": false,
+    "productionDeploymentAllowed": false
+  },
+  "acceptanceCriteria": [
+    "Phase 140 uses a new namespace and does not reuse the Phase 139 work branch.",
+    "The verifier confirms branch idempotency guidance exists: switch/reuse or unique branch, never fail solely because an old branch exists.",
+    "The verifier confirms stale handoff guidance exists: do not mark a new command complete from an unrelated previous CLOSED_CLEANLY handoff.",
+    "The verifier confirms duplicate generation becomes BLOCKED_WITH_EVIDENCE instead of silent pass/fail.",
+    "The verifier confirms routing semantics are documented: 13_chatgpt_downloads is source/capture and may retain a copy after routing to 01_apply_approved.",
+    "The verifier confirms saved ChatGPT target only and no random/new chat fallback."
+  ],
+  "files": [
+    ".overlay/phase140_safe_autopilot_recovery_branch_idempotent_intake_v1.json",
+    ".sera-proof/phase140_safe_autopilot_recovery_branch_idempotent_intake_v1.json",
+    "docs/phase140-safe-autopilot-recovery-branch-idempotent-intake-v1.md",
+    "scripts/phase140-safe-autopilot-recovery-branch-idempotent-intake-v1.ps1",
+    "scripts/verify-phase140-safe-autopilot-recovery-branch-idempotent-intake-v1.ps1"
+  ],
+  "createdAt": "2026-06-30T20:10:00.000Z"
+}
