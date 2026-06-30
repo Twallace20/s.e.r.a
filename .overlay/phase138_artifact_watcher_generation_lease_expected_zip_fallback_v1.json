@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "phase": 138,
+  "name": "Artifact Watcher Generation Lease + Expected ZIP Fallback v1",
+  "slug": "phase138_artifact_watcher_generation_lease_expected_zip_fallback_v1",
+  "overlayType": "main_fix",
+  "expectedZipFilename": "s.e.r.a_phase138_artifact_watcher_generation_lease_expected_zip_fallback_v1_overlay.zip",
+  "purpose": "Harden the S.E.R.A. browser-side autopilot loop so one-minute polling does not refresh, resubmit, or escalate while ChatGPT is still generating an expected overlay ZIP.",
+  "ownerGuidance": [
+    "Apply manually through 01_apply_approved; do not use the browser autopilot loop to install this fix.",
+    "Install runtime guard after merge by running the included PowerShell helper with -InstallRuntimeGuard -Apply.",
+    "The guard wraps only the local hidden scheduled-task launchers and preserves saved ChatGPT target-only behavior."
+  ],
+  "files": [
+    ".overlay/phase138_artifact_watcher_generation_lease_expected_zip_fallback_v1.json",
+    ".sera-proof/phase138_artifact_watcher_generation_lease_expected_zip_fallback_v1.json",
+    "docs/phase138-artifact-watcher-generation-lease-expected-zip-fallback-v1.md",
+    "scripts/phase138-artifact-watcher-generation-lease-expected-zip-fallback-v1.ps1",
+    "scripts/verify-phase138-artifact-watcher-generation-lease-expected-zip-fallback-v1.ps1"
+  ],
+  "runtimeBehavior": {
+    "generationLease": true,
+    "leaseMinutesDefault": 12,
+    "doNotRefreshWhileLeaseActive": true,
+    "doNotResubmitWhileLeaseActive": true,
+    "doNotEscalateBeforeLeaseExpires": true,
+    "expectedZipExactMatchFirst": true,
+    "fallbackZipPatternOrder": [
+      "exact expectedZipFilename",
+      "*phase138*.zip",
+      "*generation_lease*.zip",
+      "newest repo-root overlay zip"
+    ],
+    "stalePromptReferencesArchived": true,
+    "wrapsHiddenLaunchers": [
+      "SERA_Phone_Control_Watcher-action1.vbs",
+      "SERA_ChatGPT_Artifact_Watcher-action1.vbs"
+    ]
+  },
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowNewChatFallback": false,
+    "allowRandomRecentChatFallback": false,
+    "credentialsOrTokensChanged": false,
+    "externalAccountsChanged": false,
+    "paidServicesChanged": false,
+    "githubSettingsChanged": false,
+    "ownerControlBoundariesChanged": false,
+    "selfApprovalAllowed": false,
+    "selfMergeAllowed": false
+  },
+  "validation": {
+    "verifier": "scripts/verify-phase138-artifact-watcher-generation-lease-expected-zip-fallback-v1.ps1",
+    "requiredAfterApply": [
+      "phase verifier",
+      "npm run build",
+      "npm test"
+    ],
+    "coverage": [
+      "generation lease behavior",
+      "expected ZIP filename exact-match fallback",
+      "stale prompt reference archive marker",
+      "no refresh/resubmit during active lease marker",
+      "saved ChatGPT target-only contract"
+    ]
+  }
+}
