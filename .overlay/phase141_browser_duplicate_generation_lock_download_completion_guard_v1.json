@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "phase": 141,
+  "phaseSlug": "phase141_browser_duplicate_generation_lock_download_completion_guard_v1",
+  "title": "Phase 141 \u2014 Browser Duplicate Generation Lock + Download Completion Guard v1",
+  "createdAt": "2026-06-30T20:16:00Z",
+  "expectedZipFilename": "s.e.r.a_phase141_browser_duplicate_generation_lock_download_completion_guard_v1_overlay.zip",
+  "purpose": "Prevent duplicate ChatGPT artifact generation, require download-completion evidence before browser workflow success, and make stale/duplicate browser outcomes deterministic blocked states.",
+  "safetyGates": {
+    "savedChatGptTargetOnly": true,
+    "randomRecentChatFallbackAllowed": false,
+    "newChatFallbackAllowed": false,
+    "credentialUseAllowed": false,
+    "tokenExposureAllowed": false,
+    "paidServiceActivationAllowed": false,
+    "githubSettingsMutationAllowed": false,
+    "ownerControlBoundaryMutationAllowed": false,
+    "selfMergeAllowed": false,
+    "productionDeploymentAllowed": false,
+    "silentAutoMergeAllowed": false
+  },
+  "runtimeGuards": {
+    "promptSubmissionLockRequired": true,
+    "generationLeaseRequired": true,
+    "expectedZipSingleSourceOfTruthRequired": true,
+    "downloadCompleteEvidenceRequired": true,
+    "duplicateGenerationOutcome": "BLOCKED_PACKET",
+    "staleHandoffCompletionAllowed": false,
+    "mergeApprovalSourceEvidenceRequired": true
+  },
+  "files": [
+    "repo/.overlay/phase141_browser_duplicate_generation_lock_download_completion_guard_v1.json",
+    "repo/.sera-proof/phase141_browser_duplicate_generation_lock_download_completion_guard_v1.json",
+    "repo/docs/phase141-browser-duplicate-generation-lock-download-completion-guard-v1.md",
+    "repo/scripts/phase141-browser-duplicate-generation-lock-download-completion-guard-v1.ps1",
+    "repo/scripts/verify-phase141-browser-duplicate-generation-lock-download-completion-guard-v1.ps1"
+  ]
+}

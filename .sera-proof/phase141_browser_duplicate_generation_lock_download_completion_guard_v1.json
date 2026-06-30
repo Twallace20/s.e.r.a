@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "phase": 141,
+  "phaseSlug": "phase141_browser_duplicate_generation_lock_download_completion_guard_v1",
+  "status": "proof-ready",
+  "proofClaims": [
+    "Defines a single-run prompt submission lock so one command cannot submit multiple prompts.",
+    "Defines generation lease evidence so artifact watchers must wait while generation is active instead of refreshing/resubmitting.",
+    "Defines download completion evidence so success cannot be marked until expected ZIP exists and has a completed file hash.",
+    "Defines stale handoff protection so old CLOSED_CLEANLY packets cannot complete a fresh retry command.",
+    "Defines duplicate generation as a BLOCKED_PACKET condition rather than silent failure.",
+    "Defines merge approval source evidence so automatic safe-merge is auditable and no silent merge is treated as owner approval."
+  ],
+  "expectedZipFilename": "s.e.r.a_phase141_browser_duplicate_generation_lock_download_completion_guard_v1_overlay.zip",
+  "forbiddenAlternatePhase139Zip": "s.e.r.a_phase139_full_autopilot_browser_workflow_smoke_test_v1_overlay.zip",
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "noRandomChatFallback": true,
+    "noNewChatFallback": true,
+    "noCredentials": true,
+    "noTokens": true,
+    "noPaidServices": true,
+    "noGithubSettingsChanges": true,
+    "noSelfMerge": true,
+    "noProductionDeployment": true
+  },
+  "validation": {
+    "verifier": "scripts/verify-phase141-browser-duplicate-generation-lock-download-completion-guard-v1.ps1",
+    "requiresOverlayManifest": true,
+    "requiresProofFile": true,
+    "requiresDoc": true,
+    "requiresRuntimeScript": true
+  }
+}
