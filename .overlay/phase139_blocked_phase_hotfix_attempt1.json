@@ -1,0 +1,46 @@
+{
+  "schema": "s.e.r.a.overlay.v1",
+  "phase": 139,
+  "name": "Phase 139 Safe Autopilot Continuation v1 Hotfix Attempt 1",
+  "kind": "hotfix",
+  "attempt": 1,
+  "zipFilename": "s.e.r.a_phase139_blocked_phase_hotfix_attempt1_overlay.zip",
+  "route": "02_hotfix_approved",
+  "createdUtc": "2026-06-30T17:01:16Z",
+  "blockedEvidenceSource": "C:\\Users\\18123\\OneDrive\\SERA-AutoOps\\17_needs_attention\\CHATGPT_ARTIFACT_WATCHER_NEEDS_ATTENTION-20260630_165956Z.md",
+  "blockedReason": "Max watcher attempts reached for s.e.r.a_phase139_phase_139_safe_autopilot_continuation_v1_overlay.zip",
+  "purpose": "Repair the recoverable blocked state for Phase 139 using the smallest safe overlay and allow the same phase to be retried.",
+  "scope": [
+    "Record the Phase 139 watcher blocked state as a tracked recovery artifact.",
+    "Provide a local cleanup helper that archives stale Phase 139 watcher artifacts without altering credentials, tokens, external accounts, project settings, or owner-control boundaries.",
+    "Provide a verifier for the hotfix package and safety-gate coverage."
+  ],
+  "safetyGates": {
+    "savedChatGptTargetOnly": true,
+    "noRandomRecentChatFallback": true,
+    "noNewChatFallback": true,
+    "noCredentials": true,
+    "noTokens": true,
+    "noPaidServices": true,
+    "noExternalAccountChanges": true,
+    "noGitHubSettingsChanges": true,
+    "noOwnerControlBoundaryChanges": true,
+    "noSelfMerge": true,
+    "noProductionDeployment": true,
+    "stopIfOwnerDecisionRequired": true
+  },
+  "retryTarget": {
+    "phase": 139,
+    "phaseName": "Phase 139 Safe Autopilot Continuation v1",
+    "expectedZipFilename": "s.e.r.a_phase139_phase_139_safe_autopilot_continuation_v1_overlay.zip",
+    "ownerGuidanceExpectedZipFilename": "s.e.r.a_phase139_full_autopilot_browser_workflow_smoke_test_v1_overlay.zip",
+    "note": "The retry must use one canonical expected ZIP filename end-to-end. The watcher block referenced the safe-continuation filename."
+  },
+  "files": [
+    ".overlay/phase139_blocked_phase_hotfix_attempt1.json",
+    ".sera-proof/phase139_blocked_phase_hotfix_attempt1.json",
+    "docs/phase139-blocked-phase-hotfix-attempt1.md",
+    "scripts/phase139-blocked-phase-hotfix-attempt1.ps1",
+    "scripts/verify-phase139-blocked-phase-hotfix-attempt1.ps1"
+  ]
+}
