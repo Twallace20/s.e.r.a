@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "phase": 144,
+  "phaseSlug": "phase144_no_refresh_browser_submission_lock_onedrive_inbox_sync_guard_v1",
+  "proofType": "safety-and-reliability-spec-proof",
+  "status": "ready_for_validation",
+  "claims": {
+    "addressesPhase143RefreshLoop": true,
+    "requiresNoRefreshWhileActive": true,
+    "requiresOneDriveHydrationGuard": true,
+    "requiresDownloadCompletionEvidence": true,
+    "preservesSafetyGates": true,
+    "doesNotChangeExternalAccounts": true,
+    "doesNotEnableRandomFallback": true,
+    "doesNotEnableNewChatFallback": true
+  },
+  "validationCommands": [
+    "powershell -ExecutionPolicy Bypass -File .\\scripts\\verify-phase144-no-refresh-browser-submission-lock-onedrive-inbox-sync-guard-v1.ps1 -RepoRoot <repo>",
+    "npm run build",
+    "npm test"
+  ],
+  "expectedNextStep": "Run a controlled Phase 143/145 phone JSON smoke test only after this guard is installed and validated."
+}

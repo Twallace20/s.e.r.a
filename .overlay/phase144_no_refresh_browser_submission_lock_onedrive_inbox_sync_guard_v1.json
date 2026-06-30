@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "phase": 144,
+  "phaseSlug": "phase144_no_refresh_browser_submission_lock_onedrive_inbox_sync_guard_v1",
+  "title": "Phase 144 \u2014 No-Refresh Browser Submission Lock + OneDrive Inbox Sync Guard v1",
+  "purpose": "Prevent browser refresh/resubmission from interrupting ChatGPT prompt entry/generation and add OneDrive command inbox hydration/stability guards before phone JSON commands are accepted.",
+  "type": "normal_overlay",
+  "routing": "01_apply_approved",
+  "createdFor": "S.E.R.A. AutoOps phone-to-autopilot reliability hardening",
+  "observedFailure": {
+    "phase": 143,
+    "symptoms": [
+      "Artifact watcher refreshed/retried while the prompt was still being typed or generation had not completed.",
+      "Phase 143 prompt began typing but did not reliably submit or download an artifact.",
+      "Hotfix requests duplicated instead of producing a single stable download route.",
+      "OneDrive command inbox did not appear hydrated locally until opened by the owner."
+    ]
+  },
+  "scope": {
+    "browserSubmissionLock": true,
+    "disableRefreshDuringPromptTyping": true,
+    "disableRefreshDuringGenerationLease": true,
+    "singleSubmissionPerCommand": true,
+    "duplicatePromptBlockedPacket": true,
+    "onedriveInboxHydrationGuard": true,
+    "stableFileSizeBeforeAccept": true,
+    "downloadCompletionGuard": true,
+    "hotfixDownloadRoutingEvidence": true,
+    "batchAutopilotDeferredUntilPass": true
+  },
+  "safetyGates": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "credentialsAllowed": false,
+    "tokensAllowed": false,
+    "paidServicesAllowed": false,
+    "externalAccountChangesAllowed": false,
+    "githubSettingsChangesAllowed": false,
+    "ownerControlBoundaryChangesAllowed": false,
+    "productionDeploymentAllowed": false,
+    "selfMergeAllowed": false,
+    "stopIfOwnerDecisionRequired": true
+  },
+  "acceptanceCriteria": [
+    "Phone command intake waits for a fully-local, stable JSON file before accepting the command.",
+    "A command receives exactly one prompt-submission attempt unless explicitly retried by a new owner command id.",
+    "Artifact watcher never refreshes the ChatGPT page while prompt typing, submission, generation, or download lease is active.",
+    "Duplicate submission or duplicate generation is recorded as BLOCKED/NEEDS_ATTENTION instead of continuing silently.",
+    "Download success requires the expected ZIP filename to exist, be stable, and be routed with evidence.",
+    "Blocked handoff includes enough context to continue the same conversation safely."
+  ],
+  "files": [
+    ".overlay/phase144_no_refresh_browser_submission_lock_onedrive_inbox_sync_guard_v1.json",
+    ".sera-proof/phase144_no_refresh_browser_submission_lock_onedrive_inbox_sync_guard_v1.json",
+    "docs/phase144-no-refresh-browser-submission-lock-onedrive-inbox-sync-guard-v1.md",
+    "scripts/phase144-no-refresh-browser-submission-lock-onedrive-inbox-sync-guard-v1.ps1",
+    "scripts/verify-phase144-no-refresh-browser-submission-lock-onedrive-inbox-sync-guard-v1.ps1"
+  ]
+}
