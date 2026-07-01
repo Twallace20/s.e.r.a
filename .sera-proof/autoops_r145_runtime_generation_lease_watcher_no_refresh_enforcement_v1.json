@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R145",
+  "phaseSlug": "autoops_r145_runtime_generation_lease_watcher_no_refresh_enforcement_v1",
+  "proofType": "runtime-guard-verification",
+  "claims": [
+    {
+      "claim": "Generation lease schema is defined with required fields.",
+      "evidence": "Verifier checks manifest, script literals, and lease self-test."
+    },
+    {
+      "claim": "Refresh is disabled by default and only allowed by owner diagnostic flag.",
+      "evidence": "Script defines ALLOW_BROWSER_REFRESH_DIAGNOSTIC.flag and default RefreshMinutes 0."
+    },
+    {
+      "claim": "Active lease blocks browser refresh and prompt resubmission.",
+      "evidence": "Script guard exits before delegating original watcher while leaseStatus is active."
+    },
+    {
+      "claim": "Exact ZIP routing evidence is required.",
+      "evidence": "Route-ExpectedZip writes expectedZipName, sourcePath, destinationPath, sha256, fileSize, stabilityCheckResult, routeTimestamp, routeMode."
+    },
+    {
+      "claim": "Safety gates preserved.",
+      "evidence": "Manifest and script preserve saved target only, no random/new-chat fallback, no credentials, no paid services, no production deploy, no self-merge."
+    }
+  ],
+  "nonGoals": [
+    "Does not run multi-phase autopilot batches.",
+    "Does not modify external accounts or GitHub settings.",
+    "Does not guarantee ChatGPT itself will generate an artifact; it prevents watcher interruption and creates deterministic evidence."
+  ]
+}
