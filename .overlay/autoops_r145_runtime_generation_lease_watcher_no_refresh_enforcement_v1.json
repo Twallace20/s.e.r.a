@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R145",
+  "phaseSlug": "autoops_r145_runtime_generation_lease_watcher_no_refresh_enforcement_v1",
+  "title": "AutoOps R145 \u2014 Runtime Generation Lease + Watcher No-Refresh Enforcement v1",
+  "kind": "autoops-reliability-overlay",
+  "expectedZipFilename": "s.e.r.a_autoops_r145_runtime_generation_lease_watcher_no_refresh_enforcement_v1_overlay.zip",
+  "purpose": "Patch live S.E.R.A. AutoOps browser/artifact watcher behavior with a generation lease so refresh/resubmission cannot interrupt ChatGPT prompt submission, generation, download, or ZIP routing.",
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "noExternalAccounts": true,
+    "noPaidServices": true,
+    "noCredentialsOrTokens": true,
+    "noGitHubSecuritySettings": true,
+    "noProductionDeployment": true,
+    "noSelfMerge": true,
+    "ownerDiagnosticRefreshFlag": "00_control_center/ALLOW_BROWSER_REFRESH_DIAGNOSTIC.flag"
+  },
+  "runtimePatch": {
+    "generationLeasePath": "%OneDrive%/SERA-AutoOps/00_control_center/generation-lease.json",
+    "installer": "scripts/autoops-r145-runtime-generation-lease-watcher-no-refresh-enforcement-v1.ps1 -Install",
+    "watcherTask": "SERA ChatGPT Artifact Watcher",
+    "defaultRefreshMinutes": 0,
+    "leaseFields": [
+      "schemaVersion",
+      "commandId",
+      "phase",
+      "phaseSlug",
+      "expectedZipName",
+      "promptFile",
+      "leaseStatus",
+      "leaseStartedAt",
+      "leaseExpiresAt",
+      "lastObservedAt",
+      "submittedAt",
+      "downloadedAt",
+      "routedAt",
+      "completedAt",
+      "failureReason"
+    ]
+  },
+  "files": [
+    ".overlay/autoops_r145_runtime_generation_lease_watcher_no_refresh_enforcement_v1.json",
+    ".sera-proof/autoops_r145_runtime_generation_lease_watcher_no_refresh_enforcement_v1.json",
+    "docs/autoops-r145-runtime-generation-lease-watcher-no-refresh-enforcement-v1.md",
+    "scripts/autoops-r145-runtime-generation-lease-watcher-no-refresh-enforcement-v1.ps1",
+    "scripts/verify-autoops-r145-runtime-generation-lease-watcher-no-refresh-enforcement-v1.ps1",
+    "tests/integration/autoops-r145-runtime-generation-lease-watcher-no-refresh-enforcement-v1.test.ts"
+  ],
+  "validation": [
+    "powershell -ExecutionPolicy Bypass -File .\\scripts\\verify-autoops-r145-runtime-generation-lease-watcher-no-refresh-enforcement-v1.ps1 -RepoRoot .",
+    "npm run build",
+    "npm test",
+    "npm run certify, if applicable"
+  ],
+  "acceptanceCriteria": [
+    "Live watcher is wrapped by an installable R145 runtime guard, not only documented.",
+    "Active generation leases prevent refresh and resubmission.",
+    "Exact expected ZIP routing evidence is required.",
+    "Lease expiration emits one deterministic needs-attention packet.",
+    "Saved ChatGPT target only and no random/new chat fallback are preserved."
+  ]
+}
