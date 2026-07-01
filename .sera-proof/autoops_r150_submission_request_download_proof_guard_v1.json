@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "phase": "AutoOps R150",
+  "phaseSlug": "autoops_r150_submission_request_download_proof_guard_v1",
+  "proof": [
+    "writes artifact-watch-request.json before raw watcher launch",
+    "uses canonical prompt primary Expected ZIP block",
+    "routes exact expected ZIP from Downloads/AutoOps downloads to 01_apply_approved",
+    "keeps saved-target-only/no-random/no-new-chat boundaries",
+    "does not change credentials, paid services, GitHub/security settings, owner-control boundaries, or production deployment"
+  ]
+}

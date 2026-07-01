@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R150",
+  "phaseSlug": "autoops_r150_submission_request_download_proof_guard_v1",
+  "title": "Submission request and download proof guard",
+  "files": [
+    ".overlay/autoops_r150_submission_request_download_proof_guard_v1.json",
+    ".sera-proof/autoops_r150_submission_request_download_proof_guard_v1.json",
+    "docs/autoops-r150-submission-request-download-proof-guard-v1.md",
+    "scripts/autoops-r150-submission-request-download-proof-guard-v1.ps1",
+    "scripts/verify-autoops-r150-submission-request-download-proof-guard-v1.ps1",
+    "tests/integration/autoops-r150-submission-request-download-proof-guard-v1.test.ts"
+  ],
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "noCredentialsOrTokens": true,
+    "noPaidServices": true,
+    "noGitHubSecuritySettings": true,
+    "noProductionDeployment": true,
+    "noSelfMerge": true
+  },
+  "purpose": "Create artifact-watch-request before browser submission, launch the raw saved ChatGPT watcher exactly once per command/prompt, and prove exact ZIP download/routing before completion."
+}
