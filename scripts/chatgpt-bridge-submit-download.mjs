@@ -654,6 +654,18 @@ async function main() {
   const runId = `${PHASE}-${timestamp()}`;
   const evidencePath = path.join(stateDir, `${runId}.json`);
   const baseEvidence = { phase: PHASE, mode: args.mode, runId, createdAt: new Date().toISOString(), autoOps };
+  let lastEvidence = null;
+  const checkpoint = (evidence, status, extra = {}) => {
+    const next = {
+      ...(evidence || baseEvidence),
+      ...extra,
+      status,
+      checkpointAt: new Date().toISOString()
+    };
+    lastEvidence = next;
+    writeJson(evidencePath, next);
+    return next;
+  };
 
   try {
     if (fs.existsSync(pauseFile)) throw new Error(`Autopilot pause file exists: ${pauseFile}`);
@@ -672,7 +684,7 @@ async function main() {
       if (!composer?.found) throw new Error("Composer was not found in the saved ChatGPT target tab.");
 
       const evidence = {
-        ...baseEvidence,
+        ...(lastEvidence || baseEvidence),
         status: args.mode === "execute" ? "READY_TO_EXECUTE" : "DRY_RUN_PASS",
         targetName: target.targetName || null,
         targetUrl: redactedUrl(target.targetUrl),
@@ -692,7 +704,10 @@ async function main() {
       };
 
       if (args.mode !== "execute") {
-        writeJson(evidencePath, evidence);
+      lastEvidence = evidence;
+      checkpoint(evidence, evidence.status, { stage: "composer_ready" });
+
+        checkpoint(evidence, "DRY_RUN_PASS", { stage: "dry_run_pass" });
         console.log(JSON.stringify({ ok: true, status: "dry_run_pass", evidencePath }, null, 2));
         return;
       }
@@ -702,10 +717,21 @@ async function main() {
       }
 
       const downloadBehavior = await setDownloadDir(cdpEndpoint, downloadsDir);
+      evidence.downloadBehavior = downloadBehavior;
+      checkpoint(evidence, "DOWNLOAD_BEHAVIOR_SET", { stage: "download_behavior_set" });
       const preexistingStartMs = Date.now();
       const preexistingCandidate = await existingArtifactCandidate(client, expectedZipName || ".zip");
+      evidence.preexistingCandidate = preexistingCandidate.candidate;
+      evidence.preexistingCandidates = preexistingCandidate.candidates;
+      evidence.preexistingDomTroubleshooting = preexistingCandidate.snapshot;
+      checkpoint(evidence, "PREEXISTING_ARTIFACT_CHECKED", { stage: "preexisting_artifact_checked" });
       if (preexistingCandidate?.candidate) {
         const clickedExisting = await clickDownloadCandidate(client, preexistingCandidate.candidate);
+        evidence.clicked = clickedExisting;
+        evidence.downloadCandidate = preexistingCandidate.candidate;
+        evidence.downloadCandidates = preexistingCandidate.candidates;
+        evidence.domTroubleshooting = preexistingCandidate.snapshot;
+        checkpoint(evidence, "EXISTING_ARTIFACT_CLICKED_WAITING_FOR_DOWNLOAD", { stage: "existing_artifact_clicked_waiting_for_download" });
         if (!clickedExisting?.ok) throw new Error(`Existing artifact download click failed: ${clickedExisting?.reason || "unknown"}`);
         const downloadedExisting = await waitForDownloadedZip(downloadsDir, preexistingStartMs, Math.min(args.maxWaitMs, 300000), expectedZipName);
         evidence.status = "EXECUTE_PASS_EXISTING_ARTIFACT";
@@ -720,20 +746,32 @@ async function main() {
         evidence.domTroubleshooting = preexistingCandidate.snapshot;
         evidence.clicked = clickedExisting;
         evidence.downloaded = downloadedExisting;
-        writeJson(evidencePath, evidence);
+        checkpoint(evidence, "DRY_RUN_PASS", { stage: "dry_run_pass" });
         console.log(JSON.stringify({ ok: true, status: "execute_pass_existing_artifact", downloaded: downloadedExisting.file, evidencePath }, null, 2));
         return;
       }
       const submitStartMs = Date.now();
       const inserted = await insertPrompt(client, selectors, prompt);
+      evidence.inserted = inserted;
+      checkpoint(evidence, "PROMPT_INSERTED", { stage: "prompt_inserted" });
       if (!inserted?.ok) throw new Error(`Prompt insertion failed: ${inserted?.reason || "unknown"}`);
       const sent = await clickSend(client);
+      evidence.sent = sent;
+      checkpoint(evidence, "PROMPT_SENT_WAITING_FOR_ZIP_CANDIDATE", { stage: "prompt_sent_waiting_for_zip_candidate" });
       if (!sent?.ok) throw new Error(`Send click failed: ${sent?.reason || "unknown"}`);
 
       const candidateResult = await waitForZipCandidate(client, expectedZipName || ".zip", args.maxWaitMs);
+      evidence.downloadCandidate = candidateResult.candidate;
+      evidence.downloadCandidates = candidateResult.candidates;
+      evidence.domTroubleshooting = candidateResult.snapshot;
+      checkpoint(evidence, "ZIP_CANDIDATE_FOUND", { stage: "zip_candidate_found" });
       const clicked = await clickDownloadCandidate(client, candidateResult.candidate);
+      evidence.clicked = clicked;
+      checkpoint(evidence, "ZIP_CANDIDATE_CLICKED_WAITING_FOR_DOWNLOAD", { stage: "zip_candidate_clicked_waiting_for_download" });
       if (!clicked?.ok) throw new Error(`Download click failed: ${clicked?.reason || "unknown"}`);
       const downloaded = await waitForDownloadedZip(downloadsDir, submitStartMs, Math.min(args.maxWaitMs, 300000), expectedZipName);
+      evidence.downloaded = downloaded;
+      checkpoint(evidence, "EXECUTE_PASS", { stage: "execute_pass" });
 
       evidence.status = "EXECUTE_PASS";
       evidence.downloadBehavior = downloadBehavior;
@@ -751,10 +789,12 @@ async function main() {
     }
   } catch (error) {
     const blocked = {
-      ...baseEvidence,
+      ...(lastEvidence || baseEvidence),
       status: "BLOCKED",
+      failedAfterStatus: lastEvidence?.status || null,
+      failedAfterStage: lastEvidence?.stage || null,
       error: error instanceof Error ? error.message : String(error),
-      safety: "No random chat selected. No new chat fallback used. If execute failed before send, no prompt was submitted."
+      safety: "No random chat selected. No new chat fallback used. Check failedAfterStage to see whether the prompt was inserted, sent, candidate-clicked, or download-waiting."
     };
     writeJson(evidencePath, blocked);
     const blockedPath = path.join(blockedDir, `${runId}-BLOCKED.md`);
