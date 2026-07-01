@@ -134,6 +134,31 @@ function archiveArtifactRequest(requestPath, request, status, extra = {}) {
   return archived;
 }
 
+function requestTimestampMs(request) {
+  const fields = ["requestedAt", "createdAt", "artifactWatchRequestAt", "updatedAt", "leaseStartedAt"];
+  for (const field of fields) {
+    const value = request?.[field];
+    if (!value) continue;
+    const ms = Date.parse(String(value));
+    if (Number.isFinite(ms)) return ms;
+  }
+  return 0;
+}
+function closedHandoffTimestampMs(closed) {
+  if (!closed?.file || !isFile(closed.file)) return 0;
+  return fileMtimeMs(closed.file);
+}
+function requestIsFreshAfterClosedHandoff(request, closed) {
+  const requestMs = requestTimestampMs(request);
+  const closedMs = closedHandoffTimestampMs(closed);
+  return requestMs > 0 && closedMs > 0 && requestMs > closedMs;
+}
+function shouldArchiveAsStaleClosedPhaseRequest(request, closed) {
+  const requestPhase = Number(request?.phase || 0);
+  if (!closed?.phase || requestPhase <= 0 || requestPhase > closed.phase) return false;
+  return !requestIsFreshAfterClosedHandoff(request, closed);
+}
+
 function newestPrompt(outbox) {
   if (!fs.existsSync(outbox)) return null;
   const prompts = fs.readdirSync(outbox)
@@ -156,8 +181,8 @@ function activeArtifactRequest(p) {
     const status = String(request.status || "").toLowerCase();
     if (["closed_cleanly", "completed", "routed", "cancelled", "archived_stale_closed_phase"].includes(status)) continue;
     const requestPhase = Number(request.phase || 0);
-    if (closed?.phase && requestPhase > 0 && requestPhase <= closed.phase) {
-      archiveArtifactRequest(requestPath, request, "archived_stale_closed_phase", { closedPhase: closed.phase, closedHandoff: closed.file });
+    if (shouldArchiveAsStaleClosedPhaseRequest(request, closed)) {
+      archiveArtifactRequest(requestPath, request, "archived_stale_closed_phase", { closedPhase: closed.phase, closedHandoff: closed.file, requestFreshAfterClosedHandoff: false });
       continue;
     }
     const promptFile = request.promptFile || request.promptPath;
@@ -415,7 +440,10 @@ async function runPass(args, p, passIndex = 0) {
     const zipPhase = phaseNumberFromName(expectedZipName);
     const closedPhase = latestClosedPhase(p);
     const archiveGuard = archiveClosedPhaseZipIfQueued(p, expectedZipName);
-    const alreadyClosed = archiveGuard?.handoff || completedHandoffFor(p, expectedZipName) || (closedPhase?.phase && zipPhase > 0 && zipPhase <= closedPhase.phase ? closedPhase.file : null);
+    const freshActiveRequestAfterClosed = activeRequest ? requestIsFreshAfterClosedHandoff(activeRequest, closedPhase) : false;
+    const alreadyClosedByLatestPhase = (!freshActiveRequestAfterClosed && closedPhase?.phase && zipPhase > 0 && zipPhase <= closedPhase.phase) ? closedPhase.file : null;
+    const alreadyClosed = archiveGuard?.handoff || completedHandoffFor(p, expectedZipName) || alreadyClosedByLatestPhase;
+    evidence.freshActiveRequestAfterClosed = freshActiveRequestAfterClosed;
     if (alreadyClosed) {
       evidence.archivedClosedPhaseArtifacts = archiveGuard?.archived || [];
       record.status = "closed_cleanly";
