@@ -720,10 +720,11 @@ async function main() {
       evidence.downloadBehavior = downloadBehavior;
       checkpoint(evidence, "DOWNLOAD_BEHAVIOR_SET", { stage: "download_behavior_set" });
       const preexistingStartMs = Date.now();
-      const preexistingCandidate = await existingArtifactCandidate(client, expectedZipName || ".zip");
-      evidence.preexistingCandidate = preexistingCandidate.candidate;
-      evidence.preexistingCandidates = preexistingCandidate.candidates;
-      evidence.preexistingDomTroubleshooting = preexistingCandidate.snapshot;
+      const preexistingCandidateRaw = await existingArtifactCandidate(client, expectedZipName || ".zip");
+      const preexistingCandidate = preexistingCandidateRaw || { candidate: null, candidates: [], snapshot: null };
+      evidence.preexistingCandidate = preexistingCandidate.candidate || null;
+      evidence.preexistingCandidates = preexistingCandidate.candidates || [];
+      evidence.preexistingDomTroubleshooting = preexistingCandidate.snapshot || null;
       checkpoint(evidence, "PREEXISTING_ARTIFACT_CHECKED", { stage: "preexisting_artifact_checked" });
       if (preexistingCandidate?.candidate) {
         const clickedExisting = await clickDownloadCandidate(client, preexistingCandidate.candidate);
@@ -746,7 +747,7 @@ async function main() {
         evidence.domTroubleshooting = preexistingCandidate.snapshot;
         evidence.clicked = clickedExisting;
         evidence.downloaded = downloadedExisting;
-        checkpoint(evidence, "DRY_RUN_PASS", { stage: "dry_run_pass" });
+        checkpoint(evidence, "EXECUTE_PASS_EXISTING_ARTIFACT", { stage: "execute_pass_existing_artifact" });
         console.log(JSON.stringify({ ok: true, status: "execute_pass_existing_artifact", downloaded: downloadedExisting.file, evidencePath }, null, 2));
         return;
       }
