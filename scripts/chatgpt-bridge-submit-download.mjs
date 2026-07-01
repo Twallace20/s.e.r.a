@@ -431,8 +431,12 @@ async function getDownloadCandidates(client, expectedName) {
       const ownLooksDownload = ownText.toLowerCase().includes("download") || (el.getAttribute("aria-label") || "").toLowerCase().includes("download") || (el.getAttribute("download") || "").toLowerCase().includes("download");
       const contextLooksDownload = haystack.includes("download");
       const isGenericDownloadButton = (kind === "button" && ownLooksDownload) || (kind === "link" && (ownLooksDownload || href));
-      if (!mentionsExpected && !mentionsStandardLink && !mentionsZip && !isGenericDownloadButton && !contextLooksDownload) return;
+      const requireExactArtifact = Boolean(expectedName || expectedStem || expectedLinkText);
+      const mentionsExactArtifact = mentionsExpected || mentionsStandardLink || Boolean(expectedName && href.toLowerCase().includes(expectedName)) || Boolean(expectedStem && href.toLowerCase().includes(expectedStem));
+      if (requireExactArtifact && !mentionsExactArtifact) return;
+      if (!requireExactArtifact && !mentionsExpected && !mentionsStandardLink && !mentionsZip && !isGenericDownloadButton && !contextLooksDownload) return;
       let score = 0;
+      if (mentionsExactArtifact) score += 320;
       if (mentionsStandardLink) score += 260;
       if (mentionsExpected) score += 140;
       if (mentionsZip) score += 50;
@@ -460,7 +464,9 @@ async function getDownloadCandidates(client, expectedName) {
         mentionsExpected,
         mentionsStandardLink,
         mentionsZip,
-        ownLooksDownload
+        ownLooksDownload,
+        requireExactArtifact,
+        mentionsExactArtifact
       });
     };
     const seenElements = new WeakSet();
@@ -532,7 +538,7 @@ async function existingArtifactCandidate(client, expectedName) {
   const result = await getDownloadCandidates(client, expectedName);
   const candidate = result?.candidate || null;
   if (!candidate) return null;
-  if (candidate.mentionsStandardLink || candidate.mentionsExpected || candidate.score >= 180) {
+  if (candidate.mentionsExactArtifact || candidate.mentionsStandardLink || candidate.mentionsExpected) {
     return result;
   }
   return null;
