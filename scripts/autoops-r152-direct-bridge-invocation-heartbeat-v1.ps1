@@ -40,7 +40,7 @@ $Phase138OriginalVbs = Join-Path $Phase138GuardDir "SERA_ChatGPT_Artifact_Watche
 # artifact-watch-request.json
 # generation-lease.json
 # exact expected ZIP
-# no Start-ScheduledTask dependency
+# no scheduled task launcher dependency
 # allowRandomRecentChatFallback = False
 # allowNewChatFallback = False
 # savedChatGptTargetOnly = True
@@ -471,3 +471,4 @@ if ($SelfTest) { Invoke-SelfTest | ConvertTo-Json -Depth 30; exit 0 }
 $result = Invoke-R152Run
 $result | ConvertTo-Json -Depth 40
 if ($result.blocked -eq $true -or $result.ok -eq $false) { exit 2 }
+
