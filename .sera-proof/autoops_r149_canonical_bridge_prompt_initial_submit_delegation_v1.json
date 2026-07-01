@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "phase": "AutoOps R149",
+  "phaseSlug": "autoops_r149_canonical_bridge_prompt_initial_submit_delegation_v1",
+  "proof": [
+    "canonical expected ZIP block validation",
+    "hotfix prompt quarantine",
+    "lease promptFile alignment",
+    "initial submit delegates to raw saved watcher exactly once",
+    "R145/R147/R148 chain preserved"
+  ],
+  "expectedZipAuthoritativeFrom": "active autopilot-command.json expectedZipFilename"
+}
