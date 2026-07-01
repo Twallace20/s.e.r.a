@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R147",
+  "phaseSlug": "autoops_r147_bridge_prompt_expected_zip_lease_handoff_guard_v1",
+  "verifiedAt": "2026-07-01T01:58:00Z",
+  "checks": [
+    "bridge prompt expected ZIP fidelity",
+    "generation lease creation from active command",
+    "mismatched prompt quarantine/correction",
+    "saved target only",
+    "no random/new chat fallback"
+  ],
+  "status": "ready_for_manual_apply"
+}
