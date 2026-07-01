@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R148",
+  "phaseSlug": "autoops_r148_command_source_immutability_stale_handoff_filter_v1",
+  "title": "Command Source Immutability + Stale Handoff Filter v1",
+  "summary": "Protect phone command source files from being overwritten by result packets and prevent stale CLOSED_CLEANLY handoffs from blocking active commands.",
+  "safety": [
+    "no credentials",
+    "no paid services",
+    "no random chat fallback",
+    "no new chat fallback",
+    "no owner-control boundary change",
+    "no self-merge"
+  ],
+  "installsRuntimeGuardFor": "SERA Phone Control Watcher"
+}
