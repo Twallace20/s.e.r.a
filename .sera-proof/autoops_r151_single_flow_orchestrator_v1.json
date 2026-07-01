@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R151",
+  "phaseSlug": "autoops_r151_single_flow_orchestrator_v1",
+  "proof": [
+    "Creates a one-shot Phase 143 smoke-test runner",
+    "Writes canonical prompt, artifact-watch-request, and lease in one controlled run",
+    "Blocks before submission if SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE or Chrome remote debugging is missing",
+    "Waits for exact ZIP and routes only with file stability proof",
+    "Waits for Phase 143 handoff and blocks honestly if missing"
+  ]
+}

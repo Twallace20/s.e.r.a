@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R151",
+  "phaseSlug": "autoops_r151_single_flow_orchestrator_v1",
+  "title": "Single Flow Orchestrator v1",
+  "intent": "Replace repeated scheduled-task toggling with one controlled end-to-end Phase 143 smoke-test runner.",
+  "files": [
+    "docs/autoops-r151-single-flow-orchestrator-v1.md",
+    "scripts/autoops-r151-single-flow-orchestrator-v1.ps1",
+    "scripts/verify-autoops-r151-single-flow-orchestrator-v1.ps1",
+    "tests/integration/autoops-r151-single-flow-orchestrator-v1.test.ts"
+  ],
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "requiresBrowserExecutionGate": true,
+    "noStartScheduledTaskDependency": true
+  }
+}
