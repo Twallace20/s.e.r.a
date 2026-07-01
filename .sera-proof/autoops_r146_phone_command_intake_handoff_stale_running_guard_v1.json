@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R146",
+  "phaseSlug": "autoops_r146_phone_command_intake_handoff_stale_running_guard_v1",
+  "proofs": [
+    "stable local JSON intake requires two matching size/hash reads",
+    "example JSON files are ignored",
+    "commandId and runNonce are recorded as intake evidence",
+    "stale running command with no progress creates deterministic NEEDS_ATTENTION",
+    "wrapper preserves saved ChatGPT target only and does not enable random/new-chat fallback",
+    "install is dry-run capable and backs up original Phone Control Watcher action"
+  ],
+  "validation": [
+    "powershell -ExecutionPolicy Bypass -File scripts/verify-autoops-r146-phone-command-intake-handoff-stale-running-guard-v1.ps1 -RepoRoot <repo>",
+    "npm run build",
+    "npm test"
+  ]
+}
