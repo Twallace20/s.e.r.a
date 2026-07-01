@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R149",
+  "phaseSlug": "autoops_r149_canonical_bridge_prompt_initial_submit_delegation_v1",
+  "summary": "Canonical bridge prompt and initial submit delegation guard for S.E.R.A. ChatGPT Artifact Watcher.",
+  "files": [
+    ".overlay/autoops_r149_canonical_bridge_prompt_initial_submit_delegation_v1.json",
+    ".sera-proof/autoops_r149_canonical_bridge_prompt_initial_submit_delegation_v1.json",
+    "docs/autoops-r149-canonical-bridge-prompt-initial-submit-delegation-v1.md",
+    "scripts/autoops-r149-canonical-bridge-prompt-initial-submit-delegation-v1.ps1",
+    "scripts/verify-autoops-r149-canonical-bridge-prompt-initial-submit-delegation-v1.ps1",
+    "tests/integration/autoops-r149-canonical-bridge-prompt-initial-submit-delegation-v1.test.ts"
+  ],
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "noRefreshResubmitLoop": true,
+    "noCredentialsOrTokens": true,
+    "noPaidServices": true,
+    "noExternalAccountChanges": true,
+    "noGitHubSecuritySettings": true,
+    "noProductionDeployment": true
+  }
+}
