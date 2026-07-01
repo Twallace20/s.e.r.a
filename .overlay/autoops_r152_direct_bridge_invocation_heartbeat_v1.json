@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R152",
+  "phaseSlug": "autoops_r152_direct_bridge_invocation_heartbeat_v1",
+  "title": "Direct Bridge Invocation Heartbeat v1",
+  "purpose": "Replace the silent R151 raw watcher launch with a direct resolved browser bridge invocation, heartbeat, and short stage timeout.",
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "noScheduledTaskDependency": true,
+    "requiresExplicitExecutionGate": "SERA_CHATGPT_BRIDGE_ALLOW_EXECUTE=true"
+  },
+  "artifacts": [
+    "docs/autoops-r152-direct-bridge-invocation-heartbeat-v1.md",
+    "scripts/autoops-r152-direct-bridge-invocation-heartbeat-v1.ps1",
+    "scripts/verify-autoops-r152-direct-bridge-invocation-heartbeat-v1.ps1",
+    "tests/integration/autoops-r152-direct-bridge-invocation-heartbeat-v1.test.ts"
+  ]
+}

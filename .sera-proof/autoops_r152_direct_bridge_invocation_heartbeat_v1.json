@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R152",
+  "phaseSlug": "autoops_r152_direct_bridge_invocation_heartbeat_v1",
+  "verifiedClaims": [
+    "does not call Start-ScheduledTask",
+    "resolves the wrapped phase138 browser bridge target",
+    "invokes the bridge wrapper directly with the current expected ZIP",
+    "writes heartbeat and summary artifacts",
+    "blocks quickly instead of silently waiting for a long timeout"
+  ]
+}
