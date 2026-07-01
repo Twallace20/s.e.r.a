@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "phase": 143,
+  "phaseSlug": "phase143_phone_batch_autopilot_smoke_test_v1",
+  "proofType": "s.e.r.a.phase-proof",
+  "status": "ready-for-guarded-smoke-test",
+  "assertions": {
+    "singleActiveCommandRequired": true,
+    "batchModeMustStopOnBlocked": true,
+    "closedCleanlyRequiredBeforeNextPhase": true,
+    "blockedHandoffIsContinuationInput": true,
+    "randomChatFallbackDisabled": true,
+    "newChatFallbackDisabled": true,
+    "credentialsOrTokenAccessProhibited": true,
+    "manualOwnerJudgmentRequiredForUnexpectedBrowserBehavior": true
+  },
+  "validation": {
+    "expectedVerifier": "scripts/verify-phase143-phone-batch-autopilot-smoke-test-v1.ps1",
+    "expectedBuildCommand": "npm run build",
+    "expectedTestCommand": "npm test"
+  },
+  "notes": [
+    "This phase is intentionally a guarded smoke test, not a declaration that unattended multi-phase phone batching is safe.",
+    "If a BLOCKED handoff is produced, the next operator action is to upload the handoff to ChatGPT for diagnosis and closeout before any continuation.",
+    "The phase preserves the saved ChatGPT target constraint and disables random/new chat fallback."
+  ]
+}
