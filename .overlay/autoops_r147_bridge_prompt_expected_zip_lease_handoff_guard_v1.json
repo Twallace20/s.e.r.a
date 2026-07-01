@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "phase": "AutoOps R147",
+  "phaseSlug": "autoops_r147_bridge_prompt_expected_zip_lease_handoff_guard_v1",
+  "title": "Bridge Prompt Expected ZIP + Lease Handoff Guard v1",
+  "kind": "autoops_reliability_overlay",
+  "expectedZipFilename": "s.e.r.a_autoops_r147_bridge_prompt_expected_zip_lease_handoff_guard_v1_overlay.zip",
+  "route": "normal_overlay_to_01_apply_approved",
+  "summary": "Installs a guarded wrapper around SERA ChatGPT Artifact Watcher to preserve phone-command expected ZIP fidelity, correct mismatched bridge prompts before submission, create generation-lease.json from the active command, and escalate deterministic NEEDS_ATTENTION when bridge-to-lease handoff cannot be made safely.",
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "noCredentialsTokensPaidServices": true,
+    "noExternalAccountChanges": true,
+    "noGitHubSettingsChanges": true,
+    "noSelfMerge": true,
+    "stopIfOwnerDecisionRequired": true
+  },
+  "files": [
+    ".overlay/autoops_r147_bridge_prompt_expected_zip_lease_handoff_guard_v1.json",
+    ".sera-proof/autoops_r147_bridge_prompt_expected_zip_lease_handoff_guard_v1.json",
+    "docs/autoops-r147-bridge-prompt-expected-zip-lease-handoff-guard-v1.md",
+    "scripts/autoops-r147-bridge-prompt-expected-zip-lease-handoff-guard-v1.ps1",
+    "scripts/verify-autoops-r147-bridge-prompt-expected-zip-lease-handoff-guard-v1.ps1",
+    "tests/integration/autoops-r147-bridge-prompt-expected-zip-lease-handoff-guard-v1.test.ts"
+  ]
+}
