@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "phase": 161,
+  "phaseId": "phase161_full_loop_orchestrator_qa_guarantee_gate_v1",
+  "status": "artifact-built",
+  "proofType": "overlay-deliverable",
+  "expectedZipFilename": "s.e.r.a_phase161_full_loop_orchestrator_qa_guarantee_gate_v1_overlay.zip",
+  "qaProofMode": "scripts/verify-phase161-full-loop-orchestrator-qa-guarantee-gate-v1.ps1 invokes the orchestrator self-test using temp fixtures and both pass/fail examples.",
+  "createdBy": "ChatGPT",
+  "acceptanceCriteria": [
+    "One JSON upload can drive a simulated workflow",
+    "Multiple JSON files are sequenced by phase number, not newest file",
+    "Older closed phases are ignored",
+    "Fresh prompt/request/lease are created",
+    "Timeouts create BLOCKED handoffs and snapshots",
+    "PASS requires QA Guarantee before safe self-approval",
+    "Safe auto-merge stays blocked by owner-required boundaries"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "phase": 161,
+  "phaseId": "phase161_full_loop_orchestrator_qa_guarantee_gate_v1",
+  "phaseName": "Full Loop Orchestrator + QA Guarantee Gate v1",
+  "expectedZipFilename": "s.e.r.a_phase161_full_loop_orchestrator_qa_guarantee_gate_v1_overlay.zip",
+  "summary": "Consolidates command inbox sequencing, canonical prompt/request/lease creation, bridge/download routing, runtime snapshots, timeout BLOCKED handoffs, QA Guarantee proof, and safe auto-merge approval after PASS_GUARANTEED.",
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "ownerRequiredBoundaries": [
+      "credentials",
+      "tokens",
+      "secrets",
+      "paid services",
+      "dependency/tool installs",
+      "GitHub/security settings",
+      "owner-control policy changes",
+      "production deployments",
+      "ambiguous requirements",
+      "failed or partial QA Guarantee"
+    ],
+    "safeAutoMergeRequires": [
+      "PASS_GUARANTEED",
+      "safe-auto-merge eligible",
+      "repo clean",
+      "no owner-required boundary triggers",
+      "merge pending packet present"
+    ]
+  },
+  "files": [
+    "repo/.overlay/phase161_full_loop_orchestrator_qa_guarantee_gate_v1.json",
+    "repo/.sera-proof/phase161_full_loop_orchestrator_qa_guarantee_gate_v1.json",
+    "repo/docs/phase161-full-loop-orchestrator-qa-guarantee-gate-v1.md",
+    "repo/scripts/phase161-full-loop-orchestrator-qa-guarantee-gate-v1.ps1",
+    "repo/scripts/verify-phase161-full-loop-orchestrator-qa-guarantee-gate-v1.ps1"
+  ],
+  "qaGuarantee": {
+    "purpose": "PASS is promoted to PASS_GUARANTEED only after real-use proof of the phase deliverables.",
+    "realUseProofs": [
+      "Select next command by smallest phase number above latest CLOSED_CLEANLY phase",
+      "Create fresh canonical prompt, artifact-watch-request.json, and generation lease from JSON",
+      "Reject stale request/prompt/evidence mismatches",
+      "Create BLOCKED handoff on timeout or missing ZIP",
+      "Promote PASS to PASS_GUARANTEED only after functional proof",
+      "Auto-move MERGE_PENDING to MERGE_APPROVED only when safe-auto-merge policy permits"
+    ]
+  }
+}
