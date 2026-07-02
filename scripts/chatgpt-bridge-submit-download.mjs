@@ -442,6 +442,7 @@ async function getDownloadCandidates(client, expectedName) {
       if (mentionsZip) score += 50;
       if (ownLooksDownload) score += 35;
       if (isGenericDownloadButton) score += 25;
+      if (source === "exactArtifactButton") score += 500;
       if (source === "matchingAssistant") score += 40;
       if (source === "latestAssistant") score += 20;
       if (kind === "link" && href) score += 10;
@@ -470,6 +471,32 @@ async function getDownloadCandidates(client, expectedName) {
       });
     };
     const seenElements = new WeakSet();
+    if (expectedName || expectedStem || expectedLinkText) {
+      const directExactClickables = Array.from(document.querySelectorAll("button, a, [role='button']"));
+      for (const el of directExactClickables) {
+        if (seenElements.has(el)) continue;
+        if (!visible(el) || el.closest("pre, code")) continue;
+        const href = hrefOf(el);
+        const ownText = textOf(el);
+        const contextText = ancestorText(el);
+        const haystack = norm([
+          href,
+          ownText,
+          contextText,
+          el.getAttribute("aria-label"),
+          el.getAttribute("title"),
+          el.getAttribute("download")
+        ].join(" ")).toLowerCase();
+        const exact = Boolean(expectedName && haystack.includes(expectedName)) || Boolean(expectedStem && haystack.includes(expectedStem)) || Boolean(expectedLinkText && haystack.includes(expectedLinkText));
+        if (!exact) continue;
+        seenElements.add(el);
+        if (el.matches?.("a[href], a[download]")) {
+          addCandidate(el, "a[href], a[download]", "link", "exactArtifactButton");
+        } else {
+          addCandidate(el, "button, [role=""button""]", "button", "exactArtifactButton");
+        }
+      }
+    }
     for (const { node, source } of roots) {
       for (const el of Array.from(node.querySelectorAll('a[href], a[download]'))) {
         if (seenElements.has(el)) continue;
@@ -526,7 +553,9 @@ async function waitForZipCandidate(client, expectedName, maxWaitMs) {
   let last = null;
   while (Date.now() - start < maxWaitMs) {
     last = await getDownloadCandidates(client, expectedName);
-    if (last?.ok && last.candidate) return last;
+    if (last?.ok && last.candidate) {
+      if (!expectedName || last.candidate.mentionsExactArtifact || last.candidate.mentionsExpected || last.candidate.mentionsStandardLink) return last;
+    }
     await new Promise((resolve) => setTimeout(resolve, 5000));
   }
   const snapshot = last?.snapshot ? JSON.stringify(last.snapshot).slice(0, 4000) : "no DOM snapshot available";
