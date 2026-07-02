@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "phase": 164,
+  "phaseSlug": "phase164_full_live_loop_command_inbox_proof_v1",
+  "status": "ready_for_runtime_verification",
+  "verifier": "scripts/verify-phase164-full-live-loop-command-inbox-proof-v1.ps1",
+  "qaScript": "scripts/phase164-full-live-loop-command-inbox-proof-v1.ps1",
+  "proofsExpected": [
+    "required files exist",
+    "command discovery sample passes",
+    "stale request rejection sample passes",
+    "no runnable command fail-closed sample passes",
+    "terminal handoff current packet sample passes",
+    "QA_BLOCKED hard-stop sample passes",
+    "PASS_GUARANTEED explicit PASS sample passes"
+  ],
+  "createdAt": "2026-07-02T14:39:54Z"
+}
