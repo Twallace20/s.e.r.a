@@ -1,0 +1,22 @@
+{
+  "phase": 163,
+  "phaseSlug": "phase163_qa_guarantee_hard_stop_integrity_hotfix_v1",
+  "verifier": "scripts/verify-phase163-qa-guarantee-hard-stop-integrity-hotfix-v1.ps1",
+  "runner": "scripts/phase163-qa-guarantee-hard-stop-integrity-hotfix-v1.ps1",
+  "expectedStatus": "PASS",
+  "qaGuarantee": {
+    "requiredBeforeMerge": true,
+    "qaBlockedIsTerminal": true,
+    "passGuaranteedRequiresExplicitVerifierPass": true,
+    "mergePendingMoveBlockedAfterQaBlocked": true,
+    "singleScriptRequired": true
+  },
+  "sampleCases": [
+    "verifier PASS allows PASS_GUARANTEED",
+    "verifier nonzero creates QA_BLOCKED only",
+    "NativeCommandError creates QA_BLOCKED only",
+    "missing explicit status PASS creates QA_BLOCKED only",
+    "existing QA_BLOCKED blocks PASS_GUARANTEED",
+    "interactive continuation risk fails closed"
+  ]
+}
