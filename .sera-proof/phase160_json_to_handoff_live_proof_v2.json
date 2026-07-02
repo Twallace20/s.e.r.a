@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "phase": 160,
+  "phaseSlug": "phase160_json_to_handoff_live_proof_v2",
+  "proofType": "s.e.r.a.phase-proof",
+  "status": "ready-for-runtime-proof",
+  "expectedZipFilename": "s.e.r.a_phase160_json_to_handoff_live_proof_v2_overlay.zip",
+  "assertions": {
+    "jsonCommandMustCreateFreshArtifactRequest": true,
+    "artifactRequestMustContainExpectedZip": true,
+    "promptFileMustContainExpectedZip": true,
+    "staleArtifactRequestMustBlock": true,
+    "stalePromptFileMustBlock": true,
+    "staleBrowserEvidenceMustBlock": true,
+    "exactZipRequiredBeforeRoute": true,
+    "exactZipRequiredBeforeRunner": true,
+    "runnerSkippedWhenZipMissing": true,
+    "handoffRequiredForBlocked": true,
+    "handoffRequiredForPass": true,
+    "handoffRequiredForClosedCleanly": true,
+    "savedChatGptTargetOnly": true,
+    "randomChatFallbackDisabled": true,
+    "newChatFallbackDisabled": true,
+    "credentialsOrTokenAccessProhibited": true,
+    "noStandaloneNpmTestRequiredForRuntimeProof": true
+  },
+  "validation": {
+    "expectedVerifier": "scripts/verify-phase160-json-to-handoff-live-proof-v2.ps1",
+    "runtimeProofCommand": "scripts/phase160-json-to-handoff-live-proof-v2.ps1",
+    "standaloneNpmTestRequired": false,
+    "nodeCheckAllowed": true
+  },
+  "notes": [
+    "Phase 160 is a runtime proof overlay, not a request to bypass safety gates.",
+    "If the exact ZIP is missing, the flow must produce a BLOCKED handoff and stop before AutoOps runner.",
+    "If the request or prompt is stale or does not match the expected ZIP, the flow must produce a BLOCKED handoff.",
+    "The generated handoff is the continuation input for ChatGPT diagnosis or merge approval."
+  ]
+}
