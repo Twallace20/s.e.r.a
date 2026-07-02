@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "phase": 165,
+  "phaseSlug": "phase165_production_json_watcher_repo_integration_v1",
+  "phaseName": "s.e.r.a_phase165_production_json_watcher_repo_integration_v1_overlay",
+  "title": "Phase 165 \u2014 Production JSON Watcher Repo Integration v1",
+  "expectedZipFilename": "s.e.r.a_phase165_production_json_watcher_repo_integration_v1_overlay.zip",
+  "safeAutoMergeEligible": true,
+  "qaGuaranteeRequiredBeforeMerge": true,
+  "createdAtUtc": "2026-07-02T18:52:54.055542+00:00",
+  "deliverables": [
+    "repo-managed production JSON-to-closeout watcher",
+    "command inbox hygiene archival script",
+    "watcher self-test mode",
+    "ZIP-drop-first workflow documentation",
+    "QA hard-stop verification"
+  ],
+  "safety": {
+    "credentials": false,
+    "tokens": false,
+    "paidServices": false,
+    "dependencyInstalls": false,
+    "githubSecuritySettings": false,
+    "productionDeployments": false
+  }
+}

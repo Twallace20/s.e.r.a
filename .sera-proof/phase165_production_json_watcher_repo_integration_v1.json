@@ -1,0 +1,16 @@
+{
+  "phase": 165,
+  "phaseSlug": "phase165_production_json_watcher_repo_integration_v1",
+  "phaseName": "s.e.r.a_phase165_production_json_watcher_repo_integration_v1_overlay",
+  "proofType": "local-overlay-generation",
+  "checks": [
+    "overlay contains manifest",
+    "overlay contains proof file",
+    "overlay contains docs",
+    "overlay contains watcher script",
+    "overlay contains hygiene script",
+    "overlay contains QA script",
+    "overlay contains verifier script"
+  ],
+  "createdAtUtc": "2026-07-02T18:52:54.055567+00:00"
+}
