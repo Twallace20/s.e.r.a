@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "phase": 160,
+  "phaseSlug": "phase160_json_to_handoff_live_proof_v2",
+  "title": "JSON to Handoff Live Proof v2",
+  "type": "s.e.r.a.overlay",
+  "createdAt": "2026-07-02T09:24:00.000Z",
+  "expectedZipFilename": "s.e.r.a_phase160_json_to_handoff_live_proof_v2_overlay.zip",
+  "purpose": "Prove the live S.E.R.A. AutoOps runtime path from a JSON command through canonical ChatGPT prompt creation, exact ZIP acquisition, routing, and PASS/BLOCKED/CLOSED_CLEANLY handoff production.",
+  "scope": [
+    "Defines Phase 160 as the fresh JSON-to-handoff runtime proof after R159 request freshness and bridge syntax fixes.",
+    "Requires command_inbox JSON to create a fresh artifact-watch-request.json and canonical prompt for the current expected ZIP.",
+    "Requires exact ZIP download to 13_chatgpt_downloads before routing to 01_apply_approved.",
+    "Requires PASS, BLOCKED, or CLOSED_CLEANLY handoff to be produced and suitable for ChatGPT continuation or hotfix review.",
+    "Requires stale artifact requests, stale prompt files, stale browser evidence, and wrong expected ZIP names to fail as BLOCKED instead of continuing."
+  ],
+  "runtimeAcceptance": {
+    "jsonCommandCreatesArtifactRequest": true,
+    "artifactRequestExpectedZipMustMatchCurrentPhase": true,
+    "promptFileExpectedZipMustMatchCurrentPhase": true,
+    "savedChatGptTargetOnly": true,
+    "exactZipMustLandIn13BeforeRunner": true,
+    "runnerMustNotStartWhenZipMissing": true,
+    "handoffRequiredForPassBlockedOrClosedCleanly": true,
+    "blockedHandoffIsContinuationInput": true,
+    "noStandaloneNpmTestRequiredForRuntimeProof": true
+  },
+  "safetyGates": {
+    "savedChatGptTargetOnly": true,
+    "randomRecentChatFallbackAllowed": false,
+    "newChatFallbackAllowed": false,
+    "credentialsTokensPaidServicesAllowed": false,
+    "githubSettingsMutationAllowed": false,
+    "ownerControlBoundaryMutationAllowed": false,
+    "selfMergeAllowed": false,
+    "productionDeploymentAllowed": false,
+    "multipleActiveCommandsAllowed": false,
+    "continueAfterBlockedAllowed": false,
+    "requiresClosedCleanlyBeforeNext": true,
+    "runnerStartsOnlyAfterExactZipExistsIn13": true
+  },
+  "evidenceRequired": [
+    "phoneOrJsonSubmittedCommandRecorded",
+    "freshArtifactWatchRequestCreated",
+    "artifactRequestExpectedZipMatchesPhase160",
+    "promptFileExpectedZipMatchesPhase160",
+    "savedChatGptTargetUsed",
+    "noRandomChatFallback",
+    "noNewChatFallback",
+    "exactZipDownloadedTo13OrBlockedHandoffCreated",
+    "zipRoutedTo01ApplyApprovedOnlyAfterExactMatch",
+    "passBlockedOrClosedCleanlyHandoffProduced",
+    "handoffCopiedOrSurfacedForChatGptReview"
+  ],
+  "files": [
+    ".overlay/phase160_json_to_handoff_live_proof_v2.json",
+    ".sera-proof/phase160_json_to_handoff_live_proof_v2.json",
+    "docs/phase160-json-to-handoff-live-proof-v2.md",
+    "scripts/phase160-json-to-handoff-live-proof-v2.ps1",
+    "scripts/verify-phase160-json-to-handoff-live-proof-v2.ps1"
+  ]
+}
