@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "phase": 162,
+  "phaseSlug": "phase162_runtime_handoff_completion_snapshot_delivery_v1",
+  "verification": {
+    "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify-phase162-runtime-handoff-completion-snapshot-delivery-v1.ps1",
+    "expectedStatus": "PASS",
+    "covers": [
+      "required files",
+      "handoff status resolver",
+      "CURRENT_CHATGPT_HANDOFF.md generation",
+      "BLOCKED immediate nonzero exit",
+      "stale handoff rejection",
+      "snapshot bundle inclusion",
+      "safe auto-merge gate",
+      "QA-approved wording"
+    ]
+  },
+  "proofOfUse": {
+    "simulatedFullLoopSelfTest": true,
+    "liveChatGptRequired": false,
+    "liveZipRequired": false
+  },
+  "createdAt": "2026-07-02T13:19:46.558731Z"
+}

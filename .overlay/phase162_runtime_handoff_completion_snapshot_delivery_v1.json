@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "phase": 162,
+  "phaseSlug": "phase162_runtime_handoff_completion_snapshot_delivery_v1",
+  "phaseName": "s.e.r.a_phase162_runtime_handoff_completion_snapshot_delivery_v1_overlay",
+  "title": "Phase 162 \u2014 Runtime Handoff Completion + Snapshot Delivery v1",
+  "purpose": "Harden terminal handoff delivery, snapshot surfacing, stale handoff rejection, and immediate BLOCKED stop behavior before the full live loop test.",
+  "expectedZipFilename": "s.e.r.a_phase162_runtime_handoff_completion_snapshot_delivery_v1_overlay.zip",
+  "files": [
+    ".overlay/phase162_runtime_handoff_completion_snapshot_delivery_v1.json",
+    ".sera-proof/phase162_runtime_handoff_completion_snapshot_delivery_v1.json",
+    "docs/phase162-runtime-handoff-completion-snapshot-delivery-v1.md",
+    "scripts/phase162-runtime-handoff-completion-snapshot-delivery-v1.ps1",
+    "scripts/verify-phase162-runtime-handoff-completion-snapshot-delivery-v1.ps1"
+  ],
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "credentialsTokensSecretsAllowed": false,
+    "paidServiceActivationAllowed": false,
+    "dependencyOrToolInstallAllowed": false,
+    "githubSecuritySettingsMutationAllowed": false,
+    "ownerControlPolicyMutationAllowed": false,
+    "productionDeploymentAllowed": false
+  },
+  "acceptanceCriteria": [
+    "CURRENT_CHATGPT_HANDOFF.md is written for terminal statuses.",
+    "Terminal BLOCKED and QA_BLOCKED statuses exit nonzero.",
+    "Snapshots and evidence paths are attached to handoffs.",
+    "Newest non-stale handoff after the active run timestamp is selected.",
+    "PASS_GUARANTEED enables safe auto-approval only when owner boundary triggers are false.",
+    "QA-approved auto-merge wording is distinct from owner-approved merge wording.",
+    "Verifier includes pass and fail sample cases."
+  ],
+  "createdAt": "2026-07-02T13:19:46.556892Z"
+}
