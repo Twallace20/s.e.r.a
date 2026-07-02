@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "phase": 164,
+  "phaseSlug": "phase164_full_live_loop_command_inbox_proof_v1",
+  "title": "Phase 164 - Full Live Loop + Command Inbox Proof v1",
+  "expectedZipFilename": "s.e.r.a_phase164_full_live_loop_command_inbox_proof_v1_overlay.zip",
+  "createdAt": "2026-07-02T14:39:54Z",
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "credentialsTouched": false,
+    "tokensTouched": false,
+    "paidServicesTouched": false,
+    "dependencyInstalls": false,
+    "githubSecuritySettingsTouched": false,
+    "productionDeployments": false
+  },
+  "deliverables": [
+    "docs/phase164-full-live-loop-command-inbox-proof-v1.md",
+    "scripts/phase164-full-live-loop-command-inbox-proof-v1.ps1",
+    "scripts/verify-phase164-full-live-loop-command-inbox-proof-v1.ps1"
+  ],
+  "purpose": "Full live loop command inbox proof with request freshness, terminal handoff surfacing, bridge wait ceiling guidance, and Phase163 QA hard-stop preservation.",
+  "acceptanceCriteria": [
+    "command inbox discovery selects the smallest runnable phase above latest CLOSED_CLEANLY",
+    "stale artifact requests are rejected",
+    "terminal states write CURRENT_CHATGPT_HANDOFF.md and prompt file",
+    "QA hard-stop refuses PASS_GUARANTEED after QA_BLOCKED",
+    "full-loop simulation passes without live ChatGPT"
+  ]
+}
