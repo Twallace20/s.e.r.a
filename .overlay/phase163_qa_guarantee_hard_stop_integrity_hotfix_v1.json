@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "phase": 163,
+  "phaseSlug": "phase163_qa_guarantee_hard_stop_integrity_hotfix_v1",
+  "title": "Phase 163 \u2014 QA Guarantee Hard Stop Integrity Hotfix v1",
+  "expectedZipFilename": "s.e.r.a_phase163_qa_guarantee_hard_stop_integrity_hotfix_v1_overlay.zip",
+  "purpose": "Repair QA Guarantee hard-stop integrity after Phase162 showed verifier failure could continue to false PASS_GUARANTEED in an interactive paste.",
+  "deliverables": [
+    "Reusable single-file QA Guarantee closeout runner",
+    "Fail-closed verifier output classification",
+    "QA_BLOCKED terminal guard",
+    "PASS_GUARANTEED creation guard",
+    "MERGE_PENDING auto-approval guard",
+    "CURRENT_CHATGPT_HANDOFF.md terminal packet writer",
+    "Regression verifier covering PASS and failure cases"
+  ],
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "noCredentialsTokensSecrets": true,
+    "noPaidServices": true,
+    "noDependencyInstalls": true,
+    "noGithubSecuritySettings": true,
+    "noProductionDeployments": true
+  }
+}
