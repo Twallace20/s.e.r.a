@@ -472,7 +472,7 @@ async function getDownloadCandidates(client, expectedName) {
     };
     const seenElements = new WeakSet();
     if (expectedName || expectedStem || expectedLinkText) {
-      const directExactClickables = Array.from(document.querySelectorAll("button, a, [role='button']"));
+      const directExactClickables = Array.from(document.querySelectorAll('button, a, [role="button"]'));
       for (const el of directExactClickables) {
         if (seenElements.has(el)) continue;
         if (!visible(el) || el.closest("pre, code")) continue;
@@ -493,7 +493,7 @@ async function getDownloadCandidates(client, expectedName) {
         if (el.matches?.("a[href], a[download]")) {
           addCandidate(el, "a[href], a[download]", "link", "exactArtifactButton");
         } else {
-          addCandidate(el, "button, [role=""button""]", "button", "exactArtifactButton");
+          addCandidate(el, 'button, [role="button"]', 'button', 'exactArtifactButton');
         }
       }
     }
