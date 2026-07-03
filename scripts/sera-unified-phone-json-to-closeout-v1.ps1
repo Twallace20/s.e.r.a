@@ -1,4 +1,4 @@
-param([ValidateSet("RunOnce","SelfTest")][string]$Mode="RunOnce",[string]$RepoRoot=(Get-Location).Path,[string]$AutoOpsRoot="$env:USERPROFILE\OneDrive\SERA-AutoOps",[int]$WaitForZipSeconds=0,[switch]$NoApply)
+﻿param([ValidateSet("RunOnce","SelfTest")][string]$Mode="RunOnce",[string]$RepoRoot=(Get-Location).Path,[string]$AutoOpsRoot="$env:USERPROFILE\OneDrive\SERA-AutoOps",[int]$WaitForZipSeconds=0,[switch]$NoApply)
 
 $ErrorActionPreference = "Stop"
 $ScriptRoot = Split-Path $MyInvocation.MyCommand.Path -Parent
@@ -13,11 +13,46 @@ function Get-LatestClosedPhase {
   if(!$Latest){return 0}; if($Latest.Name -match "phase(\d+)"){return [int]$Matches[1]}; return 0
 }
 
+function Get-SeraJsonPropertyValue {
+  param([object]$Json,[string]$Name)
+  if($null -eq $Json){ return $null }
+  $Prop = $Json.PSObject.Properties[$Name]
+  if(!$Prop){ return $null }
+  return $Prop.Value
+}
+
+function Get-SeraJsonString {
+  param([object]$Json,[string]$Name,[string]$Default = "")
+  $Value = Get-SeraJsonPropertyValue -Json $Json -Name $Name
+  if($null -eq $Value){ return $Default }
+  return [string]$Value
+}
+
 function Read-SeraCommandJson { param([string]$Path)
-  try { $Raw=Get-Content -LiteralPath $Path -Raw; $Json=$Raw | ConvertFrom-Json } catch { Write-SeraLog -Message "SKIPPED_MALFORMED :: $Path" -LogPath $LogPath; return $null }
-  $Phase=if($Json.phase){[int]$Json.phase}elseif($Json.phaseStart){[int]$Json.phaseStart}else{$null}; $Slug=[string]$Json.phaseSlug; $Zip=if($Json.expectedZipFilename){[string]$Json.expectedZipFilename}elseif($Json.expectedZipName){[string]$Json.expectedZipName}else{""}
-  if(!$Phase -or !$Slug -or !$Zip){ Write-SeraLog -Message "SKIPPED_MALFORMED :: missing required fields :: $Path" -LogPath $LogPath; return $null }
-  [pscustomobject]@{path=$Path; raw=$Raw; json=$Json; phase=$Phase; phaseSlug=$Slug; expectedZipFilename=$Zip; commandId=[string]$Json.commandId; runNonce=[string]$Json.runNonce; ownerGuidance=[string]$Json.ownerGuidance}
+  try {
+    $Raw = Get-Content -LiteralPath $Path -Raw
+    $Json = $Raw | ConvertFrom-Json
+  } catch {
+    Write-SeraLog -Message "SKIPPED_MALFORMED :: $Path" -LogPath $LogPath
+    return $null
+  }
+
+  $PhaseValue = Get-SeraJsonPropertyValue -Json $Json -Name "phase"
+  if($null -eq $PhaseValue){ $PhaseValue = Get-SeraJsonPropertyValue -Json $Json -Name "phaseStart" }
+
+  $Phase = $null
+  if($null -ne $PhaseValue){ $Phase = [int]$PhaseValue }
+
+  $Slug = Get-SeraJsonString -Json $Json -Name "phaseSlug"
+  $Zip = Get-SeraJsonString -Json $Json -Name "expectedZipFilename"
+  if([string]::IsNullOrWhiteSpace($Zip)){ $Zip = Get-SeraJsonString -Json $Json -Name "expectedZipName" }
+
+  if(!$Phase -or [string]::IsNullOrWhiteSpace($Slug) -or [string]::IsNullOrWhiteSpace($Zip)){
+    Write-SeraLog -Message "SKIPPED_MALFORMED :: missing required fields :: $Path" -LogPath $LogPath
+    return $null
+  }
+
+  [pscustomobject]@{path=$Path; raw=$Raw; json=$Json; phase=$Phase; phaseSlug=$Slug; expectedZipFilename=$Zip; commandId=(Get-SeraJsonString -Json $Json -Name "commandId"); runNonce=(Get-SeraJsonString -Json $Json -Name "runNonce"); ownerGuidance=(Get-SeraJsonString -Json $Json -Name "ownerGuidance")}
 }
 
 function Invoke-SeraCommandInboxHygiene { param([int]$LatestClosedPhase)
@@ -28,8 +63,9 @@ function Invoke-SeraCommandInboxHygiene { param([int]$LatestClosedPhase)
 function New-SeraRichPrompt { param($Command)
   $Lines=New-Object System.Collections.Generic.List[string]
   @("S.E.R.A. PHASE REQUEST","","Return the downloadable overlay ZIP for:","","Phase $($Command.phase) - $($Command.phaseSlug)","","Expected ZIP filename:",$Command.expectedZipFilename,"","Purpose:") | ForEach-Object {$Lines.Add($_)}
-  if($Command.json.purpose){$Lines.Add([string]$Command.json.purpose)}elseif($Command.ownerGuidance){$Lines.Add($Command.ownerGuidance)}else{$Lines.Add("Continue S.E.R.A. development from the selected command inbox JSON.")}
-  if($Command.ownerGuidance){$Lines.Add("");$Lines.Add("Owner guidance:");$Lines.Add($Command.ownerGuidance)}
+  $PurposeText = Get-SeraJsonString -Json $Command.json -Name "purpose"
+  if(-not [string]::IsNullOrWhiteSpace($PurposeText)){$Lines.Add($PurposeText)}elseif(-not [string]::IsNullOrWhiteSpace($Command.ownerGuidance)){$Lines.Add($Command.ownerGuidance)}else{$Lines.Add("Continue S.E.R.A. development from the selected command inbox JSON.")}
+  if(-not [string]::IsNullOrWhiteSpace($Command.ownerGuidance)){$Lines.Add("");$Lines.Add("Owner guidance:");$Lines.Add($Command.ownerGuidance)}
   $Lines.Add("");$Lines.Add("Command contract:");$Lines.Add("- commandId: $($Command.commandId)");$Lines.Add("- runNonce: $($Command.runNonce)");$Lines.Add("- phaseSlug: $($Command.phaseSlug)");$Lines.Add("- expectedZipFilename: $($Command.expectedZipFilename)");$Lines.Add("- savedChatGptTargetOnly: true");$Lines.Add("- allowRandomRecentChatFallback: false");$Lines.Add("- allowNewChatFallback: false");$Lines.Add("");$Lines.Add("Requirements:");$Lines.Add("- Return a downloadable ZIP link.");$Lines.Add("- Return SHA256.");$Lines.Add("- ZIP root must be repo/.");$Lines.Add("- Include .overlay manifest.");$Lines.Add("- Include .sera-proof verification file."); return ($Lines -join "`r`n")
 }
 
