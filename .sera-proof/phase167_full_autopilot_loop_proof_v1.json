@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "phase": 167,
+  "phaseSlug": "phase167_full_autopilot_loop_proof_v1",
+  "phaseName": "s.e.r.a_phase167_full_autopilot_loop_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase167_full_autopilot_loop_proof_v1_overlay.zip",
+  "branchName": "work/phase167-full-autopilot-loop-proof-v1",
+  "tagName": "phase-167-full-autopilot-loop-proof-v1",
+  "verifier": "scripts/verify-phase167-full-autopilot-loop-proof-v1.ps1",
+  "qaGuaranteeScript": "scripts/phase167-full-autopilot-loop-proof-v1.ps1",
+  "statusScript": "scripts/phase167-full-autopilot-loop-status-v1.ps1",
+  "docs": "docs/phase167-full-autopilot-loop-proof-v1.md",
+  "requiredRuntimeArtifacts": [
+    "00_control_center/artifact-watch-request.json",
+    "00_control_center/artifact-generation-lease.json",
+    "15_bridge_outbox/phase167-*.md",
+    "13_chatgpt_downloads/s.e.r.a_phase167_full_autopilot_loop_proof_v1_overlay.zip"
+  ],
+  "passCriteria": [
+    "Phase166 CLOSED_CLEANLY is present before Phase167 begins.",
+    "A fresh Phase167 command JSON exists or was processed into REQUEST_READY.",
+    "artifact-watch-request.json points to phase 167 and the exact expected ZIP name.",
+    "Prompt file includes Phase 167 and the exact expected ZIP name.",
+    "Verifier passes before PASS_GUARANTEED is written.",
+    "Merge approval file is MERGE_PENDING only, not auto-approved."
+  ],
+  "forbiddenChanges": [
+    "credentials",
+    "tokens",
+    "paid services",
+    "dependency installs",
+    "security settings",
+    "startup persistence"
+  ]
+}
