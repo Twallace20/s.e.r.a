@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "phase": 169,
+  "phaseSlug": "phase169_json_upload_starts_loop_proof_v1",
+  "phaseName": "s.e.r.a_phase169_json_upload_starts_loop_proof_v1_overlay",
+  "title": "JSON Upload Starts Loop Proof v1",
+  "createdAtUtc": "2026-07-03T16:25:00Z",
+  "expectedZipFilename": "s.e.r.a_phase169_json_upload_starts_loop_proof_v1_overlay.zip",
+  "zipRoot": "repo/",
+  "branchName": "work/phase169-json-upload-starts-loop-proof-v1",
+  "tagName": "phase-169-json-upload-starts-loop-proof-v1",
+  "riskClass": "safe-autopilot-proof-overlay",
+  "summary": "Adds Phase169 proof files showing a user-provided JSON in command_inbox can start the request-ready path, target the exact ZIP, proceed through apply, QA Guarantee, safe merge approval, and closeout with clipboard handoff capture.",
+  "changes": [
+    {
+      "path": "docs/phase169-json-upload-starts-loop-proof-v1.md",
+      "type": "add",
+      "purpose": "Operator-facing proof documentation and acceptance criteria."
+    },
+    {
+      "path": "scripts/verify-phase169-json-upload-starts-loop-proof-v1.ps1",
+      "type": "add",
+      "purpose": "Verifier for Phase169 proof files, runtime markers, and JSON upload request artifacts."
+    },
+    {
+      "path": "scripts/phase169-json-upload-starts-loop-proof-v1.ps1",
+      "type": "add",
+      "purpose": "QA Guarantee script for Phase169."
+    },
+    {
+      "path": "scripts/phase169-json-upload-starts-loop-status-v1.ps1",
+      "type": "add",
+      "purpose": "Read-only Phase169 status report."
+    },
+    {
+      "path": ".sera-proof/phase169_json_upload_starts_loop_proof_v1.json",
+      "type": "add",
+      "purpose": "Machine-readable proof contract."
+    },
+    {
+      "path": ".overlay/phase169_json_upload_starts_loop_proof_v1.json",
+      "type": "add",
+      "purpose": "Overlay manifest."
+    }
+  ],
+  "hardStops": [
+    "A user-provided JSON must be the input contract for REQUEST_READY proof.",
+    "Exact ZIP targeting is mandatory.",
+    "PASS is not merge eligible.",
+    "Merge approval may move only after PASS_GUARANTEED.",
+    "Closeout must wait for CLOSED_CLEANLY and ignore PASS/PASS_GUARANTEED.",
+    "This overlay does not add credentials, tokens, paid services, dependency installs, security-setting changes, or startup persistence."
+  ]
+}

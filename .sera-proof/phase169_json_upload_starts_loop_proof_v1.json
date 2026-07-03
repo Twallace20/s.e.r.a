@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "phase": 169,
+  "phaseSlug": "phase169_json_upload_starts_loop_proof_v1",
+  "phaseName": "s.e.r.a_phase169_json_upload_starts_loop_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase169_json_upload_starts_loop_proof_v1_overlay.zip",
+  "branchName": "work/phase169-json-upload-starts-loop-proof-v1",
+  "tagName": "phase-169-json-upload-starts-loop-proof-v1",
+  "verifier": "scripts/verify-phase169-json-upload-starts-loop-proof-v1.ps1",
+  "qaGuaranteeScript": "scripts/phase169-json-upload-starts-loop-proof-v1.ps1",
+  "statusScript": "scripts/phase169-json-upload-starts-loop-status-v1.ps1",
+  "docs": "docs/phase169-json-upload-starts-loop-proof-v1.md",
+  "expectedCommandJson": "00_control_center/command_inbox/autopilot-command-phase169_json_upload_starts_loop_proof_v1.json",
+  "requiredRuntimeArtifacts": [
+    "00_control_center/artifact-watch-request.json",
+    "15_bridge_outbox/phase169-*.md",
+    "13_chatgpt_downloads/s.e.r.a_phase169_json_upload_starts_loop_proof_v1_overlay.zip"
+  ],
+  "passCriteria": [
+    "Phase168 CLOSED_CLEANLY is present before Phase169 begins.",
+    "A user-provided Phase169 JSON in command_inbox is validated.",
+    "The merged unified loop can turn that JSON into REQUEST_READY.",
+    "The exact expected ZIP is targeted and can be queued for apply.",
+    "The overlay applies and verifier passes.",
+    "PASS_GUARANTEED is created before merge approval.",
+    "Closeout produces CLOSED_CLEANLY.",
+    "Final handoff or diagnostics can be copied to clipboard."
+  ],
+  "observedGap": "The VBS production runner did not pick up the JSON during the first watch; direct merged unified RunOnce did. Phase169 captures that proof and leaves the runner pickup gap for a follow-up hardening phase.",
+  "forbiddenChanges": [
+    "credentials",
+    "tokens",
+    "paid services",
+    "dependency installs",
+    "security settings",
+    "startup persistence"
+  ]
+}
