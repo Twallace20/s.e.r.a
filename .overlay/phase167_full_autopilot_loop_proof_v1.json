@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "phase": 167,
+  "phaseSlug": "phase167_full_autopilot_loop_proof_v1",
+  "phaseName": "s.e.r.a_phase167_full_autopilot_loop_proof_v1_overlay",
+  "title": "Full Autopilot Loop Proof v1",
+  "createdAtUtc": "2026-07-03T15:08:14Z",
+  "expectedZipFilename": "s.e.r.a_phase167_full_autopilot_loop_proof_v1_overlay.zip",
+  "zipRoot": "repo/",
+  "branchName": "work/phase167-full-autopilot-loop-proof-v1",
+  "tagName": "phase-167-full-autopilot-loop-proof-v1",
+  "riskClass": "safe-proof-overlay",
+  "summary": "Adds Phase167 proof, verifier, status, documentation, and manifest files for the full command JSON to closeout autopilot path.",
+  "changes": [
+    {
+      "path": "docs/phase167-full-autopilot-loop-proof-v1.md",
+      "type": "add",
+      "purpose": "Operator-facing phase documentation and success criteria."
+    },
+    {
+      "path": "scripts/verify-phase167-full-autopilot-loop-proof-v1.ps1",
+      "type": "add",
+      "purpose": "Verifier for repo files, request artifacts, and hard-stop safety markers."
+    },
+    {
+      "path": "scripts/phase167-full-autopilot-loop-proof-v1.ps1",
+      "type": "add",
+      "purpose": "QA Guarantee script that emits evidence, PASS_GUARANTEED handoff, and MERGE_PENDING approval file."
+    },
+    {
+      "path": "scripts/phase167-full-autopilot-loop-status-v1.ps1",
+      "type": "add",
+      "purpose": "Read-only operator status script for the Phase167 full-loop proof."
+    },
+    {
+      "path": ".sera-proof/phase167_full_autopilot_loop_proof_v1.json",
+      "type": "add",
+      "purpose": "Machine-readable proof contract."
+    },
+    {
+      "path": ".overlay/phase167_full_autopilot_loop_proof_v1.json",
+      "type": "add",
+      "purpose": "Overlay manifest."
+    }
+  ],
+  "hardStops": [
+    "No merge approval is created until verifier passes.",
+    "PASS_GUARANTEED is the only merge-eligible status.",
+    "CLOSED_CLEANLY is required before the next phase begins.",
+    "This overlay does not add credentials, paid services, dependency installs, security-setting changes, or startup persistence."
+  ]
+}
