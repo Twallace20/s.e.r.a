@@ -1,0 +1,28 @@
+{
+  "phase": 170,
+  "phaseSlug": "phase170_production_runner_json_pickup_fix_v1",
+  "phaseName": "s.e.r.a_phase170_production_runner_json_pickup_fix_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase170_production_runner_json_pickup_fix_v1_overlay.zip",
+  "proofContract": {
+    "startsFromUserJson": true,
+    "capturesProductionPickupFailure": true,
+    "installsProductionJsonPickupRunner": true,
+    "repairsVbsLauncher": true,
+    "requestReady": true,
+    "exactZipTargeting": true,
+    "zipReadyForApply": true,
+    "qaGuaranteeRequired": true,
+    "safeMergeAfterPassGuaranteedOnly": true,
+    "closedCleanlyRequired": true,
+    "clipboardHandoff": true
+  },
+  "disallowedActions": [
+    "credentials",
+    "tokens",
+    "paid services",
+    "dependency installs",
+    "security setting changes",
+    "scheduled task enablement",
+    "startup persistence"
+  ]
+}

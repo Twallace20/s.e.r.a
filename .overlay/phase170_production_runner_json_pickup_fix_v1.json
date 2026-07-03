@@ -1,0 +1,28 @@
+{
+  "overlayFormat": "SERA_SAFE_OVERLAY_V1",
+  "phase": 170,
+  "phaseSlug": "phase170_production_runner_json_pickup_fix_v1",
+  "phaseName": "s.e.r.a_phase170_production_runner_json_pickup_fix_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase170_production_runner_json_pickup_fix_v1_overlay.zip",
+  "branch": "work/phase170-production-runner-json-pickup-fix-v1",
+  "tag": "phase-170-production-runner-json-pickup-fix-v1",
+  "createdBy": "ChatGPT GPT-5.5 Thinking",
+  "summary": "Fixes production runner JSON pickup by installing a reusable runner and repairing the VBS launcher to call it.",
+  "safety": {
+    "credentials": false,
+    "tokens": false,
+    "paidServices": false,
+    "dependencyInstalls": false,
+    "securitySettingChanges": false,
+    "startupPersistence": false,
+    "scheduledTaskEnablement": false
+  },
+  "files": [
+    "docs/phase170-production-runner-json-pickup-fix-v1.md",
+    "scripts/sera-production-json-pickup-runner-v1.ps1",
+    "scripts/repair-sera-autoops-runner-launcher-v1.ps1",
+    "scripts/verify-phase170-production-runner-json-pickup-fix-v1.ps1",
+    "scripts/phase170-production-runner-json-pickup-fix-v1.ps1",
+    "scripts/phase170-production-runner-status-v1.ps1"
+  ]
+}
