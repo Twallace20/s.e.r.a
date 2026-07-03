@@ -52,3 +52,22 @@ The orchestrator is expected to perform or guard the following sequence:
 ## Operator Notes
 
 Phase168 is the bridge from a successful controlled helper proof to a repeatable production-level loop. The immediate test should still be watched, but the expected outcome is a much smaller owner role: create the JSON, save the ZIP, run the orchestrator, and paste the copied final output.
+
+## Phase168 full loop marker coverage
+
+This proof covers these required orchestration markers:
+
+- REQUEST_READY
+- ZIP_FOUND
+- ZIP_READY_FOR_APPLY
+- 01_apply_approved
+- overlay apply
+- verifier execution
+- PASS_GUARANTEED
+- SAFE AUTO-MERGE APPROVAL
+- CLOSED_CLEANLY
+- CURRENT_CHATGPT_HANDOFF.md
+- Set-Clipboard
+- stale handoff protection
+- exact ZIP targeting
+
