@@ -1,0 +1,13 @@
+{
+  "phase": 172,
+  "phaseName": "s.e.r.a_phase172_upload_json_only_auto_loop_router_v1_overlay",
+  "proof": "upload-json-only-auto-loop-router-v1",
+  "mustProve": [
+    "fresh command JSON in command_inbox is selected",
+    "REQUEST_READY is generated",
+    "ChatGPT browser bridge attempts prompt submission and ZIP download using expected filename selectors",
+    "exact ZIP is validated",
+    "direct no-VBS ZIP closeout applies overlay, verifies, QA guarantees, merges, tags, and writes CLOSED_CLEANLY",
+    "BLOCKED handoff is written and copied if browser control is not available"
+  ]
+}
