@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "phase": 166,
+  "phaseSlug": "phase166_unified_phone_json_to_closeout_hardening_v1",
+  "phaseName": "s.e.r.a_phase166_unified_phone_json_to_closeout_hardening_v1_overlay",
+  "title": "Phase 166 \u2014 Unified Phone JSON-to-Closeout Hardening v1",
+  "expectedZipFilename": "s.e.r.a_phase166_unified_phone_json_to_closeout_hardening_v1_overlay.zip",
+  "safeAutoMergeEligible": true,
+  "qaGuaranteeRequiredBeforeMerge": true,
+  "createdAtUtc": "2026-07-02T19:48:19Z",
+  "deliverables": [
+    "unified production phone loop",
+    "safe native command helper",
+    "safe PowerShell argument builder",
+    "branch integrity gate",
+    "ZIP-drop-first continuation",
+    "self-test cleanup",
+    "rich prompt preservation",
+    "resume-safe logging",
+    "verifier coverage"
+  ],
+  "safety": {
+    "credentials": false,
+    "tokens": false,
+    "paidServices": false,
+    "dependencyInstalls": false,
+    "githubSecuritySettings": false,
+    "productionDeployments": false,
+    "windowsStartupPersistence": false,
+    "scheduledTaskPersistence": false,
+    "savedChatGptTargetOnly": true,
+    "randomRecentChatFallback": false,
+    "newChatFallback": false
+  }
+}
