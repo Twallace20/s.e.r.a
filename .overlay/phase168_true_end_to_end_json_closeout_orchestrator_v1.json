@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "phase": 168,
+  "phaseSlug": "phase168_true_end_to_end_json_closeout_orchestrator_v1",
+  "phaseName": "s.e.r.a_phase168_true_end_to_end_json_closeout_orchestrator_v1_overlay",
+  "title": "True End-to-End JSON-to-CLOSED_CLEANLY Orchestrator v1",
+  "createdAtUtc": "2026-07-03T16:00:00Z",
+  "expectedZipFilename": "s.e.r.a_phase168_true_end_to_end_json_closeout_orchestrator_v1_overlay.zip",
+  "zipRoot": "repo/",
+  "branchName": "work/phase168-true-end-to-end-json-closeout-orchestrator-v1",
+  "tagName": "phase-168-true-end-to-end-json-closeout-orchestrator-v1",
+  "riskClass": "safe-orchestration-overlay",
+  "summary": "Adds Phase168 proof files and a generic production-safe orchestrator for the full command JSON to CLOSED_CLEANLY path, including exact ZIP queueing, QA Guarantee, safe merge approval after PASS_GUARANTEED, closeout wait, and clipboard handoff capture.",
+  "changes": [
+    {
+      "path": "docs/phase168-true-end-to-end-json-closeout-orchestrator-v1.md",
+      "type": "add",
+      "purpose": "Operator-facing documentation and acceptance criteria."
+    },
+    {
+      "path": "scripts/sera-json-to-closed-cleanly-orchestrator-v1.ps1",
+      "type": "add",
+      "purpose": "Reusable safe orchestrator for command JSON to CLOSED_CLEANLY flow."
+    },
+    {
+      "path": "scripts/verify-phase168-true-end-to-end-json-closeout-orchestrator-v1.ps1",
+      "type": "add",
+      "purpose": "Verifier for Phase168 files, markers, and request artifacts."
+    },
+    {
+      "path": "scripts/phase168-true-end-to-end-json-closeout-orchestrator-v1.ps1",
+      "type": "add",
+      "purpose": "QA Guarantee script for Phase168."
+    },
+    {
+      "path": "scripts/phase168-true-end-to-end-json-closeout-status-v1.ps1",
+      "type": "add",
+      "purpose": "Read-only status view for Phase168."
+    },
+    {
+      "path": ".sera-proof/phase168_true_end_to_end_json_closeout_orchestrator_v1.json",
+      "type": "add",
+      "purpose": "Machine-readable proof contract."
+    },
+    {
+      "path": ".overlay/phase168_true_end_to_end_json_closeout_orchestrator_v1.json",
+      "type": "add",
+      "purpose": "Overlay manifest."
+    }
+  ],
+  "hardStops": [
+    "Exact ZIP name and SHA may be checked before queueing.",
+    "The orchestrator only moves an exact expected ZIP into 01_apply_approved.",
+    "PASS is not merge eligible.",
+    "Merge approval is only moved after PASS_GUARANTEED.",
+    "Closeout wait ignores PASS and PASS_GUARANTEED while waiting for CLOSED_CLEANLY.",
+    "This overlay does not add credentials, tokens, paid services, dependency installs, security-setting changes, or startup persistence."
+  ]
+}
