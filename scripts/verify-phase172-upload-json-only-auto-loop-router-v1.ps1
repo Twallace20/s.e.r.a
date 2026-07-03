@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$RepoRoot = (Get-Location).Path,
   [string]$AutoOpsRoot = "$env:USERPROFILE\OneDrive\SERA-AutoOps"
 )
@@ -28,7 +28,7 @@ foreach ($Marker in @("USER_UPLOADS_JSON_TO_COMMAND_INBOX","REQUEST_READY","CHAT
 foreach ($Marker in @("savedChatGptTargetOnly","allowRandomRecentChatFallback","allowNewChatFallback","artifact-watch-request","sera-production-json-pickup-runner-v1.ps1","sera-chatgpt-browser-bridge-v1.ps1","sera-direct-zip-to-closed-cleanly-v1.ps1")) {
   if ($Router -notlike "*$Marker*") { throw "Phase172 router missing marker: $Marker" }
 }
-foreach ($Marker in @("Download","expectedZipName","button","role=\"button\"","aria-label","Runtime.evaluate","Input.insertText","Page.setDownloadBehavior")) {
+foreach ($Marker in @("Download","expectedZipName","button","role=`"button`"","aria-label","Runtime.evaluate","Input.insertText","Page.setDownloadBehavior")) {
   if ($Bridge -notlike "*$Marker*") { throw "Phase172 browser bridge missing marker: $Marker" }
 }
 foreach ($Marker in @("PASS_GUARANTEED","SAFE_AUTO_MERGE_AFTER_PASS_GUARANTEED","CLOSED_CLEANLY","git merge --no-ff","git tag")) {
@@ -39,3 +39,4 @@ foreach ($Word in $Forbidden) {
   if ($Router -like "*$Word*" -or $Bridge -like "*$Word*" -or $Direct -like "*$Word*") { throw "Phase172 contains forbidden persistence marker: $Word" }
 }
 Write-Host "VERIFIER PASS phase172 upload json only auto loop router"
+
