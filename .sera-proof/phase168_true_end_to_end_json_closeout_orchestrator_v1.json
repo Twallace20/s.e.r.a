@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "phase": 168,
+  "phaseSlug": "phase168_true_end_to_end_json_closeout_orchestrator_v1",
+  "phaseName": "s.e.r.a_phase168_true_end_to_end_json_closeout_orchestrator_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase168_true_end_to_end_json_closeout_orchestrator_v1_overlay.zip",
+  "branchName": "work/phase168-true-end-to-end-json-closeout-orchestrator-v1",
+  "tagName": "phase-168-true-end-to-end-json-closeout-orchestrator-v1",
+  "orchestratorScript": "scripts/sera-json-to-closed-cleanly-orchestrator-v1.ps1",
+  "verifier": "scripts/verify-phase168-true-end-to-end-json-closeout-orchestrator-v1.ps1",
+  "qaGuaranteeScript": "scripts/phase168-true-end-to-end-json-closeout-orchestrator-v1.ps1",
+  "statusScript": "scripts/phase168-true-end-to-end-json-closeout-status-v1.ps1",
+  "docs": "docs/phase168-true-end-to-end-json-closeout-orchestrator-v1.md",
+  "requiredRuntimeArtifacts": [
+    "00_control_center/artifact-watch-request.json",
+    "15_bridge_outbox/phase168-*.md",
+    "13_chatgpt_downloads/s.e.r.a_phase168_true_end_to_end_json_closeout_orchestrator_v1_overlay.zip"
+  ],
+  "passCriteria": [
+    "Phase167 CLOSED_CLEANLY is present before Phase168 begins.",
+    "A fresh Phase168 command JSON produces REQUEST_READY.",
+    "The exact expected ZIP can be queued into 01_apply_approved.",
+    "The overlay applies and verifier passes.",
+    "PASS_GUARANTEED is created before merge approval.",
+    "Closeout wait ignores PASS and PASS_GUARANTEED while waiting for CLOSED_CLEANLY.",
+    "Final handoff or log can be copied to clipboard."
+  ],
+  "forbiddenChanges": [
+    "credentials",
+    "tokens",
+    "paid services",
+    "dependency installs",
+    "security settings",
+    "startup persistence"
+  ]
+}
