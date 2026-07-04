@@ -1,244 +1,308 @@
 param(
-  [Parameter(Mandatory=$true)][string]$PromptFile,
-  [Parameter(Mandatory=$true)][string]$ExpectedZipName,
-  [Parameter(Mandatory=$true)][string]$DownloadDirectory,
-  [string]$AutoOpsRoot = "$env:USERPROFILE\OneDrive\SERA-AutoOps",
-  [ValidateSet("Auto","Cdp","ClipboardOnly")]
-  [string]$Mode = "Auto",
-  [int[]]$CdpPorts = @(9222,9223,9224,9225),
-  [int]$WaitMinutes = 30
+  [string]$PromptFile,
+  [string]$ExpectedFilename,
+  [string]$DownloadDir = "$env:USERPROFILE\OneDrive\SERA-AutoOps\13_chatgpt_downloads",
+  [string]$BrowserDebugUrl = "http://127.0.0.1:9222",
+  [int]$TimeoutSeconds = 900,
+  [switch]$LaunchBrowserIfNeeded
 )
 
 $ErrorActionPreference = "Stop"
 
-$Control = Join-Path $AutoOpsRoot "00_control_center"
-$LogDir = Join-Path $Control "production_watchers"
-$Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$Log = Join-Path $LogDir "chatgpt-browser-bridge-v1-$Stamp.log"
-New-Item -ItemType Directory -Force $LogDir,$DownloadDirectory | Out-Null
+New-Item -ItemType Directory -Force $DownloadDir | Out-Null
 
 function Write-Step {
   param([string]$Message)
-  $Line = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
-  Add-Content -Path $Log -Value $Line -Encoding UTF8
-  Write-Host $Line
+  Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
 }
 
-function Write-Blocked {
-  param([string]$Reason)
-  $Text = @(
-    "# S.E.R.A. Browser Bridge Blocked",
-    "",
-    "Status: BROWSER_BRIDGE_BLOCKED",
-    "Reason: $Reason",
-    "PromptFile: $PromptFile",
-    "ExpectedZipName: $ExpectedZipName",
-    "DownloadDirectory: $DownloadDirectory",
-    "Log: $Log",
-    "",
-    "No credentials, tokens, paid services, security settings, scheduled tasks, or startup persistence were touched."
-  ) -join "`r`n"
-  $Path = Join-Path $Control "CURRENT_CHATGPT_HANDOFF.md"
-  $Text | Set-Content $Path -Encoding UTF8
-  Set-Clipboard $Text
-  Write-Step "BROWSER_BRIDGE_BLOCKED: $Reason"
-  throw $Reason
-}
-
-function Get-CdpTargets {
-  foreach ($Port in $CdpPorts) {
-    try {
-      $Targets = Invoke-RestMethod -Uri "http://127.0.0.1:$Port/json" -TimeoutSec 2
-      foreach ($Target in $Targets) {
-        if ($Target.webSocketDebuggerUrl -and (($Target.url -like "*chatgpt.com*") -or ($Target.url -like "*chat.openai.com*") -or ($Target.title -like "*ChatGPT*"))) {
-          return [pscustomobject]@{ Port = $Port; Target = $Target }
-        }
-      }
-      foreach ($Target in $Targets) {
-        if ($Target.webSocketDebuggerUrl -and $Target.type -eq "page") {
-          return [pscustomobject]@{ Port = $Port; Target = $Target }
-        }
-      }
-    } catch {
-    }
+function Test-DebugBrowser {
+  try {
+    $Version = Invoke-RestMethod -Uri "$BrowserDebugUrl/json/version" -TimeoutSec 2
+    return $true
+  } catch {
+    return $false
   }
-  return $null
 }
 
-function Invoke-CdpCommand {
+function Start-DebugBrowser {
+  $Candidates = @(
+    "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+    "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe",
+    "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
+    "$env:ProgramFiles(x86)\Microsoft\Edge\Application\msedge.exe"
+  )
+
+  $Browser = $Candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+  if (!$Browser) {
+    throw "No Chrome or Edge executable found for browser bridge."
+  }
+
+  Start-Process -FilePath $Browser -ArgumentList @("--remote-debugging-port=9222","https://chatgpt.com/")
+  Start-Sleep -Seconds 5
+}
+
+function Get-ChatGptTarget {
+  $Tabs = Invoke-RestMethod -Uri "$BrowserDebugUrl/json" -TimeoutSec 5
+  $Target = $Tabs |
+    Where-Object {
+      ([string]$_.url -like "*chatgpt.com*" -or [string]$_.url -like "*chat.openai.com*") -and
+      [string]$_.webSocketDebuggerUrl
+    } |
+    Select-Object -First 1
+
+  if (!$Target) {
+    throw "No ChatGPT browser tab found on $BrowserDebugUrl. Open ChatGPT in the debug browser and rerun."
+  }
+
+  return $Target
+}
+
+function Invoke-CdpMethod {
   param(
-    [Parameter(Mandatory=$true)][string]$WebSocketUrl,
-    [Parameter(Mandatory=$true)][string]$Method,
+    [string]$WsUrl,
+    [string]$Method,
     [hashtable]$Params = @{}
   )
 
-  $Client = [System.Net.WebSockets.ClientWebSocket]::new()
-  $Client.ConnectAsync([Uri]$WebSocketUrl, [Threading.CancellationToken]::None).GetAwaiter().GetResult()
+  $Socket = [System.Net.WebSockets.ClientWebSocket]::new()
+  $Uri = [Uri]$WsUrl
+  $Socket.ConnectAsync($Uri, [Threading.CancellationToken]::None).GetAwaiter().GetResult()
+
   try {
     $Id = Get-Random -Minimum 1000 -Maximum 999999
-    $Payload = @{ id = $Id; method = $Method; params = $Params } | ConvertTo-Json -Depth 20 -Compress
+    $Payload = @{
+      id = $Id
+      method = $Method
+      params = $Params
+    } | ConvertTo-Json -Depth 20 -Compress
+
     $Bytes = [Text.Encoding]::UTF8.GetBytes($Payload)
     $Segment = [ArraySegment[byte]]::new($Bytes)
-    $Client.SendAsync($Segment, [Net.WebSockets.WebSocketMessageType]::Text, $true, [Threading.CancellationToken]::None).GetAwaiter().GetResult()
+    $Socket.SendAsync($Segment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [Threading.CancellationToken]::None).GetAwaiter().GetResult()
 
-    $Buffer = New-Object byte[] 1048576
-    $Chunks = New-Object System.Collections.Generic.List[byte]
+    $Buffer = [byte[]]::new(1048576)
+    $Chunks = New-Object System.Collections.Generic.List[string]
+
     do {
       $ReceiveSegment = [ArraySegment[byte]]::new($Buffer)
-      $Result = $Client.ReceiveAsync($ReceiveSegment, [Threading.CancellationToken]::None).GetAwaiter().GetResult()
-      for ($i = 0; $i -lt $Result.Count; $i++) { $Chunks.Add($Buffer[$i]) }
-    } while (!$Result.EndOfMessage)
+      $Result = $Socket.ReceiveAsync($ReceiveSegment, [Threading.CancellationToken]::None).GetAwaiter().GetResult()
+      if ($Result.Count -gt 0) {
+        $Chunks.Add([Text.Encoding]::UTF8.GetString($Buffer, 0, $Result.Count))
+      }
+    } until ($Result.EndOfMessage)
 
-    $Text = [Text.Encoding]::UTF8.GetString($Chunks.ToArray())
-    return ($Text | ConvertFrom-Json)
+    $ResponseText = ($Chunks -join "")
+    return ($ResponseText | ConvertFrom-Json)
   } finally {
-    $Client.Dispose()
+    if ($Socket.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
+      $Socket.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, "done", [Threading.CancellationToken]::None).GetAwaiter().GetResult()
+    }
+    $Socket.Dispose()
   }
 }
 
-function Find-ExpectedZipOnDisk {
-  $Exact = Join-Path $DownloadDirectory $ExpectedZipName
-  if (Test-Path $Exact) { return $Exact }
+function Find-DownloadedArtifact {
+  param([string]$Name)
 
-  $Base = [IO.Path]::GetFileNameWithoutExtension($ExpectedZipName)
-  $Match = Get-ChildItem $DownloadDirectory -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -like "$Base*.zip" -or $_.Name -like "*$Base*.zip" } |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
+  $SearchDirs = @(
+    $DownloadDir,
+    "$env:USERPROFILE\Downloads"
+  ) | Select-Object -Unique
 
-  if ($Match) {
-    Copy-Item $Match.FullName $Exact -Force
-    return $Exact
+  foreach ($Dir in $SearchDirs) {
+    if (!(Test-Path $Dir)) { continue }
+
+    if ($Name) {
+      $Exact = Join-Path $Dir $Name
+      if (Test-Path $Exact) {
+        $Dest = Join-Path $DownloadDir $Name
+        if ($Exact -ne $Dest) {
+          Copy-Item $Exact $Dest -Force
+          return $Dest
+        }
+        return $Exact
+      }
+    }
+
+    $Latest = Get-ChildItem $Dir -File -ErrorAction SilentlyContinue |
+      Where-Object { $_.Name -match "\.(zip|ps1)$" -and $_.Name -notmatch "\.crdownload$" } |
+      Sort-Object LastWriteTime -Descending |
+      Select-Object -First 1
+
+    if ($Latest) {
+      $Dest = Join-Path $DownloadDir $Latest.Name
+      if ($Latest.FullName -ne $Dest) {
+        Copy-Item $Latest.FullName $Dest -Force
+        return $Dest
+      }
+      return $Latest.FullName
+    }
   }
 
   return $null
 }
 
-if (!(Test-Path $PromptFile)) { throw "Prompt file missing: $PromptFile" }
-$PromptText = Get-Content $PromptFile -Raw
-Set-Clipboard $PromptText
-Write-Step "Prompt copied to clipboard: $PromptFile"
-
-if ($Mode -eq "ClipboardOnly") {
-  Write-Blocked "ClipboardOnly mode copied the prompt but cannot safely click/download the ZIP."
+if (!(Test-DebugBrowser)) {
+  if ($LaunchBrowserIfNeeded) {
+    Write-Step "Debug browser not found. Launching Chrome or Edge with remote debug port."
+    Start-DebugBrowser
+  }
 }
 
-$TargetInfo = Get-CdpTargets
-if (!$TargetInfo) {
-  Write-Blocked "No Chrome/Edge DevTools ChatGPT page was available on ports $($CdpPorts -join ','). Start a browser with remote debugging for the full no-manual browser bridge."
+if (!(Test-DebugBrowser)) {
+  throw "Browser bridge unavailable. Start Chrome or Edge with --remote-debugging-port=9222, open ChatGPT, then rerun."
 }
 
-$Ws = [string]$TargetInfo.Target.webSocketDebuggerUrl
-Write-Step "CDP target selected port=$($TargetInfo.Port) title=$($TargetInfo.Target.title) url=$($TargetInfo.Target.url)"
+$Target = Get-ChatGptTarget
+$WsUrl = [string]$Target.webSocketDebuggerUrl
 
-try {
-  Invoke-CdpCommand -WebSocketUrl $Ws -Method "Page.setDownloadBehavior" -Params @{ behavior = "allow"; downloadPath = $DownloadDirectory } | Out-Null
-  Write-Step "Download behavior set to $DownloadDirectory"
-} catch {
-  Write-Step "Page.setDownloadBehavior unavailable. Continuing. $_"
-}
+Write-Step "CHATGPT_BROWSER_BRIDGE_CONNECTED url=$($Target.url)"
 
-$PromptJson = $PromptText | ConvertTo-Json -Compress
-$SubmitScript = @"
-(async function() {
+if ($PromptFile -and (Test-Path $PromptFile)) {
+  $PromptText = Get-Content $PromptFile -Raw
+  $PromptJson = $PromptText | ConvertTo-Json -Compress
+
+  $SubmitJs = @"
+(async () => {
   const prompt = $PromptJson;
+
   function visible(el) {
-    if (!el) return false;
     const r = el.getBoundingClientRect();
-    const s = window.getComputedStyle(el);
-    return r.width > 5 && r.height > 5 && s.visibility !== 'hidden' && s.display !== 'none';
+    return r.width > 0 && r.height > 0;
   }
-  let candidates = Array.from(document.querySelectorAll('textarea, div[contenteditable="true"], [contenteditable="true"], div.ProseMirror'))
+
+  function setText(el, text) {
+    el.focus();
+    if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+      el.value = text;
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    }
+
+    el.textContent = text;
+    el.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
+    return true;
+  }
+
+  const boxes = Array.from(document.querySelectorAll("textarea, [contenteditable='true'], [role='textbox'], #prompt-textarea"))
     .filter(visible);
-  let el = candidates[candidates.length - 1];
-  if (!el) return { ok:false, reason:'composer_not_found' };
-  el.focus();
-  if (el.tagName && el.tagName.toLowerCase() === 'textarea') {
-    el.value = prompt;
-    el.dispatchEvent(new InputEvent('input', {bubbles:true, inputType:'insertText', data: prompt}));
-  } else {
-    el.textContent = '';
-    el.dispatchEvent(new InputEvent('input', {bubbles:true, inputType:'deleteContentBackward'}));
-  }
-  return { ok:true, composer: el.tagName || el.className || 'contenteditable' };
+
+  const box = boxes[boxes.length - 1];
+  if (!box) return { ok:false, reason:"composer_not_found" };
+
+  setText(box, prompt);
+  await new Promise(r => setTimeout(r, 400));
+
+  const buttons = Array.from(document.querySelectorAll("button, [role='button']"))
+    .filter(visible);
+
+  const send = buttons.find(b => {
+    const t = [
+      b.innerText,
+      b.textContent,
+      b.getAttribute("aria-label"),
+      b.getAttribute("title"),
+      b.getAttribute("data-testid")
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    return !b.disabled && (
+      t.includes("send") ||
+      t.includes("submit") ||
+      t.includes("composer-submit") ||
+      t.includes("arrow-up")
+    );
+  });
+
+  if (!send) return { ok:false, reason:"send_button_not_found" };
+
+  send.click();
+  return { ok:true, action:"prompt_submitted" };
 })()
 "@
 
-$SubmitResult = Invoke-CdpCommand -WebSocketUrl $Ws -Method "Runtime.evaluate" -Params @{ expression = $SubmitScript; awaitPromise = $true; returnByValue = $true }
-Write-Step "Composer focus result: $($SubmitResult | ConvertTo-Json -Depth 10 -Compress)"
+  $SubmitResult = Invoke-CdpMethod -WsUrl $WsUrl -Method "Runtime.evaluate" -Params @{
+    expression = $SubmitJs
+    awaitPromise = $true
+    returnByValue = $true
+  }
 
-try {
-  Invoke-CdpCommand -WebSocketUrl $Ws -Method "Input.insertText" -Params @{ text = $PromptText } | Out-Null
-  Start-Sleep -Milliseconds 500
-  Invoke-CdpCommand -WebSocketUrl $Ws -Method "Input.dispatchKeyEvent" -Params @{ type = "keyDown"; windowsVirtualKeyCode = 13; nativeVirtualKeyCode = 13; key = "Enter"; code = "Enter" } | Out-Null
-  Invoke-CdpCommand -WebSocketUrl $Ws -Method "Input.dispatchKeyEvent" -Params @{ type = "keyUp"; windowsVirtualKeyCode = 13; nativeVirtualKeyCode = 13; key = "Enter"; code = "Enter" } | Out-Null
-  Write-Step "Prompt submitted through CDP."
-} catch {
-  Write-Blocked "CDP prompt submit failed: $_"
+  Write-Step "PROMPT_SUBMIT_RESULT $($SubmitResult.result.result.value | ConvertTo-Json -Compress)"
 }
 
-$ClickScriptTemplate = @'
-(function(expectedZipName) {
-  const expected = String(expectedZipName || '').toLowerCase();
-  const expectedNoExt = expected.replace(/\.zip$/,'');
-  function textOf(el) {
-    if (!el) return '';
-    return [el.innerText, el.textContent, el.getAttribute('aria-label'), el.getAttribute('title'), el.getAttribute('download'), el.href]
-      .filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
-  }
-  function visible(el) {
-    if (!el) return false;
-    const r = el.getBoundingClientRect();
-    const s = window.getComputedStyle(el);
-    return r.width > 3 && r.height > 3 && s.visibility !== 'hidden' && s.display !== 'none';
-  }
-  const nodes = Array.from(document.querySelectorAll('button, a, [role="button"], span, div'));
-  const matches = [];
-  for (const el of nodes) {
-    const raw = textOf(el);
-    const t = raw.toLowerCase();
-    if (!t) continue;
-    const exact = t.includes(expected);
-    const loose = t.includes('download') && t.includes('.zip') && (t.includes(expectedNoExt) || t.includes('phase'));
-    const hrefZip = (el.href || '').toLowerCase().includes('.zip');
-    if ((exact || loose || hrefZip) && visible(el)) {
-      const clickable = el.closest('button, a, [role="button"]') || el;
-      matches.push({ raw, tag: el.tagName, clickableTag: clickable.tagName });
-      clickable.scrollIntoView({block:'center', inline:'center'});
-      clickable.click();
-      return { ok:true, clicked: raw, tag: el.tagName, clickableTag: clickable.tagName, matches: matches.slice(0,5) };
-    }
-  }
-  return { ok:false, reason:'download_control_not_found', expectedZipName, sample: nodes.slice(-80).map(textOf).filter(Boolean).slice(-20) };
-})('__EXPECTED_ZIP__')
-'@
-$ClickScript = $ClickScriptTemplate.Replace('__EXPECTED_ZIP__', ($ExpectedZipName -replace "'", "\\'"))
+$ExpectedJson = ($ExpectedFilename | ConvertTo-Json -Compress)
+$Deadline = (Get-Date).AddSeconds($TimeoutSeconds)
 
-$Deadline = (Get-Date).AddMinutes($WaitMinutes)
 while ((Get-Date) -lt $Deadline) {
-  $Zip = Find-ExpectedZipOnDisk
-  if ($Zip) {
-    Write-Step "ZIP already present: $Zip"
+  $Existing = Find-DownloadedArtifact -Name $ExpectedFilename
+  if ($Existing) {
+    Write-Step "ARTIFACT_FOUND $Existing"
     exit 0
   }
 
-  try {
-    $ClickResult = Invoke-CdpCommand -WebSocketUrl $Ws -Method "Runtime.evaluate" -Params @{ expression = $ClickScript; returnByValue = $true }
-    $ResultJson = $ClickResult | ConvertTo-Json -Depth 20 -Compress
-    if ($ResultJson -like '*"ok":true*') {
-      Write-Step "Download click attempted: $ResultJson"
-    }
-  } catch {
-    Write-Step "Download click attempt failed: $_"
+  $ClickJs = @"
+(async () => {
+  const expected = $ExpectedJson;
+
+  function textOf(el) {
+    const attrs = [
+      el.innerText,
+      el.textContent,
+      el.getAttribute("aria-label"),
+      el.getAttribute("title"),
+      el.getAttribute("download"),
+      el.getAttribute("href"),
+      el.getAttribute("data-testid"),
+      el.closest("[data-message-author-role]")?.innerText,
+      el.parentElement?.innerText
+    ];
+    return attrs.filter(Boolean).join(" ");
   }
 
-  Start-Sleep -Seconds 10
+  function visible(el) {
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+
+  const nodes = Array.from(document.querySelectorAll("button, a, [role='button'], span, div"))
+    .filter(visible);
+
+  const scored = nodes.map(el => {
+    const t = textOf(el);
+    const lower = t.toLowerCase();
+    let score = 0;
+
+    if (expected && t.includes(expected)) score += 1000;
+    if (lower.includes("download")) score += 100;
+    if (lower.includes(".zip")) score += 80;
+    if (lower.includes(".ps1")) score += 80;
+    if (el.tagName === "BUTTON" || el.tagName === "A" || el.getAttribute("role") === "button") score += 20;
+    if (lower.includes("copy")) score += 5;
+
+    return { el, score, text: t.slice(0, 300) };
+  }).filter(x => x.score >= 100);
+
+  scored.sort((a, b) => b.score - a.score);
+
+  if (!scored.length) return { ok:false, reason:"download_or_copy_control_not_found" };
+
+  scored[0].el.scrollIntoView({ block:"center" });
+  await new Promise(r => setTimeout(r, 200));
+  scored[0].el.click();
+
+  return { ok:true, clicked: scored[0].text, score: scored[0].score };
+})()
+"@
+
+  $ClickResult = Invoke-CdpMethod -WsUrl $WsUrl -Method "Runtime.evaluate" -Params @{
+    expression = $ClickJs
+    awaitPromise = $true
+    returnByValue = $true
+  }
+
+  Write-Step "ARTIFACT_CLICK_RESULT $($ClickResult.result.result.value | ConvertTo-Json -Compress)"
+  Start-Sleep -Seconds 8
 }
 
-$ZipFinal = Find-ExpectedZipOnDisk
-if ($ZipFinal) {
-  Write-Step "ZIP downloaded: $ZipFinal"
-  exit 0
-}
-
-Write-Blocked "Timed out waiting for expected ZIP after browser bridge attempted download: $ExpectedZipName"
+throw "Timed out waiting for ChatGPT artifact download: $ExpectedFilename"

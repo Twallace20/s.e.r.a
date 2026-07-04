@@ -1,30 +1,18 @@
 {
-  "overlay": "phase172_upload_json_only_auto_loop_router_v1",
   "phase": 172,
+  "phaseSlug": "phase172_upload_json_only_auto_loop_router_v1",
   "phaseName": "s.e.r.a_phase172_upload_json_only_auto_loop_router_v1_overlay",
-  "branch": "work/phase172-upload-json-only-auto-loop-router-v1",
-  "tag": "phase-172-upload-json-only-auto-loop-router-v1",
-  "expectedZip": "s.e.r.a_phase172_upload_json_only_auto_loop_router_v1_overlay.zip",
-  "status": "safe-orchestration-overlay",
-  "createdBy": "GPT-5.5 Thinking",
-  "files": [
-    "SERA_RUN_UPLOADED_JSON_LOOP.ps1",
-    "scripts/sera-full-auto-json-loop-router-v1.ps1",
-    "scripts/sera-chatgpt-browser-bridge-v1.ps1",
-    "scripts/sera-direct-zip-to-closed-cleanly-v1.ps1",
-    "scripts/verify-phase172-upload-json-only-auto-loop-router-v1.ps1",
-    "scripts/phase172-upload-json-only-auto-loop-router-v1.ps1",
-    "scripts/phase172-upload-json-only-auto-loop-status-v1.ps1",
-    "docs/phase172-upload-json-only-auto-loop-router-v1.md"
-  ],
+  "purpose": "Enable upload JSON only auto loop router with ChatGPT artifact hunter fallback.",
   "safety": {
     "credentials": false,
     "tokens": false,
     "paidServices": false,
-    "dependencyInstalls": false,
-    "securitySettingChanges": false,
+    "securitySettings": false,
     "scheduledTaskEnablement": false,
-    "startupPersistence": false,
-    "uncontrolledBrowserAutomation": false
+    "loginBootAutomation": false
+  },
+  "statusSemantics": {
+    "mergeEligible": "PASS_GUARANTEED",
+    "closed": "CLOSED_CLEANLY"
   }
 }
