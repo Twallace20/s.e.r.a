@@ -1,0 +1,22 @@
+{
+  "proof": "phase172_upload_json_only_auto_loop_router_v1",
+  "adds": [
+    "SERA_RUN_UPLOADED_JSON_LOOP.ps1",
+    "scripts/sera-full-auto-json-loop-router-v1.ps1",
+    "scripts/sera-chatgpt-browser-bridge-v1.ps1",
+    "scripts/sera-direct-zip-to-closed-cleanly-v1.ps1",
+    "scripts/phase172-upload-json-only-auto-loop-status-v1.ps1"
+  ],
+  "browserArtifactFallbacks": [
+    ".zip",
+    ".ps1",
+    "download button",
+    "copy button",
+    "aria-label",
+    "title",
+    "download attribute",
+    "data-testid",
+    "nearby filename text"
+  ],
+  "mergeGate": "PASS_GUARANTEED"
+}

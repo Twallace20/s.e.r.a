@@ -1,0 +1,18 @@
+{
+  "phase": 172,
+  "phaseSlug": "phase172_upload_json_only_auto_loop_router_v1",
+  "phaseName": "s.e.r.a_phase172_upload_json_only_auto_loop_router_v1_overlay",
+  "purpose": "Enable upload JSON only auto loop router with ChatGPT artifact hunter fallback.",
+  "safety": {
+    "credentials": false,
+    "tokens": false,
+    "paidServices": false,
+    "securitySettings": false,
+    "scheduledTaskEnablement": false,
+    "loginBootAutomation": false
+  },
+  "statusSemantics": {
+    "mergeEligible": "PASS_GUARANTEED",
+    "closed": "CLOSED_CLEANLY"
+  }
+}
