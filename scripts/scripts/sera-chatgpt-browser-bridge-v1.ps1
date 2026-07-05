@@ -28,12 +28,12 @@ function Test-DebugBrowser {
 function Start-DebugBrowser {
   $Candidates = @(
     "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-    "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
+    "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe",
     "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
-    "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe"
+    "$env:ProgramFiles(x86)\Microsoft\Edge\Application\msedge.exe"
   )
 
-  $Browser = $Candidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+  $Browser = $Candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
   if (!$Browser) {
     throw "No Chrome or Edge executable found for browser bridge."
   }
@@ -49,7 +49,6 @@ function Get-ChatGptTarget {
       ([string]$_.url -like "*chatgpt.com*" -or [string]$_.url -like "*chat.openai.com*") -and
       [string]$_.webSocketDebuggerUrl
     } |
-    Sort-Object { if ([string]$_.url -like "*/c/*") { 0 } else { 1 } } |
     Select-Object -First 1
 
   if (!$Target) {
@@ -122,22 +121,26 @@ function Find-DownloadedArtifact {
           Copy-Item $Exact $Dest -Force
           return $Dest
         }
+
         return $Exact
       }
-    } else {
-      $Latest = Get-ChildItem $Dir -File -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -match "\.(zip|ps1)$" -and $_.Name -notmatch "\.crdownload$" } |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
 
-      if ($Latest) {
-        $Dest = Join-Path $DownloadDir $Latest.Name
-        if ($Latest.FullName -ne $Dest) {
-          Copy-Item $Latest.FullName $Dest -Force
-          return $Dest
-        }
-        return $Latest.FullName
+      continue
+    }
+
+    $Latest = Get-ChildItem $Dir -File -ErrorAction SilentlyContinue |
+      Where-Object { $_.Name -match "\.(zip|ps1)$" -and $_.Name -notmatch "\.crdownload$" } |
+      Sort-Object LastWriteTime -Descending |
+      Select-Object -First 1
+
+    if ($Latest) {
+      $Dest = Join-Path $DownloadDir $Latest.Name
+      if ($Latest.FullName -ne $Dest) {
+        Copy-Item $Latest.FullName $Dest -Force
+        return $Dest
       }
+
+      return $Latest.FullName
     }
   }
 
@@ -159,15 +162,17 @@ $Target = Get-ChatGptTarget
 $WsUrl = [string]$Target.webSocketDebuggerUrl
 
 Write-Step "CHATGPT_BROWSER_BRIDGE_CONNECTED url=$($Target.url)"
-Write-Step "EXACT_ARTIFACT_MATCH_REQUIRED expected=$ExpectedFilename"
 
 if ($PromptFile -and (Test-Path $PromptFile)) {
   $PromptText = Get-Content $PromptFile -Raw
-  $PromptJson = $PromptText | ConvertTo-Json -Compress
+  $PromptBytes = [System.Text.Encoding]::UTF8.GetBytes($PromptText)
+  $PromptB64 = [Convert]::ToBase64String($PromptBytes)
+  $PromptB64Json = $PromptB64 | ConvertTo-Json -Compress
 
   $SubmitJs = @"
 (async () => {
-  const prompt = $PromptJson;
+  const promptB64 = $PromptB64Json;
+  const prompt = new TextDecoder("utf-8").decode(Uint8Array.from(atob(promptB64), c => c.charCodeAt(0)));
 
   function visible(el) {
     const r = el.getBoundingClientRect();
@@ -195,7 +200,7 @@ if ($PromptFile -and (Test-Path $PromptFile)) {
   if (!box) return { ok:false, reason:"composer_not_found" };
 
   setText(box, prompt);
-  await new Promise(r => setTimeout(r, 500));
+  await new Promise(r => setTimeout(r, 400));
 
   const buttons = Array.from(document.querySelectorAll("button, [role='button']"))
     .filter(visible);
@@ -230,8 +235,7 @@ if ($PromptFile -and (Test-Path $PromptFile)) {
     returnByValue = $true
   }
 
-  $SubmitValue = $SubmitResult.result.result.value | ConvertTo-Json -Compress -Depth 10
-  Write-Step "PROMPT_SUBMIT_RESULT $SubmitValue"
+  Write-Step "PROMPT_SUBMIT_RESULT $($SubmitResult.result.result.value | ConvertTo-Json -Compress)"
 }
 
 $ExpectedJson = ($ExpectedFilename | ConvertTo-Json -Compress)
@@ -277,20 +281,18 @@ while ((Get-Date) -lt $Deadline) {
     let score = 0;
 
     if (expected && t.includes(expected)) score += 1000;
-    if (expected && lower.includes("download")) score += 100;
-    if (expected && lower.includes(expected.toLowerCase())) score += 1000;
-    if (!expected && lower.includes("download")) score += 100;
-    if (!expected && lower.includes(".zip")) score += 80;
-    if (!expected && lower.includes(".ps1")) score += 80;
+    if (lower.includes("download")) score += 100;
+    if (lower.includes(".zip")) score += 80;
+    if (lower.includes(".ps1")) score += 80;
     if (el.tagName === "BUTTON" || el.tagName === "A" || el.getAttribute("role") === "button") score += 20;
-    if (!expected && lower.includes("copy")) score += 5;
+    if (lower.includes("copy")) score += 5;
 
     return { el, score, text: t.slice(0, 300) };
-  }).filter(x => expected ? x.score >= 1000 : x.score >= 100);
+  }).filter(x => expected ? x.text.includes(expected) : x.score >= 100);
 
   scored.sort((a, b) => b.score - a.score);
 
-  if (!scored.length) return { ok:false, reason:"exact_download_control_not_found_yet" };
+  if (!scored.length) return { ok:false, reason:"download_or_copy_control_not_found" };
 
   scored[0].el.scrollIntoView({ block:"center" });
   await new Promise(r => setTimeout(r, 200));
@@ -306,9 +308,8 @@ while ((Get-Date) -lt $Deadline) {
     returnByValue = $true
   }
 
-  $ClickValue = $ClickResult.result.result.value | ConvertTo-Json -Compress -Depth 10
-  Write-Step "ARTIFACT_CLICK_RESULT $ClickValue"
+  Write-Step "ARTIFACT_CLICK_RESULT $($ClickResult.result.result.value | ConvertTo-Json -Compress)"
   Start-Sleep -Seconds 8
 }
 
-throw "Timed out waiting for exact ChatGPT artifact download: $ExpectedFilename"
+throw "Timed out waiting for ChatGPT artifact download: $ExpectedFilename"
