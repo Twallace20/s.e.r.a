@@ -1,0 +1,24 @@
+{
+  "phase": 173,
+  "phaseSlug": "phase173_json_only_full_loop_proof_v1",
+  "phaseName": "s.e.r.a_phase173_json_only_full_loop_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase173_json_only_full_loop_proof_v1_overlay.zip",
+  "purpose": "Prove the JSON-only full loop and harden artifact hunter exact ZIP behavior after Phase172.",
+  "safety": {
+    "credentials": false,
+    "tokens": false,
+    "paidServices": false,
+    "dependencyInstalls": false,
+    "securitySettingChanges": false,
+    "scheduledTaskEnablement": false,
+    "loginBootPersistence": false,
+    "uncontrolledBrowserAutomation": false
+  },
+  "successCriteria": [
+    "Fresh JSON command triggers SERA_RUN_UPLOADED_JSON_LOOP.ps1.",
+    "REQUEST_READY is created without manual prompt paste.",
+    "ChatGPT browser bridge submits the generated prompt.",
+    "Artifact hunter downloads the exact expected ZIP rather than stale repair scripts.",
+    "Overlay applies, verifier passes, QA emits PASS_GUARANTEED, safe merge closes CLEANLY."
+  ]
+}
