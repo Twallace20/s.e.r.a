@@ -1,0 +1,13 @@
+{
+  "proof": "phase173_json_only_full_loop_proof_v1",
+  "resultTarget": "CLOSED_CLEANLY",
+  "validates": [
+    "Phase172 JSON-only loop router",
+    "ChatGPT browser bridge prompt submission",
+    "Exact expected ZIP artifact download",
+    "No stale PS1 fallback accepted when expected ZIP is missing",
+    "Verifier and QA Guarantee gates before safe merge"
+  ],
+  "bugFoundBeforeOverlay": "The Phase172 artifact hunter accepted the latest .ps1 when the expected ZIP was not present; Phase173 patches this to exact artifact matching when ExpectedFilename is supplied.",
+  "mergeGate": "PASS_GUARANTEED"
+}

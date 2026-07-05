@@ -13,6 +13,7 @@ $Downloads13 = Join-Path $AutoOpsRoot "13_chatgpt_downloads"
 $Handoff = Join-Path $AutoOpsRoot "06_handoff"
 $Runner = Join-Path $RepoRoot "scripts\sera-production-json-pickup-runner-v1.ps1"
 $Bridge = Join-Path $RepoRoot "scripts\sera-chatgpt-browser-bridge-v1.ps1"
+$DirectCloseout = Join-Path $RepoRoot "scripts\sera-direct-zip-to-closed-cleanly-v1.ps1"
 
 New-Item -ItemType Directory -Force $CommandInbox,$Downloads13,$Handoff | Out-Null
 
@@ -26,6 +27,7 @@ function Write-Blocked {
 
   $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
   $Path = Join-Path $Handoff "s.e.r.a_full_auto_json_loop-$Stamp-BLOCKED.md"
+
   @"
 Status: BLOCKED
 Phase: full_auto_json_loop
@@ -40,28 +42,9 @@ Fix the blocker, then rerun SERA_RUN_UPLOADED_JSON_LOOP.ps1.
   Write-Host "BLOCKED_HANDOFF: $Path"
 }
 
-function Find-FinalHandoff {
-  $Latest = Get-ChildItem $Handoff -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -match "(CLOSED_CLEANLY|BLOCKED|PASS_GUARANTEED)" } |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
-
-  if ($Latest) {
-    Get-Content $Latest.FullName -Raw | Set-Clipboard
-    Write-Step "FINAL_HANDOFF_COPIED $($Latest.FullName)"
-    return $Latest.FullName
-  }
-
-  return $null
-}
-
-if (!(Test-Path $Runner)) {
-  throw "Production JSON pickup runner missing: $Runner"
-}
-
-if (!(Test-Path $Bridge)) {
-  throw "ChatGPT browser bridge missing: $Bridge"
-}
+if (!(Test-Path $Runner)) { throw "Production JSON pickup runner missing: $Runner" }
+if (!(Test-Path $Bridge)) { throw "ChatGPT browser bridge missing: $Bridge" }
+if (!(Test-Path $DirectCloseout)) { throw "Direct ZIP closeout script missing: $DirectCloseout" }
 
 $Command = Get-ChildItem $CommandInbox -File -Filter "*.json" -ErrorAction SilentlyContinue |
   Sort-Object LastWriteTime -Descending |
@@ -74,22 +57,7 @@ if (!$Command) {
 
 Write-Step "FULL_AUTO_LOOP_START command=$($Command.FullName)"
 
-$FirstArgs = @(
-  "-NoProfile",
-  "-ExecutionPolicy",
-  "Bypass",
-  "-File",
-  $Runner,
-  "-RepoRoot",
-  $RepoRoot,
-  "-AutoOpsRoot",
-  $AutoOpsRoot,
-  "-Once",
-  "-WaitForZipMinutes",
-  "0"
-)
-
-& powershell.exe @FirstArgs
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Runner -RepoRoot $RepoRoot -AutoOpsRoot $AutoOpsRoot -Once -WaitForZipMinutes 0
 if ($LASTEXITCODE -ne 0) {
   Write-Blocked "Production runner could not create REQUEST_READY."
   exit $LASTEXITCODE
@@ -104,6 +72,8 @@ if (!(Test-Path $RequestPath)) {
 $Request = Get-Content $RequestPath -Raw | ConvertFrom-Json
 $PromptFile = [string]$Request.promptFile
 $ExpectedZip = [string]$Request.expectedZipName
+$Phase = [string]$Request.phase
+$PhaseSlug = [string]$Request.phaseSlug
 
 if (!(Test-Path $PromptFile)) {
   Write-Blocked "Prompt file missing: $PromptFile"
@@ -115,7 +85,21 @@ if (!$ExpectedZip) {
   exit 2
 }
 
-Write-Step "REQUEST_READY phase=$($Request.phase) expectedZip=$ExpectedZip"
+if (!$PhaseSlug) {
+  $PhaseSlug = $ExpectedZip -replace "^s\.e\.r\.a_","" -replace "_overlay\.zip$",""
+}
+
+$Tail = $PhaseSlug -replace "^phase$Phase[_-]?",""
+$TailHyphen = $Tail -replace "_","-"
+
+$PhaseToken = "phase$Phase"
+$PhaseName = [System.IO.Path]::GetFileNameWithoutExtension($ExpectedZip)
+$Branch = "work/phase$Phase-$TailHyphen"
+$Verifier = "scripts\verify-phase$Phase-$TailHyphen.ps1"
+$QaScript = "scripts\phase$Phase-$TailHyphen.ps1"
+$TagName = "phase-$Phase-$TailHyphen"
+
+Write-Step "REQUEST_READY phase=$Phase expectedZip=$ExpectedZip"
 
 $BridgeArgs = @(
   "-NoProfile",
@@ -150,37 +134,35 @@ if (!(Test-Path $ExpectedZipPath)) {
 }
 
 Write-Step "ZIP_READY $ExpectedZipPath"
+Write-Step "RUN_DIRECT_ZIP_CLOSEOUT phase=$Phase branch=$Branch tag=$TagName"
 
-$SecondArgs = @(
-  "-NoProfile",
-  "-ExecutionPolicy",
-  "Bypass",
-  "-File",
-  $Runner,
-  "-RepoRoot",
-  $RepoRoot,
-  "-AutoOpsRoot",
-  $AutoOpsRoot,
-  "-Once",
-  "-WaitForZipMinutes",
-  "0"
-)
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $DirectCloseout `
+  -RepoRoot $RepoRoot `
+  -AutoOpsRoot $AutoOpsRoot `
+  -Phase $Phase `
+  -PhaseName $PhaseName `
+  -PhaseToken $PhaseToken `
+  -Branch $Branch `
+  -ExpectedZip $ExpectedZip `
+  -Verifier $Verifier `
+  -QaScript $QaScript `
+  -TagName $TagName
 
-& powershell.exe @SecondArgs
 $Exit = $LASTEXITCODE
 
-$Final = Find-FinalHandoff
+$Latest = Get-ChildItem $Handoff -File -ErrorAction SilentlyContinue |
+  Where-Object { $_.Name -match "(CLOSED_CLEANLY|BLOCKED|PASS_GUARANTEED)" } |
+  Sort-Object LastWriteTime -Descending |
+  Select-Object -First 1
+
+if ($Latest) {
+  Get-Content $Latest.FullName -Raw | Set-Clipboard
+  Write-Step "FINAL_HANDOFF_COPIED $($Latest.FullName)"
+}
+
 if ($Exit -ne 0) {
-  if (!$Final) {
-    Write-Blocked "Production closeout runner failed after ZIP download."
-  }
   exit $Exit
 }
 
-if (!$Final) {
-  Write-Blocked "Loop ended without a final handoff."
-  exit 2
-}
-
-Write-Step "FULL_AUTO_LOOP_DONE $Final"
+Write-Step "FULL_AUTO_LOOP_DONE"
 exit 0
