@@ -196,3 +196,6 @@ exit 0
 
 # PHASE177_ROUTER_MARKER: stale prior-phase handoffs are not valid closeout evidence
 
+
+# PHASE178_ROUTER_MARKER: FULL_LOOP_EXIT_CODE
+
