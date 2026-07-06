@@ -199,3 +199,6 @@ exit 0
 
 # PHASE178_ROUTER_MARKER: FULL_LOOP_EXIT_CODE
 
+
+# PHASE179_FINAL_HANDOFF_ONLY: VERIFY_PASS and PASS_GUARANTEED are intermediate handoffs and must not be copied as final run results.
+

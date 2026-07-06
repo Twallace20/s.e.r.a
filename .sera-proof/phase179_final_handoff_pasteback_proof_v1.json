@@ -1,0 +1,16 @@
+{
+  "phase": 179,
+  "phaseSlug": "phase179_final_handoff_pasteback_proof_v1",
+  "proofIntent": [
+    "The foreground watcher flow remains active from Phase178.",
+    "The direct closeout path invokes verifier before QA, QA before fresh PASS_GUARANTEED, and fresh PASS_GUARANTEED before merge.",
+    "After writing and copying the current final handoff, S.E.R.A. attempts a safe pasteback into the same/current ChatGPT target only.",
+    "The pasteback helper refuses random chat fallback and new chat fallback."
+  ],
+  "expectedEvidence": [
+    "FINAL_HANDOFF_COPIED",
+    "FINAL_HANDOFF_PASTEBACK_START",
+    "PASTEBACK_SUBMITTED or PASTEBACK_SKIPPED_SAFE with current-phase handoff path",
+    "CLOSED_CLEANLY only after verifier and QA gates pass"
+  ]
+}
