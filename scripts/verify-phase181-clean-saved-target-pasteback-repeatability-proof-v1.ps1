@@ -124,3 +124,6 @@ Proof:
 Write-Host "PHASE181_VERIFY PASS"
 Write-Host $PassPath
 exit 0
+
+# PHASE181_VERIFY_MARKER: PASTEBACK_POSTED_TEXT_MATCH required for true pasteback proof.
+

@@ -42,20 +42,18 @@ function Invoke-CdpEvaluate {
     [string]$Expression
   )
 
-  # PHASE181_CLIENTWEBSOCKET_LOAD_FIX:
-# Windows PowerShell may expose ClientWebSocket without an assembly named System.Net.WebSockets.Client.
-try {
-  [void][System.Net.WebSockets.ClientWebSocket]
-} catch {
-  try { Add-Type -AssemblyName System.Net.WebSockets -ErrorAction SilentlyContinue } catch {}
-  try { Add-Type -AssemblyName System -ErrorAction SilentlyContinue } catch {}
-}
+  try {
+    [void][System.Net.WebSockets.ClientWebSocket]
+  } catch {
+    try { Add-Type -AssemblyName System.Net.WebSockets -ErrorAction SilentlyContinue } catch {}
+    try { Add-Type -AssemblyName System -ErrorAction SilentlyContinue } catch {}
+  }
 
-try {
-  [void][System.Net.WebSockets.ClientWebSocket]
-} catch {
-  throw "ClientWebSocket type is unavailable in this PowerShell runtime."
-}
+  try {
+    [void][System.Net.WebSockets.ClientWebSocket]
+  } catch {
+    throw "ClientWebSocket type is unavailable in this PowerShell runtime."
+  }
 
   $Client = [System.Net.WebSockets.ClientWebSocket]::new()
   $Uri = [Uri]$WebSocketDebuggerUrl
@@ -75,7 +73,12 @@ try {
     } | ConvertTo-Json -Depth 20 -Compress
 
     $Bytes = [Text.Encoding]::UTF8.GetBytes($Payload)
-    $Client.SendAsync([ArraySegment[byte]]::new($Bytes), [System.Net.WebSockets.WebSocketMessageType]::Text, $true, $Cancel).GetAwaiter().GetResult()
+    $Client.SendAsync(
+      [ArraySegment[byte]]::new($Bytes),
+      [System.Net.WebSockets.WebSocketMessageType]::Text,
+      $true,
+      $Cancel
+    ).GetAwaiter().GetResult()
 
     $Buffer = [byte[]]::new(1048576)
 
@@ -144,12 +147,18 @@ if (![string]$Target.webSocketDebuggerUrl) {
   exit 1
 }
 
-$HandoffText = Get-Content -LiteralPath $HandoffPath -Raw
+$HandoffText = [string](Get-Content -LiteralPath $HandoffPath -Raw)
+
+if (!$HandoffText.StartsWith("Status: CLOSED_CLEANLY") -and !$HandoffText.StartsWith("Status: BLOCKED")) {
+  Write-PastebackResult "PASTEBACK_BLOCKED" "Final handoff text does not start with CLOSED_CLEANLY or BLOCKED." | Out-Null
+  exit 1
+}
+
 $TextLiteral = $HandoffText | ConvertTo-Json -Compress
 
 $Expression = @"
 (async () => {
-  const text = $TextLiteral;
+  const text = String($TextLiteral);
 
   function visible(el) {
     if (!el) return false;
@@ -158,26 +167,58 @@ $Expression = @"
     return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
   }
 
+  function setNativeValue(element, value) {
+    const proto = element instanceof HTMLTextAreaElement
+      ? HTMLTextAreaElement.prototype
+      : element instanceof HTMLInputElement
+        ? HTMLInputElement.prototype
+        : null;
+
+    if (proto) {
+      const descriptor = Object.getOwnPropertyDescriptor(proto, "value");
+      descriptor.set.call(element, value);
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+      return true;
+    }
+
+    return false;
+  }
+
   const boxes = Array.from(document.querySelectorAll("textarea, [contenteditable='true'], [role='textbox'], #prompt-textarea"))
     .filter(visible);
 
   const box = boxes[boxes.length - 1];
 
   if (!box) {
-    return { ok: false, reason: "textbox_not_found", url: location.href };
+    return JSON.stringify({ ok: false, reason: "textbox_not_found", url: location.href });
   }
 
   box.focus();
 
+  let inserted = false;
+
   if (box.tagName === "TEXTAREA" || box.tagName === "INPUT") {
-    box.value = text;
-    box.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
-  } else {
+    inserted = setNativeValue(box, text);
+  }
+
+  if (!inserted) {
     box.textContent = text;
     box.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
   }
 
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 700));
+
+  const currentText = String(box.value || box.textContent || "");
+
+  if (!currentText.startsWith("Status: CLOSED_CLEANLY") && !currentText.startsWith("Status: BLOCKED")) {
+    return JSON.stringify({
+      ok: false,
+      reason: "textbox_text_mismatch",
+      observedPrefix: currentText.slice(0, 80),
+      expectedPrefix: text.slice(0, 80),
+      url: location.href
+    });
+  }
 
   const buttons = Array.from(document.querySelectorAll("button, [role='button']")).filter(visible);
 
@@ -193,36 +234,56 @@ $Expression = @"
   });
 
   if (!send) {
-    return { ok: false, reason: "send_button_not_found", url: location.href };
+    return JSON.stringify({ ok: false, reason: "send_button_not_found", url: location.href });
   }
 
   send.click();
 
-  return { ok: true, action: "pasteback_submitted", url: location.href };
+  return JSON.stringify({
+    ok: true,
+    action: "pasteback_submitted_plain_text",
+    textPrefix: text.slice(0, 120),
+    url: location.href
+  });
 })()
 "@
 
 Write-Host "FINAL_HANDOFF_PASTEBACK_START handoff=$HandoffPath"
 
-$Result = Invoke-CdpEvaluate -WebSocketDebuggerUrl ([string]$Target.webSocketDebuggerUrl) -Expression $Expression
-$Value = $Result.result.result.value
+$RawResult = Invoke-CdpEvaluate -WebSocketDebuggerUrl ([string]$Target.webSocketDebuggerUrl) -Expression $Expression
+$RawJson = $RawResult | ConvertTo-Json -Depth 20 -Compress
 
-if (!$Value -or $Value.ok -ne $true) {
-  $Reason = ($Value | ConvertTo-Json -Depth 10 -Compress)
-  Write-PastebackResult "PASTEBACK_BLOCKED" $Reason | Out-Null
+$Value = [string]$RawResult.result.result.value
+
+if (!$Value) {
+  Write-PastebackResult "PASTEBACK_BLOCKED" "CDP returned no string value. RawResult: $RawJson" | Out-Null
+  exit 1
+}
+
+try {
+  $Parsed = $Value | ConvertFrom-Json
+} catch {
+  Write-PastebackResult "PASTEBACK_BLOCKED" "CDP value was not JSON. Value: $Value RawResult: $RawJson" | Out-Null
+  exit 1
+}
+
+if ($Parsed.ok -ne $true) {
+  $Reason = $Parsed | ConvertTo-Json -Depth 10 -Compress
+  Write-PastebackResult "PASTEBACK_BLOCKED" "Browser pasteback failed: $Reason RawResult: $RawJson" | Out-Null
   exit 1
 }
 
 $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$PostedPath = Join-Path $Handoff "$PhaseName-$Stamp-PASTEBACK_POSTED.md"
+$PostedPath = Join-Path $Handoff "$PhaseName-$Stamp-PASTEBACK_POSTED_TEXT_MATCH.md"
 
 @"
-Status: PASTEBACK_POSTED
+Status: PASTEBACK_POSTED_TEXT_MATCH
 Phase: $PhaseName
 Timestamp: $Stamp
 
 Proof:
-- Final handoff was submitted to the saved run-scoped ChatGPT target.
+- Final handoff was submitted as plain text to the saved run-scoped ChatGPT target.
+- Text prefix matched Status: CLOSED_CLEANLY or Status: BLOCKED before clicking Send.
 - PhaseSlug: $PhaseSlug
 - ExpectedFilename: $ExpectedFilename
 - Target URL: $($Target.url)
@@ -230,6 +291,5 @@ Proof:
 - No new chat fallback was used.
 "@ | Set-Content $PostedPath -Encoding UTF8
 
-Write-Host "PASTEBACK_POSTED $PostedPath"
+Write-Host "PASTEBACK_POSTED_TEXT_MATCH $PostedPath"
 exit 0
-
