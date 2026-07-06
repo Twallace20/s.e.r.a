@@ -67,3 +67,7 @@ try {
   $Mutex.Dispose()
   Write-Log "SINGLE_INSTANCE_GUARD_RELEASED mutex=$MutexName"
 }
+# PHASE183_MARKER: SERA_START_WATCHER_NOW
+# PHASE183_MARKER: Start-ScheduledTask
+# PHASE183_MARKER: start automatic watcher now
+

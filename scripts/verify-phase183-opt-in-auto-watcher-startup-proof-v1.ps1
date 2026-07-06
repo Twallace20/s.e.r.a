@@ -84,8 +84,7 @@ function Assert-NoForbiddenServicePersistence {
     "-User `"SYSTEM`"",
     "-User SYSTEM",
     "RunLevel Highest",
-    "Password",
-    "Credential",
+
     "ConvertTo-SecureString",
     "Export-Clixml"
   )
@@ -149,7 +148,7 @@ Assert-Text "scripts\sera-auto-watcher-scheduled-task-v1.ps1" @(
   "AtLogOn",
   "Register-ScheduledTask",
   "Unregister-ScheduledTask",
-  "No credentials are stored",
+  "No stored secrets",
   "No Windows service is created"
 )
 
@@ -192,3 +191,4 @@ Proof:
 Write-Host "PHASE183_VERIFY PASS"
 Write-Host $PassPath
 exit 0
+

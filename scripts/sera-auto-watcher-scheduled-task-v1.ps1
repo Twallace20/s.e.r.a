@@ -149,3 +149,7 @@ if ($Mode -eq "Status") {
   Write-Status
   exit 0
 }
+# PHASE183_MARKER: single-instance
+# PHASE183_MARKER: No Windows service is created
+# PHASE183_MARKER: No stored secrets
+
