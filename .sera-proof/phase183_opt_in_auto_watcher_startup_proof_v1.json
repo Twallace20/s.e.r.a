@@ -1,0 +1,12 @@
+{
+  "status": "overlay_ready",
+  "phase": 183,
+  "phaseName": "s.e.r.a_phase183_opt_in_auto_watcher_startup_proof_v1_overlay",
+  "proof": [
+    "Opt-in current-user Scheduled Task wrappers are present.",
+    "Enable/disable/status/start-now scripts are provided at repo root.",
+    "Scheduled task launcher uses single-instance guard through SERA_START_WATCHER_NOW.ps1.",
+    "Verifier blocks service creation, SYSTEM run-as, credential storage, admin-only elevation, and random/new ChatGPT fallback.",
+    "QA requires fresh VERIFY_PASS."
+  ]
+}

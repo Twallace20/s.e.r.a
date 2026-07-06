@@ -1,0 +1,33 @@
+{
+  "phase": 183,
+  "phaseSlug": "phase183_opt_in_auto_watcher_startup_proof_v1",
+  "phaseName": "s.e.r.a_phase183_opt_in_auto_watcher_startup_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase183_opt_in_auto_watcher_startup_proof_v1_overlay.zip",
+  "commandId": "phase183-opt-in-auto-watcher-startup-proof-v1-001",
+  "runNonce": "opt-in-auto-watcher-startup-proof-v1-001",
+  "purpose": "Add explicit opt-in automatic startup for the command_inbox watcher using a reversible current-user Scheduled Task.",
+  "safety": {
+    "explicitUserApprovedStartupAutomation": true,
+    "currentUserScheduledTaskOnly": true,
+    "windowsService": false,
+    "runAsSystem": false,
+    "credentialsStored": false,
+    "tokensOrSecrets": false,
+    "paidServices": false,
+    "dependencyInstalls": false,
+    "securitySettingChanges": false,
+    "randomChatGptFallback": false,
+    "newChatFallback": false
+  },
+  "rootScripts": [
+    "SERA_ENABLE_AUTO_WATCHER.ps1",
+    "SERA_DISABLE_AUTO_WATCHER.ps1",
+    "SERA_AUTO_WATCHER_STATUS.ps1",
+    "SERA_START_WATCHER_NOW.ps1"
+  ],
+  "scriptFiles": [
+    "scripts/sera-auto-watcher-scheduled-task-v1.ps1",
+    "scripts/phase183-opt-in-auto-watcher-startup-proof-v1.ps1",
+    "scripts/verify-phase183-opt-in-auto-watcher-startup-proof-v1.ps1"
+  ]
+}
