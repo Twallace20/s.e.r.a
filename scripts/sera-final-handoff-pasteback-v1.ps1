@@ -1,31 +1,62 @@
 param(
-  [Parameter(Mandatory=$true)][string]$HandoffPath,
   [string]$RepoRoot = ".",
   [string]$AutoOpsRoot = "$env:USERPROFILE\OneDrive\SERA-AutoOps",
+  [string]$HandoffPath,
+  [string]$FinalHandoffPath,
   [string]$BrowserDebugUrl = "http://127.0.0.1:9222",
-  [int]$TimeoutSeconds = 60,
-  [switch]$LaunchBrowserIfNeeded,
-  [switch]$AllowSingleChatGptTabFallback
+  [string]$ExpectedFilename,
+  [string]$PhaseSlug,
+  [switch]$SavedChatGptTargetOnly,
+  [switch]$RequireSavedChatGptTargetOnly
 )
 
 $ErrorActionPreference = "Stop"
 
-$PhaseName = "s.e.r.a_phase179_final_handoff_pasteback_proof_v1_overlay"
+if (!$HandoffPath -and $FinalHandoffPath) {
+  $HandoffPath = $FinalHandoffPath
+}
+
+if (!$HandoffPath) {
+  throw "HandoffPath is required."
+}
+
 $HandoffRoot = Join-Path $AutoOpsRoot "06_handoff"
-$TargetRoot = Join-Path $AutoOpsRoot "00_control_center\browser_target"
-New-Item -ItemType Directory -Force $HandoffRoot,$TargetRoot | Out-Null
+New-Item -ItemType Directory -Force $HandoffRoot | Out-Null
 
 function Write-Step {
   param([string]$Message)
   Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
 }
 
-function Write-PastebackNote {
+function Get-PhaseNameFromHandoff {
+  param([string]$Path)
+
+  $Name = [IO.Path]::GetFileName($Path)
+  $Match = [regex]::Match($Name, "^(s\.e\.r\.a_.+?_overlay)-\d{8}_\d{6}-")
+  if ($Match.Success) {
+    return $Match.Groups[1].Value
+  }
+
+  return "unknown_phase"
+}
+
+function Get-PhaseSlugFromPhaseName {
+  param([string]$PhaseName)
+
+  $Slug = $PhaseName
+  $Slug = $Slug -replace "^s\.e\.r\.a_", ""
+  $Slug = $Slug -replace "_overlay$", ""
+  return $Slug
+}
+
+function Write-PastebackResult {
   param(
     [string]$Status,
-    [string]$Reason
+    [string]$Reason,
+    [string]$TargetUrl = ""
   )
 
+  $PhaseName = Get-PhaseNameFromHandoff -Path $HandoffPath
   $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
   $Path = Join-Path $HandoffRoot "$PhaseName-$Stamp-$Status.md"
 
@@ -33,40 +64,18 @@ function Write-PastebackNote {
 Status: $Status
 Phase: $PhaseName
 Timestamp: $Stamp
-HandoffPath: $HandoffPath
+TargetUrl: $TargetUrl
 
 Reason:
 $Reason
+
+Final handoff:
+$HandoffPath
 "@ | Set-Content $Path -Encoding UTF8
 
   Write-Step "$Status $Path"
+  Write-Host $Path
   return $Path
-}
-
-function Test-DebugBrowser {
-  try {
-    Invoke-RestMethod -Uri "$BrowserDebugUrl/json/version" -TimeoutSec 2 | Out-Null
-    return $true
-  } catch {
-    return $false
-  }
-}
-
-function Start-DebugBrowser {
-  $Candidates = @(
-    "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
-    "$env:ProgramFiles(x86)\Google\Chrome\Application\chrome.exe",
-    "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
-    "$env:ProgramFiles(x86)\Microsoft\Edge\Application\msedge.exe"
-  )
-
-  $Browser = $Candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-  if (!$Browser) {
-    throw "No Chrome or Edge executable found for pasteback."
-  }
-
-  Start-Process -FilePath $Browser -ArgumentList @("--remote-debugging-port=9222","https://chatgpt.com/")
-  Start-Sleep -Seconds 5
 }
 
 function Invoke-CdpMethod {
@@ -118,92 +127,88 @@ function Invoke-CdpMethod {
   }
 }
 
-function Get-SafeChatGptTarget {
-  $Tabs = Invoke-RestMethod -Uri "$BrowserDebugUrl/json" -TimeoutSec 5
-  $ChatTabs = @($Tabs | Where-Object {
-    ([string]$_.url -like "*chatgpt.com/*" -or [string]$_.url -like "*chat.openai.com/*") -and
-    [string]$_.webSocketDebuggerUrl
-  })
-
-  if ($ChatTabs.Count -eq 0) {
-    return $null
-  }
-
-  $Saved = Join-Path $TargetRoot "latest-chatgpt-target.json"
-  if (Test-Path $Saved) {
-    try {
-      $SavedObj = Get-Content $Saved -Raw | ConvertFrom-Json
-      $SavedUrl = [string]$SavedObj.url
-      if ($SavedUrl) {
-        $Match = $ChatTabs | Where-Object { [string]$_.url -eq $SavedUrl } | Select-Object -First 1
-        if ($Match) {
-          return $Match
-        }
-      }
-    } catch {
-      Write-Step "PASTEBACK_SAVED_TARGET_READ_FAILED $($_.Exception.Message)"
-    }
-  }
-
-  if ($ChatTabs.Count -eq 1 -or $AllowSingleChatGptTabFallback) {
-    if ($ChatTabs.Count -eq 1) {
-      return $ChatTabs[0]
-    }
-  }
-
-  return $null
-}
-
-if (!(Test-Path $HandoffPath)) {
-  Write-PastebackNote -Status "PASTEBACK_BLOCKED" -Reason "Handoff path was not found."
-  exit 1
-}
-
-$FinalText = Get-Content -LiteralPath $HandoffPath -Raw
-
-if ($FinalText -notlike "Status: CLOSED_CLEANLY*" -and $FinalText -notlike "Status: BLOCKED*") {
-  Write-PastebackNote -Status "PASTEBACK_BLOCKED" -Reason "Handoff is neither CLOSED_CLEANLY nor BLOCKED. Refusing pasteback."
-  exit 1
-}
-
 Write-Step "FINAL_HANDOFF_PASTEBACK_START handoff=$HandoffPath"
 
-if (!(Test-DebugBrowser)) {
-  if ($LaunchBrowserIfNeeded) {
-    Start-DebugBrowser
-  }
+if (!(Test-Path $HandoffPath)) {
+  Write-PastebackResult -Status "PASTEBACK_BLOCKED" -Reason "Final handoff file not found."
+  exit 1
 }
 
-if (!(Test-DebugBrowser)) {
-  Write-PastebackNote -Status "PASTEBACK_SKIPPED_SAFE" -Reason "Browser debug endpoint unavailable. Refusing unsafe pasteback."
+$HandoffText = Get-Content -LiteralPath $HandoffPath -Raw
+if ($HandoffText -notmatch "Status:\s*(CLOSED_CLEANLY|BLOCKED)") {
+  Write-PastebackResult -Status "PASTEBACK_SKIPPED_SAFE" -Reason "Handoff is not a final CLOSED_CLEANLY or BLOCKED handoff."
   exit 0
 }
 
-$Target = Get-SafeChatGptTarget
+$PhaseName = Get-PhaseNameFromHandoff -Path $HandoffPath
+if (!$PhaseSlug) {
+  $PhaseSlug = Get-PhaseSlugFromPhaseName -PhaseName $PhaseName
+}
+
+$TargetRoot = Join-Path $AutoOpsRoot "00_control_center\chatgpt_targets"
+$TargetPath = Join-Path $TargetRoot "$PhaseSlug-saved-chatgpt-target.json"
+
+if (!(Test-Path $TargetPath)) {
+  Write-PastebackResult -Status "PASTEBACK_SKIPPED_SAFE" -Reason "Saved ChatGPT target metadata missing for phase slug $PhaseSlug."
+  exit 0
+}
+
+$Meta = Get-Content -LiteralPath $TargetPath -Raw | ConvertFrom-Json
+$SavedUrl = [string]$Meta.url
+$SavedTargetId = [string]$Meta.targetId
+
+if ($SavedUrl -notlike "*chatgpt.com*" -and $SavedUrl -notlike "*chat.openai.com*") {
+  Write-PastebackResult -Status "PASTEBACK_BLOCKED" -Reason "Saved target is not a ChatGPT URL: $SavedUrl"
+  exit 1
+}
+
+try {
+  $Tabs = Invoke-RestMethod -Uri "$BrowserDebugUrl/json" -TimeoutSec 5
+} catch {
+  Write-PastebackResult -Status "PASTEBACK_SKIPPED_SAFE" -Reason "Browser debug endpoint unavailable."
+  exit 0
+}
+
+$Target = $null
+
+$Target = $Tabs |
+  Where-Object {
+    [string]$_.webSocketDebuggerUrl -and
+    [string]$_.id -eq $SavedTargetId -and
+    [string]$_.url -eq $SavedUrl
+  } |
+  Select-Object -First 1
+
 if (!$Target) {
-  Write-PastebackNote -Status "PASTEBACK_SKIPPED_SAFE" -Reason "Safe current ChatGPT target could not be uniquely identified. No random chat fallback and no new chat fallback were used."
-  exit 0
+  $Target = $Tabs |
+    Where-Object {
+      [string]$_.webSocketDebuggerUrl -and
+      [string]$_.url -eq $SavedUrl
+    } |
+    Select-Object -First 1
 }
 
-$TargetRecord = @{
-  url = [string]$Target.url
-  ts = (Get-Date).ToString("o")
-  source = "phase179-pasteback"
-  savedChatGptTargetOnly = $true
-  allowRandomRecentChatFallback = $false
-  allowNewChatFallback = $false
+if (!$Target) {
+  Write-PastebackResult -Status "PASTEBACK_SKIPPED_SAFE" -Reason "Exact saved ChatGPT target is not currently available. Refusing random fallback." -TargetUrl $SavedUrl
+  exit 0
 }
-$TargetRecord | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $TargetRoot "latest-chatgpt-target.json") -Encoding UTF8
 
 $WsUrl = [string]$Target.webSocketDebuggerUrl
-$HandoffBytes = [System.Text.Encoding]::UTF8.GetBytes($FinalText)
-$HandoffB64 = [Convert]::ToBase64String($HandoffBytes)
-$HandoffB64Json = $HandoffB64 | ConvertTo-Json -Compress
+$CurrentUrl = [string]$Target.url
 
-$PasteJs = @"
+if ($CurrentUrl -ne $SavedUrl) {
+  Write-PastebackResult -Status "PASTEBACK_BLOCKED" -Reason "Current target URL does not match saved URL. Refusing pasteback." -TargetUrl $CurrentUrl
+  exit 1
+}
+
+$Message = $HandoffText.Trim()
+$MessageB64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($Message))
+$MessageB64Json = $MessageB64 | ConvertTo-Json -Compress
+
+$SubmitJs = @"
 (async () => {
-  const handoffB64 = $HandoffB64Json;
-  const handoff = new TextDecoder("utf-8").decode(Uint8Array.from(atob(handoffB64), c => c.charCodeAt(0)));
+  const messageB64 = $MessageB64Json;
+  const message = new TextDecoder("utf-8").decode(Uint8Array.from(atob(messageB64), c => c.charCodeAt(0)));
 
   function visible(el) {
     const r = el.getBoundingClientRect();
@@ -225,17 +230,17 @@ $PasteJs = @"
     return true;
   }
 
-  const boxes = Array.from(document.querySelectorAll("textarea, [contenteditable='true'], [role='textbox'], #prompt-textarea")).filter(visible);
+  const boxes = Array.from(document.querySelectorAll("textarea, [contenteditable='true'], [role='textbox'], #prompt-textarea"))
+    .filter(visible);
+
   const box = boxes[boxes.length - 1];
+  if (!box) return { ok:false, reason:"composer_not_found" };
 
-  if (!box) {
-    return { ok:false, reason:"composer_not_found" };
-  }
-
-  setText(box, handoff);
+  setText(box, message);
   await new Promise(r => setTimeout(r, 500));
 
-  const buttons = Array.from(document.querySelectorAll("button, [role='button']")).filter(visible);
+  const buttons = Array.from(document.querySelectorAll("button, [role='button']"))
+    .filter(visible);
 
   const send = buttons.find(b => {
     const t = [
@@ -254,45 +259,33 @@ $PasteJs = @"
     );
   });
 
-  if (!send) {
-    return { ok:false, reason:"send_button_not_found" };
-  }
+  if (!send) return { ok:false, reason:"send_button_not_found" };
 
   send.click();
-  return { ok:true, action:"handoff_pasteback_submitted" };
+  return { ok:true, action:"final_handoff_pasteback_submitted" };
 })()
 "@
 
 $Result = Invoke-CdpMethod -WsUrl $WsUrl -Method "Runtime.evaluate" -Params @{
-  expression = $PasteJs
+  expression = $SubmitJs
   awaitPromise = $true
   returnByValue = $true
 }
 
-$Value = $Result.result.result.value
-$ValueJson = $Value | ConvertTo-Json -Compress
-Write-Step "PASTEBACK_RESULT $ValueJson"
+$JsonResult = $Result.result.result.value | ConvertTo-Json -Compress
+Write-Step "PASTEBACK_SUBMIT_RESULT $JsonResult"
 
-if (!$Value.ok) {
-  Write-PastebackNote -Status "PASTEBACK_BLOCKED" -Reason "Pasteback failed safely: $ValueJson"
+if ($Result.result.result.value.ok -ne $true) {
+  Write-PastebackResult -Status "PASTEBACK_BLOCKED" -Reason "Pasteback submit failed: $JsonResult" -TargetUrl $CurrentUrl
   exit 1
 }
 
-$Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$ProofPath = Join-Path $HandoffRoot "$PhaseName-$Stamp-PASTEBACK_SUBMITTED.md"
-
-@"
-Status: PASTEBACK_SUBMITTED
-Phase: $PhaseName
-Timestamp: $Stamp
-HandoffPath: $HandoffPath
-TargetUrl: $($Target.url)
-
-Proof:
-- Final current-phase handoff was submitted into the safe ChatGPT target.
-- No random recent chat fallback was used.
-- No new chat fallback was used.
-"@ | Set-Content $ProofPath -Encoding UTF8
-
-Write-Step "PASTEBACK_SUBMITTED $ProofPath"
+Write-PastebackResult -Status "PASTEBACK_POSTED" -Reason "Final handoff was posted into the exact saved ChatGPT target." -TargetUrl $CurrentUrl | Out-Null
+Write-Step "PASTEBACK_POSTED exactSavedTarget=$CurrentUrl"
 exit 0
+
+# EXACT_SAVED_CHATGPT_TARGET_ONLY marker.
+# PASTEBACK_SKIPPED_SAFE marker.
+# PASTEBACK_BLOCKED marker.
+# PASTEBACK_POSTED marker.
+# Supports CLOSED_CLEANLY and BLOCKED handoffs.

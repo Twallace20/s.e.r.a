@@ -1,0 +1,26 @@
+{
+  "phase": 180,
+  "phaseSlug": "phase180_saved_chatgpt_target_pasteback_live_proof_v1",
+  "phaseName": "s.e.r.a_phase180_saved_chatgpt_target_pasteback_live_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase180_saved_chatgpt_target_pasteback_live_proof_v1_overlay.zip",
+  "commandId": "phase180-saved-chatgpt-target-pasteback-live-proof-v1-001",
+  "runNonce": "saved-chatgpt-target-pasteback-live-proof-v1-001",
+  "purpose": "Bind final handoff pasteback to the exact saved ChatGPT target used for prompt submission.",
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "noPersistenceAdded": true
+  },
+  "files": [
+    ".overlay/phase180_saved_chatgpt_target_pasteback_live_proof_v1.json",
+    ".sera-proof/phase180_saved_chatgpt_target_pasteback_live_proof_v1.json",
+    "docs/phase180-saved-chatgpt-target-pasteback-live-proof-v1.md",
+    "scripts/phase180-saved-chatgpt-target-pasteback-live-proof-v1.ps1",
+    "scripts/sera-chatgpt-browser-bridge-v1.ps1",
+    "scripts/sera-direct-zip-to-closed-cleanly-v1.ps1",
+    "scripts/sera-final-handoff-pasteback-v1.ps1",
+    "scripts/verify-phase180-saved-chatgpt-target-pasteback-live-proof-v1.ps1",
+    ".overlay/CHECKSUMS.sha256"
+  ]
+}

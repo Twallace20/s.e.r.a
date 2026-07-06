@@ -3,6 +3,7 @@ param(
   [string]$ExpectedFilename,
   [string]$DownloadDir = "$env:USERPROFILE\OneDrive\SERA-AutoOps\13_chatgpt_downloads",
   [string]$BrowserDebugUrl = "http://127.0.0.1:9222",
+  [string]$AutoOpsRoot = "$env:USERPROFILE\OneDrive\SERA-AutoOps",
   [int]$TimeoutSeconds = 900,
   [switch]$LaunchBrowserIfNeeded
 )
@@ -15,6 +16,61 @@ New-Item -ItemType Directory -Force $DownloadDir | Out-Null
 function Write-Step {
   param([string]$Message)
   Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
+}
+
+function Get-PhaseSlugFromExpected {
+  param([string]$Name)
+
+  if (!$Name) { return "unknown_phase" }
+
+  $Slug = $Name
+  $Slug = $Slug -replace "^s\.e\.r\.a_", ""
+  $Slug = $Slug -replace "_overlay\.zip$", ""
+  return $Slug
+}
+
+function Save-ChatGptTargetMetadata {
+  param(
+    [object]$Target,
+    [string]$ExpectedFilename,
+    [string]$BrowserDebugUrl,
+    [string]$AutoOpsRoot
+  )
+
+  $PhaseSlug = Get-PhaseSlugFromExpected -Name $ExpectedFilename
+  $TargetRoot = Join-Path $AutoOpsRoot "00_control_center\chatgpt_targets"
+  New-Item -ItemType Directory -Force $TargetRoot | Out-Null
+
+  $SafeUrl = [string]$Target.url
+  $TargetId = [string]$Target.id
+  $WsUrl = [string]$Target.webSocketDebuggerUrl
+
+  if ($SafeUrl -notlike "*chatgpt.com*" -and $SafeUrl -notlike "*chat.openai.com*") {
+    throw "Refusing to save non-ChatGPT target: $SafeUrl"
+  }
+
+  $Meta = [ordered]@{
+    phaseSlug = $PhaseSlug
+    expectedFilename = $ExpectedFilename
+    targetId = $TargetId
+    url = $SafeUrl
+    webSocketDebuggerUrl = $WsUrl
+    browserDebugUrl = $BrowserDebugUrl
+    savedAt = (Get-Date).ToString("o")
+    savedChatGptTargetOnly = $true
+    allowRandomRecentChatFallback = $false
+    allowNewChatFallback = $false
+    marker = "SAVED_CHATGPT_TARGET_CAPTURE"
+  }
+
+  $Path = Join-Path $TargetRoot "$PhaseSlug-saved-chatgpt-target.json"
+  ($Meta | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $Path -Encoding UTF8
+
+  $LatestPath = Join-Path $TargetRoot "latest-saved-chatgpt-target.json"
+  ($Meta | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $LatestPath -Encoding UTF8
+
+  Write-Step "SAVED_CHATGPT_TARGET_CAPTURE $Path"
+  return $Path
 }
 
 function Test-DebugBrowser {
@@ -153,8 +209,8 @@ if (!(Test-DebugBrowser)) {
 
 $Target = Get-ChatGptTarget
 $WsUrl = [string]$Target.webSocketDebuggerUrl
-
 Write-Step "CHATGPT_BROWSER_BRIDGE_CONNECTED url=$($Target.url)"
+Save-ChatGptTargetMetadata -Target $Target -ExpectedFilename $ExpectedFilename -BrowserDebugUrl $BrowserDebugUrl -AutoOpsRoot $AutoOpsRoot | Out-Null
 
 if ($PromptFile -and (Test-Path $PromptFile)) {
   $PromptText = Get-Content $PromptFile -Raw
@@ -374,4 +430,4 @@ while ((Get-Date) -lt $Deadline) {
 throw "Timed out waiting for exact ChatGPT artifact download: $ExpectedFilename"
 
 # fresh-download marker: Find-DownloadedArtifact rejects stale files using RunStartedAt before accepting an exact expected ZIP.
-
+# EXACT_SAVED_CHATGPT_TARGET_ONLY marker: saved target is captured during prompt submission and later required for pasteback.
