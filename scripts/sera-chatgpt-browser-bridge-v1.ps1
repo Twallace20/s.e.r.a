@@ -372,3 +372,6 @@ while ((Get-Date) -lt $Deadline) {
 }
 
 throw "Timed out waiting for exact ChatGPT artifact download: $ExpectedFilename"
+
+# fresh-download marker: Find-DownloadedArtifact rejects stale files using RunStartedAt before accepting an exact expected ZIP.
+
