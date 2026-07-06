@@ -114,10 +114,21 @@ function Get-CommandInfoFromJson {
   }
 }
 
-function Convert-SlugToTagTail {
+function Convert-SlugToBranchTail {
   param([string]$Slug)
-  $Tail = $Slug -replace "^phase\d+_", ""
-  return ($Tail -replace "_", "-")
+  return ($Slug -replace "_", "-")
+}
+
+function Convert-SlugToTagName {
+  param([string]$Slug)
+
+  $Token = Convert-SlugToBranchTail -Slug $Slug
+
+  if ($Token -match "^phase(\d+)-(.+)$") {
+    return "phase-$($Matches[1])-$($Matches[2])"
+  }
+
+  return "phase-$Token"
 }
 
 function Invoke-WithSupportedParams {
@@ -261,7 +272,7 @@ function Invoke-FullAutoLoopForCommand {
   }
 
   Write-Step "ZIP_READY $ZipPath"
-  Write-Step "RUN_DIRECT_ZIP_CLOSEOUT phase=$($Info.Phase) branch=work/$(Convert-SlugToTagTail -Slug $Info.PhaseSlug) tag=phase-$(Convert-SlugToTagTail -Slug $Info.PhaseSlug)"
+  Write-Step "RUN_DIRECT_ZIP_CLOSEOUT phase=$($Info.Phase) branch=work/$(Convert-SlugToBranchTail -Slug $Info.PhaseSlug) tag=$(Convert-SlugToTagName -Slug $Info.PhaseSlug)"
 
   if (!(Test-Path $DirectCloseout)) {
     throw "Direct closeout missing: $DirectCloseout"
@@ -276,8 +287,8 @@ function Invoke-FullAutoLoopForCommand {
     ExpectedZipFilename = $Info.ExpectedZip
     PhaseSlug = $Info.PhaseSlug
     Phase = $Info.Phase
-    Branch = "work/" + (Convert-SlugToTagTail -Slug $Info.PhaseSlug)
-    TagName = "phase-" + (Convert-SlugToTagTail -Slug $Info.PhaseSlug)
+    Branch = "work/" + (Convert-SlugToBranchTail -Slug $Info.PhaseSlug)
+    TagName = (Convert-SlugToTagName -Slug $Info.PhaseSlug)
     SavedChatGptTargetOnly = $true
   }
 
@@ -339,3 +350,4 @@ while ($true) {
 
   Start-Sleep -Seconds $PollSeconds
 }
+
