@@ -1,291 +1,295 @@
 param(
   [string]$RepoRoot = ".",
   [string]$AutoOpsRoot = "$env:USERPROFILE\OneDrive\SERA-AutoOps",
-  [string]$HandoffPath,
-  [string]$FinalHandoffPath,
-  [string]$BrowserDebugUrl = "http://127.0.0.1:9222",
-  [string]$ExpectedFilename,
-  [string]$PhaseSlug,
-  [switch]$SavedChatGptTargetOnly,
-  [switch]$RequireSavedChatGptTargetOnly
+  [Parameter(Mandatory = $true)][string]$HandoffPath,
+  [Parameter(Mandatory = $true)][string]$PhaseSlug,
+  [string]$ExpectedFilename = "",
+  [switch]$SavedChatGptTargetOnly
 )
 
 $ErrorActionPreference = "Stop"
 
-if (!$HandoffPath -and $FinalHandoffPath) {
-  $HandoffPath = $FinalHandoffPath
-}
+$PhaseName = "s.e.r.a_${PhaseSlug}_overlay"
+$Handoff = Join-Path $AutoOpsRoot "06_handoff"
+$TargetPath = Join-Path $AutoOpsRoot "00_control_center\chatgpt_targets\$PhaseSlug-saved-chatgpt-target.json"
 
-if (!$HandoffPath) {
-  throw "HandoffPath is required."
-}
-
-$HandoffRoot = Join-Path $AutoOpsRoot "06_handoff"
-New-Item -ItemType Directory -Force $HandoffRoot | Out-Null
-
-function Write-Step {
-  param([string]$Message)
-  Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
-}
-
-function Get-PhaseNameFromHandoff {
-  param([string]$Path)
-
-  $Name = [IO.Path]::GetFileName($Path)
-  $Match = [regex]::Match($Name, "^(s\.e\.r\.a_.+?_overlay)-\d{8}_\d{6}-")
-  if ($Match.Success) {
-    return $Match.Groups[1].Value
-  }
-
-  return "unknown_phase"
-}
-
-function Get-PhaseSlugFromPhaseName {
-  param([string]$PhaseName)
-
-  $Slug = $PhaseName
-  $Slug = $Slug -replace "^s\.e\.r\.a_", ""
-  $Slug = $Slug -replace "_overlay$", ""
-  return $Slug
-}
+New-Item -ItemType Directory -Force $Handoff | Out-Null
 
 function Write-PastebackResult {
   param(
     [string]$Status,
-    [string]$Reason,
-    [string]$TargetUrl = ""
+    [string]$Reason
   )
 
-  $PhaseName = Get-PhaseNameFromHandoff -Path $HandoffPath
   $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-  $Path = Join-Path $HandoffRoot "$PhaseName-$Stamp-$Status.md"
+  $Path = Join-Path $Handoff "$PhaseName-$Stamp-$Status.md"
 
   @"
 Status: $Status
 Phase: $PhaseName
 Timestamp: $Stamp
-TargetUrl: $TargetUrl
-
 Reason:
 $Reason
-
-Final handoff:
-$HandoffPath
 "@ | Set-Content $Path -Encoding UTF8
 
-  Write-Step "$Status $Path"
-  Write-Host $Path
+  Write-Host "$Status $Path"
   return $Path
 }
 
-function Invoke-CdpMethod {
+function Invoke-CdpEvaluate {
   param(
-    [string]$WsUrl,
-    [string]$Method,
-    [hashtable]$Params = @{}
+    [string]$WebSocketDebuggerUrl,
+    [string]$Expression
   )
 
-  $Socket = [System.Net.WebSockets.ClientWebSocket]::new()
-  $Socket.ConnectAsync([Uri]$WsUrl, [Threading.CancellationToken]::None).GetAwaiter().GetResult()
+  try {
+    [void][System.Net.WebSockets.ClientWebSocket]
+  } catch {
+    try { Add-Type -AssemblyName System.Net.WebSockets -ErrorAction SilentlyContinue } catch {}
+    try { Add-Type -AssemblyName System -ErrorAction SilentlyContinue } catch {}
+  }
 
   try {
-    $Id = Get-Random -Minimum 1000 -Maximum 999999
+    [void][System.Net.WebSockets.ClientWebSocket]
+  } catch {
+    throw "ClientWebSocket type is unavailable in this PowerShell runtime."
+  }
+
+  $Client = [System.Net.WebSockets.ClientWebSocket]::new()
+  $Uri = [Uri]$WebSocketDebuggerUrl
+  $Cancel = [Threading.CancellationToken]::None
+
+  $Client.ConnectAsync($Uri, $Cancel).GetAwaiter().GetResult()
+
+  try {
     $Payload = @{
-      id = $Id
-      method = $Method
-      params = $Params
+      id = 1
+      method = "Runtime.evaluate"
+      params = @{
+        expression = $Expression
+        awaitPromise = $true
+        returnByValue = $true
+      }
     } | ConvertTo-Json -Depth 20 -Compress
 
     $Bytes = [Text.Encoding]::UTF8.GetBytes($Payload)
-    $Socket.SendAsync(
+    $Client.SendAsync(
       [ArraySegment[byte]]::new($Bytes),
       [System.Net.WebSockets.WebSocketMessageType]::Text,
       $true,
-      [Threading.CancellationToken]::None
+      $Cancel
     ).GetAwaiter().GetResult()
 
     $Buffer = [byte[]]::new(1048576)
-    $Chunks = New-Object System.Collections.Generic.List[string]
 
-    do {
-      $Result = $Socket.ReceiveAsync(
-        [ArraySegment[byte]]::new($Buffer),
-        [Threading.CancellationToken]::None
-      ).GetAwaiter().GetResult()
+    for ($Attempt = 0; $Attempt -lt 30; $Attempt++) {
+      $Stream = [IO.MemoryStream]::new()
 
-      if ($Result.Count -gt 0) {
-        $Chunks.Add([Text.Encoding]::UTF8.GetString($Buffer, 0, $Result.Count))
+      do {
+        $Segment = [ArraySegment[byte]]::new($Buffer)
+        $Result = $Client.ReceiveAsync($Segment, $Cancel).GetAwaiter().GetResult()
+
+        if ($Result.MessageType -eq [System.Net.WebSockets.WebSocketMessageType]::Close) {
+          throw "CDP websocket closed."
+        }
+
+        $Stream.Write($Buffer, 0, $Result.Count)
+      } until ($Result.EndOfMessage)
+
+      $JsonText = [Text.Encoding]::UTF8.GetString($Stream.ToArray())
+      $Message = $JsonText | ConvertFrom-Json
+
+      if ($Message.id -eq 1) {
+        return $Message
       }
-    } until ($Result.EndOfMessage)
-
-    return (($Chunks -join "") | ConvertFrom-Json)
-  } finally {
-    if ($Socket.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
-      $Socket.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, "done", [Threading.CancellationToken]::None).GetAwaiter().GetResult()
     }
-    $Socket.Dispose()
+
+    throw "CDP evaluate response timed out."
+  } finally {
+    $Client.Dispose()
   }
 }
-
-Write-Step "FINAL_HANDOFF_PASTEBACK_START handoff=$HandoffPath"
 
 if (!(Test-Path $HandoffPath)) {
-  Write-PastebackResult -Status "PASTEBACK_BLOCKED" -Reason "Final handoff file not found."
+  Write-PastebackResult "PASTEBACK_BLOCKED" "Handoff path missing: $HandoffPath" | Out-Null
   exit 1
 }
-
-$HandoffText = Get-Content -LiteralPath $HandoffPath -Raw
-if ($HandoffText -notmatch "Status:\s*(CLOSED_CLEANLY|BLOCKED)") {
-  Write-PastebackResult -Status "PASTEBACK_SKIPPED_SAFE" -Reason "Handoff is not a final CLOSED_CLEANLY or BLOCKED handoff."
-  exit 0
-}
-
-$PhaseName = Get-PhaseNameFromHandoff -Path $HandoffPath
-if (!$PhaseSlug) {
-  $PhaseSlug = Get-PhaseSlugFromPhaseName -PhaseName $PhaseName
-}
-
-$TargetRoot = Join-Path $AutoOpsRoot "00_control_center\chatgpt_targets"
-$TargetPath = Join-Path $TargetRoot "$PhaseSlug-saved-chatgpt-target.json"
 
 if (!(Test-Path $TargetPath)) {
-  Write-PastebackResult -Status "PASTEBACK_SKIPPED_SAFE" -Reason "Saved ChatGPT target metadata missing for phase slug $PhaseSlug."
-  exit 0
-}
-
-$Meta = Get-Content -LiteralPath $TargetPath -Raw | ConvertFrom-Json
-$SavedUrl = [string]$Meta.url
-$SavedTargetId = [string]$Meta.targetId
-
-if ($SavedUrl -notlike "*chatgpt.com*" -and $SavedUrl -notlike "*chat.openai.com*") {
-  Write-PastebackResult -Status "PASTEBACK_BLOCKED" -Reason "Saved target is not a ChatGPT URL: $SavedUrl"
+  Write-PastebackResult "PASTEBACK_BLOCKED" "Saved ChatGPT target missing: $TargetPath" | Out-Null
   exit 1
 }
 
-try {
-  $Tabs = Invoke-RestMethod -Uri "$BrowserDebugUrl/json" -TimeoutSec 5
-} catch {
-  Write-PastebackResult -Status "PASTEBACK_SKIPPED_SAFE" -Reason "Browser debug endpoint unavailable."
-  exit 0
-}
+$Target = Get-Content -LiteralPath $TargetPath -Raw | ConvertFrom-Json
 
-$Target = $null
-
-$Target = $Tabs |
-  Where-Object {
-    [string]$_.webSocketDebuggerUrl -and
-    [string]$_.id -eq $SavedTargetId -and
-    [string]$_.url -eq $SavedUrl
-  } |
-  Select-Object -First 1
-
-if (!$Target) {
-  $Target = $Tabs |
-    Where-Object {
-      [string]$_.webSocketDebuggerUrl -and
-      [string]$_.url -eq $SavedUrl
-    } |
-    Select-Object -First 1
-}
-
-if (!$Target) {
-  Write-PastebackResult -Status "PASTEBACK_SKIPPED_SAFE" -Reason "Exact saved ChatGPT target is not currently available. Refusing random fallback." -TargetUrl $SavedUrl
-  exit 0
-}
-
-$WsUrl = [string]$Target.webSocketDebuggerUrl
-$CurrentUrl = [string]$Target.url
-
-if ($CurrentUrl -ne $SavedUrl) {
-  Write-PastebackResult -Status "PASTEBACK_BLOCKED" -Reason "Current target URL does not match saved URL. Refusing pasteback." -TargetUrl $CurrentUrl
+if ([string]$Target.phaseSlug -ne $PhaseSlug) {
+  Write-PastebackResult "PASTEBACK_BLOCKED" "Saved target phaseSlug mismatch." | Out-Null
   exit 1
 }
 
-$Message = $HandoffText.Trim()
-$MessageB64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($Message))
-$MessageB64Json = $MessageB64 | ConvertTo-Json -Compress
+if ($ExpectedFilename -and [string]$Target.expectedFilename -ne $ExpectedFilename) {
+  Write-PastebackResult "PASTEBACK_BLOCKED" "Saved target expectedFilename mismatch." | Out-Null
+  exit 1
+}
 
-$SubmitJs = @"
+if ([string]$Target.url -notlike "*chatgpt.com*" -and [string]$Target.url -notlike "*chat.openai.com*") {
+  Write-PastebackResult "PASTEBACK_BLOCKED" "Saved target is not a ChatGPT URL." | Out-Null
+  exit 1
+}
+
+if ([string]$Target.url -notmatch "/c/") {
+  Write-PastebackResult "PASTEBACK_BLOCKED" "Saved target is not a ChatGPT conversation URL." | Out-Null
+  exit 1
+}
+
+if (![string]$Target.webSocketDebuggerUrl) {
+  Write-PastebackResult "PASTEBACK_BLOCKED" "Saved target is missing webSocketDebuggerUrl." | Out-Null
+  exit 1
+}
+
+$HandoffText = [string](Get-Content -LiteralPath $HandoffPath -Raw)
+
+if (!$HandoffText.StartsWith("Status: CLOSED_CLEANLY") -and !$HandoffText.StartsWith("Status: BLOCKED")) {
+  Write-PastebackResult "PASTEBACK_BLOCKED" "Final handoff text does not start with CLOSED_CLEANLY or BLOCKED." | Out-Null
+  exit 1
+}
+
+$TextLiteral = $HandoffText | ConvertTo-Json -Compress
+
+$Expression = @"
 (async () => {
-  const messageB64 = $MessageB64Json;
-  const message = new TextDecoder("utf-8").decode(Uint8Array.from(atob(messageB64), c => c.charCodeAt(0)));
+  const text = String($TextLiteral);
 
   function visible(el) {
-    const r = el.getBoundingClientRect();
-    return r.width > 0 && r.height > 0;
+    if (!el) return false;
+    const rect = el.getBoundingClientRect();
+    const style = window.getComputedStyle(el);
+    return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
   }
 
-  function setText(el, text) {
-    el.focus();
+  function setNativeValue(element, value) {
+    const proto = element instanceof HTMLTextAreaElement
+      ? HTMLTextAreaElement.prototype
+      : element instanceof HTMLInputElement
+        ? HTMLInputElement.prototype
+        : null;
 
-    if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
-      el.value = text;
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-      el.dispatchEvent(new Event("change", { bubbles: true }));
+    if (proto) {
+      const descriptor = Object.getOwnPropertyDescriptor(proto, "value");
+      descriptor.set.call(element, value);
+      element.dispatchEvent(new Event("input", { bubbles: true }));
       return true;
     }
 
-    el.textContent = text;
-    el.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
-    return true;
+    return false;
   }
 
   const boxes = Array.from(document.querySelectorAll("textarea, [contenteditable='true'], [role='textbox'], #prompt-textarea"))
     .filter(visible);
 
   const box = boxes[boxes.length - 1];
-  if (!box) return { ok:false, reason:"composer_not_found" };
 
-  setText(box, message);
-  await new Promise(r => setTimeout(r, 500));
+  if (!box) {
+    return JSON.stringify({ ok: false, reason: "textbox_not_found", url: location.href });
+  }
 
-  const buttons = Array.from(document.querySelectorAll("button, [role='button']"))
-    .filter(visible);
+  box.focus();
 
-  const send = buttons.find(b => {
-    const t = [
-      b.innerText,
-      b.textContent,
-      b.getAttribute("aria-label"),
-      b.getAttribute("title"),
-      b.getAttribute("data-testid")
+  let inserted = false;
+
+  if (box.tagName === "TEXTAREA" || box.tagName === "INPUT") {
+    inserted = setNativeValue(box, text);
+  }
+
+  if (!inserted) {
+    box.textContent = text;
+    box.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
+  }
+
+  await new Promise(resolve => setTimeout(resolve, 700));
+
+  const currentText = String(box.value || box.textContent || "");
+
+  if (!currentText.startsWith("Status: CLOSED_CLEANLY") && !currentText.startsWith("Status: BLOCKED")) {
+    return JSON.stringify({
+      ok: false,
+      reason: "textbox_text_mismatch",
+      observedPrefix: currentText.slice(0, 80),
+      expectedPrefix: text.slice(0, 80),
+      url: location.href
+    });
+  }
+
+  const buttons = Array.from(document.querySelectorAll("button, [role='button']")).filter(visible);
+
+  const send = buttons.find(button => {
+    const label = [
+      button.getAttribute("aria-label"),
+      button.getAttribute("data-testid"),
+      button.title,
+      button.innerText
     ].filter(Boolean).join(" ").toLowerCase();
 
-    return !b.disabled && (
-      t.includes("send") ||
-      t.includes("submit") ||
-      t.includes("composer-submit") ||
-      t.includes("arrow-up")
-    );
+    return label.includes("send") || label.includes("submit");
   });
 
-  if (!send) return { ok:false, reason:"send_button_not_found" };
+  if (!send) {
+    return JSON.stringify({ ok: false, reason: "send_button_not_found", url: location.href });
+  }
 
   send.click();
-  return { ok:true, action:"final_handoff_pasteback_submitted" };
+
+  return JSON.stringify({
+    ok: true,
+    action: "pasteback_submitted_plain_text",
+    textPrefix: text.slice(0, 120),
+    url: location.href
+  });
 })()
 "@
 
-$Result = Invoke-CdpMethod -WsUrl $WsUrl -Method "Runtime.evaluate" -Params @{
-  expression = $SubmitJs
-  awaitPromise = $true
-  returnByValue = $true
-}
+Write-Host "FINAL_HANDOFF_PASTEBACK_START handoff=$HandoffPath"
 
-$JsonResult = $Result.result.result.value | ConvertTo-Json -Compress
-Write-Step "PASTEBACK_SUBMIT_RESULT $JsonResult"
+$RawResult = Invoke-CdpEvaluate -WebSocketDebuggerUrl ([string]$Target.webSocketDebuggerUrl) -Expression $Expression
+$RawJson = $RawResult | ConvertTo-Json -Depth 20 -Compress
 
-if ($Result.result.result.value.ok -ne $true) {
-  Write-PastebackResult -Status "PASTEBACK_BLOCKED" -Reason "Pasteback submit failed: $JsonResult" -TargetUrl $CurrentUrl
+$Value = [string]$RawResult.result.result.value
+
+if (!$Value) {
+  Write-PastebackResult "PASTEBACK_BLOCKED" "CDP returned no string value. RawResult: $RawJson" | Out-Null
   exit 1
 }
 
-Write-PastebackResult -Status "PASTEBACK_POSTED" -Reason "Final handoff was posted into the exact saved ChatGPT target." -TargetUrl $CurrentUrl | Out-Null
-Write-Step "PASTEBACK_POSTED exactSavedTarget=$CurrentUrl"
-exit 0
+try {
+  $Parsed = $Value | ConvertFrom-Json
+} catch {
+  Write-PastebackResult "PASTEBACK_BLOCKED" "CDP value was not JSON. Value: $Value RawResult: $RawJson" | Out-Null
+  exit 1
+}
 
-# EXACT_SAVED_CHATGPT_TARGET_ONLY marker.
-# PASTEBACK_SKIPPED_SAFE marker.
-# PASTEBACK_BLOCKED marker.
-# PASTEBACK_POSTED marker.
-# Supports CLOSED_CLEANLY and BLOCKED handoffs.
+if ($Parsed.ok -ne $true) {
+  $Reason = $Parsed | ConvertTo-Json -Depth 10 -Compress
+  Write-PastebackResult "PASTEBACK_BLOCKED" "Browser pasteback failed: $Reason RawResult: $RawJson" | Out-Null
+  exit 1
+}
+
+$Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+$PostedPath = Join-Path $Handoff "$PhaseName-$Stamp-PASTEBACK_POSTED_TEXT_MATCH.md"
+
+@"
+Status: PASTEBACK_POSTED_TEXT_MATCH
+Phase: $PhaseName
+Timestamp: $Stamp
+
+Proof:
+- Final handoff was submitted as plain text to the saved run-scoped ChatGPT target.
+- Text prefix matched Status: CLOSED_CLEANLY or Status: BLOCKED before clicking Send.
+- PhaseSlug: $PhaseSlug
+- ExpectedFilename: $ExpectedFilename
+- Target URL: $($Target.url)
+- No random chat fallback was used.
+- No new chat fallback was used.
+"@ | Set-Content $PostedPath -Encoding UTF8
+
+Write-Host "PASTEBACK_POSTED_TEXT_MATCH $PostedPath"
+exit 0

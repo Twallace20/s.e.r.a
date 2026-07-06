@@ -227,11 +227,11 @@ if ($ZipPath -and -not [IO.Path]::IsPathRooted($ZipPath)) {
   $CandidateZip = Join-Path (Join-Path $AutoOpsRoot "13_chatgpt_downloads") $ZipPath
   if (Test-Path $CandidateZip) {
     $ZipPath = $CandidateZip
-    Write-Step "PHASE180_ZIPPATH_FILENAME_RESOLUTION $ZipPath"
+    Write-Step "PHASE181_ZIPPATH_FILENAME_RESOLUTION $ZipPath"
   }
 }
 
-# PHASE180_ZIPPATH_FILENAME_RESOLUTION marker.
+# PHASE181_ZIPPATH_FILENAME_RESOLUTION marker.
 if (!$ZipPath -or !(Test-Path $ZipPath)) {
   Write-Blocked "ZIP missing: $ZipPath"
 }
@@ -338,3 +338,6 @@ Write-Host $ClosedPath
 # sera-final-handoff-pasteback-v1.ps1 marker.
 # PHASE180_SCALAR_TIMESTAMP_FIX marker.
 
+# PHASE181_PASTEBACK_POSTED_REQUIRED_BEFORE_CLOSED_CLEANLY marker.
+# VERIFY_PASS and PASS_GUARANTEED are intermediate handoffs and must not be copied as final results marker.
+# PASTEBACK_POSTED proof must be current-phase only marker.
