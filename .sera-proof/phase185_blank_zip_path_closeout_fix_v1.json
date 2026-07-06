@@ -1,0 +1,10 @@
+{
+  "status": "overlay_ready",
+  "phase": 185,
+  "phaseSlug": "phase185_blank_zip_path_closeout_fix_v1",
+  "claims": [
+    "Patches direct closeout ZIP path resolution.",
+    "Adds verifier/QA for blank ZIP recovery markers.",
+    "Does not add persistence, services, credentials, dependencies, or security settings."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "phase": 185,
+  "phaseSlug": "phase185_blank_zip_path_closeout_fix_v1",
+  "phaseName": "s.e.r.a_phase185_blank_zip_path_closeout_fix_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase185_blank_zip_path_closeout_fix_v1_overlay.zip",
+  "purpose": "Fix blank ZIP path handoff between router/artifact download and direct closeout.",
+  "markers": [
+    "ZIP_PATH_RESOLVED_FROM_EXPECTED_FILENAME",
+    "ZIP_PATH_RESOLVED_FROM_DOWNLOADS13",
+    "ZIP_PATH_ARGUMENT_WAS_BLANK_RECOVERED",
+    "NO_EMPTY_ZIP_MISSING_REASON"
+  ],
+  "safety": {
+    "newPersistence": false,
+    "windowsService": false,
+    "adminOnlyInstall": false,
+    "credentials": false,
+    "tokens": false,
+    "paidServices": false,
+    "dependencyInstalls": false,
+    "securitySettingChanges": false
+  }
+}
