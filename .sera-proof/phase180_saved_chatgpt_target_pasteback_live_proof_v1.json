@@ -1,0 +1,14 @@
+{
+  "phase": 180,
+  "phaseSlug": "phase180_saved_chatgpt_target_pasteback_live_proof_v1",
+  "verification": [
+    "saved ChatGPT target metadata captured during prompt submission",
+    "pasteback posts only to exact saved/current ChatGPT target",
+    "pasteback supports CLOSED_CLEANLY and BLOCKED final handoffs",
+    "pasteback writes PASTEBACK_SKIPPED_SAFE or PASTEBACK_BLOCKED when target is unsafe",
+    "current-phase final handoff only",
+    "no random recent chat fallback",
+    "no new chat fallback",
+    "no persistence"
+  ]
+}
