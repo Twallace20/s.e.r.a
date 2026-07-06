@@ -1,0 +1,22 @@
+{
+  "proof": "phase174_json_only_full_loop_hardening_proof_v1",
+  "requires": [
+    "JSON command pickup from command_inbox",
+    "REQUEST_READY prompt creation",
+    "ChatGPT browser bridge prompt submission",
+    "exact artifact hunter download",
+    "direct ZIP closeout",
+    "nested overlay flattening before verification",
+    "verifier pass",
+    "QA PASS_GUARANTEED",
+    "merge only after PASS_GUARANTEED"
+  ],
+  "mustNot": [
+    "merge without verifier",
+    "merge without QA",
+    "merge without PASS_GUARANTEED",
+    "use broken VBS closeout path",
+    "leave scripts/scripts docs/docs .overlay/.overlay .sera-proof/.sera-proof"
+  ],
+  "safety": "No credentials, tokens, paid services, dependency installs, security changes, scheduled task enablement, or login boot persistence."
+}

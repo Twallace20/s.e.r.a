@@ -42,9 +42,24 @@ Fix the blocker, then rerun SERA_RUN_UPLOADED_JSON_LOOP.ps1.
   Write-Host "BLOCKED_HANDOFF: $Path"
 }
 
-if (!(Test-Path $Runner)) { throw "Production JSON pickup runner missing: $Runner" }
-if (!(Test-Path $Bridge)) { throw "ChatGPT browser bridge missing: $Bridge" }
-if (!(Test-Path $DirectCloseout)) { throw "Direct ZIP closeout script missing: $DirectCloseout" }
+function Get-PropertyValue {
+  param(
+    [object]$Object,
+    [string]$Name
+  )
+
+  if ($Object -and $Object.PSObject.Properties.Name -contains $Name) {
+    return [string]$Object.$Name
+  }
+
+  return ""
+}
+
+foreach ($RequiredPath in @($Runner,$Bridge,$DirectCloseout)) {
+  if (!(Test-Path $RequiredPath)) {
+    throw "Required full-loop component missing: $RequiredPath"
+  }
+}
 
 $Command = Get-ChildItem $CommandInbox -File -Filter "*.json" -ErrorAction SilentlyContinue |
   Sort-Object LastWriteTime -Descending |
@@ -74,6 +89,7 @@ $PromptFile = [string]$Request.promptFile
 $ExpectedZip = [string]$Request.expectedZipName
 $Phase = [string]$Request.phase
 $PhaseSlug = [string]$Request.phaseSlug
+$ExpectedSha = Get-PropertyValue -Object $Request -Name "expectedZipSha256"
 
 if (!(Test-Path $PromptFile)) {
   Write-Blocked "Prompt file missing: $PromptFile"
@@ -136,18 +152,40 @@ if (!(Test-Path $ExpectedZipPath)) {
 Write-Step "ZIP_READY $ExpectedZipPath"
 Write-Step "RUN_DIRECT_ZIP_CLOSEOUT phase=$Phase branch=$Branch tag=$TagName"
 
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $DirectCloseout `
-  -RepoRoot $RepoRoot `
-  -AutoOpsRoot $AutoOpsRoot `
-  -Phase $Phase `
-  -PhaseName $PhaseName `
-  -PhaseToken $PhaseToken `
-  -Branch $Branch `
-  -ExpectedZip $ExpectedZip `
-  -Verifier $Verifier `
-  -QaScript $QaScript `
-  -TagName $TagName
+$CloseoutArgs = @(
+  "-NoProfile",
+  "-ExecutionPolicy",
+  "Bypass",
+  "-File",
+  $DirectCloseout,
+  "-RepoRoot",
+  $RepoRoot,
+  "-AutoOpsRoot",
+  $AutoOpsRoot,
+  "-Phase",
+  $Phase,
+  "-PhaseName",
+  $PhaseName,
+  "-PhaseToken",
+  $PhaseToken,
+  "-Branch",
+  $Branch,
+  "-ExpectedZip",
+  $ExpectedZip,
+  "-Verifier",
+  $Verifier,
+  "-QaScript",
+  $QaScript,
+  "-TagName",
+  $TagName
+)
 
+if ($ExpectedSha) {
+  $CloseoutArgs += "-ExpectedSha256"
+  $CloseoutArgs += $ExpectedSha
+}
+
+& powershell.exe @CloseoutArgs
 $Exit = $LASTEXITCODE
 
 $Latest = Get-ChildItem $Handoff -File -ErrorAction SilentlyContinue |

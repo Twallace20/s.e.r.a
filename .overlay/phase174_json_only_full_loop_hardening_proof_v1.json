@@ -1,0 +1,29 @@
+{
+  "phase": 174,
+  "phaseSlug": "phase174_json_only_full_loop_hardening_proof_v1",
+  "phaseName": "s.e.r.a_phase174_json_only_full_loop_hardening_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase174_json_only_full_loop_hardening_proof_v1_overlay.zip",
+  "purpose": "Test the JSON-only full loop again and harden nested overlay flattening, verifier/QA path resolution, direct ZIP closeout gating, and no-merge-without-PASS_GUARANTEED behavior.",
+  "safety": {
+    "credentials": false,
+    "tokens": false,
+    "paidServices": false,
+    "dependencyInstalls": false,
+    "securitySettingChanges": false,
+    "scheduledTaskEnablement": false,
+    "loginBootPersistence": false,
+    "uncontrolledBrowserAutomation": false
+  },
+  "gates": [
+    "exactPhaseTargeting",
+    "exactZipTargeting",
+    "ZIP_READY",
+    "flattenNestedOverlayPathsBeforeVerification",
+    "verifierRequired",
+    "qaRequired",
+    "PASS_GUARANTEED_REQUIRED_BEFORE_MERGE",
+    "SAFE_AUTO_MERGE_AFTER_PASS_GUARANTEED",
+    "WAIT_ONLY_CLOSED",
+    "CLOSED_CLEANLY"
+  ]
+}
