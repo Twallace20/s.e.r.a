@@ -1,0 +1,22 @@
+{
+  "phase": 175,
+  "phaseSlug": "phase175_gate_integrity_enforcement_proof_v1",
+  "phaseName": "s.e.r.a_phase175_gate_integrity_enforcement_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase175_gate_integrity_enforcement_proof_v1_overlay.zip",
+  "purpose": "Gate integrity enforcement for JSON-only full loop direct ZIP closeout.",
+  "safety": {
+    "noCredentials": true,
+    "noTokens": true,
+    "noPaidServices": true,
+    "noDependencyInstalls": true,
+    "noSecuritySettingChanges": true,
+    "noPersistenceChanges": true
+  },
+  "requiredProof": [
+    "Invoke-RequiredScript gates verifier and QA",
+    "Verifier failure blocks QA and merge",
+    "QA failure blocks merge",
+    "Fresh PASS_GUARANTEED required before merge",
+    "Nested paths flattened before verifier execution"
+  ]
+}

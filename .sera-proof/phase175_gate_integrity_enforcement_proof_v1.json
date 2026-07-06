@@ -1,0 +1,12 @@
+{
+  "phase": 175,
+  "proofType": "gate_integrity_enforcement",
+  "files": [
+    "scripts/sera-direct-zip-to-closed-cleanly-v1.ps1",
+    "scripts/sera-full-auto-json-loop-router-v1.ps1",
+    "scripts/sera-chatgpt-browser-bridge-v1.ps1",
+    "scripts/verify-phase175-gate-integrity-enforcement-proof-v1.ps1",
+    "scripts/phase175-gate-integrity-enforcement-proof-v1.ps1"
+  ],
+  "expectedResult": "CLOSED_CLEANLY only after verifier, QA, and fresh PASS_GUARANTEED pass in the same run"
+}

@@ -1,68 +1,41 @@
 param(
-  [string]$RepoRoot = "C:\Users\18123\Documents\SERA-Core\s.e.r.a",
-  [switch]$CommitIfChanged,
-  [string]$CommitMessage = "fix: flatten nested overlay paths"
+  [string]$RepoRoot = "C:\Users\18123\Documents\SERA-Core\s.e.r.a"
 )
 
 $ErrorActionPreference = "Stop"
 
-Set-Location $RepoRoot
+function Repair-NestedOverlayPaths {
+  param([string]$Root)
 
-function Move-NestedContents {
-  param(
-    [string]$ParentRelative,
-    [string]$NestedName
+  $Pairs = @(
+    @{ Nested = ".overlay\.overlay"; Target = ".overlay" },
+    @{ Nested = ".sera-proof\.sera-proof"; Target = ".sera-proof" },
+    @{ Nested = "docs\docs"; Target = "docs" },
+    @{ Nested = "scripts\scripts"; Target = "scripts" }
   )
 
-  $Parent = Join-Path $RepoRoot $ParentRelative
-  $Nested = Join-Path $Parent $NestedName
+  $Changed = $false
 
-  if (!(Test-Path $Nested)) {
-    return $false
-  }
+  foreach ($Pair in $Pairs) {
+    $NestedPath = Join-Path $Root $Pair.Nested
+    $TargetPath = Join-Path $Root $Pair.Target
 
-  New-Item -ItemType Directory -Force $Parent | Out-Null
+    if (!(Test-Path $NestedPath)) { continue }
 
-  Get-ChildItem -LiteralPath $Nested -Force | ForEach-Object {
-    $Destination = Join-Path $Parent $_.Name
-    if (Test-Path $Destination) {
-      Remove-Item -LiteralPath $Destination -Recurse -Force
+    New-Item -ItemType Directory -Force $TargetPath | Out-Null
+
+    Get-ChildItem -LiteralPath $NestedPath -Force | ForEach-Object {
+      $Destination = Join-Path $TargetPath $_.Name
+      if (Test-Path $Destination) { Remove-Item $Destination -Recurse -Force }
+      Move-Item -LiteralPath $_.FullName -Destination $Destination -Force
+      Write-Host "FLATTENED $($Pair.Nested)\$($_.Name) -> $($Pair.Target)\$($_.Name)"
+      $Changed = $true
     }
-    Move-Item -LiteralPath $_.FullName -Destination $Destination -Force
-    Write-Host "FLATTENED $ParentRelative\$NestedName\$($_.Name) -> $ParentRelative\$($_.Name)"
+
+    Remove-Item $NestedPath -Recurse -Force
   }
 
-  Remove-Item -LiteralPath $Nested -Recurse -Force
-  Write-Host "REMOVED_NESTED_PATH $ParentRelative\$NestedName"
-  return $true
+  if ($Changed) { Write-Host "FLATTEN_REPAIR_PASS" } else { Write-Host "FLATTEN_REPAIR_NO_COMMIT_NEEDED" }
 }
 
-$Changed = $false
-if (Move-NestedContents -ParentRelative ".overlay" -NestedName ".overlay") { $Changed = $true }
-if (Move-NestedContents -ParentRelative ".sera-proof" -NestedName ".sera-proof") { $Changed = $true }
-if (Move-NestedContents -ParentRelative "docs" -NestedName "docs") { $Changed = $true }
-if (Move-NestedContents -ParentRelative "scripts" -NestedName "scripts") { $Changed = $true }
-
-foreach ($Forbidden in @(".overlay\.overlay",".sera-proof\.sera-proof","docs\docs","scripts\scripts")) {
-  $Path = Join-Path $RepoRoot $Forbidden
-  if (Test-Path $Path) {
-    throw "Nested path still exists after flatten repair: $Forbidden"
-  }
-}
-
-if ($CommitIfChanged) {
-  $Status = & git status --porcelain
-  if ($Status) {
-    & git add --all
-    if ($LASTEXITCODE -ne 0) { throw "git add failed during flatten repair" }
-
-    & git commit -m $CommitMessage
-    if ($LASTEXITCODE -ne 0) { throw "git commit failed during flatten repair" }
-
-    Write-Host "FLATTEN_REPAIR_COMMITTED"
-  } else {
-    Write-Host "FLATTEN_REPAIR_NO_COMMIT_NEEDED"
-  }
-}
-
-Write-Host "FLATTEN_REPAIR_PASS"
+Repair-NestedOverlayPaths -Root $RepoRoot

@@ -8,6 +8,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$RunStartedAt = Get-Date
 
 New-Item -ItemType Directory -Force $DownloadDir | Out-Null
 
@@ -66,8 +67,7 @@ function Invoke-CdpMethod {
   )
 
   $Socket = [System.Net.WebSockets.ClientWebSocket]::new()
-  $Uri = [Uri]$WsUrl
-  $Socket.ConnectAsync($Uri, [Threading.CancellationToken]::None).GetAwaiter().GetResult()
+  $Socket.ConnectAsync([Uri]$WsUrl, [Threading.CancellationToken]::None).GetAwaiter().GetResult()
 
   try {
     $Id = Get-Random -Minimum 1000 -Maximum 999999
@@ -78,22 +78,28 @@ function Invoke-CdpMethod {
     } | ConvertTo-Json -Depth 20 -Compress
 
     $Bytes = [Text.Encoding]::UTF8.GetBytes($Payload)
-    $Segment = [ArraySegment[byte]]::new($Bytes)
-    $Socket.SendAsync($Segment, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, [Threading.CancellationToken]::None).GetAwaiter().GetResult()
+    $Socket.SendAsync(
+      [ArraySegment[byte]]::new($Bytes),
+      [System.Net.WebSockets.WebSocketMessageType]::Text,
+      $true,
+      [Threading.CancellationToken]::None
+    ).GetAwaiter().GetResult()
 
     $Buffer = [byte[]]::new(1048576)
     $Chunks = New-Object System.Collections.Generic.List[string]
 
     do {
-      $ReceiveSegment = [ArraySegment[byte]]::new($Buffer)
-      $Result = $Socket.ReceiveAsync($ReceiveSegment, [Threading.CancellationToken]::None).GetAwaiter().GetResult()
+      $Result = $Socket.ReceiveAsync(
+        [ArraySegment[byte]]::new($Buffer),
+        [Threading.CancellationToken]::None
+      ).GetAwaiter().GetResult()
+
       if ($Result.Count -gt 0) {
         $Chunks.Add([Text.Encoding]::UTF8.GetString($Buffer, 0, $Result.Count))
       }
     } until ($Result.EndOfMessage)
 
-    $ResponseText = ($Chunks -join "")
-    return ($ResponseText | ConvertFrom-Json)
+    return (($Chunks -join "") | ConvertFrom-Json)
   } finally {
     if ($Socket.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
       $Socket.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, "done", [Threading.CancellationToken]::None).GetAwaiter().GetResult()
@@ -105,42 +111,29 @@ function Invoke-CdpMethod {
 function Find-DownloadedArtifact {
   param([string]$Name)
 
-  $SearchDirs = @(
-    $DownloadDir,
-    "$env:USERPROFILE\Downloads"
-  ) | Select-Object -Unique
+  if (!$Name) {
+    return $null
+  }
 
-  foreach ($Dir in $SearchDirs) {
+  foreach ($Dir in @($DownloadDir, "$env:USERPROFILE\Downloads")) {
     if (!(Test-Path $Dir)) { continue }
 
-    if ($Name) {
-      $Exact = Join-Path $Dir $Name
-      if (Test-Path $Exact) {
-        $Dest = Join-Path $DownloadDir $Name
-        if ($Exact -ne $Dest) {
-          Copy-Item $Exact $Dest -Force
-          return $Dest
-        }
+    $Exact = Join-Path $Dir $Name
+    if (Test-Path $Exact) {
+      $File = Get-Item $Exact
 
-        return $Exact
+      if ($File.LastWriteTime -lt $RunStartedAt.AddSeconds(-3)) {
+        Write-Step "IGNORING_STALE_ARTIFACT $Exact"
+        continue
       }
 
-      continue
-    }
-
-    $Latest = Get-ChildItem $Dir -File -ErrorAction SilentlyContinue |
-      Where-Object { $_.Name -match "\.(zip|ps1)$" -and $_.Name -notmatch "\.crdownload$" } |
-      Sort-Object LastWriteTime -Descending |
-      Select-Object -First 1
-
-    if ($Latest) {
-      $Dest = Join-Path $DownloadDir $Latest.Name
-      if ($Latest.FullName -ne $Dest) {
-        Copy-Item $Latest.FullName $Dest -Force
+      $Dest = Join-Path $DownloadDir $Name
+      if ($Exact -ne $Dest) {
+        Copy-Item $Exact $Dest -Force
         return $Dest
       }
 
-      return $Latest.FullName
+      return $Exact
     }
   }
 
@@ -181,6 +174,7 @@ if ($PromptFile -and (Test-Path $PromptFile)) {
 
   function setText(el, text) {
     el.focus();
+
     if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
       el.value = text;
       el.dispatchEvent(new Event("input", { bubbles: true }));
@@ -200,7 +194,7 @@ if ($PromptFile -and (Test-Path $PromptFile)) {
   if (!box) return { ok:false, reason:"composer_not_found" };
 
   setText(box, prompt);
-  await new Promise(r => setTimeout(r, 400));
+  await new Promise(r => setTimeout(r, 500));
 
   const buttons = Array.from(document.querySelectorAll("button, [role='button']"))
     .filter(visible);
@@ -252,53 +246,48 @@ while ((Get-Date) -lt $Deadline) {
 (async () => {
   const expected = $ExpectedJson;
 
+  function visible(el) {
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+
   function textOf(el) {
-    const attrs = [
+    return [
       el.innerText,
       el.textContent,
       el.getAttribute("aria-label"),
       el.getAttribute("title"),
       el.getAttribute("download"),
       el.getAttribute("href"),
-      el.getAttribute("data-testid"),
-      el.closest("[data-message-author-role]")?.innerText,
-      el.parentElement?.innerText
-    ];
-    return attrs.filter(Boolean).join(" ");
+      el.getAttribute("data-testid")
+    ].filter(Boolean).join(" ");
   }
 
-  function visible(el) {
-    const r = el.getBoundingClientRect();
-    return r.width > 0 && r.height > 0;
-  }
-
-  const nodes = Array.from(document.querySelectorAll("button, a, [role='button'], span, div"))
+  const controls = Array.from(document.querySelectorAll("button, a, [role='button'], [download]"))
     .filter(visible);
 
-  const scored = nodes.map(el => {
-    const t = textOf(el);
-    const lower = t.toLowerCase();
+  const exactControls = controls.map(el => {
+    const text = textOf(el);
     let score = 0;
 
-    if (expected && t.includes(expected)) score += 1000;
-    if (lower.includes("download")) score += 100;
-    if (lower.includes(".zip")) score += 80;
-    if (lower.includes(".ps1")) score += 80;
-    if (el.tagName === "BUTTON" || el.tagName === "A" || el.getAttribute("role") === "button") score += 20;
-    if (lower.includes("copy")) score += 5;
+    if (text.includes(expected)) score += 1000;
+    if (text.toLowerCase().includes("download")) score += 100;
+    if (text.toLowerCase().includes(".zip")) score += 50;
 
-    return { el, score, text: t.slice(0, 300) };
-  }).filter(x => expected ? x.text.includes(expected) : x.score >= 100);
+    return { el, text, score };
+  }).filter(x => x.score >= 1000);
 
-  scored.sort((a, b) => b.score - a.score);
+  exactControls.sort((a, b) => b.score - a.score);
 
-  if (!scored.length) return { ok:false, reason:"download_or_copy_control_not_found" };
+  if (!exactControls.length) {
+    return { ok:false, reason:"exact_expected_download_control_not_ready", expected };
+  }
 
-  scored[0].el.scrollIntoView({ block:"center" });
-  await new Promise(r => setTimeout(r, 200));
-  scored[0].el.click();
+  exactControls[0].el.scrollIntoView({ block:"center" });
+  await new Promise(r => setTimeout(r, 250));
+  exactControls[0].el.click();
 
-  return { ok:true, clicked: scored[0].text, score: scored[0].score };
+  return { ok:true, clicked: exactControls[0].text.slice(0, 300), score: exactControls[0].score };
 })()
 "@
 
@@ -312,4 +301,4 @@ while ((Get-Date) -lt $Deadline) {
   Start-Sleep -Seconds 8
 }
 
-throw "Timed out waiting for ChatGPT artifact download: $ExpectedFilename"
+throw "Timed out waiting for exact ChatGPT artifact download: $ExpectedFilename"

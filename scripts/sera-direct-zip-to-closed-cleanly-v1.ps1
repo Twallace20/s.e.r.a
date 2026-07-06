@@ -22,6 +22,10 @@ $ZipPath = Join-Path $Downloads13 $ExpectedZip
 Set-Location $RepoRoot
 New-Item -ItemType Directory -Force $Downloads13,$Handoff,$MergePending | Out-Null
 
+# SAFE_AUTO_MERGE_AFTER_PASS_GUARANTEED
+# WAIT_ONLY_CLOSED
+# Invoke-RequiredScript gate: required scripts cannot be skipped or ignored.
+
 function Run-Git {
   param(
     [string]$Label,
@@ -38,6 +42,31 @@ function Run-Git {
   }
 
   return $Code
+}
+
+function Write-BlockedHandoff {
+  param([string]$Reason)
+
+  $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+  $BlockedPath = Join-Path $Handoff "$PhaseName-$Stamp-BLOCKED.md"
+
+@"
+Status: BLOCKED
+Phase: $PhaseName
+Branch: $Branch
+Timestamp: $Stamp
+Reason: $Reason
+
+Gate result:
+Merge was refused. QA and merge must only run after required scripts pass in this run.
+
+Required invariant:
+Verifier success -> QA success -> fresh PASS_GUARANTEED -> merge/tag/push -> CLOSED_CLEANLY.
+"@ | Set-Content $BlockedPath -Encoding UTF8
+
+  Get-Content $BlockedPath -Raw | Set-Clipboard
+  Write-Host "BLOCKED_HANDOFF: $BlockedPath"
+  return $BlockedPath
 }
 
 function Repair-NestedOverlayPaths {
@@ -75,14 +104,52 @@ function Repair-NestedOverlayPaths {
   }
 }
 
+function Invoke-RequiredScript {
+  param(
+    [string]$Role,
+    [string]$Path
+  )
+
+  if (!(Test-Path $Path)) {
+    $Reason = "Required $Role script missing: $Path"
+    Write-BlockedHandoff -Reason $Reason | Out-Null
+    throw $Reason
+  }
+
+  $StartedAt = Get-Date
+  Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') RUN_REQUIRED_SCRIPT role=$Role path=$Path"
+
+  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Path -RepoRoot $RepoRoot -AutoOpsRoot $AutoOpsRoot
+  $Code = $LASTEXITCODE
+  $EndedAt = Get-Date
+
+  if ($Code -ne 0) {
+    $Reason = "Required $Role script failed with exit $Code: $Path"
+    Write-BlockedHandoff -Reason $Reason | Out-Null
+    throw $Reason
+  }
+
+  return [pscustomobject]@{
+    Role = $Role
+    Path = $Path
+    StartedAt = $StartedAt
+    EndedAt = $EndedAt
+    ExitCode = $Code
+  }
+}
+
 if (!(Test-Path $ZipPath)) {
-  throw "Expected ZIP missing: $ZipPath"
+  $Reason = "Expected ZIP missing: $ZipPath"
+  Write-BlockedHandoff -Reason $Reason | Out-Null
+  throw $Reason
 }
 
 if ($ExpectedSha256) {
   $ActualSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $ZipPath).Hash.ToLowerInvariant()
   if ($ActualSha -ne $ExpectedSha256.ToLowerInvariant()) {
-    throw "ZIP SHA mismatch. Expected $ExpectedSha256 but got $ActualSha"
+    $Reason = "ZIP SHA mismatch. Expected $ExpectedSha256 but got $ActualSha"
+    Write-BlockedHandoff -Reason $Reason | Out-Null
+    throw $Reason
   }
 }
 
@@ -99,7 +166,9 @@ Expand-Archive -LiteralPath $ZipPath -DestinationPath $Temp -Force
 $OverlayRoot = Join-Path $Temp "repo"
 
 if (!(Test-Path $OverlayRoot)) {
-  throw "Overlay ZIP does not contain repo/ root."
+  $Reason = "Overlay ZIP does not contain repo/ root."
+  Write-BlockedHandoff -Reason $Reason | Out-Null
+  throw $Reason
 }
 
 Get-ChildItem -LiteralPath $OverlayRoot -Force | ForEach-Object {
@@ -107,18 +176,21 @@ Get-ChildItem -LiteralPath $OverlayRoot -Force | ForEach-Object {
 }
 
 Remove-Item $Temp -Recurse -Force
-
 Repair-NestedOverlayPaths -Root $RepoRoot
 
 $VerifierPath = Join-Path $RepoRoot $Verifier
 $QaPath = Join-Path $RepoRoot $QaScript
 
 if (!(Test-Path $VerifierPath)) {
-  throw "Verifier path missing after flattening: $VerifierPath"
+  $Reason = "Verifier path missing after flattening: $VerifierPath"
+  Write-BlockedHandoff -Reason $Reason | Out-Null
+  throw $Reason
 }
 
 if (!(Test-Path $QaPath)) {
-  throw "QA path missing after flattening: $QaPath"
+  $Reason = "QA path missing after flattening: $QaPath"
+  Write-BlockedHandoff -Reason $Reason | Out-Null
+  throw $Reason
 }
 
 Run-Git "git add" @("add","--all")
@@ -129,27 +201,21 @@ if ($Status) {
   Run-Git "git push branch" @("push","-u","origin",$Branch,"--force")
 }
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File $VerifierPath -RepoRoot $RepoRoot -AutoOpsRoot $AutoOpsRoot
-if ($LASTEXITCODE -ne 0) {
-  throw "Verifier failed for $PhaseName"
-}
-
-$QaStartedAt = Get-Date
-
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File $QaPath -RepoRoot $RepoRoot -AutoOpsRoot $AutoOpsRoot
-if ($LASTEXITCODE -ne 0) {
-  throw "QA failed for $PhaseName"
-}
+$VerifierRun = Invoke-RequiredScript -Role "verifier" -Path $VerifierPath
+$QaRun = Invoke-RequiredScript -Role "qa" -Path $QaPath
 
 $LatestPass = Get-ChildItem $Handoff -File -Filter "$PhaseName-*PASS_GUARANTEED.md" -ErrorAction SilentlyContinue |
-  Where-Object { $_.LastWriteTime -ge $QaStartedAt.AddSeconds(-5) } |
+  Where-Object { $_.LastWriteTime -ge $QaRun.StartedAt.AddSeconds(-5) } |
   Sort-Object LastWriteTime -Descending |
   Select-Object -First 1
 
 if (!$LatestPass) {
-  throw "Fresh PASS_GUARANTEED handoff not found after QA. Refusing merge."
+  $Reason = "Fresh PASS_GUARANTEED handoff not found after verifier and QA success. Refusing merge."
+  Write-BlockedHandoff -Reason $Reason | Out-Null
+  throw $Reason
 }
 
+# Merge is below the fresh PASS_GUARANTEED gate by design.
 Run-Git "git switch main" @("switch","main")
 Run-Git "git reset main" @("reset","--hard","origin/main")
 Run-Git "git merge branch" @("merge","--no-ff",$Branch,"-m","merge: close $($TagName)")
@@ -170,16 +236,17 @@ Timestamp: $CloseStamp
 Tag: $TagName
 
 Result:
-Phase closed through direct ZIP-to-closeout with nested overlay path repair.
+Phase closed through required-script gate integrity enforcement.
 
 Proof:
 - Exact ZIP was downloaded into 13_chatgpt_downloads.
 - Nested overlay paths were flattened before verifier execution.
-- Verifier path existed and passed.
-- QA path existed and passed.
-- Fresh PASS_GUARANTEED was required after QA.
-- Safe merge/tag/push/cleanup completed.
-- Final handoff was copied.
+- Invoke-RequiredScript executed verifier and captured exit code.
+- QA only ran after verifier success in the same run.
+- Fresh PASS_GUARANTEED was required after QA success.
+- SAFE_AUTO_MERGE_AFTER_PASS_GUARANTEED was honored.
+- WAIT_ONLY_CLOSED was preserved.
+- Safe merge/tag/push/cleanup completed only after the gate passed.
 "@ | Set-Content $ClosedPath -Encoding UTF8
 
 Get-Content $ClosedPath -Raw | Set-Clipboard
