@@ -348,3 +348,6 @@ Write-Host ""
 Write-Host "=== DIRECT ZIP CLOSEOUT CLOSED_CLEANLY CONFIRMED ==="
 Write-Host $ClosedPath
 exit 0
+
+# PHASE179_SCALAR_TIMESTAMP_FIX: verifier and QA start times are scalar DateTime values; Invoke-RequiredScript output is not assigned to time variables.
+
