@@ -7,6 +7,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$RunStartedAt = Get-Date
 $Control = Join-Path $AutoOpsRoot "00_control_center"
 $CommandInbox = Join-Path $Control "command_inbox"
 $Downloads13 = Join-Path $AutoOpsRoot "13_chatgpt_downloads"
@@ -23,23 +24,48 @@ function Write-Step {
 }
 
 function Write-Blocked {
-  param([string]$Reason)
+  param(
+    [string]$PhaseName,
+    [string]$Reason
+  )
+
+  if (!$PhaseName) { $PhaseName = "s.e.r.a_full_auto_json_loop" }
 
   $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-  $Path = Join-Path $Handoff "s.e.r.a_full_auto_json_loop-$Stamp-BLOCKED.md"
+  $Path = Join-Path $Handoff "$PhaseName-$Stamp-BLOCKED.md"
 
 @"
 Status: BLOCKED
-Phase: full_auto_json_loop
-Reason: $Reason
+Phase: $PhaseName
 Timestamp: $Stamp
 
+Reason:
+$Reason
+
 Next action:
-Fix the blocker, then rerun SERA_RUN_UPLOADED_JSON_LOOP.ps1.
+Fix the blocker, then rerun or restart the foreground command inbox watcher.
 "@ | Set-Content $Path -Encoding UTF8
 
   Get-Content $Path -Raw | Set-Clipboard
   Write-Host "BLOCKED_HANDOFF: $Path"
+}
+
+function Select-CurrentPhaseHandoff {
+  param(
+    [string]$PhaseName,
+    [datetime]$Since
+  )
+
+  if (!$PhaseName) { return $null }
+
+  return Get-ChildItem $Handoff -File -ErrorAction SilentlyContinue |
+    Where-Object {
+      $_.Name -like "$PhaseName-*.md" -and
+      $_.LastWriteTime -ge $Since.AddSeconds(-10) -and
+      ($_.Name -match "(CLOSED_CLEANLY|BLOCKED|PASS_GUARANTEED|VERIFY_PASS)")
+    } |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
 }
 
 if (!(Test-Path $Runner)) { throw "Production JSON pickup runner missing: $Runner" }
@@ -51,7 +77,7 @@ $Command = Get-ChildItem $CommandInbox -File -Filter "*.json" -ErrorAction Silen
   Select-Object -First 1
 
 if (!$Command) {
-  Write-Blocked "No uploaded JSON found in command_inbox."
+  Write-Blocked -PhaseName "s.e.r.a_full_auto_json_loop" -Reason "No uploaded JSON found in command_inbox."
   exit 2
 }
 
@@ -59,13 +85,13 @@ Write-Step "FULL_AUTO_LOOP_START command=$($Command.FullName)"
 
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Runner -RepoRoot $RepoRoot -AutoOpsRoot $AutoOpsRoot -Once -WaitForZipMinutes 0
 if ($LASTEXITCODE -ne 0) {
-  Write-Blocked "Production runner could not create REQUEST_READY."
+  Write-Blocked -PhaseName "s.e.r.a_full_auto_json_loop" -Reason "Production runner could not create REQUEST_READY."
   exit $LASTEXITCODE
 }
 
 $RequestPath = Join-Path $Control "artifact-watch-request.json"
 if (!(Test-Path $RequestPath)) {
-  Write-Blocked "artifact-watch-request.json was not created."
+  Write-Blocked -PhaseName "s.e.r.a_full_auto_json_loop" -Reason "artifact-watch-request.json was not created."
   exit 2
 }
 
@@ -76,12 +102,12 @@ $Phase = [string]$Request.phase
 $PhaseSlug = [string]$Request.phaseSlug
 
 if (!(Test-Path $PromptFile)) {
-  Write-Blocked "Prompt file missing: $PromptFile"
+  Write-Blocked -PhaseName "s.e.r.a_full_auto_json_loop" -Reason "Prompt file missing: $PromptFile"
   exit 2
 }
 
 if (!$ExpectedZip) {
-  Write-Blocked "Expected ZIP name missing from artifact request."
+  Write-Blocked -PhaseName "s.e.r.a_full_auto_json_loop" -Reason "Expected ZIP name missing from artifact request."
   exit 2
 }
 
@@ -123,13 +149,13 @@ if ($LaunchBrowserIfNeeded) {
 
 & powershell.exe @BridgeArgs
 if ($LASTEXITCODE -ne 0) {
-  Write-Blocked "ChatGPT browser bridge did not return the expected artifact."
+  Write-Blocked -PhaseName $PhaseName -Reason "ChatGPT browser bridge did not return the expected artifact."
   exit $LASTEXITCODE
 }
 
 $ExpectedZipPath = Join-Path $Downloads13 $ExpectedZip
 if (!(Test-Path $ExpectedZipPath)) {
-  Write-Blocked "Expected ZIP was not found after bridge: $ExpectedZipPath"
+  Write-Blocked -PhaseName $PhaseName -Reason "Expected ZIP was not found after bridge: $ExpectedZipPath"
   exit 2
 }
 
@@ -150,14 +176,15 @@ Write-Step "RUN_DIRECT_ZIP_CLOSEOUT phase=$Phase branch=$Branch tag=$TagName"
 
 $Exit = $LASTEXITCODE
 
-$Latest = Get-ChildItem $Handoff -File -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -match "(CLOSED_CLEANLY|BLOCKED|PASS_GUARANTEED)" } |
-  Sort-Object LastWriteTime -Descending |
-  Select-Object -First 1
+$Current = Select-CurrentPhaseHandoff -PhaseName $PhaseName -Since $RunStartedAt
 
-if ($Latest) {
-  Get-Content $Latest.FullName -Raw | Set-Clipboard
-  Write-Step "FINAL_HANDOFF_COPIED $($Latest.FullName)"
+if ($Current) {
+  Get-Content $Current.FullName -Raw | Set-Clipboard
+  Write-Step "FINAL_HANDOFF_COPIED $($Current.FullName)"
+} else {
+  Write-Step "STALE_HANDOFF_REFUSED phase=$PhaseName"
+  Write-Blocked -PhaseName $PhaseName -Reason "No current-phase handoff was produced by direct closeout."
+  exit 3
 }
 
 if ($Exit -ne 0) {
@@ -166,6 +193,3 @@ if ($Exit -ne 0) {
 
 Write-Step "FULL_AUTO_LOOP_DONE"
 exit 0
-
-# PHASE176_CURRENT_HANDOFF_NOTE: Direct closeout must write and copy the current phase handoff; stale prior-phase handoffs are not valid closeout evidence.
-

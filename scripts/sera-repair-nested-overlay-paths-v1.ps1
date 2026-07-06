@@ -14,28 +14,38 @@ function Repair-NestedOverlayPaths {
     @{ Nested = "scripts\scripts"; Target = "scripts" }
   )
 
-  $Changed = $false
+  $Moved = 0
 
   foreach ($Pair in $Pairs) {
     $NestedPath = Join-Path $Root $Pair.Nested
     $TargetPath = Join-Path $Root $Pair.Target
 
-    if (!(Test-Path $NestedPath)) { continue }
+    if (!(Test-Path $NestedPath)) {
+      continue
+    }
 
     New-Item -ItemType Directory -Force $TargetPath | Out-Null
 
     Get-ChildItem -LiteralPath $NestedPath -Force | ForEach-Object {
       $Destination = Join-Path $TargetPath $_.Name
-      if (Test-Path $Destination) { Remove-Item $Destination -Recurse -Force }
+
+      if (Test-Path $Destination) {
+        Remove-Item $Destination -Recurse -Force
+      }
+
       Move-Item -LiteralPath $_.FullName -Destination $Destination -Force
+      $Moved++
       Write-Host "FLATTENED $($Pair.Nested)\$($_.Name) -> $($Pair.Target)\$($_.Name)"
-      $Changed = $true
     }
 
     Remove-Item $NestedPath -Recurse -Force
   }
 
-  if ($Changed) { Write-Host "FLATTEN_REPAIR_PASS" } else { Write-Host "FLATTEN_REPAIR_NO_COMMIT_NEEDED" }
+  if ($Moved -eq 0) {
+    Write-Host "FLATTEN_REPAIR_NO_COMMIT_NEEDED"
+  }
+
+  Write-Host "FLATTEN_REPAIR_PASS"
 }
 
 Repair-NestedOverlayPaths -Root $RepoRoot
