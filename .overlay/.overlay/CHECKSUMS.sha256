@@ -1,9 +1,0 @@
-28fa91a1140aeff3b9eefdd92d6768af68cf6eb74c55901d6c85db38eddda439  docs/phase174-json-only-full-loop-hardening-proof-v1.md
-65b32b39578bc9f2db4705776c67980829b17988d73d3fc09f1584dbed28ee78  scripts/sera-full-auto-json-loop-router-v1.ps1
-7085972999a4d9192677405edeae75f9ffac8ccfd4cd001b0adca9da2d62690d  scripts/verify-phase174-json-only-full-loop-hardening-proof-v1.ps1
-8c254e50335b4dd46e811ab97e3a8539ea32881f8d0413d7b5f917b553a50295  scripts/phase174-json-only-full-loop-hardening-proof-v1.ps1
-a447317aab473581daa67cb93dcbb6f9b6b88b2750a658792e4c80e8d30cdb08  scripts/sera-repair-nested-overlay-paths-v1.ps1
-bfa068dbb4817884dddc2763e68808846683dd3a52a8511a87be701b673c7915  scripts/sera-chatgpt-browser-bridge-v1.ps1
-cebe082642658c80007070ad6cf834e46fb02fe023adc244bcbe497dcedb6d02  .sera-proof/phase174_json_only_full_loop_hardening_proof_v1.json
-d7140102722e7d13f1fca663d8af88b4f9c851149d82e5ec29549a4009b08d28  .overlay/phase174_json_only_full_loop_hardening_proof_v1.json
-f4c9dc944711bfa94e887a4672236e5c8495b7fa1e1d875804fe0678a8bf6858  scripts/sera-direct-zip-to-closed-cleanly-v1.ps1

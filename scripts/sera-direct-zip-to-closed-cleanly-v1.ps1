@@ -40,6 +40,41 @@ function Run-Git {
   return $Code
 }
 
+function Repair-NestedOverlayPaths {
+  param([string]$Root)
+
+  $Pairs = @(
+    @{ Nested = ".overlay\.overlay"; Target = ".overlay" },
+    @{ Nested = ".sera-proof\.sera-proof"; Target = ".sera-proof" },
+    @{ Nested = "docs\docs"; Target = "docs" },
+    @{ Nested = "scripts\scripts"; Target = "scripts" }
+  )
+
+  foreach ($Pair in $Pairs) {
+    $NestedPath = Join-Path $Root $Pair.Nested
+    $TargetPath = Join-Path $Root $Pair.Target
+
+    if (!(Test-Path $NestedPath)) {
+      continue
+    }
+
+    New-Item -ItemType Directory -Force $TargetPath | Out-Null
+
+    Get-ChildItem -LiteralPath $NestedPath -Force | ForEach-Object {
+      $Destination = Join-Path $TargetPath $_.Name
+
+      if (Test-Path $Destination) {
+        Remove-Item $Destination -Recurse -Force
+      }
+
+      Move-Item -LiteralPath $_.FullName -Destination $Destination -Force
+      Write-Host "FLATTENED $($Pair.Nested)\$($_.Name) -> $($Pair.Target)\$($_.Name)"
+    }
+
+    Remove-Item $NestedPath -Recurse -Force
+  }
+}
+
 if (!(Test-Path $ZipPath)) {
   throw "Expected ZIP missing: $ZipPath"
 }
@@ -62,6 +97,7 @@ New-Item -ItemType Directory -Force $Temp | Out-Null
 
 Expand-Archive -LiteralPath $ZipPath -DestinationPath $Temp -Force
 $OverlayRoot = Join-Path $Temp "repo"
+
 if (!(Test-Path $OverlayRoot)) {
   throw "Overlay ZIP does not contain repo/ root."
 }
@@ -72,6 +108,19 @@ Get-ChildItem -LiteralPath $OverlayRoot -Force | ForEach-Object {
 
 Remove-Item $Temp -Recurse -Force
 
+Repair-NestedOverlayPaths -Root $RepoRoot
+
+$VerifierPath = Join-Path $RepoRoot $Verifier
+$QaPath = Join-Path $RepoRoot $QaScript
+
+if (!(Test-Path $VerifierPath)) {
+  throw "Verifier path missing after flattening: $VerifierPath"
+}
+
+if (!(Test-Path $QaPath)) {
+  throw "QA path missing after flattening: $QaPath"
+}
+
 Run-Git "git add" @("add","--all")
 
 $Status = & git status --porcelain
@@ -80,22 +129,25 @@ if ($Status) {
   Run-Git "git push branch" @("push","-u","origin",$Branch,"--force")
 }
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $RepoRoot $Verifier) -RepoRoot $RepoRoot -AutoOpsRoot $AutoOpsRoot
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $VerifierPath -RepoRoot $RepoRoot -AutoOpsRoot $AutoOpsRoot
 if ($LASTEXITCODE -ne 0) {
   throw "Verifier failed for $PhaseName"
 }
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $RepoRoot $QaScript) -RepoRoot $RepoRoot -AutoOpsRoot $AutoOpsRoot
+$QaStartedAt = Get-Date
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $QaPath -RepoRoot $RepoRoot -AutoOpsRoot $AutoOpsRoot
 if ($LASTEXITCODE -ne 0) {
   throw "QA failed for $PhaseName"
 }
 
 $LatestPass = Get-ChildItem $Handoff -File -Filter "$PhaseName-*PASS_GUARANTEED.md" -ErrorAction SilentlyContinue |
+  Where-Object { $_.LastWriteTime -ge $QaStartedAt.AddSeconds(-5) } |
   Sort-Object LastWriteTime -Descending |
   Select-Object -First 1
 
 if (!$LatestPass) {
-  throw "PASS_GUARANTEED handoff not found. Refusing merge."
+  throw "Fresh PASS_GUARANTEED handoff not found after QA. Refusing merge."
 }
 
 Run-Git "git switch main" @("switch","main")
@@ -118,13 +170,14 @@ Timestamp: $CloseStamp
 Tag: $TagName
 
 Result:
-Phase closed through direct ZIP-to-closeout without VBS.
+Phase closed through direct ZIP-to-closeout with nested overlay path repair.
 
-What this proves:
+Proof:
 - Exact ZIP was downloaded into 13_chatgpt_downloads.
-- Overlay was applied directly.
-- Verifier passed.
-- QA Guarantee produced PASS_GUARANTEED.
+- Nested overlay paths were flattened before verifier execution.
+- Verifier path existed and passed.
+- QA path existed and passed.
+- Fresh PASS_GUARANTEED was required after QA.
 - Safe merge/tag/push/cleanup completed.
 - Final handoff was copied.
 "@ | Set-Content $ClosedPath -Encoding UTF8

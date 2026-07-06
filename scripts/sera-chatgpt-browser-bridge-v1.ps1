@@ -18,7 +18,7 @@ function Write-Step {
 
 function Test-DebugBrowser {
   try {
-    $Version = Invoke-RestMethod -Uri "$BrowserDebugUrl/json/version" -TimeoutSec 2
+    Invoke-RestMethod -Uri "$BrowserDebugUrl/json/version" -TimeoutSec 2 | Out-Null
     return $true
   } catch {
     return $false
@@ -121,8 +121,11 @@ function Find-DownloadedArtifact {
           Copy-Item $Exact $Dest -Force
           return $Dest
         }
+
         return $Exact
       }
+
+      continue
     }
 
     $Latest = Get-ChildItem $Dir -File -ErrorAction SilentlyContinue |
@@ -136,6 +139,7 @@ function Find-DownloadedArtifact {
         Copy-Item $Latest.FullName $Dest -Force
         return $Dest
       }
+
       return $Latest.FullName
     }
   }
@@ -284,7 +288,7 @@ while ((Get-Date) -lt $Deadline) {
     if (lower.includes("copy")) score += 5;
 
     return { el, score, text: t.slice(0, 300) };
-  }).filter(x => x.score >= 100);
+  }).filter(x => expected ? x.text.includes(expected) : x.score >= 100);
 
   scored.sort((a, b) => b.score - a.score);
 
@@ -309,4 +313,3 @@ while ((Get-Date) -lt $Deadline) {
 }
 
 throw "Timed out waiting for ChatGPT artifact download: $ExpectedFilename"
-
