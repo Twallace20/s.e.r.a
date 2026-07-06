@@ -1,0 +1,11 @@
+{
+  "phase": 177,
+  "phaseSlug": "phase177_auto_inbox_trigger_and_single_run_abort_guard_v1",
+  "proof": [
+    "foreground command inbox watcher",
+    "single-run abort guard",
+    "Invoke-RequiredScript",
+    "current-phase handoff selection",
+    "fresh VERIFY_PASS and PASS_GUARANTEED gates"
+  ]
+}

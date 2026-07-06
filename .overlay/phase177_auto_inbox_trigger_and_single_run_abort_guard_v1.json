@@ -1,0 +1,57 @@
+{
+  "phase": 177,
+  "phaseSlug": "phase177_auto_inbox_trigger_and_single_run_abort_guard_v1",
+  "phaseName": "s.e.r.a_phase177_auto_inbox_trigger_and_single_run_abort_guard_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase177_auto_inbox_trigger_and_single_run_abort_guard_v1_overlay.zip",
+  "createdAt": "2026-07-06T12:42:48.573452Z",
+  "safety": {
+    "persistenceAdded": false,
+    "credentials": false,
+    "tokens": false,
+    "paidServices": false,
+    "dependencyInstalls": false,
+    "securitySettings": false
+  },
+  "files": [
+    {
+      "path": ".sera-proof/phase177_auto_inbox_trigger_and_single_run_abort_guard_v1.json",
+      "sha256": "cc47db3dd9898d783fd63bff3fb0dc51af1eafa3d3b7b8d600f9d9c4b92399a5"
+    },
+    {
+      "path": "SERA_WATCH_COMMAND_INBOX.ps1",
+      "sha256": "14b9aa08300b637216abe6a0f9bff0a4cd214887000b675a84a170469ddb8495"
+    },
+    {
+      "path": "docs/phase177-auto-inbox-trigger-and-single-run-abort-guard-v1.md",
+      "sha256": "e29a06cdfe0ef758667edd378b11fb19fc2af5efb515b8c255a1e3f4e9373ccc"
+    },
+    {
+      "path": "scripts/phase177-auto-inbox-trigger-and-single-run-abort-guard-v1.ps1",
+      "sha256": "500fd7ab542339406fa9c86195047dd2af1c2e9e647561bca52182d249b078bb"
+    },
+    {
+      "path": "scripts/sera-chatgpt-browser-bridge-v1.ps1",
+      "sha256": "766def84fdb1c4d0a26b8c510e125e26d038f72311ebfae44aaf09ce979a34f3"
+    },
+    {
+      "path": "scripts/sera-command-inbox-foreground-watcher-v1.ps1",
+      "sha256": "0406ac19cbaf5bb04233382defe4afb0941f187ed6aaecc5858e8df8a9d0d2d8"
+    },
+    {
+      "path": "scripts/sera-direct-zip-to-closed-cleanly-v1.ps1",
+      "sha256": "5db00c9e11b7962ec5dc914fe98a9053b9f22dc882d6dd0481175a4efcce251a"
+    },
+    {
+      "path": "scripts/sera-full-auto-json-loop-router-v1.ps1",
+      "sha256": "1c07c8281da0a407149e74476a4e6414b029de1f6cacfc37740d6bdf7f776aac"
+    },
+    {
+      "path": "scripts/sera-repair-nested-overlay-paths-v1.ps1",
+      "sha256": "b01b8551460ac7d676142524038235c25498590251a00474ee4b300d7c67c770"
+    },
+    {
+      "path": "scripts/verify-phase177-auto-inbox-trigger-and-single-run-abort-guard-v1.ps1",
+      "sha256": "1230ff05f9500d54504fb689e0a54dbc65c666a6aa4ab9a8c7f10a8e43df613e"
+    }
+  ]
+}

@@ -245,49 +245,119 @@ while ((Get-Date) -lt $Deadline) {
   $ClickJs = @"
 (async () => {
   const expected = $ExpectedJson;
+  const expectedLower = expected.toLowerCase();
 
   function visible(el) {
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0;
   }
 
-  function textOf(el) {
-    return [
-      el.innerText,
-      el.textContent,
-      el.getAttribute("aria-label"),
-      el.getAttribute("title"),
-      el.getAttribute("download"),
-      el.getAttribute("href"),
-      el.getAttribute("data-testid")
-    ].filter(Boolean).join(" ");
+  function clean(s) {
+    return String(s || "").replace(/\s+/g, " ").trim();
   }
 
-  const controls = Array.from(document.querySelectorAll("button, a, [role='button'], [download]"))
+  function textOf(el) {
+    const anchor = el.closest ? el.closest("a[href]") : null;
+    const real = anchor || el;
+
+    return {
+      el,
+      real,
+      tag: real.tagName || "",
+      text: clean(el.innerText || el.textContent || ""),
+      aria: clean(el.getAttribute("aria-label")),
+      title: clean(el.getAttribute("title")),
+      download: clean(real.getAttribute ? real.getAttribute("download") : ""),
+      href: clean(real.getAttribute ? real.getAttribute("href") : ""),
+      data: clean(el.getAttribute("data-testid"))
+    };
+  }
+
+  const nodes = Array.from(document.querySelectorAll("a[href], a[download], button, [role='button']"))
     .filter(visible);
 
-  const exactControls = controls.map(el => {
-    const text = textOf(el);
-    let score = 0;
+  const candidates = nodes.map(el => {
+    const info = textOf(el);
+    const combined = clean([
+      info.text,
+      info.aria,
+      info.title,
+      info.download,
+      info.href,
+      info.data
+    ].join(" "));
 
-    if (text.includes(expected)) score += 1000;
-    if (text.toLowerCase().includes("download")) score += 100;
-    if (text.toLowerCase().includes(".zip")) score += 50;
+    const lower = combined.toLowerCase();
+    const textLower = info.text.toLowerCase();
 
-    return { el, text, score };
-  }).filter(x => x.score >= 1000);
+    const blocked =
+      textLower.startsWith("copy ") ||
+      textLower.includes("s.e.r.a. phase request") ||
+      textLower.includes("owner guidance:") ||
+      textLower.includes("command contract:") ||
+      textLower.includes("requirements:") ||
+      info.text.length > 420;
 
-  exactControls.sort((a, b) => b.score - a.score);
+    if (blocked) return null;
+    if (!lower.includes(expectedLower)) return null;
 
-  if (!exactControls.length) {
-    return { ok:false, reason:"exact_expected_download_control_not_ready", expected };
+    const isDownloadish =
+      lower.includes("download") ||
+      lower.includes(".zip") ||
+      lower.includes("backend-api") ||
+      lower.includes("/download");
+
+    const directDownloadLabel =
+      textLower.startsWith("download ") ||
+      info.aria.toLowerCase().startsWith("download ") ||
+      info.title.toLowerCase().startsWith("download ");
+
+    const realAnchor = info.real && info.real.tagName === "A" && info.href;
+
+    if (!isDownloadish) return null;
+    if (!realAnchor && !directDownloadLabel) return null;
+
+    let score = 1000;
+    if (realAnchor) score += 300;
+    if (directDownloadLabel) score += 250;
+    if (textLower.startsWith("download ")) score += 150;
+    if (lower.includes(".zip")) score += 75;
+    if (lower.includes("/download")) score += 75;
+
+    return {
+      el: info.real || info.el,
+      text: combined.slice(0, 300),
+      score,
+      tag: info.tag,
+      href: info.href
+    };
+  }).filter(Boolean);
+
+  candidates.sort((a, b) => b.score - a.score);
+
+  if (!candidates.length) {
+    return {
+      ok:false,
+      reason:"real_exact_download_control_not_ready",
+      expected
+    };
   }
 
-  exactControls[0].el.scrollIntoView({ block:"center" });
-  await new Promise(r => setTimeout(r, 250));
-  exactControls[0].el.click();
+  const chosen = candidates[0];
+  chosen.el.scrollIntoView({ block:"center" });
+  await new Promise(r => setTimeout(r, 300));
 
-  return { ok:true, clicked: exactControls[0].text.slice(0, 300), score: exactControls[0].score };
+  chosen.el.dispatchEvent(new MouseEvent("mousedown", { bubbles:true, cancelable:true, view:window }));
+  chosen.el.dispatchEvent(new MouseEvent("mouseup", { bubbles:true, cancelable:true, view:window }));
+  chosen.el.click();
+
+  return {
+    ok:true,
+    clicked: chosen.text,
+    score: chosen.score,
+    tag: chosen.tag,
+    href: chosen.href
+  };
 })()
 "@
 
@@ -302,3 +372,6 @@ while ((Get-Date) -lt $Deadline) {
 }
 
 throw "Timed out waiting for exact ChatGPT artifact download: $ExpectedFilename"
+
+# fresh-download marker: Find-DownloadedArtifact rejects stale files using RunStartedAt before accepting an exact expected ZIP.
+
