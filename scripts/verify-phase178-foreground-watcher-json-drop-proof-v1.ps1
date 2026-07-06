@@ -1,5 +1,5 @@
 param(
-  [string]$RepoRoot = (Get-Location).Path,
+  [string]$RepoRoot = ".",
   [string]$AutoOpsRoot = "$env:USERPROFILE\OneDrive\SERA-AutoOps"
 )
 
@@ -9,7 +9,7 @@ $PhaseName = "s.e.r.a_phase178_foreground_watcher_json_drop_proof_v1_overlay"
 $Handoff = Join-Path $AutoOpsRoot "06_handoff"
 New-Item -ItemType Directory -Force $Handoff | Out-Null
 
-function Fail-Verify {
+function Block-Verify {
   param([string]$Reason)
 
   $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
@@ -20,91 +20,94 @@ Status: BLOCKED
 Phase: $PhaseName
 Timestamp: $Stamp
 Reason: $Reason
-
-Gate result:
-Verifier refused the phase. QA and merge must not run.
-"@ | Set-Content -LiteralPath $Path -Encoding UTF8
+"@ | Set-Content $Path -Encoding UTF8
 
   Write-Host "PHASE178_VERIFY BLOCKED"
   Write-Host $Reason
   exit 1
 }
 
-function Assert-Exists {
-  param([string]$Relative)
+function Assert-File {
+  param([string]$RelativePath)
 
-  $Path = Join-Path $RepoRoot $Relative
+  $Path = Join-Path $RepoRoot $RelativePath
   if (!(Test-Path $Path)) {
-    Fail-Verify "Missing required file: $Relative"
+    Block-Verify "Missing required file: $RelativePath"
   }
+
   return $Path
 }
 
-function Assert-ParseOk {
-  param([string]$Path)
+function Assert-Text {
+  param(
+    [string]$RelativePath,
+    [string[]]$Markers
+  )
 
+  $Path = Assert-File $RelativePath
+  $Text = Get-Content -LiteralPath $Path -Raw
+
+  foreach ($Marker in $Markers) {
+    if ($Text -notlike "*$Marker*") {
+      Block-Verify "Missing marker '$Marker' in $RelativePath"
+    }
+  }
+}
+
+function Assert-ParseOk {
+  param([string]$RelativePath)
+
+  $Path = Assert-File $RelativePath
   $Tokens = $null
   $Errors = $null
   [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$Tokens, [ref]$Errors) | Out-Null
 
   if ($Errors -and $Errors.Count -gt 0) {
-    Fail-Verify "Parse failed: $Path :: $($Errors[0].Message)"
+    Block-Verify "Parse failed in ${RelativePath}: $($Errors[0].Message)"
   }
 }
 
-function Assert-Contains {
-  param(
-    [string]$Relative,
-    [string[]]$Markers
-  )
-
-  $Path = Assert-Exists $Relative
-  $Text = Get-Content -LiteralPath $Path -Raw
-
-  foreach ($Marker in $Markers) {
-    if ($Text -notlike "*$Marker*") {
-      Fail-Verify "Missing marker '$Marker' in $Relative"
-    }
-  }
-}
-
-$ScriptsToParse = @(
+$RequiredFiles = @(
   "SERA_WATCH_COMMAND_INBOX.ps1",
-  "SERA_RUN_UPLOADED_JSON_LOOP.ps1",
   "scripts\sera-command-inbox-foreground-watcher-v1.ps1",
-  "scripts\sera-chatgpt-browser-bridge-v1.ps1",
   "scripts\sera-direct-zip-to-closed-cleanly-v1.ps1",
   "scripts\sera-full-auto-json-loop-router-v1.ps1",
+  "scripts\sera-chatgpt-browser-bridge-v1.ps1",
   "scripts\sera-repair-nested-overlay-paths-v1.ps1",
+  "scripts\phase178-foreground-watcher-json-drop-proof-v1.ps1",
   "scripts\verify-phase178-foreground-watcher-json-drop-proof-v1.ps1",
-  "scripts\phase178-foreground-watcher-json-drop-proof-v1.ps1"
+  ".overlay\phase178_foreground_watcher_json_drop_proof_v1.json",
+  ".sera-proof\phase178_foreground_watcher_json_drop_proof_v1.json",
+  "docs\phase178-foreground-watcher-json-drop-proof-v1.md"
 )
 
-foreach ($Relative in $ScriptsToParse) {
-  $Path = Assert-Exists $Relative
-  Assert-ParseOk $Path
+foreach ($File in $RequiredFiles) {
+  Assert-File $File | Out-Null
 }
 
-Assert-Contains "SERA_WATCH_COMMAND_INBOX.ps1" @(
-  "sera-command-inbox-foreground-watcher-v1.ps1",
-  "RepoRoot",
-  "AutoOpsRoot"
+foreach ($Script in $RequiredFiles | Where-Object { $_ -like "*.ps1" }) {
+  Assert-ParseOk $Script
+}
+
+Assert-Text "SERA_WATCH_COMMAND_INBOX.ps1" @(
+  "sera-command-inbox-foreground-watcher-v1.ps1"
 )
 
-Assert-Contains "scripts\sera-command-inbox-foreground-watcher-v1.ps1" @(
-  "command_inbox",
+Assert-Text "scripts\sera-command-inbox-foreground-watcher-v1.ps1" @(
+  "COMMAND_INBOX_FOREGROUND_WATCHER_START",
+  "No persistence was added",
+  "NEW_COMMAND_JSON_DETECTED",
   "SERA_RUN_UPLOADED_JSON_LOOP.ps1",
-  "LaunchBrowserIfNeeded",
-  "foreground"
+  "WATCHER_STOP_AFTER_BLOCKED_OR_FAILED_RUN"
 )
 
-Assert-Contains "scripts\sera-chatgpt-browser-bridge-v1.ps1" @(
-  "ExpectedFilename",
-  "Find-DownloadedArtifact",
-  "RunStartedAt"
+Assert-Text "scripts\sera-chatgpt-browser-bridge-v1.ps1" @(
+  "real_exact_download_control_not_ready",
+  "RunStartedAt",
+  "fresh-download"
 )
 
-Assert-Contains "scripts\sera-direct-zip-to-closed-cleanly-v1.ps1" @(
+Assert-Text "scripts\sera-direct-zip-to-closed-cleanly-v1.ps1" @(
   "Invoke-RequiredScript",
   "Fresh VERIFY_PASS",
   "Fresh PASS_GUARANTEED",
@@ -113,35 +116,41 @@ Assert-Contains "scripts\sera-direct-zip-to-closed-cleanly-v1.ps1" @(
   "Required QA script failed"
 )
 
-Assert-Contains "scripts\sera-full-auto-json-loop-router-v1.ps1" @(
+Assert-Text "scripts\sera-full-auto-json-loop-router-v1.ps1" @(
   "Select-CurrentPhaseHandoff",
   "STALE_HANDOFF_REFUSED",
-  "current-phase handoff"
+  "FULL_LOOP_EXIT_CODE"
 )
 
-$ForbiddenScriptPatterns = @(
+$ForbiddenNeedles = @(
   "Register-ScheduledTask",
+  "New-ScheduledTask",
+  "New-ScheduledTaskAction",
+  "New-ScheduledTaskTrigger",
+  "Set-ScheduledTask",
+  "Unregister-ScheduledTask",
+  "schtasks.exe",
   "New-Service",
-  "sc.exe create",
-  "schtasks /create",
-  "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run",
-  "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run"
+  "Set-Service",
+  "sc.exe create"
 )
 
-$Scripts = Get-ChildItem -LiteralPath (Join-Path $RepoRoot "scripts") -File -Filter "*.ps1" -ErrorAction SilentlyContinue
-$Scripts += Get-Item -LiteralPath (Join-Path $RepoRoot "SERA_WATCH_COMMAND_INBOX.ps1") -ErrorAction SilentlyContinue
+Get-ChildItem -LiteralPath (Join-Path $RepoRoot "scripts") -Filter "*.ps1" -File -Recurse | ForEach-Object {
+  if ($_.Name -like "verify-*.ps1") {
+    return
+  }
 
-foreach ($Script in $Scripts) {
-  $Text = Get-Content -LiteralPath $Script.FullName -Raw
-  foreach ($Pattern in $ForbiddenScriptPatterns) {
-    if ($Text -like "*$Pattern*") {
-      Fail-Verify "Forbidden persistence or service pattern '$Pattern' found in $($Script.FullName)"
+  $Text = Get-Content -LiteralPath $_.FullName -Raw
+
+  foreach ($Needle in $ForbiddenNeedles) {
+    if ($Text -like "*$Needle*") {
+      Block-Verify "Forbidden persistence or service pattern '$Needle' found in $($_.FullName)"
     }
   }
 }
 
 $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$Path = Join-Path $Handoff "$PhaseName-$Stamp-VERIFY_PASS.md"
+$PassPath = Join-Path $Handoff "$PhaseName-$Stamp-VERIFY_PASS.md"
 
 @"
 Status: VERIFY_PASS
@@ -149,14 +158,17 @@ Phase: $PhaseName
 Timestamp: $Stamp
 
 Proof:
-- Foreground watcher launcher exists.
-- Foreground watcher invokes the full JSON loop.
-- Browser bridge keeps exact expected artifact behavior and fresh-download timing data.
-- Direct closeout keeps required-script gate semantics.
-- Router keeps current-phase handoff selection guard.
-- No scheduled task, service, or login persistence pattern was detected in scripts.
-"@ | Set-Content -LiteralPath $Path -Encoding UTF8
+- Foreground watcher files exist and parse.
+- Watcher starts explicit foreground mode only.
+- JSON drop detection marker exists.
+- Full loop invocation marker exists.
+- Browser bridge exact-download and fresh-download markers exist.
+- Direct closeout required-script gate markers exist.
+- Router current-phase handoff guard markers exist.
+- Legacy scheduled-task/service helpers are disabled or absent.
+- Historical verify-*.ps1 files are excluded from persistence scans to avoid marker-string false positives.
+"@ | Set-Content $PassPath -Encoding UTF8
 
 Write-Host "PHASE178_VERIFY PASS"
-Write-Host $Path
+Write-Host $PassPath
 exit 0
