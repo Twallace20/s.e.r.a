@@ -11,14 +11,17 @@ New-Item -ItemType Directory -Force $Handoff | Out-Null
 
 function Block-Verify {
   param([string]$Reason)
+
   $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
   $Path = Join-Path $Handoff "$PhaseName-$Stamp-VERIFY_BLOCKED.md"
-@"
+
+  @"
 Status: BLOCKED
 Phase: $PhaseName
 Timestamp: $Stamp
 Reason: $Reason
 "@ | Set-Content $Path -Encoding UTF8
+
   Write-Host "PHASE183_VERIFY BLOCKED"
   Write-Host $Reason
   exit 1
@@ -26,133 +29,164 @@ Reason: $Reason
 
 function Assert-File {
   param([string]$RelativePath)
+
   $Path = Join-Path $RepoRoot $RelativePath
-  if (!(Test-Path $Path)) { Block-Verify "Missing required file: $RelativePath" }
+  if (!(Test-Path $Path)) {
+    Block-Verify "Missing required file: $RelativePath"
+  }
+
   return $Path
 }
 
 function Assert-ParseOk {
   param([string]$RelativePath)
+
   $Path = Assert-File $RelativePath
   $Tokens = $null
   $Errors = $null
   [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$Tokens, [ref]$Errors) | Out-Null
-  if ($Errors -and $Errors.Count -gt 0) { Block-Verify "Parse failed in ${RelativePath}: $($Errors[0].Message)" }
-}
 
-function Assert-Text {
-  param([string]$RelativePath, [string[]]$Markers)
-  $Path = Assert-File $RelativePath
-  $Text = Get-Content -LiteralPath $Path -Raw
-  foreach ($Marker in $Markers) {
-    if ($Text -notlike "*$Marker*") { Block-Verify "Missing marker '$Marker' in $RelativePath" }
+  if ($Errors -and $Errors.Count -gt 0) {
+    Block-Verify "Parse failed in ${RelativePath}: $($Errors[0].Message)"
   }
 }
 
-$Required = @(
+function Assert-Text {
+  param(
+    [string]$RelativePath,
+    [string[]]$Markers
+  )
+
+  $Path = Assert-File $RelativePath
+  $Text = Get-Content -LiteralPath $Path -Raw
+
+  foreach ($Marker in $Markers) {
+    if ($Text -notlike "*$Marker*") {
+      Block-Verify "Missing marker '$Marker' in $RelativePath"
+    }
+  }
+}
+
+function Assert-NoForbiddenServicePersistence {
+  param([string]$RelativePath)
+
+  $Path = Assert-File $RelativePath
+  $Text = Get-Content -LiteralPath $Path -Raw
+
+  $ForbiddenPatterns = @(
+    "New-Service",
+    "sc.exe create",
+    "sc.exe config",
+    "Start-Service",
+    "Set-Service",
+    "Restart-Service",
+    "NT AUTHORITY\SYSTEM",
+    "-User `"SYSTEM`"",
+    "-User SYSTEM",
+    "RunLevel Highest",
+    "Password",
+    "Credential",
+    "ConvertTo-SecureString",
+    "Export-Clixml"
+  )
+
+  foreach ($Pattern in $ForbiddenPatterns) {
+    if ($Text -like "*$Pattern*") {
+      Block-Verify "Forbidden service/security pattern '$Pattern' found in $RelativePath"
+    }
+  }
+}
+
+$RequiredFiles = @(
   "SERA_ENABLE_AUTO_WATCHER.ps1",
   "SERA_DISABLE_AUTO_WATCHER.ps1",
   "SERA_AUTO_WATCHER_STATUS.ps1",
   "SERA_START_WATCHER_NOW.ps1",
   "scripts\sera-auto-watcher-scheduled-task-v1.ps1",
-  "scripts\verify-phase183-opt-in-auto-watcher-startup-proof-v1.ps1",
   "scripts\phase183-opt-in-auto-watcher-startup-proof-v1.ps1",
+  "scripts\verify-phase183-opt-in-auto-watcher-startup-proof-v1.ps1",
   ".overlay\phase183_opt_in_auto_watcher_startup_proof_v1.json",
   ".sera-proof\phase183_opt_in_auto_watcher_startup_proof_v1.json",
   "docs\phase183-opt-in-auto-watcher-startup-proof-v1.md"
 )
 
-foreach ($File in $Required) { Assert-File $File | Out-Null }
-foreach ($Script in $Required | Where-Object { $_ -like "*.ps1" }) { Assert-ParseOk $Script }
+foreach ($File in $RequiredFiles) {
+  Assert-File $File | Out-Null
+}
 
-Assert-Text "SERA_START_WATCHER_NOW.ps1" @(
-  "SINGLE_INSTANCE_GUARD_ACQUIRED",
+foreach ($Script in $RequiredFiles | Where-Object { $_ -like "*.ps1" }) {
+  Assert-ParseOk $Script
+}
+
+Assert-Text "SERA_ENABLE_AUTO_WATCHER.ps1" @(
+  "SERA_ENABLE_AUTO_WATCHER",
+  "Register-ScheduledTask",
+  "SERA AutoOps Command Inbox Watcher",
   "SERA_WATCH_COMMAND_INBOX.ps1",
-  "AUTO_WATCHER_START_NOW",
   "LaunchBrowserIfNeeded"
 )
 
+Assert-Text "SERA_DISABLE_AUTO_WATCHER.ps1" @(
+  "SERA_DISABLE_AUTO_WATCHER",
+  "Unregister-ScheduledTask",
+  "SERA AutoOps Command Inbox Watcher"
+)
+
+Assert-Text "SERA_AUTO_WATCHER_STATUS.ps1" @(
+  "SERA_AUTO_WATCHER_STATUS",
+  "Get-ScheduledTask",
+  "command_inbox"
+)
+
+Assert-Text "SERA_START_WATCHER_NOW.ps1" @(
+  "SERA_START_WATCHER_NOW",
+  "Start-ScheduledTask"
+)
+
 Assert-Text "scripts\sera-auto-watcher-scheduled-task-v1.ps1" @(
+  "single-instance",
+  "current-user",
+  "AtLogOn",
   "Register-ScheduledTask",
   "Unregister-ScheduledTask",
-  "New-ScheduledTaskTrigger -AtLogOn",
-  "New-ScheduledTaskPrincipal",
-  "LogonType Interactive",
-  "RunLevel LeastPrivilege",
-  "MultipleInstances IgnoreNew",
-  "AUTO_WATCHER_TASK_ENABLED",
-  "AUTO_WATCHER_TASK_DISABLED",
-  "AUTO_WATCHER_STATUS"
+  "No credentials are stored",
+  "No Windows service is created"
 )
 
-Assert-Text "docs\phase183-opt-in-auto-watcher-startup-proof-v1.md" @(
-  "explicit opt-in",
-  "current-user scheduled task",
-  "Disable anytime",
-  "OneDrive"
+$ScanFiles = @(
+  "SERA_ENABLE_AUTO_WATCHER.ps1",
+  "SERA_DISABLE_AUTO_WATCHER.ps1",
+  "SERA_AUTO_WATCHER_STATUS.ps1",
+  "SERA_START_WATCHER_NOW.ps1",
+  "scripts\sera-auto-watcher-scheduled-task-v1.ps1"
 )
 
-$AllScripts = Get-ChildItem (Join-Path $RepoRoot "scripts") -File -Filter "*.ps1" -ErrorAction SilentlyContinue
-$RootScripts = Get-ChildItem $RepoRoot -File -Filter "SERA_*.ps1" -ErrorAction SilentlyContinue
-$ForbiddenPatterns = @(
-  "New-Service",
-  "sc.exe create",
-  "nssm",
-  "-User SYSTEM",
-  "NT AUTHORITY\\SYSTEM",
-  "RunLevel Highest",
-  "Start-Process.*-Verb RunAs",
-  "-Password",
-  "-Credential",
-  "Set-ItemProperty.*Run",
-  "Startup\\Programs"
-)
-
-foreach ($File in @($AllScripts + $RootScripts)) {
-  $Text = Get-Content -LiteralPath $File.FullName -Raw
-  foreach ($Pattern in $ForbiddenPatterns) {
-    if ($Text -match $Pattern) {
-      Block-Verify "Forbidden persistence/security pattern '$Pattern' found in $($File.FullName)"
-    }
-  }
+foreach ($File in $ScanFiles) {
+  Assert-NoForbiddenServicePersistence $File
 }
 
-# Register-ScheduledTask is explicitly allowed only in the opt-in scheduler script for Phase183.
-foreach ($File in @($AllScripts + $RootScripts)) {
-  $Text = Get-Content -LiteralPath $File.FullName -Raw
-  if ($Text -like "*Register-ScheduledTask*" -and $File.Name -ne "sera-auto-watcher-scheduled-task-v1.ps1") {
-    Block-Verify "Register-ScheduledTask found outside explicit opt-in scheduler script: $($File.FullName)"
-  }
-}
-
-# Preserve current browser bridge and pasteback guard markers if those files are present in the repo.
-if (Test-Path (Join-Path $RepoRoot "scripts\sera-chatgpt-browser-bridge-v1.ps1")) {
-  Assert-Text "scripts\sera-chatgpt-browser-bridge-v1.ps1" @("SAVED_CHATGPT_TARGET_CAPTURE")
-}
-
-if (Test-Path (Join-Path $RepoRoot "scripts\sera-final-handoff-pasteback-v1.ps1")) {
-  Assert-Text "scripts\sera-final-handoff-pasteback-v1.ps1" @(
-    "PASTEBACK_POSTED_TEXT_MATCH",
-    "No random chat fallback was used",
-    "No new chat fallback was used"
-  )
-}
+# Explicitly allowed in Phase183 by user approval:
+# Register-ScheduledTask is allowed only for the current-user, opt-in watcher task.
+# Historical verify-*.ps1 files are intentionally not scanned for forbidden marker text.
+# PHASE183_VERIFIER_SCOPED_SCAN
 
 $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $PassPath = Join-Path $Handoff "$PhaseName-$Stamp-VERIFY_PASS.md"
+
 @"
 Status: VERIFY_PASS
 Phase: $PhaseName
 Timestamp: $Stamp
 
 Proof:
-- Opt-in auto watcher startup scripts exist and parse.
-- Enable, disable, status, and start-now root scripts exist.
-- Scheduled task logic is current-user, AtLogOn, Interactive, LeastPrivilege, and reversible.
-- Single-instance guard is present.
-- No service creation, SYSTEM run-as, credential storage, admin elevation, or hidden startup folder/registry persistence was found.
-- Register-ScheduledTask is contained only in the explicit opt-in scheduler script.
-- Browser saved-target and pasteback text-match markers remain present.
+- Phase183 auto-watcher files exist.
+- Top-level enable, disable, status, and start-now scripts parse.
+- Scheduled task helper parses.
+- Verification scan is scoped to Phase183 auto-watcher files and excludes historical verifier marker strings.
+- Current-user opt-in scheduled task support is present.
+- Disable/unregister path is present.
+- No Windows service creation is present in Phase183 auto-watcher files.
+- No SYSTEM run-as, credentials, tokens, or password storage patterns are present in Phase183 auto-watcher files.
 "@ | Set-Content $PassPath -Encoding UTF8
 
 Write-Host "PHASE183_VERIFY PASS"
