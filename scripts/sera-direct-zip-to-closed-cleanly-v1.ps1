@@ -1,343 +1,257 @@
 param(
-  [string]$RepoRoot = ".",
+  [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path,
   [string]$AutoOpsRoot = "$env:USERPROFILE\OneDrive\SERA-AutoOps",
+
   [string]$ZipPath,
-  [string]$Phase,
+  [string]$ZipFullPath,
+  [string]$Zip,
+  [string]$OverlayZipPath,
+  [string]$OverlayZipFullPath,
+  [string]$OverlayZip,
+
+  [string]$ExpectedFilename,
+  [string]$ExpectedZipFilename,
+
   [string]$PhaseSlug,
   [string]$PhaseName,
+  [string]$PhaseToken,
+  [int]$Phase,
   [string]$Branch,
   [string]$TagName,
-  [string]$Verifier,
-  [string]$QaScript
+
+  [switch]$SavedChatGptTargetOnly,
+
+  [Parameter(ValueFromRemainingArguments = $true)]
+  [string[]]$RemainingArgs
 )
 
 $ErrorActionPreference = "Stop"
 
-$RepoRoot = [IO.Path]::GetFullPath($RepoRoot)
-Set-Location $RepoRoot
+$Downloads13 = Join-Path $AutoOpsRoot "13_chatgpt_downloads"
+New-Item -ItemType Directory -Force $Downloads13 | Out-Null
 
-$Handoff = Join-Path $AutoOpsRoot "06_handoff"
-New-Item -ItemType Directory -Force $Handoff | Out-Null
-
-function Write-Step {
-  param([string]$Message)
-  Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
-}
-
-function Get-PhaseSlugFromZip {
-  param([string]$Path)
-  $Name = [IO.Path]::GetFileName($Path)
-  $Slug = $Name -replace "^s\.e\.r\.a_", ""
-  $Slug = $Slug -replace "_overlay\.zip$", ""
-  return $Slug
-}
-
-function Convert-SlugToTagTail {
+function Convert-SlugToBranchTail {
   param([string]$Slug)
-  $Tail = $Slug -replace "^phase\d+_", ""
-  return ($Tail -replace "_", "-")
+  return ($Slug -replace "_", "-")
 }
 
-if (!$PhaseSlug -and $ZipPath) {
-  $PhaseSlug = Get-PhaseSlugFromZip -Path $ZipPath
-}
+function Convert-SlugToTagName {
+  param([string]$Slug)
 
-if (!$PhaseName -and $PhaseSlug) {
-  $PhaseName = "s.e.r.a_${PhaseSlug}_overlay"
-}
+  $Token = Convert-SlugToBranchTail -Slug $Slug
 
-if (!$Phase -and $PhaseSlug) {
-  $m = [regex]::Match($PhaseSlug, "^phase(\d+)_")
-  if ($m.Success) { $Phase = $m.Groups[1].Value }
-}
-
-if (!$Branch -and $PhaseSlug) {
-  $Branch = "work/" + (Convert-SlugToTagTail -Slug $PhaseSlug)
-}
-
-if (!$TagName -and $PhaseSlug) {
-  $TagName = "phase-" + (Convert-SlugToTagTail -Slug $PhaseSlug)
-}
-
-if (!$Verifier -and $PhaseSlug) {
-  $Verifier = "scripts\verify-" + (Convert-SlugToTagTail -Slug $PhaseSlug) + ".ps1"
-}
-
-if (!$QaScript -and $PhaseSlug) {
-  $QaScript = "scripts\" + (Convert-SlugToTagTail -Slug $PhaseSlug) + ".ps1"
-}
-
-function Run-Git {
-  param(
-    [string]$Label,
-    [string[]]$ArgList,
-    [switch]$AllowFail
-  )
-
-  Write-Step "RUN: git $($ArgList -join ' ')"
-  & git @ArgList
-  $Code = $LASTEXITCODE
-
-  if ($Code -ne 0 -and -not $AllowFail) {
-    throw "$Label failed with exit $Code"
+  if ($Token -match "^phase(\d+)-(.+)$") {
+    return "phase-$($Matches[1])-$($Matches[2])"
   }
 
-  return $Code
+  return "phase-$Token"
 }
 
-function Repair-NestedOverlayPaths {
-  param([string]$Root)
+$Expected = [string]$ExpectedFilename
 
-  $Pairs = @(
-    @{ Nested = ".overlay\.overlay"; Target = ".overlay" },
-    @{ Nested = ".sera-proof\.sera-proof"; Target = ".sera-proof" },
-    @{ Nested = "docs\docs"; Target = "docs" },
-    @{ Nested = "scripts\scripts"; Target = "scripts" }
+if ([string]::IsNullOrWhiteSpace($Expected)) {
+  $Expected = [string]$ExpectedZipFilename
+}
+
+if ([string]::IsNullOrWhiteSpace($Expected) -and -not [string]::IsNullOrWhiteSpace($PhaseSlug)) {
+  $Expected = "s.e.r.a_{0}_overlay.zip" -f $PhaseSlug
+}
+
+if ([string]::IsNullOrWhiteSpace($PhaseToken) -and -not [string]::IsNullOrWhiteSpace($PhaseSlug)) {
+  $PhaseToken = Convert-SlugToBranchTail -Slug $PhaseSlug
+}
+
+if ([string]::IsNullOrWhiteSpace($Branch) -and -not [string]::IsNullOrWhiteSpace($PhaseSlug)) {
+  $Branch = "work/" + (Convert-SlugToBranchTail -Slug $PhaseSlug)
+}
+
+if ([string]::IsNullOrWhiteSpace($TagName) -and -not [string]::IsNullOrWhiteSpace($PhaseSlug)) {
+  $TagName = Convert-SlugToTagName -Slug $PhaseSlug
+}
+
+$Kebab = ""
+if (-not [string]::IsNullOrWhiteSpace($PhaseSlug)) {
+  $Kebab = Convert-SlugToBranchTail -Slug $PhaseSlug
+}
+
+$VerifierRelative = ""
+$QaRelative = ""
+
+if (-not [string]::IsNullOrWhiteSpace($Kebab)) {
+  $VerifierRelative = "scripts\verify-$Kebab.ps1"
+  $QaRelative = "scripts\$Kebab.ps1"
+}
+
+$VerifierFull = ""
+$QaFull = ""
+
+if ($VerifierRelative) {
+  $VerifierFull = Join-Path $RepoRoot $VerifierRelative
+}
+
+if ($QaRelative) {
+  $QaFull = Join-Path $RepoRoot $QaRelative
+}
+
+$CandidateValues = @(
+  $ZipPath,
+  $ZipFullPath,
+  $Zip,
+  $OverlayZipPath,
+  $OverlayZipFullPath,
+  $OverlayZip
+) | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) }
+
+$OriginalZipArgumentWasBlank = (@($CandidateValues).Count -eq 0)
+
+function Resolve-SeraOverlayZip {
+  param(
+    [string[]]$Candidates,
+    [string]$ExpectedName,
+    [string]$PhaseSlugValue
   )
 
-  foreach ($Pair in $Pairs) {
-    $NestedPath = Join-Path $Root $Pair.Nested
-    $TargetPath = Join-Path $Root $Pair.Target
+  foreach ($Candidate in @($Candidates)) {
+    $Value = [string]$Candidate
 
-    if (!(Test-Path $NestedPath)) {
-      continue
+    if ([IO.Path]::IsPathRooted($Value) -and (Test-Path $Value)) {
+      Write-Host "ZIP_PATH_RESOLVED_FROM_ARGUMENT $Value"
+      return (Resolve-Path $Value).Path
     }
 
-    New-Item -ItemType Directory -Force $TargetPath | Out-Null
+    $CandidateInDownloads = Join-Path $Downloads13 $Value
+    if (Test-Path $CandidateInDownloads) {
+      Write-Host "ZIP_PATH_RESOLVED_FROM_DOWNLOADS13 $CandidateInDownloads"
+      return (Resolve-Path $CandidateInDownloads).Path
+    }
+  }
 
-    Get-ChildItem -LiteralPath $NestedPath -Force | ForEach-Object {
-      $Destination = Join-Path $TargetPath $_.Name
+  if (-not [string]::IsNullOrWhiteSpace($ExpectedName)) {
+    $ExpectedPath = Join-Path $Downloads13 $ExpectedName
 
-      if (Test-Path $Destination) {
-        Remove-Item $Destination -Recurse -Force
-      }
-
-      Move-Item -LiteralPath $_.FullName -Destination $Destination -Force
-      Write-Step "FLATTENED $($Pair.Nested)\$($_.Name) -> $($Pair.Target)\$($_.Name)"
+    if (Test-Path $ExpectedPath) {
+      Write-Host "ZIP_PATH_RESOLVED_FROM_EXPECTED_FILENAME $ExpectedPath"
+      return (Resolve-Path $ExpectedPath).Path
     }
 
-    Remove-Item $NestedPath -Recurse -Force
+    $FreshExact = Get-ChildItem $Downloads13 -File -Filter $ExpectedName -ErrorAction SilentlyContinue |
+      Sort-Object LastWriteTime -Descending |
+      Select-Object -First 1
+
+    if ($FreshExact) {
+      Write-Host "ZIP_PATH_RESOLVED_FROM_DOWNLOADS13 $($FreshExact.FullName)"
+      return $FreshExact.FullName
+    }
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($PhaseSlugValue)) {
+    $FreshBySlug = Get-ChildItem $Downloads13 -File -Filter "*$PhaseSlugValue*.zip" -ErrorAction SilentlyContinue |
+      Sort-Object LastWriteTime -Descending |
+      Select-Object -First 1
+
+    if ($FreshBySlug) {
+      Write-Host "ZIP_PATH_RESOLVED_FROM_DOWNLOADS13 $($FreshBySlug.FullName)"
+      return $FreshBySlug.FullName
+    }
+  }
+
+  $Searched = @($Downloads13, $RepoRoot) -join "; "
+  throw "ZIP missing: expectedFilename=$ExpectedName phaseSlug=$PhaseSlugValue searchedDirectories=$Searched originalZipArgument=$($Candidates -join ',')"
+}
+
+$ResolvedZip = Resolve-SeraOverlayZip -Candidates $CandidateValues -ExpectedName $Expected -PhaseSlugValue $PhaseSlug
+
+if ($OriginalZipArgumentWasBlank) {
+  Write-Host "ZIP_PATH_ARGUMENT_WAS_BLANK_RECOVERED $ResolvedZip"
+}
+
+if ([string]::IsNullOrWhiteSpace($Expected)) {
+  $Expected = Split-Path $ResolvedZip -Leaf
+}
+
+$LegacyCandidates = @(
+  (Join-Path $PSScriptRoot "sera-direct-zip-to-closed-cleanly-v1.pre_phase186_realfix.ps1"),
+  (Join-Path $PSScriptRoot "sera-direct-zip-to-closed-cleanly-v1.pre_phase187_phase_token_fix.ps1"),
+  (Join-Path $PSScriptRoot "sera-direct-zip-to-closed-cleanly-v1.pre_phase185.ps1")
+)
+
+$Legacy = $null
+foreach ($Candidate in $LegacyCandidates) {
+  if (Test-Path $Candidate) {
+    $Legacy = $Candidate
+    break
   }
 }
 
-function Assert-ParseOk {
-  param([string]$Path)
-
-  if (!(Test-Path $Path)) {
-    throw "Missing required script: $Path"
-  }
-
-  $Tokens = $null
-  $Errors = $null
-  [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref]$Tokens, [ref]$Errors) | Out-Null
-
-  if ($Errors -and $Errors.Count -gt 0) {
-    throw "Parse failed: $Path :: $($Errors[0].Message)"
-  }
+if (!$Legacy) {
+  throw "Legacy direct closeout missing. Checked: $($LegacyCandidates -join '; ')"
 }
 
-function Get-FreshHandoff {
-  param(
-    [string]$Pattern,
-    [datetime]$Since
-  )
+$CommandInfo = Get-Command $Legacy
+$InvokeParams = @{}
 
-  return Get-ChildItem $Handoff -File -Filter $Pattern -ErrorAction SilentlyContinue |
-    Where-Object { $_.LastWriteTime -ge $Since.AddSeconds(-5) } |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
+$PossibleParams = @{
+  RepoRoot = $RepoRoot
+  AutoOpsRoot = $AutoOpsRoot
+
+  ZipPath = $ResolvedZip
+  ZipFullPath = $ResolvedZip
+  Zip = $ResolvedZip
+  OverlayZipPath = $ResolvedZip
+  OverlayZipFullPath = $ResolvedZip
+  OverlayZip = $ResolvedZip
+
+  ExpectedFilename = $Expected
+  ExpectedZipFilename = $Expected
+
+  PhaseSlug = $PhaseSlug
+  PhaseName = $PhaseName
+  PhaseToken = $PhaseToken
+  Phase = $Phase
+  Branch = $Branch
+  TagName = $TagName
+
+  VerifierScript = $VerifierRelative
+  VerifierScriptPath = $VerifierFull
+  VerifierPath = $VerifierFull
+  VerifyScript = $VerifierRelative
+  VerifyScriptPath = $VerifierFull
+  VerifyPath = $VerifierFull
+
+  QaScript = $QaRelative
+  QaScriptPath = $QaFull
+  QaPath = $QaFull
+  QualityGateScript = $QaRelative
+  QualityGateScriptPath = $QaFull
 }
 
-function Invoke-FinalPasteback {
-  param([string]$FinalHandoffPath)
-
-  $Pasteback = Join-Path $RepoRoot "scripts\sera-final-handoff-pasteback-v1.ps1"
-
-  if (!(Test-Path $Pasteback)) {
-    Write-Step "PASTEBACK_SKIPPED_SAFE helper_missing=$Pasteback"
-    return
-  }
-
-  Assert-ParseOk $Pasteback
-
-  powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Pasteback `
-    -RepoRoot $RepoRoot `
-    -AutoOpsRoot $AutoOpsRoot `
-    -HandoffPath $FinalHandoffPath `
-    -ExpectedFilename ([IO.Path]::GetFileName($ZipPath)) `
-    -PhaseSlug $PhaseSlug `
-    -SavedChatGptTargetOnly
-
-  $Code = $LASTEXITCODE
-  if ($Code -ne 0) {
-    Write-Step "PASTEBACK_BLOCKED exit=$Code"
-  } else {
-    Write-Step "PASTEBACK_HELPER_EXITED_CLEANLY"
+foreach ($Key in $PossibleParams.Keys) {
+  if ($CommandInfo.Parameters.ContainsKey($Key) -and -not [string]::IsNullOrWhiteSpace([string]$PossibleParams[$Key])) {
+    $InvokeParams[$Key] = $PossibleParams[$Key]
   }
 }
 
-function Write-Blocked {
-  param([string]$Reason)
-
-  $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-  $Path = Join-Path $Handoff "$PhaseName-$Stamp-BLOCKED.md"
-
-  @"
-Status: BLOCKED
-Phase: $PhaseName
-Branch: $Branch
-Timestamp: $Stamp
-Reason: $Reason
-
-Gate result:
-Merge was not attempted.
-QA must not run after verifier failure.
-CLOSED_CLEANLY was not written.
-"@ | Set-Content $Path -Encoding UTF8
-
-  Get-Content $Path -Raw | Set-Clipboard
-  Write-Host "BLOCKED_HANDOFF: $Path"
-
-  Invoke-FinalPasteback -FinalHandoffPath $Path
-  exit 1
+if ($SavedChatGptTargetOnly -and $CommandInfo.Parameters.ContainsKey("SavedChatGptTargetOnly")) {
+  $InvokeParams["SavedChatGptTargetOnly"] = $true
 }
 
-function Invoke-RequiredScript {
-  param(
-    [string]$Role,
-    [string]$Path
-  )
+Write-Host "DIRECT_CLOSEOUT_WRAPPER_INVOKE legacy=$Legacy"
+Write-Host "DIRECT_CLOSEOUT_WRAPPER_ZIP $ResolvedZip"
+Write-Host "DIRECT_CLOSEOUT_WRAPPER_EXPECTED_FILENAME $Expected"
+Write-Host "DIRECT_CLOSEOUT_WRAPPER_PHASE_TOKEN $PhaseToken"
+Write-Host "DIRECT_CLOSEOUT_WRAPPER_VERIFIER $VerifierRelative"
+Write-Host "DIRECT_CLOSEOUT_WRAPPER_QA $QaRelative"
 
-  if (!(Test-Path $Path)) {
-    Write-Blocked "Required $Role script missing: $Path"
-  }
+& $Legacy @InvokeParams
 
-  Assert-ParseOk $Path
-  Write-Step "INVOKE_REQUIRED_SCRIPT role=$Role path=$Path"
+$Code = $LASTEXITCODE
+if ($null -eq $Code) { $Code = 0 }
+exit $Code
 
-  powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Path -RepoRoot $RepoRoot -AutoOpsRoot $AutoOpsRoot
-  $Code = $LASTEXITCODE
-
-  if ($Code -ne 0) {
-    Write-Blocked "Required ${Role} script failed with exit ${Code}: $Path"
-  }
-}
-
-if ($ZipPath -and -not [IO.Path]::IsPathRooted($ZipPath)) {
-  $CandidateZip = Join-Path (Join-Path $AutoOpsRoot "13_chatgpt_downloads") $ZipPath
-  if (Test-Path $CandidateZip) {
-    $ZipPath = $CandidateZip
-    Write-Step "PHASE181_ZIPPATH_FILENAME_RESOLUTION $ZipPath"
-  }
-}
-
-# PHASE181_ZIPPATH_FILENAME_RESOLUTION marker.
-if (!$ZipPath -or !(Test-Path $ZipPath)) {
-  Write-Blocked "ZIP missing: $ZipPath"
-}
-
-Write-Step "RUN_DIRECT_ZIP_CLOSEOUT phase=$Phase branch=$Branch tag=$TagName"
-
-Run-Git "git fetch" @("fetch","origin","--tags")
-Run-Git "git switch main" @("switch","main")
-Run-Git "git reset main" @("reset","--hard","origin/main")
-Run-Git "git switch branch" @("switch","-C",$Branch)
-
-$Temp = Join-Path $env:TEMP "sera_phase_closeout_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
-if (Test-Path $Temp) {
-  Remove-Item $Temp -Recurse -Force
-}
-
-New-Item -ItemType Directory -Force $Temp | Out-Null
-Expand-Archive -LiteralPath $ZipPath -DestinationPath $Temp -Force
-
-$OverlayRoot = Join-Path $Temp "repo"
-if (!(Test-Path $OverlayRoot)) {
-  Write-Blocked "Overlay ZIP does not contain repo/ root."
-}
-
-Get-ChildItem -LiteralPath $OverlayRoot -Force | ForEach-Object {
-  Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $RepoRoot $_.Name) -Recurse -Force
-}
-
-Remove-Item $Temp -Recurse -Force
-
-Repair-NestedOverlayPaths -Root $RepoRoot
-
-Run-Git "git add" @("add","--all")
-$Status = & git status --porcelain
-if ($Status) {
-  Run-Git "git commit" @("commit","-m","feat: add $PhaseName")
-  Run-Git "git push branch" @("push","-u","origin",$Branch,"--force")
-}
-
-$VerifierPath = Join-Path $RepoRoot $Verifier
-$QaPath = Join-Path $RepoRoot $QaScript
-
-$VerifierStartedAt = Get-Date
-Invoke-RequiredScript -Role "verifier" -Path $VerifierPath
-$VerifyPass = Get-FreshHandoff -Pattern "$PhaseName-*VERIFY_PASS.md" -Since $VerifierStartedAt
-
-if (!$VerifyPass) {
-  Write-Blocked "Fresh VERIFY_PASS handoff not found after verifier."
-}
-
-$QaStartedAt = Get-Date
-Invoke-RequiredScript -Role "QA" -Path $QaPath
-$Pass = Get-FreshHandoff -Pattern "$PhaseName-*PASS_GUARANTEED.md" -Since $QaStartedAt
-
-if (!$Pass) {
-  Write-Blocked "Fresh PASS_GUARANTEED handoff not found after QA."
-}
-
-Run-Git "git switch main" @("switch","main")
-Run-Git "git reset main" @("reset","--hard","origin/main")
-Run-Git "git merge" @("merge","--no-ff",$Branch,"-m","merge: close $(Convert-SlugToTagTail -Slug $PhaseSlug)")
-Run-Git "git tag" @("tag","-f",$TagName)
-Run-Git "git push main" @("push","origin","main")
-Run-Git "git push tag" @("push","origin",$TagName,"--force")
-Run-Git "git delete remote branch" @("push","origin",":$Branch") -AllowFail
-Run-Git "git delete local branch" @("branch","-D",$Branch) -AllowFail
-
-$CloseStamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$ClosedPath = Join-Path $Handoff "$PhaseName-$CloseStamp-CLOSED_CLEANLY.md"
-
-@"
-Status: CLOSED_CLEANLY
-Phase: $PhaseName
-Branch: main
-Timestamp: $CloseStamp
-Tag: $TagName
-
-Result:
-Phase180 closed cleanly after binding final handoff pasteback to the saved ChatGPT target.
-
-Proof:
-- Saved ChatGPT target metadata was captured during prompt submission.
-- Exact Phase180 ZIP was downloaded.
-- Direct closeout flattened nested overlay paths.
-- Verifier passed.
-- QA produced fresh PASS_GUARANTEED.
-- Safe merge/tag/push/cleanup completed.
-- Final current-phase handoff was copied.
-- Pasteback helper was invoked after final handoff copy.
-- Pasteback only targets the exact saved ChatGPT conversation.
-- No random chat fallback or new chat fallback was allowed.
-"@ | Set-Content $ClosedPath -Encoding UTF8
-
-Get-Content $ClosedPath -Raw | Set-Clipboard
-Invoke-FinalPasteback -FinalHandoffPath $ClosedPath
-
-Write-Host ""
-Write-Host "=== DIRECT ZIP CLOSEOUT CLOSED_CLEANLY CONFIRMED ==="
-Write-Host $ClosedPath
-
-# Fresh VERIFY_PASS marker.
-# Fresh PASS_GUARANTEED marker.
-# Invoke-RequiredScript marker.
-# sera-final-handoff-pasteback-v1.ps1 marker.
-# PHASE180_SCALAR_TIMESTAMP_FIX marker.
-
-# PHASE181_PASTEBACK_POSTED_REQUIRED_BEFORE_CLOSED_CLEANLY marker.
-# VERIFY_PASS and PASS_GUARANTEED are intermediate handoffs and must not be copied as final results marker.
-# PASTEBACK_POSTED proof must be current-phase only marker.
+# PHASE187_COMPAT_FIX: PhaseToken is passed as a named parameter, never as verifier script path.
+# PHASE187_COMPAT_FIX: VerifierScript is derived from PhaseSlug.
+# PHASE187_COMPAT_FIX: QaScript is derived from PhaseSlug.
+# PHASE187_COMPAT_FIX: ZIP_PATH_ARGUMENT_WAS_BLANK_RECOVERED
+# PHASE187_COMPAT_FIX: ZIP_PATH_RESOLVED_FROM_EXPECTED_FILENAME
+# PHASE187_COMPAT_FIX: ZIP_PATH_RESOLVED_FROM_DOWNLOADS13
+# PHASE187_COMPAT_FIX: expectedFilename and searchedDirectories included in ZIP missing errors.
