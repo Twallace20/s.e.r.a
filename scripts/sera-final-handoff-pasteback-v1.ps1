@@ -41,9 +41,9 @@ function Get-PhaseNameFromHandoff {
 }
 
 function Get-PhaseSlugFromPhaseName {
-  param([string]$PhaseName)
+  param([string]$Name)
 
-  $Out = $PhaseName
+  $Out = $Name
   $Out = $Out -replace "^s\.e\.r\.a_", ""
   $Out = $Out -replace "_overlay$", ""
   return $Out
@@ -56,25 +56,25 @@ function Write-PastebackResult {
     [string]$TargetUrl = ""
   )
 
-  $PhaseName = Get-PhaseNameFromHandoff -Path $HandoffPath
+  $Name = Get-PhaseNameFromHandoff -Path $HandoffPath
   $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-  $Path = Join-Path $HandoffRoot "$PhaseName-$Stamp-$Status.md"
+  $Path = Join-Path $HandoffRoot "$Name-$Stamp-$Status.md"
 
-  @"
-Status: $Status
-Phase: $PhaseName
-Timestamp: $Stamp
-TargetUrl: $TargetUrl
+  $Lines = @(
+    "Status: $Status",
+    "Phase: $Name",
+    "Timestamp: $Stamp",
+    "TargetUrl: $TargetUrl",
+    "",
+    "Reason:",
+    $Reason,
+    "",
+    "Final handoff:",
+    $HandoffPath
+  )
 
-Reason:
-$Reason
-
-Final handoff:
-$HandoffPath
-"@ | Set-Content $Path -Encoding UTF8
-
+  Set-Content -LiteralPath $Path -Encoding UTF8 -Value $Lines
   Write-Step "$Status $Path"
-  Write-Host $Path
   return $Path
 }
 
@@ -94,10 +94,6 @@ function Resolve-ExpectedFilename {
     if ($Leaf -match "^(s\.e\.r\.a_.+?_overlay)-\d{8}_\d{6}-") {
       $Expected = "$($Matches[1]).zip"
     }
-  }
-
-  if ([string]::IsNullOrWhiteSpace($Expected)) {
-    $Expected = "unknown_expected_filename.zip"
   }
 
   return $Expected
@@ -133,22 +129,19 @@ function Test-RetryablePastebackReason {
 
 function Get-LatestPastebackFile {
   param(
-    [string]$PhaseName,
+    [string]$Name,
     [string]$Suffix,
     [datetime]$Since
   )
 
-  return Get-ChildItem $HandoffRoot -File -Filter "$PhaseName-*$Suffix.md" -ErrorAction SilentlyContinue |
+  return Get-ChildItem $HandoffRoot -File -Filter "$Name-*$Suffix.md" -ErrorAction SilentlyContinue |
     Where-Object { $_.LastWriteTime -ge $Since.AddSeconds(-5) } |
     Sort-Object LastWriteTime -Descending |
     Select-Object -First 1
 }
 
 function Invoke-TargetFocusBestEffort {
-  param(
-    [string]$PhaseSlugValue,
-    [string]$Expected
-  )
+  param([string]$PhaseSlugValue)
 
   try {
     $TargetRoot = Join-Path $AutoOpsRoot "00_control_center\chatgpt_targets"
@@ -160,12 +153,13 @@ function Invoke-TargetFocusBestEffort {
 
     $Target = Get-Content -LiteralPath $TargetPath -Raw | ConvertFrom-Json
     $TargetId = [string]$Target.targetId
+
     if ([string]::IsNullOrWhiteSpace($TargetId)) {
       return
     }
 
     Invoke-RestMethod -Uri "$BrowserDebugUrl/json/activate/$TargetId" -TimeoutSec 3 | Out-Null
-    Write-Step "PASTEBACK_TARGET_REFOCUSED targetId=$TargetId expected=$Expected"
+    Write-Step "PASTEBACK_TARGET_REFOCUSED targetId=$TargetId"
     Start-Sleep -Seconds 2
   } catch {
     Write-Step "PASTEBACK_TARGET_REFOCUS_SKIPPED reason=$($_.Exception.Message)"
@@ -174,9 +168,9 @@ function Invoke-TargetFocusBestEffort {
 
 function Get-LegacyPastebackScript {
   $Candidates = @(
+    (Join-Path $PSScriptRoot "sera-final-handoff-pasteback-v1.pre_phase187_reliability.ps1"),
     (Join-Path $PSScriptRoot "sera-final-handoff-pasteback-v1.pre_phase186_realfix.ps1"),
-    (Join-Path $PSScriptRoot "sera-final-handoff-pasteback-v1.pre_phase185.ps1"),
-    (Join-Path $PSScriptRoot "sera-final-handoff-pasteback-v1.pre_phase187_reliability.ps1")
+    (Join-Path $PSScriptRoot "sera-final-handoff-pasteback-v1.pre_phase185.ps1")
   )
 
   foreach ($Candidate in $Candidates) {
@@ -186,6 +180,54 @@ function Get-LegacyPastebackScript {
   }
 
   throw "Legacy pasteback helper missing. Checked: $($Candidates -join '; ')"
+}
+
+function Invoke-LegacyPasteback {
+  param(
+    [string]$Legacy,
+    [string]$Expected
+  )
+
+  $Info = Get-Command $Legacy
+  $Values = @{
+    RepoRoot = $RepoRoot
+    AutoOpsRoot = $AutoOpsRoot
+    HandoffPath = $HandoffPath
+    FinalHandoffPath = $HandoffPath
+    PhaseSlug = $PhaseSlug
+    ExpectedFilename = $Expected
+    ExpectedZipFilename = $Expected
+    BrowserDebugUrl = $BrowserDebugUrl
+  }
+
+  $ArgList = @(
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-File", $Legacy
+  )
+
+  foreach ($Key in ($Values.Keys | Sort-Object)) {
+    if ($Info.Parameters.ContainsKey($Key) -and -not [string]::IsNullOrWhiteSpace([string]$Values[$Key])) {
+      $ArgList += "-$Key"
+      $ArgList += [string]$Values[$Key]
+    }
+  }
+
+  if (($SavedChatGptTargetOnly -or $RequireSavedChatGptTargetOnly) -and $Info.Parameters.ContainsKey("SavedChatGptTargetOnly")) {
+    $ArgList += "-SavedChatGptTargetOnly"
+  }
+
+  if ($RequireSavedChatGptTargetOnly -and $Info.Parameters.ContainsKey("RequireSavedChatGptTargetOnly")) {
+    $ArgList += "-RequireSavedChatGptTargetOnly"
+  }
+
+  & powershell.exe @ArgList
+  $Code = $LASTEXITCODE
+  if ($null -eq $Code) {
+    $Code = 0
+  }
+
+  return $Code
 }
 
 if (!$HandoffPath) {
@@ -204,9 +246,10 @@ if ($HandoffText -notmatch "Status:\s*(CLOSED_CLEANLY|BLOCKED)") {
   exit 0
 }
 
-$PhaseName = Get-PhaseNameFromHandoff -Path $HandoffPath
+$Name = Get-PhaseNameFromHandoff -Path $HandoffPath
+
 if (!$PhaseSlug) {
-  $PhaseSlug = Get-PhaseSlugFromPhaseName -PhaseName $PhaseName
+  $PhaseSlug = Get-PhaseSlugFromPhaseName -Name $Name
 }
 
 $Expected = Resolve-ExpectedFilename
@@ -216,39 +259,23 @@ $Legacy = Get-LegacyPastebackScript
 Write-Step "PASTEBACK_RELIABILITY_WRAPPER legacy=$Legacy"
 
 $LastReason = ""
+
 for ($Attempt = 1; $Attempt -le $MaxPastebackAttempts; $Attempt++) {
   $Started = Get-Date
 
   Write-Step "PASTEBACK_INTERNAL_RETRY_START attempt=$Attempt max=$MaxPastebackAttempts"
-  Invoke-TargetFocusBestEffort -PhaseSlugValue $PhaseSlug -Expected $Expected
+  Invoke-TargetFocusBestEffort -PhaseSlugValue $PhaseSlug
 
-  $ArgList = @(
-    "-NoProfile",
-    "-ExecutionPolicy", "Bypass",
-    "-File", $Legacy,
-    "-RepoRoot", $RepoRoot,
-    "-AutoOpsRoot", $AutoOpsRoot,
-    "-HandoffPath", $HandoffPath,
-    "-PhaseSlug", $PhaseSlug,
-    "-ExpectedFilename", $Expected
-  )
+  $Code = Invoke-LegacyPasteback -Legacy $Legacy -Expected $Expected
 
-  if ($SavedChatGptTargetOnly -or $RequireSavedChatGptTargetOnly) {
-    $ArgList += "-SavedChatGptTargetOnly"
-  }
-
-  & powershell.exe @ArgList
-  $Code = $LASTEXITCODE
-  if ($null -eq $Code) { $Code = 0 }
-
-  $Posted = Get-LatestPastebackFile -PhaseName $PhaseName -Suffix "PASTEBACK_POSTED_TEXT_MATCH" -Since $Started
+  $Posted = Get-LatestPastebackFile -Name $Name -Suffix "PASTEBACK_POSTED_TEXT_MATCH" -Since $Started
   if ($Posted) {
     Write-Step "PASTEBACK_POSTED_TEXT_MATCH $($Posted.FullName)"
     Write-Host "PASTEBACK_POSTED_TEXT_MATCH_FOUND $($Posted.FullName)"
     exit 0
   }
 
-  $Blocked = Get-LatestPastebackFile -PhaseName $PhaseName -Suffix "PASTEBACK_BLOCKED" -Since $Started
+  $Blocked = Get-LatestPastebackFile -Name $Name -Suffix "PASTEBACK_BLOCKED" -Since $Started
   if ($Blocked) {
     $LastReason = Get-Content -LiteralPath $Blocked.FullName -Raw
     Write-Step "PASTEBACK_RETRYABLE_BLOCKED attempt=$Attempt file=$($Blocked.FullName)"
@@ -270,12 +297,8 @@ for ($Attempt = 1; $Attempt -le $MaxPastebackAttempts; $Attempt++) {
   }
 }
 
-Write-PastebackResult -Status "PASTEBACK_BLOCKED" -Reason @"
-Pasteback did not produce PASTEBACK_POSTED_TEXT_MATCH after $MaxPastebackAttempts internal attempts.
-
-Last reason:
-$LastReason
-"@
+$FinalReason = "Pasteback did not produce PASTEBACK_POSTED_TEXT_MATCH after $MaxPastebackAttempts internal attempts.`n`nLast reason:`n$LastReason"
+Write-PastebackResult -Status "PASTEBACK_BLOCKED" -Reason $FinalReason
 exit 1
 
 # PHASE187_MARKER: PASTEBACK_EXPECTED_FILENAME_RECOVERED
@@ -285,3 +308,4 @@ exit 1
 # PHASE187_MARKER: Promise was collected
 # PHASE187_MARKER: CDP returned no string value
 # PHASE187_MARKER: SavedChatGptTargetOnly
+# PHASE187_MARKER: dynamic legacy supported parameter invocation
