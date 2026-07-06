@@ -1,0 +1,37 @@
+{
+  "phase": 187,
+  "phaseSlug": "phase187_pasteback_reliability_watcher_continuity_v1",
+  "phaseName": "s.e.r.a_phase187_pasteback_reliability_watcher_continuity_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase187_pasteback_reliability_watcher_continuity_v1_overlay.zip",
+  "purpose": "Harness stability patch: watcher continuity, pasteback retry reliability, command JSON routing from downloads13, and command_inbox startup backlog processing.",
+  "supersedes": [
+    "phase187-true-no-rescue-phone-only-closed-cleanly-proof-v1",
+    "phase187-pasteback-reliability-watcher-continuity-v1-001",
+    "phase187-pasteback-reliability-watcher-continuity-v1-002"
+  ],
+  "safety": {
+    "newPersistence": false,
+    "usesExistingStartupFallbackOnly": true,
+    "windowsService": false,
+    "adminOnlyInstall": false,
+    "credentials": false,
+    "tokens": false,
+    "paidServices": false,
+    "dependencyInstalls": false,
+    "securitySettingChanges": false
+  },
+  "markers": [
+    "COMMAND_INBOX_BACKLOG_SCAN_START",
+    "COMMAND_INBOX_BACKLOG_COMMAND_FOUND",
+    "COMMAND_INBOX_BACKLOG_EMPTY",
+    "COMMAND_JSON_ROUTED_FROM_DOWNLOADS13",
+    "ROUTED_COMMAND_JSON_TO_INBOX",
+    "COMMAND_JSON_ROUTE_SKIPPED_DUPLICATE",
+    "COMMAND_JSON_ROUTE_REJECTED_NOT_COMMAND",
+    "WATCHER_RETURN_TO_WATCH_AFTER_RUN",
+    "PASTEBACK_EXPECTED_FILENAME_RECOVERED",
+    "PASTEBACK_INTERNAL_RETRY_START",
+    "PASTEBACK_RETRYABLE_BLOCKED",
+    "PASTEBACK_POSTED_TEXT_MATCH"
+  ]
+}

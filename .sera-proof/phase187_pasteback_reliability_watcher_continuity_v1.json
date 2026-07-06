@@ -1,0 +1,14 @@
+{
+  "status": "overlay_ready",
+  "phase": 187,
+  "phaseSlug": "phase187_pasteback_reliability_watcher_continuity_v1",
+  "claims": [
+    "This is a harness stability patch, not the final no-rescue proof.",
+    "It keeps the existing approved StartupFallback/runner model and adds no new persistence mechanism.",
+    "It patches command_inbox backlog processing for files that already exist before the watcher starts.",
+    "It routes safe autopilot-command-*.json files from 13_chatgpt_downloads to command_inbox.",
+    "It keeps the watcher process alive after blocked or failed command runs by returning to watch mode.",
+    "It adds internal pasteback retries around transient CDP/browser failures before blocking.",
+    "It preserves PASTEBACK_POSTED_TEXT_MATCH as the merge gate."
+  ]
+}
