@@ -124,7 +124,7 @@ function Invoke-RequiredScript {
   $EndedAt = Get-Date
 
   if ($Code -ne 0) {
-    $Reason = "Required $Role script failed with exit $Code: $Path"
+    $Reason = "Required $Role script failed with exit ${Code}: $Path"
     Write-BlockedHandoff -Reason $Reason | Out-Null
     throw $Reason
   }
@@ -254,3 +254,4 @@ Get-Content $ClosedPath -Raw | Set-Clipboard
 Write-Host ""
 Write-Host "=== DIRECT ZIP CLOSEOUT CLOSED_CLEANLY CONFIRMED ==="
 Write-Host $ClosedPath
+

@@ -166,3 +166,6 @@ if ($Exit -ne 0) {
 
 Write-Step "FULL_AUTO_LOOP_DONE"
 exit 0
+
+# PHASE176_CURRENT_HANDOFF_NOTE: Direct closeout must write and copy the current phase handoff; stale prior-phase handoffs are not valid closeout evidence.
+
