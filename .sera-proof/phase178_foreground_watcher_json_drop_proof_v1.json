@@ -1,0 +1,13 @@
+{
+  "phase": 178,
+  "phaseSlug": "phase178_foreground_watcher_json_drop_proof_v1",
+  "verificationIntent": "Verify that the Phase177 watcher and gate integrity changes are present and that this phase can close only after verifier and QA pass.",
+  "expectedProof": [
+    "SERA_WATCH_COMMAND_INBOX.ps1 is present",
+    "scripts/sera-command-inbox-foreground-watcher-v1.ps1 is present",
+    "Watcher invokes SERA_RUN_UPLOADED_JSON_LOOP.ps1 after command JSON detection",
+    "Direct closeout requires verifier pass, QA pass, and fresh PASS_GUARANTEED before merge",
+    "Router refuses stale prior-phase handoffs",
+    "No persistence mechanism is introduced"
+  ]
+}
