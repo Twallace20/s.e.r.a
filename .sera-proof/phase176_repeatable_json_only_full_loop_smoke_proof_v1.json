@@ -1,0 +1,15 @@
+{
+  "status": "PENDING_RUNTIME_PROOF",
+  "phase": 176,
+  "phaseName": "s.e.r.a_phase176_repeatable_json_only_full_loop_smoke_proof_v1_overlay",
+  "proofIntent": "Prove a repeatable full loop without manual bridge rewrites or closeout patches.",
+  "runtimeRequirements": [
+    "Prompt submitted by browser bridge",
+    "Real exact download control clicked",
+    "Expected ZIP downloaded into 13_chatgpt_downloads",
+    "Direct closeout invoked",
+    "Verifier passed before QA",
+    "QA created fresh PASS_GUARANTEED",
+    "Merge occurred only after fresh PASS_GUARANTEED"
+  ]
+}

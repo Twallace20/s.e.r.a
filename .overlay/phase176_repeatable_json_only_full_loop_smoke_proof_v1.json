@@ -1,0 +1,39 @@
+{
+  "phase": 176,
+  "phaseSlug": "phase176_repeatable_json_only_full_loop_smoke_proof_v1",
+  "phaseName": "s.e.r.a_phase176_repeatable_json_only_full_loop_smoke_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase176_repeatable_json_only_full_loop_smoke_proof_v1_overlay.zip",
+  "branch": "work/phase176-repeatable-json-only-full-loop-smoke-proof-v1",
+  "tag": "phase-176-repeatable-json-only-full-loop-smoke-proof-v1",
+  "purpose": "Repeatability smoke proof for the JSON-only full loop after Phase175 gate integrity enforcement.",
+  "safety": {
+    "noCredentials": true,
+    "noTokens": true,
+    "noPaidServices": true,
+    "noDependencyInstalls": true,
+    "noSecuritySettingChanges": true,
+    "noScheduledTaskEnablement": true,
+    "noLoginBootPersistence": true,
+    "noUncontrolledBrowserAutomation": true
+  },
+  "requiredProof": [
+    "REQUEST_READY",
+    "exact ZIP artifact download",
+    "ZIP_READY",
+    "direct ZIP closeout",
+    "nested overlay flattening remains active",
+    "verifier execution through Invoke-RequiredScript gate semantics",
+    "QA execution after verifier success only",
+    "fresh PASS_GUARANTEED after QA success",
+    "SAFE_AUTO_MERGE_AFTER_PASS_GUARANTEED",
+    "WAIT_ONLY_CLOSED",
+    "CLOSED_CLEANLY"
+  ],
+  "files": [
+    ".overlay/phase176_repeatable_json_only_full_loop_smoke_proof_v1.json",
+    ".sera-proof/phase176_repeatable_json_only_full_loop_smoke_proof_v1.json",
+    "docs/phase176-repeatable-json-only-full-loop-smoke-proof-v1.md",
+    "scripts/verify-phase176-repeatable-json-only-full-loop-smoke-proof-v1.ps1",
+    "scripts/phase176-repeatable-json-only-full-loop-smoke-proof-v1.ps1"
+  ]
+}
