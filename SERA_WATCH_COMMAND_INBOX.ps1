@@ -227,6 +227,58 @@ function Get-PhaseNameFromInfo {
   return "s.e.r.a_unknown_phase_overlay"
 }
 
+
+function Test-FinalHandoffIdentityIntegrity {
+  param(
+    [object]$Info,
+    [string]$FinalHandoffPath,
+    [string]$Status
+  )
+
+  # PHASE189_FINAL_HANDOFF_IDENTITY_INTEGRITY_GUARD
+  if ([string]::IsNullOrWhiteSpace($FinalHandoffPath) -or !(Test-Path $FinalHandoffPath)) {
+    return [pscustomobject]@{ Ok = $false; Reason = "Final handoff missing for identity validation." }
+  }
+
+  $ExpectedPhaseName = Get-PhaseNameFromInfo -Info $Info
+  $ExpectedSlug = [string]$Info.PhaseSlug
+  $ExpectedPhase = [string]$Info.Phase
+  $Text = Get-Content -LiteralPath $FinalHandoffPath -Raw
+
+  if ($Status -eq "CLOSED_CLEANLY") {
+    if ($Text -notmatch "(?m)^Status:\s*CLOSED_CLEANLY\s*$") {
+      return [pscustomobject]@{ Ok = $false; Reason = "CLOSED_CLEANLY final handoff missing exact Status line." }
+    }
+
+    if ($Text -notmatch [regex]::Escape("Phase: $ExpectedPhaseName")) {
+      return [pscustomobject]@{ Ok = $false; Reason = "CLOSED_CLEANLY final handoff Phase line does not match current phase: $ExpectedPhaseName" }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedSlug) -and $Text -notlike "*$ExpectedSlug*") {
+      return [pscustomobject]@{ Ok = $false; Reason = "CLOSED_CLEANLY final handoff does not mention current phaseSlug: $ExpectedSlug" }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedPhase) -and $Text -notlike "*Phase$ExpectedPhase*") {
+      return [pscustomobject]@{ Ok = $false; Reason = "CLOSED_CLEANLY final handoff does not mention current Phase$ExpectedPhase." }
+    }
+
+    $ForbiddenResultPatterns = @(
+      "Result:\s*Phase180\s+closed cleanly",
+      "Result:\s*Phase186\s+closed cleanly",
+      "Result:\s*Phase187\s+closed cleanly",
+      "Result:\s*Phase188\s+closed cleanly"
+    )
+
+    foreach ($Pattern in $ForbiddenResultPatterns) {
+      if ($Text -match $Pattern) {
+        return [pscustomobject]@{ Ok = $false; Reason = "STALE_HANDOFF_REJECTED: final handoff contains older phase as result phase: $Pattern" }
+      }
+    }
+  }
+
+  return [pscustomobject]@{ Ok = $true; Reason = "FINAL_HANDOFF_IDENTITY_VALIDATED" }
+}
+
 function Invoke-WithSupportedParams {
   param(
     [string]$ScriptPath,
@@ -684,6 +736,16 @@ function Invoke-FullAutoLoopForCommand {
     throw "Direct closeout exited 0 but no CLOSED_CLEANLY or BLOCKED handoff was found for phaseSlug=$($Info.PhaseSlug)."
   }
 
+  $Integrity = Test-FinalHandoffIdentityIntegrity -Info $Info -FinalHandoffPath $Final.Path -Status $Final.Status
+  if (-not $Integrity.Ok) {
+    Write-Step "STALE_HANDOFF_REJECTED phase=$($Info.PhaseSlug) reason=$($Integrity.Reason) final=$($Final.Path)"
+    Write-QueueEvent "STALE_HANDOFF_REJECTED" @{ phaseSlug = $Info.PhaseSlug; finalHandoffPath = $Final.Path; reason = $Integrity.Reason }
+    throw $Integrity.Reason
+  }
+
+  Write-Step "FINAL_HANDOFF_IDENTITY_VALIDATED phase=$($Info.PhaseSlug) final=$($Final.Path)"
+  Write-QueueEvent "FINAL_HANDOFF_IDENTITY_VALIDATED" @{ phaseSlug = $Info.PhaseSlug; finalHandoffPath = $Final.Path }
+
   return $Final
 }
 
@@ -770,5 +832,6 @@ while ($true) {
 # PHASE188_NO_RESCUE_PHONE_ONLY: upload command JSON, watcher routes/picks up, browser bridge, exact ZIP, direct closeout, final pasteback.
 # PHASE188_BLOCKED_HANDOFF_GUARD: blocked runs halt downstream command JSON until repair/unblock command.
 # PHASE188_MARKERS: COMMAND_JSON_ROUTED_FROM_DOWNLOADS13 NEW_COMMAND_JSON_DETECTED REQUEST_READY ZIP_READY RUN_DIRECT_ZIP_CLOSEOUT PASTEBACK_POSTED_TEXT_MATCH CLOSED_CLEANLY BLOCKED
+# PHASE189_MARKERS: PHASE189_FINAL_HANDOFF_IDENTITY_INTEGRITY_GUARD FINAL_HANDOFF_IDENTITY_VALIDATED STALE_HANDOFF_REJECTED
 
 # PHASE188_PRESEEDED_ZIP_BRIDGE_BYPASS_PATCH: exact expected ZIP already present skips browser bridge to prevent duplicate downloads.

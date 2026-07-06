@@ -1,0 +1,26 @@
+{
+  "schema": "sera-proof-v1",
+  "phase": 189,
+  "phaseSlug": "phase189_final_handoff_identity_integrity_true_no_rescue_v1",
+  "expectedZipFilename": "s.e.r.a_phase189_final_handoff_identity_integrity_true_no_rescue_v1_overlay.zip",
+  "generatedAt": "2026-07-06T18:24:41.053957+00:00",
+  "verification": {
+    "includesOverlayManifest": true,
+    "includesSeraProof": true,
+    "zipRoot": "repo/",
+    "noNewPersistence": true,
+    "finalHandoffIdentityIntegrityGuard": true,
+    "currentPhaseFinalHandoffSeed": true,
+    "preseededZipBridgeBypassCarryForward": true
+  },
+  "commandContract": {
+    "commandId": "phase189-final-handoff-identity-integrity-true-no-rescue-v1-001",
+    "runNonce": "final-handoff-identity-integrity-true-no-rescue-v1-001",
+    "phase": 189,
+    "phaseSlug": "phase189_final_handoff_identity_integrity_true_no_rescue_v1",
+    "expectedZipFilename": "s.e.r.a_phase189_final_handoff_identity_integrity_true_no_rescue_v1_overlay.zip",
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false
+  }
+}
