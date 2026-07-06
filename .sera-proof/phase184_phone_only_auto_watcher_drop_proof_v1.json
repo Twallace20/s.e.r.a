@@ -1,0 +1,22 @@
+{
+  "phase": 184,
+  "phaseSlug": "phase184_phone_only_auto_watcher_drop_proof_v1",
+  "proofIntent": "Phase184 is a proof-only overlay for no-manual-watcher JSON drop.",
+  "expectedCloseout": {
+    "verifier": "PHASE184_VERIFY PASS",
+    "qa": "PHASE184_QA PASS_GUARANTEED",
+    "pasteback": "PASTEBACK_POSTED_TEXT_MATCH",
+    "status": "CLOSED_CLEANLY"
+  },
+  "notAllowed": [
+    "New Windows service",
+    "Admin-only persistence",
+    "Credentials",
+    "Tokens",
+    "Paid services",
+    "Dependency installs",
+    "Security setting changes",
+    "Random recent ChatGPT fallback",
+    "New chat fallback"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "phase": 184,
+  "phaseSlug": "phase184_phone_only_auto_watcher_drop_proof_v1",
+  "phaseName": "s.e.r.a_phase184_phone_only_auto_watcher_drop_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase184_phone_only_auto_watcher_drop_proof_v1_overlay.zip",
+  "createdAtUtc": "2026-07-06T15:27:42Z",
+  "purpose": "Prove phone-only JSON drop with auto watcher already enabled and running.",
+  "safety": {
+    "addsNewPersistence": false,
+    "usesExistingPhase183AutoWatcher": true,
+    "windowsServiceCreated": false,
+    "credentialsTokensPaidServicesSecuritySettingsChanged": false,
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false
+  },
+  "requirements": [
+    "Verify Phase183 auto-watcher artifacts exist.",
+    "Verify StartupFallback or ScheduledTask exists.",
+    "Verify watcher runner/process/log proof exists.",
+    "Verify Phase184 bridge request evidence exists after the watcher was already running.",
+    "Write VERIFY_PASS only for current phase.",
+    "QA requires fresh current-phase VERIFY_PASS and writes PASS_GUARANTEED."
+  ],
+  "files": [
+    ".overlay/phase184_phone_only_auto_watcher_drop_proof_v1.json",
+    ".sera-proof/phase184_phone_only_auto_watcher_drop_proof_v1.json",
+    "docs/phase184-phone-only-auto-watcher-drop-proof-v1.md",
+    "scripts/verify-phase184-phone-only-auto-watcher-drop-proof-v1.ps1",
+    "scripts/phase184-phone-only-auto-watcher-drop-proof-v1.ps1"
+  ]
+}
