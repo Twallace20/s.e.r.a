@@ -27,8 +27,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$DirectStart = Get-Date
 $Downloads13 = Join-Path $AutoOpsRoot "13_chatgpt_downloads"
+$Handoff = Join-Path $AutoOpsRoot "06_handoff"
 New-Item -ItemType Directory -Force $Downloads13 | Out-Null
+New-Item -ItemType Directory -Force $Handoff | Out-Null
 
 function Convert-SlugToBranchTail {
   param([string]$Slug)
@@ -45,6 +48,66 @@ function Convert-SlugToTagName {
   }
 
   return "phase-$Token"
+}
+
+function Get-ExpectedPhaseName {
+  param(
+    [string]$PhaseNameValue,
+    [string]$PhaseSlugValue,
+    [string]$ExpectedZipValue
+  )
+
+  if (-not [string]::IsNullOrWhiteSpace($PhaseNameValue)) { return $PhaseNameValue }
+  if (-not [string]::IsNullOrWhiteSpace($PhaseSlugValue)) { return "s.e.r.a_{0}_overlay" -f $PhaseSlugValue }
+  if ($ExpectedZipValue -match "^(s\.e\.r\.a_.+_overlay)\.zip$") { return $Matches[1] }
+  return ""
+}
+
+function Test-SeraFinalHandoffIdentityIntegrity {
+  param(
+    [string]$Path,
+    [string]$ExpectedPhaseName,
+    [string]$ExpectedPhaseSlug,
+    [int]$ExpectedPhase
+  )
+
+  # PHASE189_FINAL_HANDOFF_IDENTITY_INTEGRITY_GUARD
+  if ([string]::IsNullOrWhiteSpace($Path) -or !(Test-Path $Path)) {
+    return [pscustomobject]@{ Ok = $false; Reason = "Final handoff missing." }
+  }
+
+  $Text = Get-Content -LiteralPath $Path -Raw
+
+  if ($Text -notmatch "(?m)^Status:\s*CLOSED_CLEANLY\s*$") {
+    return [pscustomobject]@{ Ok = $false; Reason = "Final handoff missing exact CLOSED_CLEANLY status line." }
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($ExpectedPhaseName) -and $Text -notmatch [regex]::Escape("Phase: $ExpectedPhaseName")) {
+    return [pscustomobject]@{ Ok = $false; Reason = "Final handoff Phase line does not match $ExpectedPhaseName." }
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($ExpectedPhaseSlug) -and $Text -notlike "*$ExpectedPhaseSlug*") {
+    return [pscustomobject]@{ Ok = $false; Reason = "Final handoff does not mention current phaseSlug $ExpectedPhaseSlug." }
+  }
+
+  if ($ExpectedPhase -gt 0 -and $Text -notlike "*Phase$ExpectedPhase*") {
+    return [pscustomobject]@{ Ok = $false; Reason = "Final handoff does not mention current Phase$ExpectedPhase." }
+  }
+
+  $ForbiddenResultPatterns = @(
+    "Result:\s*Phase180\s+closed cleanly",
+    "Result:\s*Phase186\s+closed cleanly",
+    "Result:\s*Phase187\s+closed cleanly",
+    "Result:\s*Phase188\s+closed cleanly"
+  )
+
+  foreach ($Pattern in $ForbiddenResultPatterns) {
+    if ($Text -match $Pattern) {
+      return [pscustomobject]@{ Ok = $false; Reason = "STALE_HANDOFF_REJECTED: older phase appears as result phase: $Pattern" }
+    }
+  }
+
+  return [pscustomobject]@{ Ok = $true; Reason = "FINAL_HANDOFF_IDENTITY_VALIDATED" }
 }
 
 $Expected = [string]$ExpectedFilename
@@ -67,6 +130,10 @@ if ([string]::IsNullOrWhiteSpace($Branch) -and -not [string]::IsNullOrWhiteSpace
 
 if ([string]::IsNullOrWhiteSpace($TagName) -and -not [string]::IsNullOrWhiteSpace($PhaseSlug)) {
   $TagName = Convert-SlugToTagName -Slug $PhaseSlug
+}
+
+if ([string]::IsNullOrWhiteSpace($PhaseName)) {
+  $PhaseName = Get-ExpectedPhaseName -PhaseNameValue $PhaseName -PhaseSlugValue $PhaseSlug -ExpectedZipValue $Expected
 }
 
 $Kebab = ""
@@ -239,13 +306,35 @@ Write-Host "DIRECT_CLOSEOUT_WRAPPER_INVOKE legacy=$Legacy"
 Write-Host "DIRECT_CLOSEOUT_WRAPPER_ZIP $ResolvedZip"
 Write-Host "DIRECT_CLOSEOUT_WRAPPER_EXPECTED_FILENAME $Expected"
 Write-Host "DIRECT_CLOSEOUT_WRAPPER_PHASE_TOKEN $PhaseToken"
+Write-Host "DIRECT_CLOSEOUT_WRAPPER_PHASE_NAME $PhaseName"
 Write-Host "DIRECT_CLOSEOUT_WRAPPER_VERIFIER $VerifierRelative"
 Write-Host "DIRECT_CLOSEOUT_WRAPPER_QA $QaRelative"
+Write-Host "PHASE189_FINAL_HANDOFF_IDENTITY_INTEGRITY_GUARD enabled"
 
 & $Legacy @InvokeParams
 
 $Code = $LASTEXITCODE
 if ($null -eq $Code) { $Code = 0 }
+
+if ($Code -eq 0 -and -not [string]::IsNullOrWhiteSpace($PhaseName)) {
+  $LatestClosed = Get-ChildItem $Handoff -File -Filter "$PhaseName-*CLOSED_CLEANLY.md" -ErrorAction SilentlyContinue |
+    Where-Object { $_.LastWriteTime -ge $DirectStart.AddSeconds(-30) } |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+
+  if ($LatestClosed) {
+    $Integrity = Test-SeraFinalHandoffIdentityIntegrity -Path $LatestClosed.FullName -ExpectedPhaseName $PhaseName -ExpectedPhaseSlug $PhaseSlug -ExpectedPhase $Phase
+    if (-not $Integrity.Ok) {
+      Write-Host "STALE_HANDOFF_REJECTED $($Integrity.Reason) path=$($LatestClosed.FullName)"
+      exit 1
+    }
+
+    Write-Host "FINAL_HANDOFF_IDENTITY_VALIDATED $($LatestClosed.FullName)"
+  } else {
+    Write-Host "FINAL_HANDOFF_IDENTITY_VALIDATION_SKIPPED no fresh CLOSED_CLEANLY handoff found for $PhaseName"
+  }
+}
+
 exit $Code
 
 # PHASE187_COMPAT_FIX: PhaseToken is passed as a named parameter, never as verifier script path.
@@ -254,4 +343,6 @@ exit $Code
 # PHASE187_COMPAT_FIX: ZIP_PATH_ARGUMENT_WAS_BLANK_RECOVERED
 # PHASE187_COMPAT_FIX: ZIP_PATH_RESOLVED_FROM_EXPECTED_FILENAME
 # PHASE187_COMPAT_FIX: ZIP_PATH_RESOLVED_FROM_DOWNLOADS13
-# PHASE187_COMPAT_FIX: expectedFilename and searchedDirectories included in ZIP missing errors.
+# PHASE189_FINAL_HANDOFF_IDENTITY_INTEGRITY_GUARD
+# FINAL_HANDOFF_IDENTITY_VALIDATED
+# STALE_HANDOFF_REJECTED

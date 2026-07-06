@@ -1,0 +1,68 @@
+{
+  "schema": "sera-overlay-manifest-v1",
+  "phase": 189,
+  "phaseSlug": "phase189_final_handoff_identity_integrity_true_no_rescue_v1",
+  "phaseToken": "phase189-final-handoff-identity-integrity-true-no-rescue-v1",
+  "phaseName": "s.e.r.a_phase189_final_handoff_identity_integrity_true_no_rescue_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase189_final_handoff_identity_integrity_true_no_rescue_v1_overlay.zip",
+  "generatedAt": "2026-07-06T18:24:41.053957+00:00",
+  "root": "repo/",
+  "purpose": "Patch and prove final handoff identity integrity after Phase188 using the watcher-driven pre-seeded ZIP path.",
+  "constraints": [
+    "No new persistence mechanisms",
+    "No paid services",
+    "No credentials",
+    "No dependency installs",
+    "No security setting changes",
+    "No random recent ChatGPT fallback",
+    "No new chat fallback",
+    "Preserve approved StartupFallback/runner model"
+  ],
+  "markers": [
+    "PHASE189_FINAL_HANDOFF_IDENTITY_INTEGRITY_GUARD",
+    "PHASE189_CURRENT_PHASE_FINAL_HANDOFF_SEED",
+    "FINAL_HANDOFF_IDENTITY_VALIDATED",
+    "STALE_HANDOFF_REJECTED",
+    "EXACT_ZIP_ALREADY_PRESENT_SKIP_BROWSER_BRIDGE",
+    "RUN_DIRECT_ZIP_CLOSEOUT",
+    "PASTEBACK_POSTED_TEXT_MATCH",
+    "WATCHER_RETURN_TO_WATCH_AFTER_RUN"
+  ],
+  "files": [
+    {
+      "path": "repo/SERA_WATCH_COMMAND_INBOX.ps1",
+      "sha256": "ed4f4ad5dbd308de47ddb3b939ccf4b55572a28d37d5d8df09978cef744f5d47",
+      "bytes": 25821
+    },
+    {
+      "path": "repo/docs/phase189-final-handoff-identity-integrity-true-no-rescue-v1.md",
+      "sha256": "e926d627124f9d72dfafed8b201048390964d92916490e84cb80460a40c946f0",
+      "bytes": 1426
+    },
+    {
+      "path": "repo/scripts/final-handoff-identity-integrity-true-no-rescue-v1.ps1",
+      "sha256": "49ffe989d29ce01b04011b6b53540c1e2e42a3ea1c0cede4e087f0e1098887df",
+      "bytes": 379
+    },
+    {
+      "path": "repo/scripts/phase189-final-handoff-identity-integrity-true-no-rescue-v1.ps1",
+      "sha256": "6eb0719825e718f088d23bbbefd8973dd6ea4dae6cf40660a505e1807b32269f",
+      "bytes": 7824
+    },
+    {
+      "path": "repo/scripts/sera-direct-zip-to-closed-cleanly-v1.ps1",
+      "sha256": "4bb659e8898d63fd9a109b873e47673c430f653c5b9ad3b1f4141afc210a2f2a",
+      "bytes": 10979
+    },
+    {
+      "path": "repo/scripts/verify-final-handoff-identity-integrity-true-no-rescue-v1.ps1",
+      "sha256": "90425671644440855dc3487e053423efe9a57b7755b0fc749446c59378969946",
+      "bytes": 770
+    },
+    {
+      "path": "repo/scripts/verify-phase189-final-handoff-identity-integrity-true-no-rescue-v1.ps1",
+      "sha256": "4dba259181b424a29b487b83bcdf611a52d74e0d666da42858d4477a1c1683d3",
+      "bytes": 4415
+    }
+  ]
+}
