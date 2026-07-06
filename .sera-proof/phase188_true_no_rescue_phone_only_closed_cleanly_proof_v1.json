@@ -1,0 +1,15 @@
+{
+  "phase": "s.e.r.a_phase188_true_no_rescue_phone_only_closed_cleanly_proof_v1_overlay",
+  "phaseSlug": "phase188_true_no_rescue_phone_only_closed_cleanly_proof_v1",
+  "proof": "Includes verifier VERIFY_PASS handoff emission plus legacy verifier/QA aliases.",
+  "expectedZipFilename": "s.e.r.a_phase188_true_no_rescue_phone_only_closed_cleanly_proof_v1_overlay.zip",
+  "requiredFinalState": "CLOSED_CLEANLY or BLOCKED handoff; downstream queue halted on BLOCKED.",
+  "preseededZipBridgeBypass": true,
+  "phase188CompatibilityCorrection": "adds PhaseToken alias verifier/QA scripts expected by direct closeout legacy helper",
+  "compatibilityFiles": [
+    "scripts/verify-true-no-rescue-phone-only-closed-cleanly-proof-v1.ps1",
+    "scripts/true-no-rescue-phone-only-closed-cleanly-proof-v1.ps1"
+  ],
+  "updatedAt": "2026-07-06T11:12:00-07:00",
+  "revision": "phase188-verify-handoff-compat-v3"
+}

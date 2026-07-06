@@ -1,0 +1,38 @@
+{
+  "phase": "s.e.r.a_phase188_true_no_rescue_phone_only_closed_cleanly_proof_v1_overlay",
+  "phaseSlug": "phase188_true_no_rescue_phone_only_closed_cleanly_proof_v1",
+  "version": "v1.1-preseeded-zip-bridge-bypass",
+  "createdBy": "GPT-5.5 Thinking",
+  "purpose": "Harden the no-rescue phone-only autopilot loop with sequential queue state, run locking, final handoff classification, blocked halt, status visibility, and exact pre-seeded ZIP browser-bridge bypass to stop duplicate downloads.",
+  "files": [
+    "repo/SERA_WATCH_COMMAND_INBOX.ps1",
+    "repo/SERA_AUTOPILOT_QUEUE_STATUS.ps1",
+    "repo/docs/phase188-true-no-rescue-phone-only-closed-cleanly-proof-v1.md",
+    "repo/scripts/phase188-true-no-rescue-phone-only-closed-cleanly-proof-v1.ps1",
+    "repo/scripts/verify-phase188-true-no-rescue-phone-only-closed-cleanly-proof-v1.ps1",
+    "repo/.overlay/phase188_true_no_rescue_phone_only_closed_cleanly_proof_v1.json",
+    "repo/.sera-proof/phase188_true_no_rescue_phone_only_closed_cleanly_proof_v1.json"
+  ],
+  "safety": {
+    "noPaidServices": true,
+    "noCredentials": true,
+    "noDependencyInstalls": true,
+    "noScheduledTaskChanges": true,
+    "noServicePersistence": true,
+    "savedChatGptTargetOnly": true
+  },
+  "validation": [
+    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\verify-phase188-true-no-rescue-phone-only-closed-cleanly-proof-v1.ps1",
+    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\phase188-true-no-rescue-phone-only-closed-cleanly-proof-v1.ps1",
+    "Verifier checks PHASE188_FIX_SKIP_BROWSER_WHEN_EXACT_ZIP_PRESENT and EXACT_ZIP_ALREADY_PRESENT_SKIP_BROWSER_BRIDGE markers."
+  ],
+  "fix": "If the exact expected ZIP already exists in 13_chatgpt_downloads after REQUEST_READY, SERA_WATCH_COMMAND_INBOX.ps1 skips the browser bridge and proceeds directly to ZIP closeout.",
+  "phase188CompatibilityCorrection": "adds PhaseToken alias verifier/QA scripts expected by direct closeout legacy helper",
+  "compatibilityFiles": [
+    "scripts/verify-true-no-rescue-phone-only-closed-cleanly-proof-v1.ps1",
+    "scripts/true-no-rescue-phone-only-closed-cleanly-proof-v1.ps1"
+  ],
+  "updatedAt": "2026-07-06T11:12:00-07:00",
+  "revision": "phase188-verify-handoff-compat-v3",
+  "blockedFix": "Verifier now writes a fresh VERIFY_PASS handoff required by the legacy direct closeout gate."
+}
