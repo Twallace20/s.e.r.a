@@ -42,7 +42,20 @@ function Invoke-CdpEvaluate {
     [string]$Expression
   )
 
-  Add-Type -AssemblyName System.Net.WebSockets.Client
+  # PHASE181_CLIENTWEBSOCKET_LOAD_FIX:
+# Windows PowerShell may expose ClientWebSocket without an assembly named System.Net.WebSockets.Client.
+try {
+  [void][System.Net.WebSockets.ClientWebSocket]
+} catch {
+  try { Add-Type -AssemblyName System.Net.WebSockets -ErrorAction SilentlyContinue } catch {}
+  try { Add-Type -AssemblyName System -ErrorAction SilentlyContinue } catch {}
+}
+
+try {
+  [void][System.Net.WebSockets.ClientWebSocket]
+} catch {
+  throw "ClientWebSocket type is unavailable in this PowerShell runtime."
+}
 
   $Client = [System.Net.WebSockets.ClientWebSocket]::new()
   $Uri = [Uri]$WebSocketDebuggerUrl
@@ -219,3 +232,4 @@ Proof:
 
 Write-Host "PASTEBACK_POSTED $PostedPath"
 exit 0
+
