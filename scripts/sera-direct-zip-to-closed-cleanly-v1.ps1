@@ -270,3 +270,12 @@ Write-Host ""
 Write-Host "=== DIRECT ZIP CLOSEOUT CLOSED_CLEANLY CONFIRMED ==="
 Write-Host $ClosedPath
 exit 0
+
+# PHASE177_GATE_MARKER: Required verifier script failed
+
+# PHASE177_GATE_MARKER: Required QA script failed
+
+# PHASE177_GATE_MARKER: Merge was refused
+
+# PHASE177_GATE_MARKER: QA and merge must only run after required scripts pass in this run
+

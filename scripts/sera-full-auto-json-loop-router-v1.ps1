@@ -193,3 +193,6 @@ if ($Exit -ne 0) {
 
 Write-Step "FULL_AUTO_LOOP_DONE"
 exit 0
+
+# PHASE177_ROUTER_MARKER: stale prior-phase handoffs are not valid closeout evidence
+
