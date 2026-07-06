@@ -100,7 +100,7 @@ if ($Mode -eq "Enable") {
 
   $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $Argument
   $Trigger = New-ScheduledTaskTrigger -AtLogOn
-  $Principal = New-ScheduledTaskPrincipal -UserId $UserId -LogonType Interactive -RunLevel LeastPrivilege
+  $Principal = New-ScheduledTaskPrincipal -UserId $UserId -LogonType Interactive -RunLevel Limited
   $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew -ExecutionTimeLimit ([TimeSpan]::Zero)
 
   $Description = "S.E.R.A. AutoOps command inbox watcher. Explicit opt-in current-user logon task. No credentials, no SYSTEM, no service."
@@ -152,4 +152,5 @@ if ($Mode -eq "Status") {
 # PHASE183_MARKER: single-instance
 # PHASE183_MARKER: No Windows service is created
 # PHASE183_MARKER: No stored secrets
+
 
