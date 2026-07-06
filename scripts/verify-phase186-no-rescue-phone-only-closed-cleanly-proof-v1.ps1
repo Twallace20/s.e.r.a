@@ -224,9 +224,23 @@ foreach ($Marker in $LogMarkers) {
   }
 }
 
-if ($RunnerLogText -like "*powershell.exe -NoProfile -ExecutionPolicy Bypass -File *SERA_WATCH_COMMAND_INBOX.ps1*") {
-  Block-Verify "Runner log suggests direct foreground watcher start instead of auto watcher runner path."
+$DirectForegroundWatcherLaunch = $false
+
+foreach ($Line in ($RunnerLogText -split "\r?\n")) {
+  if (
+    $Line -like "*Host Application:*" -and
+    $Line -like "*powershell.exe*" -and
+    $Line -like "* -File *SERA_WATCH_COMMAND_INBOX.ps1*"
+  ) {
+    $DirectForegroundWatcherLaunch = $true
+  }
 }
+
+if ($DirectForegroundWatcherLaunch) {
+  Block-Verify "Runner log host application shows direct foreground watcher start instead of auto watcher runner path."
+}
+
+# PHASE186_VERIFIER_FIX: runner-path check is line-scoped so WATCHER_SCRIPT does not false-positive as a direct launch.
 
 $PriorBlocked = Get-ChildItem $Handoff -File -Filter "$PhaseName-*VERIFY_BLOCKED.md" -ErrorAction SilentlyContinue |
   Sort-Object LastWriteTime -Descending |
@@ -264,3 +278,4 @@ Proof:
 Write-Host "PHASE186_VERIFY PASS"
 Write-Host $PassPath
 exit 0
+
