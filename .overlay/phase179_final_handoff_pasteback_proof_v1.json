@@ -1,0 +1,26 @@
+{
+  "phase": 179,
+  "phaseSlug": "phase179_final_handoff_pasteback_proof_v1",
+  "phaseName": "s.e.r.a_phase179_final_handoff_pasteback_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase179_final_handoff_pasteback_proof_v1_overlay.zip",
+  "commandId": "phase179-final-handoff-pasteback-proof-v1-001",
+  "runNonce": "final-handoff-pasteback-proof-v1-001",
+  "zipRoot": "repo/",
+  "purpose": "Safe final current-phase handoff pasteback into the current ChatGPT conversation after copy.",
+  "safety": {
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "noPersistenceAdded": true,
+    "noCredentialsOrTokens": true
+  },
+  "includedFiles": [
+    ".overlay/phase179_final_handoff_pasteback_proof_v1.json",
+    ".sera-proof/phase179_final_handoff_pasteback_proof_v1.json",
+    "docs/phase179-final-handoff-pasteback-proof-v1.md",
+    "scripts/sera-final-handoff-pasteback-v1.ps1",
+    "scripts/sera-direct-zip-to-closed-cleanly-v1.ps1",
+    "scripts/verify-phase179-final-handoff-pasteback-proof-v1.ps1",
+    "scripts/phase179-final-handoff-pasteback-proof-v1.ps1"
+  ]
+}
