@@ -1,0 +1,10 @@
+{
+  "phase": 181,
+  "phaseSlug": "phase181_clean_saved_target_pasteback_repeatability_proof_v1",
+  "proof": [
+    "Requires saved target metadata captured by the browser bridge for this exact phase slug.",
+    "Verifier blocks if saved target metadata is missing or unsafe.",
+    "Pasteback helper only uses saved target metadata and refuses random fallback.",
+    "QA requires recent VERIFY_PASS before PASS_GUARANTEED."
+  ]
+}

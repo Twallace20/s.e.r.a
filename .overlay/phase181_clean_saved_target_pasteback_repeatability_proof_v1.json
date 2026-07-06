@@ -1,0 +1,28 @@
+{
+  "phase": 181,
+  "phaseSlug": "phase181_clean_saved_target_pasteback_repeatability_proof_v1",
+  "phaseName": "s.e.r.a_phase181_clean_saved_target_pasteback_repeatability_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase181_clean_saved_target_pasteback_repeatability_proof_v1_overlay.zip",
+  "purpose": "Clean repeatability proof for saved ChatGPT target capture and final handoff pasteback.",
+  "requires": [
+    "foreground command_inbox watcher JSON-drop flow",
+    "exact saved target capture during prompt submission",
+    "pasteback only to saved run-scoped ChatGPT target",
+    "no random chat fallback",
+    "no new chat fallback",
+    "PASTEBACK_POSTED proof support",
+    "verifier and QA gates before safe merge"
+  ],
+  "forbidden": [
+    "scheduled task enablement",
+    "startup persistence",
+    "login boot persistence",
+    "services",
+    "credentials",
+    "tokens",
+    "paid services",
+    "dependency installs",
+    "security setting changes",
+    "uncontrolled browser automation"
+  ]
+}

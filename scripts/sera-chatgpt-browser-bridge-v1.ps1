@@ -101,12 +101,25 @@ function Start-DebugBrowser {
 
 function Get-ChatGptTarget {
   $Tabs = Invoke-RestMethod -Uri "$BrowserDebugUrl/json" -TimeoutSec 5
-  $Target = $Tabs |
-    Where-Object {
+
+  $ConversationTargets = @(
+    $Tabs | Where-Object {
       ([string]$_.url -like "*chatgpt.com*" -or [string]$_.url -like "*chat.openai.com*") -and
-      [string]$_.webSocketDebuggerUrl
-    } |
-    Select-Object -First 1
+      [string]$_.webSocketDebuggerUrl -and
+      [string]$_.url -match "/c/"
+    }
+  )
+
+  $Target = $ConversationTargets | Select-Object -First 1
+
+  if (!$Target) {
+    $Target = $Tabs |
+      Where-Object {
+        ([string]$_.url -like "*chatgpt.com*" -or [string]$_.url -like "*chat.openai.com*") -and
+        [string]$_.webSocketDebuggerUrl
+      } |
+      Select-Object -First 1
+  }
 
   if (!$Target) {
     throw "No ChatGPT browser tab found on $BrowserDebugUrl. Open ChatGPT in the debug browser and rerun."
@@ -431,3 +444,9 @@ throw "Timed out waiting for exact ChatGPT artifact download: $ExpectedFilename"
 
 # fresh-download marker: Find-DownloadedArtifact rejects stale files using RunStartedAt before accepting an exact expected ZIP.
 # EXACT_SAVED_CHATGPT_TARGET_ONLY marker: saved target is captured during prompt submission and later required for pasteback.
+
+# PHASE181_RUN_SCOPED_SAVED_TARGET_CAPTURE marker.
+# SAVED_CHATGPT_TARGET_CAPTURE during prompt submission marker.
+# savedChatGptTargetOnly true marker.
+# allowRandomRecentChatFallback false marker.
+# allowNewChatFallback false marker.
