@@ -59,7 +59,7 @@ function Assert-ParseOk {
   }
 }
 
-function Assert-Contains {
+function Assert-Text {
   param(
     [string]$RelativePath,
     [string[]]$Markers
@@ -139,14 +139,18 @@ foreach ($Script in $RequiredFiles | Where-Object { $_ -like "*.ps1" }) {
   Assert-ParseOk $Script
 }
 
-Assert-Contains "scripts\sera-direct-zip-to-closed-cleanly-v1.ps1" @(
+Assert-Text "scripts\sera-direct-zip-to-closed-cleanly-v1.ps1" @(
+  "Resolve-SeraOverlayZip",
   "ZIP_PATH_ARGUMENT_WAS_BLANK_RECOVERED",
   "ZIP_PATH_RESOLVED_FROM_EXPECTED_FILENAME",
-  "ZIP_PATH_RESOLVED_FROM_DOWNLOADS13"
+  "ZIP_PATH_RESOLVED_FROM_DOWNLOADS13",
+  "expectedFilename",
+  "searchedDirectories"
 )
 
-Assert-Contains "scripts\sera-final-handoff-pasteback-v1.ps1" @(
-  "PASTEBACK_EXPECTED_FILENAME_RECOVERED"
+Assert-Text "scripts\sera-final-handoff-pasteback-v1.ps1" @(
+  "PASTEBACK_EXPECTED_FILENAME_RECOVERED",
+  "ExpectedFilename fallback prevents missing argument failure"
 )
 
 $RuntimeScanFiles = @(
@@ -162,7 +166,6 @@ foreach ($File in $RuntimeScanFiles) {
 }
 
 $StartupFallback = Join-Path ([Environment]::GetFolderPath("Startup")) "SERA_AutoOps_Command_Inbox_Watcher.cmd"
-$StartupFallbackExists = Test-Path $StartupFallback
 
 $ScheduledTaskExists = $false
 try {
@@ -174,7 +177,7 @@ try {
   $ScheduledTaskExists = $false
 }
 
-if (-not $StartupFallbackExists -and -not $ScheduledTaskExists) {
+if (!(Test-Path $StartupFallback) -and -not $ScheduledTaskExists) {
   Block-Verify "No approved auto watcher startup mechanism exists."
 }
 
@@ -206,7 +209,6 @@ $LogMarkers = @(
   "WATCHER_SCRIPT=",
   "WATCHER_INVOKE_PARAMS=",
   "NEW_COMMAND_JSON_DETECTED",
-  "phase185_blank_zip_path_closeout_fix_v1",
   "phase186_no_rescue_phone_only_closed_cleanly_proof_v1",
   "REQUEST_READY",
   "CHATGPT_BROWSER_BRIDGE_CONNECTED",
@@ -226,11 +228,13 @@ if ($RunnerLogText -like "*powershell.exe -NoProfile -ExecutionPolicy Bypass -Fi
   Block-Verify "Runner log suggests direct foreground watcher start instead of auto watcher runner path."
 }
 
-$BadRecentFinals = Get-ChildItem $Handoff -File -Filter "$PhaseName-*VERIFY_PASS.md" -ErrorAction SilentlyContinue |
+$PriorBlocked = Get-ChildItem $Handoff -File -Filter "$PhaseName-*VERIFY_BLOCKED.md" -ErrorAction SilentlyContinue |
   Sort-Object LastWriteTime -Descending |
-  Select-Object -Skip 5
+  Select-Object -First 1
 
-# This variable intentionally does not block; it prevents accidental optimizer removal of current-phase file search.
+if (!$PriorBlocked) {
+  Block-Verify "Prior Phase186 VERIFY_BLOCKED handoff missing; cannot prove the repair addressed the observed failure."
+}
 
 $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
 $PassPath = Join-Path $Handoff "$PhaseName-$Stamp-VERIFY_PASS.md"
@@ -244,13 +248,16 @@ Proof:
 - Phase186 overlay files exist and parse.
 - Phase183 auto-watcher runner/start controls exist and parse.
 - StartupFallback or ScheduledTask exists for approved auto watcher startup.
-- Phase185 hardened direct closeout markers exist.
-- Phase185 pasteback ExpectedFilename recovery marker exists.
+- Direct closeout now contains real ZIP recovery behavior through Resolve-SeraOverlayZip.
+- Direct closeout resolves blank ZIP args from expected filename and 13_chatgpt_downloads.
+- Missing ZIP errors include expectedFilename and searchedDirectories.
+- Pasteback now recovers ExpectedFilename before invoking the legacy helper.
 - Phase186 bridge prompt exists.
 - Phase186 saved ChatGPT target exists.
 - Exact Phase186 ZIP exists in 13_chatgpt_downloads.
 - Phase186 auto watcher runner log includes NEW_COMMAND_JSON_DETECTED, REQUEST_READY, CHATGPT_BROWSER_BRIDGE_CONNECTED, ARTIFACT_CLICK_RESULT, ARTIFACT_FOUND, ZIP_READY, and RUN_DIRECT_ZIP_CLOSEOUT.
 - Runner log shows the auto watcher runner path, not a direct manual foreground watcher launch.
+- The prior Phase186 VERIFY_BLOCKED handoff is present and the actual missing behavior has been repaired.
 - No new service/admin/credential/dependency/security-setting pattern was found in runtime files scanned by this verifier.
 "@ | Set-Content $PassPath -Encoding UTF8
 

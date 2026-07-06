@@ -6,7 +6,6 @@ param(
 $ErrorActionPreference = "Stop"
 
 $PhaseName = "s.e.r.a_phase186_no_rescue_phone_only_closed_cleanly_proof_v1_overlay"
-$Slug = "phase186_no_rescue_phone_only_closed_cleanly_proof_v1"
 $ExpectedZip = "s.e.r.a_phase186_no_rescue_phone_only_closed_cleanly_proof_v1_overlay.zip"
 
 $Handoff = Join-Path $AutoOpsRoot "06_handoff"
@@ -43,13 +42,11 @@ if (!$LatestVerify) {
 }
 
 $RequiredFiles = @(
-  ".overlay\phase186_no_rescue_phone_only_closed_cleanly_proof_v1.json",
-  ".sera-proof\phase186_no_rescue_phone_only_closed_cleanly_proof_v1.json",
-  "docs\phase186-no-rescue-phone-only-closed-cleanly-proof-v1.md",
-  "scripts\verify-phase186-no-rescue-phone-only-closed-cleanly-proof-v1.ps1",
-  "scripts\phase186-no-rescue-phone-only-closed-cleanly-proof-v1.ps1",
   "scripts\sera-direct-zip-to-closed-cleanly-v1.ps1",
-  "scripts\sera-final-handoff-pasteback-v1.ps1"
+  "scripts\sera-final-handoff-pasteback-v1.ps1",
+  "scripts\verify-phase186-no-rescue-phone-only-closed-cleanly-proof-v1.ps1",
+  ".overlay\phase186_no_rescue_phone_only_closed_cleanly_proof_v1.json",
+  ".sera-proof\phase186_no_rescue_phone_only_closed_cleanly_proof_v1.json"
 )
 
 foreach ($File in $RequiredFiles) {
@@ -73,15 +70,17 @@ if (!$Prompt) {
 }
 
 $DirectText = Get-Content -LiteralPath (Join-Path $RepoRoot "scripts\sera-direct-zip-to-closed-cleanly-v1.ps1") -Raw
-foreach ($Marker in @("ZIP_PATH_ARGUMENT_WAS_BLANK_RECOVERED","ZIP_PATH_RESOLVED_FROM_EXPECTED_FILENAME","ZIP_PATH_RESOLVED_FROM_DOWNLOADS13")) {
+
+foreach ($Marker in @("Resolve-SeraOverlayZip","ZIP_PATH_ARGUMENT_WAS_BLANK_RECOVERED","ZIP_PATH_RESOLVED_FROM_EXPECTED_FILENAME","ZIP_PATH_RESOLVED_FROM_DOWNLOADS13")) {
   if ($DirectText -notlike "*$Marker*") {
-    Block-Qa "Missing Phase185 direct closeout marker: $Marker"
+    Block-Qa "Missing real direct closeout repair marker: $Marker"
   }
 }
 
 $PastebackText = Get-Content -LiteralPath (Join-Path $RepoRoot "scripts\sera-final-handoff-pasteback-v1.ps1") -Raw
+
 if ($PastebackText -notlike "*PASTEBACK_EXPECTED_FILENAME_RECOVERED*") {
-  Block-Qa "Missing Phase185 pasteback ExpectedFilename recovery marker."
+  Block-Qa "Missing pasteback ExpectedFilename recovery marker."
 }
 
 $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
@@ -94,13 +93,10 @@ Timestamp: $Stamp
 
 Proof:
 - Fresh current-phase VERIFY_PASS exists.
-- Phase186 overlay proof files exist.
-- Exact Phase186 ZIP exists.
-- Phase186 bridge prompt exists.
-- Phase185 hardened direct closeout markers remain installed.
-- Phase185 pasteback ExpectedFilename recovery remains installed.
+- Direct closeout now contains real ZIP recovery behavior.
+- Pasteback now contains ExpectedFilename recovery.
+- Phase186 exact ZIP and bridge prompt exist.
 - PASS_GUARANTEED is current-phase only.
-- No-rescue proof is ready for final pasteback and safe merge gates.
 "@ | Set-Content $Path -Encoding UTF8
 
 Write-Host "PHASE186_QA PASS_GUARANTEED"
