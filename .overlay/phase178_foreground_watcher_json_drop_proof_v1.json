@@ -1,0 +1,26 @@
+{
+  "phase": 178,
+  "phaseSlug": "phase178_foreground_watcher_json_drop_proof_v1",
+  "phaseName": "s.e.r.a_phase178_foreground_watcher_json_drop_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase178_foreground_watcher_json_drop_proof_v1_overlay.zip",
+  "commandId": "phase178-foreground-watcher-json-drop-proof-v1-001",
+  "runNonce": "foreground-watcher-json-drop-proof-v1-001",
+  "purpose": "Prove the foreground command_inbox watcher detects a newly saved JSON and starts the full JSON-only loop without manually running SERA_RUN_UPLOADED_JSON_LOOP.ps1 after JSON placement.",
+  "safety": {
+    "scheduledTaskEnablement": false,
+    "startupPersistence": false,
+    "loginBootPersistence": false,
+    "servicePersistence": false,
+    "credentialsTokensPaidServices": false
+  },
+  "requirements": [
+    "Foreground watcher proof",
+    "Exact phase and ZIP targeting",
+    "Fresh-download fence preserved",
+    "Nested overlay path repair preserved",
+    "Invoke-RequiredScript gate semantics preserved",
+    "Current-phase final handoff selection preserved",
+    "Verifier -> QA -> fresh PASS_GUARANTEED -> merge/tag/push -> CLOSED_CLEANLY only"
+  ],
+  "generatedAtUtc": "2026-07-06T13:05:05Z"
+}
