@@ -1,0 +1,12 @@
+{
+  "status": "overlay_ready",
+  "phase": 186,
+  "phaseSlug": "phase186_no_rescue_phone_only_closed_cleanly_proof_v1",
+  "claims": [
+    "This overlay does not add a new persistence mechanism.",
+    "It verifies the Phase183 auto-watcher runner/startup fallback baseline.",
+    "It verifies the Phase185 blank-ZIP and pasteback ExpectedFilename hardening markers.",
+    "It verifies Phase186 reached the browser bridge, exact ZIP download, ZIP_READY, and direct closeout automatically.",
+    "It supplies current-phase verifier and QA scripts only; direct closeout and pasteback gates remain responsible for final safe merge and CLOSED_CLEANLY."
+  ]
+}

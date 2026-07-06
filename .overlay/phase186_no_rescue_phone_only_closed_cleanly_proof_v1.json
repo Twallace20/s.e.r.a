@@ -1,0 +1,32 @@
+{
+  "phase": 186,
+  "phaseSlug": "phase186_no_rescue_phone_only_closed_cleanly_proof_v1",
+  "phaseName": "s.e.r.a_phase186_no_rescue_phone_only_closed_cleanly_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase186_no_rescue_phone_only_closed_cleanly_proof_v1_overlay.zip",
+  "purpose": "Prove phone-only JSON upload can complete to CLOSED_CLEANLY without rescue closeout after Phase185 hardening.",
+  "markers": [
+    "PHASE186_VERIFY PASS",
+    "PHASE186_QA PASS_GUARANTEED",
+    "NEW_COMMAND_JSON_DETECTED",
+    "REQUEST_READY",
+    "CHATGPT_BROWSER_BRIDGE_CONNECTED",
+    "ARTIFACT_CLICK_RESULT",
+    "ARTIFACT_FOUND",
+    "ZIP_READY",
+    "RUN_DIRECT_ZIP_CLOSEOUT",
+    "ZIP_PATH_ARGUMENT_WAS_BLANK_RECOVERED",
+    "ZIP_PATH_RESOLVED_FROM_EXPECTED_FILENAME",
+    "ZIP_PATH_RESOLVED_FROM_DOWNLOADS13",
+    "PASTEBACK_EXPECTED_FILENAME_RECOVERED"
+  ],
+  "safety": {
+    "newPersistence": false,
+    "windowsService": false,
+    "adminOnlyInstall": false,
+    "credentials": false,
+    "tokens": false,
+    "paidServices": false,
+    "dependencyInstalls": false,
+    "securitySettingChanges": false
+  }
+}
