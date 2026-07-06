@@ -35,16 +35,33 @@ try {
     throw "Watcher script missing: $Watcher"
   }
 
-  $Args = @(
-    "-RepoRoot", $RepoRoot,
-    "-AutoOpsRoot", $AutoOpsRoot
-  )
+  $CommandInfo = Get-Command $Watcher
+  $SupportedParams = @($CommandInfo.Parameters.Keys)
 
-  if ($LaunchBrowserIfNeeded) {
-    $Args += "-LaunchBrowserIfNeeded"
+  Write-Host "WATCHER_SCRIPT=$Watcher"
+  Write-Host "WATCHER_SUPPORTED_PARAMS=$($SupportedParams -join ',')"
+
+  $InvokeParams = @{}
+
+  if ($CommandInfo.Parameters.ContainsKey("RepoRoot")) {
+    $InvokeParams["RepoRoot"] = $RepoRoot
   }
 
-  & $Watcher @Args
+  if ($CommandInfo.Parameters.ContainsKey("AutoOpsRoot")) {
+    $InvokeParams["AutoOpsRoot"] = $AutoOpsRoot
+  }
+
+  if ($CommandInfo.Parameters.ContainsKey("PollSeconds")) {
+    $InvokeParams["PollSeconds"] = 5
+  }
+
+  if ($LaunchBrowserIfNeeded -and $CommandInfo.Parameters.ContainsKey("LaunchBrowserIfNeeded")) {
+    $InvokeParams["LaunchBrowserIfNeeded"] = $true
+  }
+
+  Write-Host "WATCHER_INVOKE_PARAMS=$($InvokeParams.Keys -join ',')"
+
+  & $Watcher @InvokeParams
 
   $Code = $LASTEXITCODE
   if ($null -eq $Code) { $Code = 0 }
