@@ -1,0 +1,14 @@
+{
+  "phase": 190,
+  "phaseSlug": "phase190_closeout_order_and_handoff_identity_hard_gate_v1",
+  "revision": "v2-preseeded-zip-saved-target-continuity",
+  "purpose": "Complete Phase190 hard gate by adding saved ChatGPT target continuity for preseeded ZIP autopilot runs and preserving pasteback-before-merge gating.",
+  "markers": [
+    "PHASE190_CLOSEOUT_ORDER_HARD_GATE",
+    "PHASE190_PRESEEDED_ZIP_SAVED_TARGET_CONTINUITY",
+    "SAVED_CHATGPT_TARGET_CAPTURED_FOR_PRESEEDED_ZIP",
+    "PASTEBACK_TARGET_READY_BEFORE_MERGE",
+    "DIRECT_CLOSEOUT_RETURNS_NONZERO_ON_PASTEBACK_FAILURE",
+    "SYNTHESIZE_CURRENT_PHASE_CLOSED_CLEANLY"
+  ]
+}

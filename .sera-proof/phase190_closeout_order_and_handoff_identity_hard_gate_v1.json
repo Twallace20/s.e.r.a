@@ -1,0 +1,6 @@
+{
+  "phase": 190,
+  "phaseSlug": "phase190_closeout_order_and_handoff_identity_hard_gate_v1",
+  "revision": "v2-preseeded-zip-saved-target-continuity",
+  "proof": "Verifier/QA assert target continuity markers and closeout hard gate behavior."
+}
