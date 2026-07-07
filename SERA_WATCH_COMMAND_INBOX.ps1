@@ -15,7 +15,6 @@ $Downloads13 = Join-Path $AutoOpsRoot "13_chatgpt_downloads"
 $Handoff = Join-Path $AutoOpsRoot "06_handoff"
 $StateDir = Join-Path $AutoOpsRoot "00_control_center\state"
 $LogDir = Join-Path $AutoOpsRoot "00_control_center\logs"
-$ChatGptTargets = Join-Path $AutoOpsRoot "00_control_center\chatgpt_targets"
 
 New-Item -ItemType Directory -Force $CommandInbox | Out-Null
 New-Item -ItemType Directory -Force $BridgeOutbox | Out-Null
@@ -23,7 +22,6 @@ New-Item -ItemType Directory -Force $Downloads13 | Out-Null
 New-Item -ItemType Directory -Force $Handoff | Out-Null
 New-Item -ItemType Directory -Force $StateDir | Out-Null
 New-Item -ItemType Directory -Force $LogDir | Out-Null
-New-Item -ItemType Directory -Force $ChatGptTargets | Out-Null
 
 $ProcessedStatePath = Join-Path $StateDir "command-inbox-watcher-processed-v1.json"
 $QueueStatePath = Join-Path $StateDir "autopilot-sequential-phase-queue-v1.json"
@@ -620,44 +618,6 @@ function Clear-BlockedPauseIfResolved {
   }
 }
 
-
-function Ensure-SavedChatGptTargetForPreseededZip {
-  param([object]$Info)
-
-  $TargetPath = Join-Path $ChatGptTargets ("{0}-saved-chatgpt-target.json" -f $Info.PhaseSlug)
-
-  if (Test-Path $TargetPath) {
-    Write-Step "SAVED_CHATGPT_TARGET_READY_FOR_PRESEEDED_ZIP $TargetPath"
-    Write-QueueEvent "SAVED_CHATGPT_TARGET_READY_FOR_PRESEEDED_ZIP" @{ phaseSlug = $Info.PhaseSlug; targetPath = $TargetPath }
-    return [pscustomobject]@{ Ok = $true; Path = $TargetPath; Reason = "existing phase target" }
-  }
-
-  $Source = Get-ChildItem $ChatGptTargets -File -Filter "*-saved-chatgpt-target.json" -ErrorAction SilentlyContinue |
-    Where-Object { $_.FullName -ne $TargetPath } |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
-
-  if (!$Source) {
-    return [pscustomobject]@{ Ok = $false; Path = ""; Reason = "Saved ChatGPT target missing for preseeded ZIP and no continuity target is available." }
-  }
-
-  try {
-    $Raw = Get-Content -LiteralPath $Source.FullName -Raw
-    $Obj = $Raw | ConvertFrom-Json
-    $Obj | Add-Member -NotePropertyName "targetContinuityCopiedForPhaseSlug" -NotePropertyValue ([string]$Info.PhaseSlug) -Force
-    $Obj | Add-Member -NotePropertyName "targetContinuitySourcePath" -NotePropertyValue $Source.FullName -Force
-    $Obj | Add-Member -NotePropertyName "targetContinuityCopiedAt" -NotePropertyValue (Get-Date).ToString("o") -Force
-    ($Obj | ConvertTo-Json -Depth 24) | Set-Content -LiteralPath $TargetPath -Encoding UTF8
-  } catch {
-    Copy-Item -LiteralPath $Source.FullName -Destination $TargetPath -Force
-  }
-
-  Write-Step "SAVED_CHATGPT_TARGET_CAPTURED_FOR_PRESEEDED_ZIP $TargetPath source=$($Source.FullName)"
-  Write-Step "PHASE190_PRESEEDED_ZIP_SAVED_TARGET_CONTINUITY source=$($Source.FullName) target=$TargetPath"
-  Write-QueueEvent "SAVED_CHATGPT_TARGET_CAPTURED_FOR_PRESEEDED_ZIP" @{ phaseSlug = $Info.PhaseSlug; targetPath = $TargetPath; sourcePath = $Source.FullName }
-  return [pscustomobject]@{ Ok = $true; Path = $TargetPath; Reason = "continuity target copied" }
-}
-
 function Invoke-FullAutoLoopForCommand {
   param([object]$Command)
 
@@ -713,11 +673,6 @@ function Invoke-FullAutoLoopForCommand {
     Write-Step "EXACT_ZIP_ALREADY_PRESENT_SKIP_BROWSER_BRIDGE $ZipPath"
     Write-Step "PHASE188_FIX_SKIP_BROWSER_WHEN_EXACT_ZIP_PRESENT"
     Write-QueueEvent "EXACT_ZIP_ALREADY_PRESENT_SKIP_BROWSER_BRIDGE" @{ phaseSlug = $Info.PhaseSlug; zipPath = $ZipPath }
-    $TargetReady = Ensure-SavedChatGptTargetForPreseededZip -Info $Info
-    if (-not $TargetReady.Ok) {
-      $Blocked = Write-BlockedHandoff -Info $Info -Reason $TargetReady.Reason
-      return $Blocked
-    }
   } else {
     if (!(Test-Path $Bridge)) {
       throw "Browser bridge missing: $Bridge"
@@ -764,21 +719,7 @@ function Invoke-FullAutoLoopForCommand {
     SavedChatGptTargetOnly = $true
   }
 
-  $DirectArgList = @(
-    '-NoProfile','-ExecutionPolicy','Bypass','-File',$DirectCloseout,
-    '-RepoRoot',$RepoRoot,
-    '-AutoOpsRoot',$AutoOpsRoot,
-    '-ZipPath',$ZipPath,
-    '-ExpectedZipFilename',$Info.ExpectedZip,
-    '-PhaseSlug',$Info.PhaseSlug,
-    '-Phase',$Info.Phase,
-    '-Branch',('work/' + (Convert-SlugToBranchTail -Slug $Info.PhaseSlug)),
-    '-TagName',(Convert-SlugToTagName -Slug $Info.PhaseSlug),
-    '-SavedChatGptTargetOnly'
-  )
-  & powershell.exe @DirectArgList
-  $DirectCode = $LASTEXITCODE
-  if ($null -eq $DirectCode) { $DirectCode = 0 }
+  $DirectCode = Invoke-WithSupportedParams -ScriptPath $DirectCloseout -Params $DirectParams
   Write-Step "DIRECT_CLOSEOUT_EXIT code=$DirectCode"
 
   $Final = Get-LatestFinalHandoff -Info $Info -Since $RunStartedAt
@@ -894,16 +835,3 @@ while ($true) {
 # PHASE189_MARKERS: PHASE189_FINAL_HANDOFF_IDENTITY_INTEGRITY_GUARD FINAL_HANDOFF_IDENTITY_VALIDATED STALE_HANDOFF_REJECTED
 
 # PHASE188_PRESEEDED_ZIP_BRIDGE_BYPASS_PATCH: exact expected ZIP already present skips browser bridge to prevent duplicate downloads.
-
-
-# PHASE190_CLOSEOUT_ORDER_AND_HANDOFF_IDENTITY_HARD_GATE
-# PHASE190_PRESEEDED_ZIP_SAVED_TARGET_CONTINUITY
-# SAVED_CHATGPT_TARGET_CAPTURED_FOR_PRESEEDED_ZIP
-# PHASE190_FULL_AUTOPILOT_ACCEPTANCE_MARKERS:
-# COMMAND_JSON_ROUTED_FROM_DOWNLOADS13
-# NEW_COMMAND_JSON_DETECTED
-# EXACT_ZIP_ALREADY_PRESENT_SKIP_BROWSER_BRIDGE
-# ZIP_READY
-# RUN_DIRECT_ZIP_CLOSEOUT
-# WATCHER_RETURN_TO_WATCH_AFTER_RUN
-# BLOCKED_DOWNSTREAM_PHASES_PAUSED
