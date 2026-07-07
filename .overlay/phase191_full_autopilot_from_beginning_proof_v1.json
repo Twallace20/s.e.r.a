@@ -1,0 +1,34 @@
+{
+  "schema": "sera-overlay-v1",
+  "phase": 191,
+  "phaseSlug": "phase191_full_autopilot_from_beginning_proof_v1",
+  "phaseName": "s.e.r.a_phase191_full_autopilot_from_beginning_proof_v1_overlay",
+  "phaseToken": "full-autopilot-from-beginning-proof-v1",
+  "expectedZipFilename": "s.e.r.a_phase191_full_autopilot_from_beginning_proof_v1_overlay.zip",
+  "tagName": "phase-191-full-autopilot-from-beginning-proof-v1",
+  "purpose": "Prove S.E.R.A. full autopilot from command JSON through exact ZIP, direct closeout, verifier, QA, pasteback, merge, tag, cleanup, CLOSED_CLEANLY, and watcher return.",
+  "createdAt": "2026-07-07T19:53:30.643413+00:00",
+  "requirements": {
+    "zipRoot": "repo/",
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "noNewDependencies": true,
+    "noCredentialChanges": true,
+    "noPaidServices": true,
+    "noScheduledTaskChanges": true
+  },
+  "successMarkers": [
+    "NEW_COMMAND_JSON_DETECTED",
+    "ARTIFACT_FOUND",
+    "ZIP_READY",
+    "RUN_DIRECT_ZIP_CLOSEOUT phase=191",
+    "VERIFY_PASS",
+    "PASS_GUARANTEED",
+    "FINAL_HANDOFF_IDENTITY_VALIDATED_BEFORE_MERGE",
+    "PASTEBACK_POSTED_TEXT_MATCH",
+    "DIRECT_CLOSEOUT_EXIT code=0",
+    "CLOSED_CLEANLY",
+    "WATCHER_RETURN_TO_WATCH_AFTER_RUN"
+  ]
+}

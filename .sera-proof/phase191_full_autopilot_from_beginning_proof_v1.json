@@ -1,0 +1,16 @@
+{
+  "schema": "sera-proof-v1",
+  "phase": 191,
+  "phaseSlug": "phase191_full_autopilot_from_beginning_proof_v1",
+  "phaseName": "s.e.r.a_phase191_full_autopilot_from_beginning_proof_v1_overlay",
+  "tagName": "phase-191-full-autopilot-from-beginning-proof-v1",
+  "proofIntent": "This file proves the overlay packet is explicitly for Phase191 full-autopilot-from-beginning verification, not a reused/stale phase.",
+  "hardGates": [
+    "current phase identity only",
+    "fresh verifier handoff required",
+    "fresh QA handoff required",
+    "pasteback text match required before merge",
+    "safe merge/tag/push/cleanup only after all gates"
+  ],
+  "createdAt": "2026-07-07T19:53:30.643413+00:00"
+}
