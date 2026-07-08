@@ -1,0 +1,38 @@
+{
+  "schema": "sera-overlay-manifest-v1",
+  "phase": 194,
+  "phaseSlug": "phase194_chatgpt_artifact_download_bridge_v6_exact_dom_full_loop_proof_v1",
+  "phaseName": "s.e.r.a_phase194_chatgpt_artifact_download_bridge_v6_exact_dom_full_loop_proof_v1_overlay",
+  "phaseToken": "chatgpt-artifact-download-bridge-v6-exact-dom-full-loop-proof-v1",
+  "phaseTitle": "ChatGPT Artifact Download Bridge V6 Exact DOM Full Loop Proof v1",
+  "expectedZipFilename": "s.e.r.a_phase194_chatgpt_artifact_download_bridge_v6_exact_dom_full_loop_proof_v1_overlay.zip",
+  "commandId": "phase194-chatgpt-artifact-download-bridge-v6-exact-dom-full-loop-proof-v1-001",
+  "runNonce": "phase194-chatgpt-artifact-download-bridge-v6-exact-dom-full-loop-proof-v1-001",
+  "savedChatGptTargetOnly": true,
+  "allowRandomRecentChatFallback": false,
+  "allowNewChatFallback": false,
+  "purpose": "Guarantee full autopilot by baking the Phase193-proven V6 exact DOM artifact downloader into the production ChatGPT browser bridge and proving a full uninterrupted JSON-to-closeout loop.",
+  "winningSelectorFromPhase193": "newest exact expected filename button anywhere in DOM; scroll into view; click; verify exact ZIP filename and SHA256",
+  "requiredGuards": [
+    "Reject random recent ChatGPT fallback",
+    "Reject new chat fallback",
+    "Set Chrome download behavior to 13_chatgpt_downloads",
+    "Find exact expected ZIP filename control anywhere in DOM",
+    "Choose newest DOM-order match",
+    "Scroll chosen control into view before clicking",
+    "Use synthetic DOM click plus CDP coordinate click",
+    "Verify exact file path exists before success",
+    "Verify stale artifact freshness before success",
+    "Never print proof pass until file exists"
+  ],
+  "files": [
+    ".overlay/CHECKSUMS.sha256",
+    ".overlay/phase194_chatgpt_artifact_download_bridge_v6_exact_dom_full_loop_proof_v1.json",
+    ".sera-proof/phase194_chatgpt_artifact_download_bridge_v6_exact_dom_full_loop_proof_v1.json",
+    "docs/phase194-chatgpt-artifact-download-bridge-v6-exact-dom-full-loop-proof-v1.md",
+    "scripts/sera-chatgpt-browser-bridge-v1.ps1",
+    "scripts/sera-chatgpt-artifact-download-v6.ps1",
+    "scripts/verify-phase194-chatgpt-artifact-download-bridge-v6-exact-dom-full-loop-proof-v1.ps1",
+    "scripts/phase194-chatgpt-artifact-download-bridge-v6-exact-dom-full-loop-proof-v1.ps1"
+  ]
+}
