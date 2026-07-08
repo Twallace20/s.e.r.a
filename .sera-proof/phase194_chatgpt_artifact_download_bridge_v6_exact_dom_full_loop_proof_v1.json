@@ -1,0 +1,35 @@
+{
+  "schema": "sera-proof-v1",
+  "phase": 194,
+  "phaseSlug": "phase194_chatgpt_artifact_download_bridge_v6_exact_dom_full_loop_proof_v1",
+  "phaseName": "s.e.r.a_phase194_chatgpt_artifact_download_bridge_v6_exact_dom_full_loop_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase194_chatgpt_artifact_download_bridge_v6_exact_dom_full_loop_proof_v1_overlay.zip",
+  "proofMode": "chatgpt_artifact_download_bridge_v6_exact_dom_full_loop_proof",
+  "sixPartProofTarget": [
+    "JSON lands in command_inbox",
+    "Watcher reads/routes JSON",
+    "S.E.R.A. pastes/submits prompt into ChatGPT",
+    "S.E.R.A. clicks/downloads exact ZIP automatically using V6 exact DOM selector",
+    "S.E.R.A. applies ZIP through direct closeout",
+    "S.E.R.A. returns standardized CLOSED_CLEANLY or BLOCKED handoff/logs"
+  ],
+  "installedCapabilities": [
+    "V6 exact DOM artifact downloader",
+    "newest exact expected filename control selection",
+    "scrollIntoView before click",
+    "CDP coordinate click backup",
+    "Browser.setDownloadBehavior to 13_chatgpt_downloads",
+    "fresh exact artifact check",
+    "false success guard",
+    "structured blocked evidence markers"
+  ],
+  "criticalMarkers": [
+    "ARTIFACT_DOWNLOAD_V6_EXACT_DOM_SELECTOR",
+    "ARTIFACT_DOWNLOAD_V6_CLICK_RESULT",
+    "ARTIFACT_DOWNLOAD_V6_COORDINATE_CLICK",
+    "ARTIFACT_DOWNLOAD_V6_DOWNLOADED",
+    "ARTIFACT_DOWNLOAD_V6_PROOF_PASS",
+    "ARTIFACT_DOWNLOAD_V6_FALSE_SUCCESS_GUARD"
+  ],
+  "createdAt": "2026-07-08T16:00:30.568862Z"
+}
