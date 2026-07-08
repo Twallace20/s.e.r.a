@@ -1,0 +1,46 @@
+{
+  "schema": "sera-overlay-manifest-v1",
+  "phase": 192,
+  "phaseSlug": "phase192_autopilot_reliability_regression_hardening_v1",
+  "phaseName": "s.e.r.a_phase192_autopilot_reliability_regression_hardening_v1_overlay",
+  "phaseToken": "autopilot-reliability-regression-hardening-v1",
+  "phaseTitle": "Autopilot Reliability Regression Hardening v1",
+  "expectedZipFilename": "s.e.r.a_phase192_autopilot_reliability_regression_hardening_v1_overlay.zip",
+  "tagName": "phase-192-autopilot-reliability-regression-hardening-v1",
+  "createdAt": "2026-07-07T21:10:42Z",
+  "purpose": "Convert Phase191 full-autopilot proof failures into reusable regression hardening artifacts and checks.",
+  "commandContract": {
+    "commandId": "phase192-autopilot-reliability-regression-hardening-v1-001",
+    "runNonce": "phase192-autopilot-reliability-regression-hardening-v1-001",
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false
+  },
+  "hardeningRules": [
+    "dirty-worktree preflight before closeout/repair-sensitive operations",
+    "PowerShell parser validation for generated verifier and QA scripts",
+    "forward-slash checksum manifest normalization and tolerant checks",
+    "ZIP patch hash-change assertion for repair workflows",
+    "stale/duplicate command aftershock detection after CLOSED_CLEANLY",
+    "fresh current-phase VERIFY_PASS and PASS_GUARANTEED handoff enforcement",
+    "final handoff identity validation before merge/tag/push/cleanup",
+    "PASTEBACK_POSTED_TEXT_MATCH required before merge/tag/push/cleanup",
+    "watcher-return proof after CLOSED_CLEANLY or BLOCKED"
+  ],
+  "files": [
+    ".overlay/phase192_autopilot_reliability_regression_hardening_v1.json",
+    ".overlay/CHECKSUMS.sha256",
+    ".sera-proof/phase192_autopilot_reliability_regression_hardening_v1.json",
+    "docs/phase192-autopilot-reliability-regression-hardening-v1.md",
+    "scripts/sera-autopilot-reliability-regression-hardening-v1.ps1",
+    "scripts/verify-phase192-autopilot-reliability-regression-hardening-v1.ps1",
+    "scripts/phase192-autopilot-reliability-regression-hardening-v1.ps1"
+  ],
+  "noTouch": [
+    "credentials",
+    "tokens",
+    "paid services",
+    "GitHub security settings",
+    "external model provider configuration"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "sera-phase-proof-v1",
+  "phase": 192,
+  "phaseSlug": "phase192_autopilot_reliability_regression_hardening_v1",
+  "phaseName": "s.e.r.a_phase192_autopilot_reliability_regression_hardening_v1_overlay",
+  "tagName": "phase-192-autopilot-reliability-regression-hardening-v1",
+  "createdAt": "2026-07-07T21:10:42Z",
+  "proofObjective": "Phase192 verifies that Phase191 autopilot reliability lessons are represented as reusable checks and future regression gates.",
+  "expectedVerifierMarker": "VERIFY_PASS",
+  "expectedQaMarker": "PASS_GUARANTEED",
+  "expectedCloseoutMarkers": [
+    "FINAL_HANDOFF_IDENTITY_VALIDATED_BEFORE_MERGE",
+    "PASTEBACK_POSTED_TEXT_MATCH_REQUIRED_BEFORE_MERGE",
+    "DIRECT_CLOSEOUT_EXIT code=0",
+    "CLOSED_CLEANLY_HANDOFF_SYNTHESIZED"
+  ],
+  "requiredHardeningMarkers": [
+    "PHASE192_AUTOPILOT_RELIABILITY_REGRESSION_HARDENING",
+    "PHASE192_DIRTY_WORKTREE_PREFLIGHT",
+    "PHASE192_SCRIPT_PARSE_PRECHECK",
+    "PHASE192_CHECKSUM_PATH_NORMALIZATION",
+    "PHASE192_ZIP_HASH_CHANGE_ASSERTION",
+    "PHASE192_DUPLICATE_COMMAND_AFTER_SUCCESS_GUARD",
+    "PHASE192_FRESH_HANDOFF_GATES",
+    "PHASE192_PASTEBACK_BEFORE_MERGE_GUARD",
+    "PHASE192_WATCHER_RETURN_PROOF"
+  ],
+  "randomRecentChatFallbackAllowed": false,
+  "newChatFallbackAllowed": false
+}
