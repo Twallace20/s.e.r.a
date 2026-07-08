@@ -1,0 +1,31 @@
+{
+  "schema": "sera-phase-proof-v1",
+  "phase": 193,
+  "phaseSlug": "phase193_chatgpt_artifact_download_bridge_v2_integration_v1",
+  "phaseName": "s.e.r.a_phase193_chatgpt_artifact_download_bridge_v2_integration_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase193_chatgpt_artifact_download_bridge_v2_integration_v1_overlay.zip",
+  "proofPurpose": "Bridge V2 integration after Phase192 proved strict_download_control_clicked and successful ZIP download.",
+  "learnedSignals": [
+    "phase192_artifact_click_download_proof_pass",
+    "strict_download_control_clicked",
+    "artifact_downloaded_to_13_chatgpt_downloads",
+    "sha256_verified"
+  ],
+  "targetEndToEndPath": "json_to_prompt_to_chatgpt_to_zip_to_closeout",
+  "sixPartAutopilotPath": [
+    "json lands in command_inbox",
+    "watcher reads/routes JSON",
+    "SERA pastes prompt into ChatGPT",
+    "SERA clicks/downloads exact ZIP automatically",
+    "SERA applies ZIP through direct closeout",
+    "SERA returns standardized CLOSED_CLEANLY or standardized_blocked_handoff"
+  ],
+  "mustHold": [
+    "no_manual_zip_download_required_after_phase193",
+    "standardized_blocked_handoff",
+    "savedChatGptTargetOnly true",
+    "allowRandomRecentChatFallback false",
+    "allowNewChatFallback false",
+    "no false proof pass after failed download"
+  ]
+}
