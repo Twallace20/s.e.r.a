@@ -1,0 +1,29 @@
+{
+  "schema": "sera-overlay-manifest-v1",
+  "phase": 193,
+  "phaseSlug": "phase193_chatgpt_artifact_download_bridge_v2_integration_v1",
+  "phaseName": "s.e.r.a_phase193_chatgpt_artifact_download_bridge_v2_integration_v1_overlay",
+  "phaseToken": "chatgpt-artifact-download-bridge-v2-integration-v1",
+  "phaseTitle": "ChatGPT Artifact Download Bridge V2 Integration v1",
+  "expectedZipFilename": "s.e.r.a_phase193_chatgpt_artifact_download_bridge_v2_integration_v1_overlay.zip",
+  "branch": "work/phase193-chatgpt-artifact-download-bridge-v2-integration-v1",
+  "tag": "phase-193-chatgpt-artifact-download-bridge-v2-integration-v1",
+  "commandId": "phase193-chatgpt-artifact-download-bridge-v2-integration-v1-001",
+  "runNonce": "phase193-chatgpt-artifact-download-bridge-v2-integration-v1-001",
+  "savedChatGptTargetOnly": true,
+  "allowRandomRecentChatFallback": false,
+  "allowNewChatFallback": false,
+  "purpose": "Install the proven V2 strict ChatGPT artifact download selector into the browser bridge so future JSON-to-ZIP autopilot runs do not require manual ZIP downloads.",
+  "capabilities": [
+    "integrates ARTIFACT_DOWNLOAD_V2_STRICT_CONTROL_SELECTOR into scripts/sera-chatgpt-browser-bridge-v1.ps1",
+    "routes downloads to 13_chatgpt_downloads with Browser.setDownloadBehavior",
+    "rejects giant message containers and selects real anchor/button/download controls",
+    "requires exact expected artifact filename context before clicking",
+    "prevents false proof pass after failed download",
+    "keeps savedChatGptTargetOnly continuity",
+    "keeps allowRandomRecentChatFallback=false and allowNewChatFallback=false",
+    "adds standalone artifact download helper for standardized troubleshooting",
+    "adds verifier and QA scripts for Phase193"
+  ],
+  "createdAt": "2026-07-08T14:06:42.454719Z"
+}

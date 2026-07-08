@@ -20,9 +20,7 @@ function Write-Step {
 
 function Get-PhaseSlugFromExpected {
   param([string]$Name)
-
   if (!$Name) { return "unknown_phase" }
-
   $Slug = $Name
   $Slug = $Slug -replace "^s\.e\.r\.a_", ""
   $Slug = $Slug -replace "_overlay\.zip$", ""
@@ -61,13 +59,14 @@ function Save-ChatGptTargetMetadata {
     allowRandomRecentChatFallback = $false
     allowNewChatFallback = $false
     marker = "SAVED_CHATGPT_TARGET_CAPTURE"
+    artifactDownloadBridge = "ARTIFACT_DOWNLOAD_V2_STRICT_CONTROL_SELECTOR"
   }
 
   $Path = Join-Path $TargetRoot "$PhaseSlug-saved-chatgpt-target.json"
-  ($Meta | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $Path -Encoding UTF8
+  ($Meta | ConvertTo-Json -Depth 12) | Set-Content -LiteralPath $Path -Encoding UTF8
 
   $LatestPath = Join-Path $TargetRoot "latest-saved-chatgpt-target.json"
-  ($Meta | ConvertTo-Json -Depth 8) | Set-Content -LiteralPath $LatestPath -Encoding UTF8
+  ($Meta | ConvertTo-Json -Depth 12) | Set-Content -LiteralPath $LatestPath -Encoding UTF8
 
   Write-Step "SAVED_CHATGPT_TARGET_CAPTURE $Path"
   return $Path
@@ -102,30 +101,30 @@ function Start-DebugBrowser {
 function Get-ChatGptTarget {
   $Tabs = Invoke-RestMethod -Uri "$BrowserDebugUrl/json" -TimeoutSec 5
 
-  $ConversationTargets = @(
-    $Tabs | Where-Object {
-      ([string]$_.url -like "*chatgpt.com*" -or [string]$_.url -like "*chat.openai.com*") -and
-      [string]$_.webSocketDebuggerUrl -and
-      [string]$_.url -match "/c/"
-    }
-  )
+  $Targets = @($Tabs | Where-Object {
+    ([string]$_.url -like "*chatgpt.com*" -or [string]$_.url -like "*chat.openai.com*") -and
+    [string]$_.webSocketDebuggerUrl
+  })
 
-  $Target = $ConversationTargets | Select-Object -First 1
-
-  if (!$Target) {
-    $Target = $Tabs |
-      Where-Object {
-        ([string]$_.url -like "*chatgpt.com*" -or [string]$_.url -like "*chat.openai.com*") -and
-        [string]$_.webSocketDebuggerUrl
-      } |
-      Select-Object -First 1
-  }
-
-  if (!$Target) {
+  if (!$Targets -or $Targets.Count -eq 0) {
     throw "No ChatGPT browser tab found on $BrowserDebugUrl. Open ChatGPT in the debug browser and rerun."
   }
 
-  return $Target
+  $Selected = $Targets |
+    Sort-Object @{
+      Expression = {
+        $Score = 0
+        if ([string]$_.title -like "*S.E.R.A*") { $Score += 1000 }
+        if ([string]$_.url -like "*g-p-68ddef884f4c*") { $Score += 1000 }
+        if ([string]$_.url -match "/g/") { $Score += 300 }
+        if ([string]$_.url -match "/c/") { $Score += 100 }
+        $Score
+      }
+      Descending = $true
+    } |
+    Select-Object -First 1
+
+  return $Selected
 }
 
 function Invoke-CdpMethod {
@@ -144,7 +143,7 @@ function Invoke-CdpMethod {
       id = $Id
       method = $Method
       params = $Params
-    } | ConvertTo-Json -Depth 20 -Compress
+    } | ConvertTo-Json -Depth 40 -Compress
 
     $Bytes = [Text.Encoding]::UTF8.GetBytes($Payload)
     $Socket.SendAsync(
@@ -154,7 +153,7 @@ function Invoke-CdpMethod {
       [Threading.CancellationToken]::None
     ).GetAwaiter().GetResult()
 
-    $Buffer = [byte[]]::new(1048576)
+    $Buffer = [byte[]]::new(4194304)
     $Chunks = New-Object System.Collections.Generic.List[string]
 
     do {
@@ -178,11 +177,12 @@ function Invoke-CdpMethod {
 }
 
 function Find-DownloadedArtifact {
-  param([string]$Name)
+  param(
+    [string]$Name,
+    [datetime]$StartedAt
+  )
 
-  if (!$Name) {
-    return $null
-  }
+  if (!$Name) { return $null }
 
   foreach ($Dir in @($DownloadDir, "$env:USERPROFILE\Downloads")) {
     if (!(Test-Path $Dir)) { continue }
@@ -191,14 +191,14 @@ function Find-DownloadedArtifact {
     if (Test-Path $Exact) {
       $File = Get-Item $Exact
 
-      if ($File.LastWriteTime -lt $RunStartedAt.AddSeconds(-3)) {
+      if ($File.LastWriteTime -lt $StartedAt.AddSeconds(-5)) {
         Write-Step "IGNORING_STALE_ARTIFACT $Exact"
         continue
       }
 
       $Dest = Join-Path $DownloadDir $Name
       if ($Exact -ne $Dest) {
-        Copy-Item $Exact $Dest -Force
+        Copy-Item -LiteralPath $Exact -Destination $Dest -Force
         return $Dest
       }
 
@@ -209,24 +209,12 @@ function Find-DownloadedArtifact {
   return $null
 }
 
-if (!(Test-DebugBrowser)) {
-  if ($LaunchBrowserIfNeeded) {
-    Write-Step "Debug browser not found. Launching Chrome or Edge with remote debug port."
-    Start-DebugBrowser
-  }
-}
+function Submit-ChatGptPrompt {
+  param(
+    [string]$WsUrl,
+    [string]$PromptText
+  )
 
-if (!(Test-DebugBrowser)) {
-  throw "Browser bridge unavailable. Start Chrome or Edge with --remote-debugging-port=9222, open ChatGPT, then rerun."
-}
-
-$Target = Get-ChatGptTarget
-$WsUrl = [string]$Target.webSocketDebuggerUrl
-Write-Step "CHATGPT_BROWSER_BRIDGE_CONNECTED url=$($Target.url)"
-Save-ChatGptTargetMetadata -Target $Target -ExpectedFilename $ExpectedFilename -BrowserDebugUrl $BrowserDebugUrl -AutoOpsRoot $AutoOpsRoot | Out-Null
-
-if ($PromptFile -and (Test-Path $PromptFile)) {
-  $PromptText = Get-Content $PromptFile -Raw
   $PromptBytes = [System.Text.Encoding]::UTF8.GetBytes($PromptText)
   $PromptB64 = [Convert]::ToBase64String($PromptBytes)
   $PromptB64Json = $PromptB64 | ConvertTo-Json -Compress
@@ -238,7 +226,8 @@ if ($PromptFile -and (Test-Path $PromptFile)) {
 
   function visible(el) {
     const r = el.getBoundingClientRect();
-    return r.width > 0 && r.height > 0;
+    const style = getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && style.visibility !== "hidden" && style.display !== "none";
   }
 
   function setText(el, text) {
@@ -263,7 +252,7 @@ if ($PromptFile -and (Test-Path $PromptFile)) {
   if (!box) return { ok:false, reason:"composer_not_found" };
 
   setText(box, prompt);
-  await new Promise(r => setTimeout(r, 500));
+  await new Promise(r => setTimeout(r, 800));
 
   const buttons = Array.from(document.querySelectorAll("button, [role='button']"))
     .filter(visible);
@@ -285,10 +274,15 @@ if ($PromptFile -and (Test-Path $PromptFile)) {
     );
   });
 
-  if (!send) return { ok:false, reason:"send_button_not_found" };
+  if (!send) {
+    box.dispatchEvent(new KeyboardEvent("keydown", { key:"Enter", code:"Enter", bubbles:true, cancelable:true }));
+    box.dispatchEvent(new KeyboardEvent("keyup", { key:"Enter", code:"Enter", bubbles:true, cancelable:true }));
+    await new Promise(r => setTimeout(r, 1200));
+    return { ok:true, action:"prompt_submitted_by_enter_fallback" };
+  }
 
   send.click();
-  return { ok:true, action:"prompt_submitted" };
+  return { ok:true, action:"prompt_submitted_by_button" };
 })()
 "@
 
@@ -298,134 +292,247 @@ if ($PromptFile -and (Test-Path $PromptFile)) {
     returnByValue = $true
   }
 
-  Write-Step "PROMPT_SUBMIT_RESULT $($SubmitResult.result.result.value | ConvertTo-Json -Compress)"
+  $Value = $SubmitResult.result.result.value
+  Write-Step "PROMPT_SUBMIT_RESULT $($Value | ConvertTo-Json -Depth 12 -Compress)"
+
+  if ($Value -and $Value.ok -eq $false) {
+    throw "Prompt submission failed: $($Value.reason)"
+  }
 }
 
-$ExpectedJson = ($ExpectedFilename | ConvertTo-Json -Compress)
-$Deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+function Invoke-ArtifactDownloadV2 {
+  param(
+    [string]$WsUrl,
+    [string]$ExpectedFilename,
+    [int]$TimeoutSeconds,
+    [datetime]$StartedAt
+  )
 
-while ((Get-Date) -lt $Deadline) {
-  $Existing = Find-DownloadedArtifact -Name $ExpectedFilename
-  if ($Existing) {
-    Write-Step "ARTIFACT_FOUND $Existing"
-    exit 0
+  if ([string]::IsNullOrWhiteSpace($ExpectedFilename)) {
+    throw "ExpectedFilename is required for artifact download."
   }
 
+  Write-Step "ARTIFACT_DOWNLOAD_V2_START expected=$ExpectedFilename"
+
+  try {
+    Invoke-CdpMethod -WsUrl $WsUrl -Method "Browser.setDownloadBehavior" -Params @{
+      behavior = "allow"
+      downloadPath = $DownloadDir
+    } | Out-Null
+    Write-Step "DOWNLOAD_BEHAVIOR_SET dir=$DownloadDir"
+  } catch {
+    Write-Step "DOWNLOAD_BEHAVIOR_SET_SKIPPED reason=$($_.Exception.Message)"
+  }
+
+  $ExpectedJson = $ExpectedFilename | ConvertTo-Json -Compress
   $ClickJs = @"
 (async () => {
   const expected = $ExpectedJson;
   const expectedLower = expected.toLowerCase();
-
-  function visible(el) {
-    const r = el.getBoundingClientRect();
-    return r.width > 0 && r.height > 0;
-  }
+  const terms = ["phase", "autopilot", "reliability", "regression", "hardening", "overlay", "zip"];
 
   function clean(s) {
     return String(s || "").replace(/\s+/g, " ").trim();
   }
 
-  function textOf(el) {
-    const anchor = el.closest ? el.closest("a[href]") : null;
-    const real = anchor || el;
-
-    return {
-      el,
-      real,
-      tag: real.tagName || "",
-      text: clean(el.innerText || el.textContent || ""),
-      aria: clean(el.getAttribute("aria-label")),
-      title: clean(el.getAttribute("title")),
-      download: clean(real.getAttribute ? real.getAttribute("download") : ""),
-      href: clean(real.getAttribute ? real.getAttribute("href") : ""),
-      data: clean(el.getAttribute("data-testid"))
-    };
+  function visible(el) {
+    const r = el.getBoundingClientRect();
+    const style = getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && style.display !== "none" && style.visibility !== "hidden";
   }
 
-  const nodes = Array.from(document.querySelectorAll("a[href], a[download], button, [role='button']"))
+  function attrs(el) {
+    const out = {};
+    for (const n of ["href","download","aria-label","title","data-testid","data-state","data-file-name","role"]) {
+      try { out[n] = clean(el.getAttribute?.(n)); } catch { out[n] = ""; }
+    }
+    return out;
+  }
+
+  function ancestorText(el, maxDepth = 7) {
+    let cur = el;
+    const rows = [];
+    for (let i = 0; cur && i < maxDepth; i++, cur = cur.parentElement) {
+      const text = clean(cur.innerText || cur.textContent || "");
+      rows.push({ depth:i, tag:cur.tagName, text:text.slice(0,1200), len:text.length, attrs:attrs(cur) });
+    }
+    return rows;
+  }
+
+  const controls = Array.from(document.querySelectorAll("a[href], a[download], button, [role='button']"))
     .filter(visible);
 
-  const candidates = nodes.map(el => {
-    const info = textOf(el);
-    const combined = clean([
-      info.text,
-      info.aria,
-      info.title,
-      info.download,
-      info.href,
-      info.data
-    ].join(" "));
+  const candidates = [];
 
-    const lower = combined.toLowerCase();
-    const textLower = info.text.toLowerCase();
+  for (const el of controls) {
+    const a = attrs(el);
+    const selfText = clean(el.innerText || el.textContent || "");
+    const combinedSelf = clean([selfText, ...Object.values(a)].join(" "));
+    const selfLower = combinedSelf.toLowerCase();
 
-    const blocked =
-      textLower.startsWith("copy ") ||
-      textLower.includes("s.e.r.a. phase request") ||
-      textLower.includes("owner guidance:") ||
-      textLower.includes("command contract:") ||
-      textLower.includes("requirements:") ||
-      info.text.length > 420;
+    const ancestors = ancestorText(el, 7);
+    const smallContext = clean(ancestors.filter(x => x.len <= 2200).map(x => x.text).join(" "));
+    const contextLower = smallContext.toLowerCase();
 
-    if (blocked) return null;
-    if (!lower.includes(expectedLower)) return null;
+    const giantContainer = selfText.length > 600 && !a.href && !a.download;
+    if (giantContainer) continue;
 
-    const isDownloadish =
-      lower.includes("download") ||
-      lower.includes(".zip") ||
-      lower.includes("backend-api") ||
-      lower.includes("/download");
+    const looksLikeDownloadControl =
+      el.tagName === "A" ||
+      a.href ||
+      a.download ||
+      selfLower.includes("download") ||
+      selfLower.includes(".zip") ||
+      selfLower.includes("sandbox") ||
+      selfLower.includes("backend-api") ||
+      selfLower.includes("file");
 
-    const directDownloadLabel =
-      textLower.startsWith("download ") ||
-      info.aria.toLowerCase().startsWith("download ") ||
-      info.title.toLowerCase().startsWith("download ");
+    if (!looksLikeDownloadControl) continue;
 
-    const realAnchor = info.real && info.real.tagName === "A" && info.href;
+    let score = 0;
 
-    if (!isDownloadish) return null;
-    if (!realAnchor && !directDownloadLabel) return null;
+    if (selfLower.includes(expectedLower)) score += 5000;
+    if (contextLower.includes(expectedLower)) score += 3000;
 
-    let score = 1000;
-    if (realAnchor) score += 300;
-    if (directDownloadLabel) score += 250;
-    if (textLower.startsWith("download ")) score += 150;
-    if (lower.includes(".zip")) score += 75;
-    if (lower.includes("/download")) score += 75;
+    const phaseMatch = expectedLower.match(/phase\d+/);
+    const phaseTerm = phaseMatch ? phaseMatch[0] : "";
 
-    return {
-      el: info.real || info.el,
-      text: combined.slice(0, 300),
+    if (phaseTerm && selfLower.includes(phaseTerm)) score += 900;
+    if (phaseTerm && contextLower.includes(phaseTerm)) score += 650;
+
+    for (const term of terms) {
+      if (selfLower.includes(term)) score += 250;
+      if (contextLower.includes(term)) score += 90;
+    }
+
+    if (a.href && /download|sandbox|backend-api|files|attachment|conversation/.test(a.href.toLowerCase())) score += 1200;
+    if (a.download) score += 1000;
+    if (el.tagName === "A") score += 800;
+    if (el.tagName === "BUTTON") score += 350;
+    if (a.role === "button") score += 250;
+    if (selfLower.includes("download")) score += 500;
+    if (selfLower.includes(".zip")) score += 500;
+
+    const expectedParts = expectedLower
+      .replace(/^s\.e\.r\.a_/, "")
+      .replace(/_overlay\.zip$/, "")
+      .split("_")
+      .filter(x => x.length >= 4);
+
+    let partHits = 0;
+    for (const part of expectedParts) {
+      if (selfLower.includes(part) || contextLower.includes(part)) partHits++;
+    }
+
+    if (partHits < Math.min(3, expectedParts.length)) continue;
+
+    candidates.push({
       score,
-      tag: info.tag,
-      href: info.href
-    };
-  }).filter(Boolean);
+      tag: el.tagName,
+      selfText: selfText.slice(0, 400),
+      combinedSelf: combinedSelf.slice(0, 600),
+      attrs: a,
+      context: smallContext.slice(0, 1200)
+    });
+  }
 
   candidates.sort((a, b) => b.score - a.score);
+  window.__SERA_ARTIFACT_DOWNLOAD_V2_CANDIDATES__ = candidates.slice(0, 25);
 
   if (!candidates.length) {
     return {
       ok:false,
-      reason:"real_exact_download_control_not_ready",
-      expected
+      reason:"no_strict_download_candidates",
+      expected,
+      controlCount:controls.length,
+      samples:Array.from(document.querySelectorAll("a[href],button,[role='button']"))
+        .filter(visible)
+        .slice(-80)
+        .map(el => ({ tag:el.tagName, text:clean(el.innerText || el.textContent || "").slice(0,240), attrs:attrs(el) }))
     };
   }
 
-  const chosen = candidates[0];
-  chosen.el.scrollIntoView({ block:"center" });
-  await new Promise(r => setTimeout(r, 300));
+  const controlsAgain = Array.from(document.querySelectorAll("a[href], a[download], button, [role='button']"))
+    .filter(visible);
 
-  chosen.el.dispatchEvent(new MouseEvent("mousedown", { bubbles:true, cancelable:true, view:window }));
-  chosen.el.dispatchEvent(new MouseEvent("mouseup", { bubbles:true, cancelable:true, view:window }));
-  chosen.el.click();
+  let target = null;
+  let best = -1;
+
+  for (const el of controlsAgain) {
+    const a = attrs(el);
+    const selfText = clean(el.innerText || el.textContent || "");
+    const combinedSelf = clean([selfText, ...Object.values(a)].join(" "));
+    const selfLower = combinedSelf.toLowerCase();
+    const ancestors = ancestorText(el, 7);
+    const smallContext = clean(ancestors.filter(x => x.len <= 2200).map(x => x.text).join(" "));
+    const contextLower = smallContext.toLowerCase();
+
+    if (selfText.length > 600 && !a.href && !a.download) continue;
+
+    let score = 0;
+    if (selfLower.includes(expectedLower)) score += 5000;
+    if (contextLower.includes(expectedLower)) score += 3000;
+
+    const phaseMatch = expectedLower.match(/phase\d+/);
+    const phaseTerm = phaseMatch ? phaseMatch[0] : "";
+    if (phaseTerm && selfLower.includes(phaseTerm)) score += 900;
+    if (phaseTerm && contextLower.includes(phaseTerm)) score += 650;
+
+    for (const term of terms) {
+      if (selfLower.includes(term)) score += 250;
+      if (contextLower.includes(term)) score += 90;
+    }
+
+    if (a.href && /download|sandbox|backend-api|files|attachment|conversation/.test(a.href.toLowerCase())) score += 1200;
+    if (a.download) score += 1000;
+    if (el.tagName === "A") score += 800;
+    if (el.tagName === "BUTTON") score += 350;
+    if (a.role === "button") score += 250;
+    if (selfLower.includes("download")) score += 500;
+    if (selfLower.includes(".zip")) score += 500;
+
+    const expectedParts = expectedLower
+      .replace(/^s\.e\.r\.a_/, "")
+      .replace(/_overlay\.zip$/, "")
+      .split("_")
+      .filter(x => x.length >= 4);
+
+    let partHits = 0;
+    for (const part of expectedParts) {
+      if (selfLower.includes(part) || contextLower.includes(part)) partHits++;
+    }
+
+    if (partHits < Math.min(3, expectedParts.length)) continue;
+
+    if (score > best) {
+      best = score;
+      target = { el, score, selfText, combinedSelf, attrs:a, context:smallContext };
+    }
+  }
+
+  if (!target) {
+    return { ok:false, reason:"candidate_lost_after_rescore", candidates:window.__SERA_ARTIFACT_DOWNLOAD_V2_CANDIDATES__ };
+  }
+
+  target.el.scrollIntoView({ block:"center", inline:"center" });
+  await new Promise(r => setTimeout(r, 600));
+  target.el.dispatchEvent(new MouseEvent("mouseover", { bubbles:true, cancelable:true, view:window }));
+  target.el.dispatchEvent(new MouseEvent("pointerdown", { bubbles:true, cancelable:true, view:window }));
+  target.el.dispatchEvent(new MouseEvent("mousedown", { bubbles:true, cancelable:true, view:window }));
+  target.el.dispatchEvent(new MouseEvent("mouseup", { bubbles:true, cancelable:true, view:window }));
+  target.el.dispatchEvent(new MouseEvent("pointerup", { bubbles:true, cancelable:true, view:window }));
+  target.el.click();
 
   return {
     ok:true,
-    clicked: chosen.text,
-    score: chosen.score,
-    tag: chosen.tag,
-    href: chosen.href
+    action:"strict_download_control_clicked",
+    score:target.score,
+    tag:target.el.tagName,
+    selfText:target.selfText.slice(0,400),
+    combinedSelf:target.combinedSelf.slice(0,600),
+    attrs:target.attrs,
+    context:target.context.slice(0,1000),
+    topCandidates:window.__SERA_ARTIFACT_DOWNLOAD_V2_CANDIDATES__
   };
 })()
 "@
@@ -436,16 +543,83 @@ while ((Get-Date) -lt $Deadline) {
     returnByValue = $true
   }
 
-  Write-Step "ARTIFACT_CLICK_RESULT $($ClickResult.result.result.value | ConvertTo-Json -Compress)"
-  Start-Sleep -Seconds 8
+  $ClickValue = $ClickResult.result.result.value
+  Write-Step "ARTIFACT_DOWNLOAD_V2_CLICK_RESULT $($ClickValue | ConvertTo-Json -Depth 20 -Compress)"
+
+  if (!$ClickValue -or $ClickValue.ok -ne $true) {
+    throw "ARTIFACT_DOWNLOAD_V2_CLICK_BLOCKED: $($ClickValue | ConvertTo-Json -Depth 20 -Compress)"
+  }
+
+  $Deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+  while ((Get-Date) -lt $Deadline) {
+    $Existing = Find-DownloadedArtifact -Name $ExpectedFilename -StartedAt $StartedAt
+    if ($Existing) {
+      Write-Step "ARTIFACT_DOWNLOAD_V2_DOWNLOADED $Existing"
+      Write-Step "ARTIFACT_FOUND $Existing"
+      return $Existing
+    }
+
+    $Seen = Get-ChildItem $DownloadDir -File -ErrorAction SilentlyContinue |
+      Where-Object { $_.Name -like "*.crdownload" -or $_.Name -like "*phase*" -or $_.Name -like "*.zip" } |
+      Sort-Object LastWriteTime -Descending |
+      Select-Object -First 3
+
+    if ($Seen) {
+      Write-Step "ARTIFACT_DOWNLOAD_V2_WAIT_SEEN $($Seen[0].FullName)"
+    }
+
+    Start-Sleep -Seconds 3
+  }
+
+  throw "Timed out waiting for exact ChatGPT artifact download via V2 selector: $ExpectedFilename"
 }
 
-throw "Timed out waiting for exact ChatGPT artifact download: $ExpectedFilename"
+try {
+  if (!(Test-DebugBrowser)) {
+    if ($LaunchBrowserIfNeeded) {
+      Write-Step "Debug browser not found. Launching Chrome or Edge with remote debug port."
+      Start-DebugBrowser
+    }
+  }
 
-# fresh-download marker: Find-DownloadedArtifact rejects stale files using RunStartedAt before accepting an exact expected ZIP.
-# EXACT_SAVED_CHATGPT_TARGET_ONLY marker: saved target is captured during prompt submission and later required for pasteback.
+  if (!(Test-DebugBrowser)) {
+    throw "Browser bridge unavailable. Start Chrome or Edge with --remote-debugging-port=9222, open ChatGPT, then rerun."
+  }
 
-# PHASE181_RUN_SCOPED_SAVED_TARGET_CAPTURE marker.
+  $Target = Get-ChatGptTarget
+  $WsUrl = [string]$Target.webSocketDebuggerUrl
+  Write-Step "CHATGPT_BROWSER_BRIDGE_CONNECTED url=$($Target.url)"
+
+  Invoke-CdpMethod -WsUrl $WsUrl -Method "Page.bringToFront" | Out-Null
+
+  Save-ChatGptTargetMetadata -Target $Target -ExpectedFilename $ExpectedFilename -BrowserDebugUrl $BrowserDebugUrl -AutoOpsRoot $AutoOpsRoot | Out-Null
+
+  if ($PromptFile -and (Test-Path $PromptFile)) {
+    $PromptText = Get-Content -LiteralPath $PromptFile -Raw
+    Submit-ChatGptPrompt -WsUrl $WsUrl -PromptText $PromptText
+  } else {
+    Write-Step "PROMPT_FILE_SKIPPED_OR_MISSING path=$PromptFile"
+  }
+
+  $Downloaded = Invoke-ArtifactDownloadV2 -WsUrl $WsUrl -ExpectedFilename $ExpectedFilename -TimeoutSeconds $TimeoutSeconds -StartedAt $RunStartedAt
+  if (!(Test-Path $Downloaded)) {
+    throw "ARTIFACT_DOWNLOAD_V2_FALSE_SUCCESS_GUARD: reported download path missing: $Downloaded"
+  }
+
+  Write-Step "ARTIFACT_DOWNLOAD_V2_PROOF_PASS path=$Downloaded"
+  exit 0
+} catch {
+  Write-Step "ARTIFACT_DOWNLOAD_V2_BLOCKED reason=$($_.Exception.Message)"
+  exit 1
+}
+
+# PHASE193_ARTIFACT_DOWNLOAD_BRIDGE_V2_INTEGRATED
+# ARTIFACT_DOWNLOAD_V2_STRICT_CONTROL_SELECTOR
+# ARTIFACT_DOWNLOAD_V2_CLICK_RESULT
+# ARTIFACT_DOWNLOAD_V2_DOWNLOADED
+# ARTIFACT_DOWNLOAD_V2_PROOF_PASS
+# ARTIFACT_DOWNLOAD_V2_FALSE_SUCCESS_GUARD
+# NO_FALSE_PROOF_PASS_AFTER_FAILED_DOWNLOAD
 # SAVED_CHATGPT_TARGET_CAPTURE during prompt submission marker.
 # savedChatGptTargetOnly true marker.
 # allowRandomRecentChatFallback false marker.
