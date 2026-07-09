@@ -19,48 +19,48 @@
   "files": [
     {
       "path": "repo/.sera-proof/phase195_full_autopilot_cold_run_v1_overlay_proof.json",
-      "bytes": 2357,
-      "sha256": "c83b12c6ad364c542f4459cbacde17acf5d573b2be62cc40ee6827eac646c207"
+      "bytes": 2402,
+      "sha256": "185afeb62aae86257e47beff6007f45963082cb28ef7e0d22639b60f13b02602"
     },
     {
       "path": "repo/commands/phase195-full-autopilot-cold-run-v1.command.json",
-      "bytes": 389,
-      "sha256": "4864103ddf4467eb67d442ebed85206c5d4dc928609e06d096ae66bba813cb76"
+      "bytes": 398,
+      "sha256": "0727eaeda748affd8fda5905e612e714cd6b7a3b7d2f04c52ca5b6cce835b0ef"
     },
     {
       "path": "repo/docs/phases/PHASE_195_FULL_AUTOPILOT_COLD_RUN_V1.md",
-      "bytes": 4064,
-      "sha256": "91d215084167c2e10161df143e119cd416441f1927022b480d234e79014fb1da"
+      "bytes": 4190,
+      "sha256": "d99b641687fcea4a7350020323a9aa083668fdcacf4f20776a0403430cdaf549"
     },
     {
       "path": "repo/scripts/phase195-full-autopilot-cold-run.ts",
-      "bytes": 6778,
-      "sha256": "b70383d362f857fc44f703980db07e89642f8024e1271e5f3f353903a1b8a59c"
+      "bytes": 6951,
+      "sha256": "4f999413ef46d86c70f4df5d64350425d6ffc16e5a3f1f09d46829786b6f4242"
     },
     {
       "path": "repo/scripts/phase195-verify-overlay.mjs",
-      "bytes": 2007,
-      "sha256": "55105c5dfe2eb59fd570d05dd52d1a4f2a7cdbd3034570cf2e53f2d4194e10bf"
+      "bytes": 2062,
+      "sha256": "085b8eaa94906ca3831525f9318a95415b8a6e2ee71d8d05ca126218368c28e7"
     },
     {
       "path": "repo/scripts/qa-phase195-full-autopilot-cold-run-v1.ps1",
-      "bytes": 3926,
-      "sha256": "07c5535da8231d5f6c7d471dada39812880c54f0714dbc1dafea68aa4841c282"
+      "bytes": 4028,
+      "sha256": "5bda900fd14b813d70bd305a664cd0e0a06fa5b30b76bfdc5a55f1d7af77d872"
     },
     {
       "path": "repo/scripts/verify-phase195-full-autopilot-cold-run-v1.ps1",
-      "bytes": 7268,
-      "sha256": "0354d5c3aba2e29067cf85b9b1bebb07b8032fead7746f76e007c274f07c1b10"
+      "bytes": 7433,
+      "sha256": "54490fb0f8a85eeae76290bc29528be512e6d173cd159f763f79b11c4ac84e69"
     },
     {
       "path": "repo/src/chatgpt/phase195FullAutopilotColdRun.ts",
-      "bytes": 7604,
-      "sha256": "f3889b367fbc59c7b76e80cbf270f9fe20c772a415723eedb74120e61e992444"
+      "bytes": 7811,
+      "sha256": "927459d785f6c58d8524882ef62d15298d20c41920eda26abdc0cd83beeba35d"
     },
     {
       "path": "repo/tests/phase195-full-autopilot-cold-run.contract.test.ts",
-      "bytes": 3684,
-      "sha256": "e8c02c359117201ddc54fe47f78222acc54d4a1208abb3150c9de7212a8fb204"
+      "bytes": 3758,
+      "sha256": "eab7bf8c9afff4c2ad1f7f596b738ddd803c24e0bc823109bb512531c7a73024"
     }
   ],
   "postApplyValidation": [
