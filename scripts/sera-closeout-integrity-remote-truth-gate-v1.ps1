@@ -39,8 +39,17 @@ PHASE196_NO_FALSE_CLOSED_CLEANLY
 function Result {
   param([string]$Status, [string]$Reason, [object]$Context)
   $Path = ""
-  if ($WriteHandoff) { $Path = Write-GateHandoff -Status $Status -Reason $Reason -Context $Context }
-  [pscustomobject]@{ status = $Status; reason = $Reason; handoffPath = $Path }
+  if ($WriteHandoff) {
+    $Path = Write-GateHandoff -Status $Status -Reason $Reason -Context $Context
+  }
+
+  $Payload = [ordered]@{
+    status = $Status
+    reason = $Reason
+    handoffPath = $Path
+  }
+
+  Write-Output ($Payload | ConvertTo-Json -Compress)
 }
 
 function Is-Blank([string]$Value) { return [string]::IsNullOrWhiteSpace($Value) }
@@ -132,4 +141,5 @@ foreach ($Needle in $RequiredText) {
 
 Result "CLOSED_CLEANLY" "All Phase196 closeout integrity and remote truth gates passed." $Context
 exit 0
+
 
