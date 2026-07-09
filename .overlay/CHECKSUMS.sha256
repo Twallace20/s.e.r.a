@@ -1,7 +1,7 @@
 e98f5d4bc2b45729e583dba3689696323b83d22a4b9a88936d8b6f1be6352573  repo/.overlay/phase194_chatgpt_artifact_download_bridge_v6_exact_dom_full_loop_proof_v1.json
 8ec104b7bd768598d56faecf3d70c8a9d35b77af07021c651aaab218b17229ec  repo/.sera-proof/phase194_chatgpt_artifact_download_bridge_v6_exact_dom_full_loop_proof_v1.json
 4b52a7b037c2fc93b729fe240fa3de972236d469412461b9c446ccba5c80a5c1  repo/docs/phase194-chatgpt-artifact-download-bridge-v6-exact-dom-full-loop-proof-v1.md
-4aa78dede2c5a0f81f67f2ca96423e6677b82bfe9decc5730a752341fc1b0916  repo/scripts/phase194-chatgpt-artifact-download-bridge-v6-exact-dom-full-loop-proof-v1.ps1
+5bceb0f9407db6dfbbcc078123b094df91205d3a6fa9d767ff18f4f353a53059  repo/scripts/phase194-chatgpt-artifact-download-bridge-v6-exact-dom-full-loop-proof-v1.ps1
 5668a2e58018353b5245f0032fb45f2af0d7ddb62e1680c568879f20a56e68f8  repo/scripts/sera-chatgpt-artifact-download-v6.ps1
 68048a9e248cfff8ae6b3610d3549bce2030bbd4a62a51c7cd1db78e6d28282c  repo/scripts/sera-chatgpt-browser-bridge-v1.ps1
 265ccdd3712314f00dd7c0b1225a9c86bd9bd971e5c30a304e9cec2915245330  repo/scripts/verify-phase194-chatgpt-artifact-download-bridge-v6-exact-dom-full-loop-proof-v1.ps1
