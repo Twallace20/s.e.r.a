@@ -1,0 +1,31 @@
+{
+  "schema": "sera-phase197-full-autopilot-contract-v1",
+  "phase": 197,
+  "phaseSlug": "phase197_full_autopilot_json_to_remote_truth_closeout_proof_v1",
+  "expectedZipFilename": "s.e.r.a_phase197_full_autopilot_json_to_remote_truth_closeout_proof_v1_overlay.zip",
+  "phase196TrustedBaseline": {
+    "commit": "7a060e9eb81af79b37b581ca9147b36869866e17",
+    "tag": "phase-196-closeout-integrity-remote-truth-gate-v1"
+  },
+  "requiredGatesInOrder": [
+    "fresh_command_json",
+    "saved_chatgpt_target",
+    "prompt_submitted",
+    "exact_zip_downloaded",
+    "exact_zip_sha_verified",
+    "verifier_passed",
+    "qa_passed_after_verifier",
+    "merge_succeeded",
+    "push_main_succeeded",
+    "push_tag_succeeded",
+    "remote_main_verified",
+    "remote_tag_verified",
+    "final_handoff_identity_verified",
+    "no_manual_rescue"
+  ],
+  "closedCleanlyAllowedOnlyAfterAllRequiredGates": true,
+  "manualRescueAllowed": false,
+  "savedChatGptTargetOnly": true,
+  "allowRandomRecentChatFallback": false,
+  "allowNewChatFallback": false
+}
