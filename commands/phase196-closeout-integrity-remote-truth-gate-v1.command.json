@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "sera-autopilot-command-v1",
+  "commandId": "phase196-json-rerun-after-identity-guard-20260709110936",
+  "runNonce": "phase196-json-rerun-after-identity-guard-20260709110936",
+  "phase": 196,
+  "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+  "phaseToken": "closeout-integrity-remote-truth-gate-v1",
+  "phaseTitle": "Closeout Integrity Remote Truth Gate v1",
+  "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+  "savedChatGptTargetOnly": true,
+  "allowRandomRecentChatFallback": false,
+  "allowNewChatFallback": false,
+  "allowWhileBlocked": false,
+  "proofRun": true,
+  "proofMode": "json_to_closeout_integrity_gate_rerun_after_identity_guard",
+  "exactZipNameRequired": true,
+  "manualZipDownloadAllowed": false,
+  "forceFreshDownload": true,
+  "allowExistingZipReuse": false,
+  "requiresActiveCommandIdentityGuardBaseline": true,
+  "ownerGuidance": "Phase196 hardens closeout integrity and proves wrong-phase/stale command hijacking is blocked before Phase197 full autopilot proof."
+}

@@ -1,0 +1,113 @@
+{
+  "schema": "sera-phase196-closeout-integrity-fixtures-v1",
+  "cases": [
+    {
+      "name": "valid_all_gates_pass",
+      "expectStatus": "CLOSED_CLEANLY",
+      "context": {
+        "phase": "196",
+        "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+        "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+        "zipSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "localHead": "1111111111111111111111111111111111111111",
+        "remoteMain": "1111111111111111111111111111111111111111",
+        "localTagCommit": "1111111111111111111111111111111111111111",
+        "remoteTagCommit": "1111111111111111111111111111111111111111",
+        "verifierPassed": true,
+        "qaPassed": true,
+        "mergeSucceeded": true,
+        "pushMainSucceeded": true,
+        "pushTagSucceeded": true,
+        "finalHandoffText": "Status: CLOSED_CLEANLY\nPhase: s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay\nPhaseSlug: phase196_closeout_integrity_remote_truth_gate_v1\nTag: phase-196-closeout-integrity-remote-truth-gate-v1\nLocalHead: 1111111111111111111111111111111111111111\nRemoteMain: 1111111111111111111111111111111111111111\nLocalTagCommit: 1111111111111111111111111111111111111111\nRemoteTagCommit: 1111111111111111111111111111111111111111\nZipSha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nVerifierHandoff: verify.md\nQaHandoff: qa.md"
+      }
+    },
+    {
+      "name": "block_verifier_failure",
+      "expectStatus": "BLOCKED",
+      "context": {
+        "phase": "196",
+        "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+        "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+        "verifierPassed": false,
+        "qaPassed": false
+      }
+    },
+    {
+      "name": "block_qa_after_verifier_failure",
+      "expectStatus": "BLOCKED",
+      "context": {
+        "phase": "196",
+        "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+        "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+        "verifierPassed": false,
+        "qaPassed": true
+      }
+    },
+    {
+      "name": "block_qa_failure",
+      "expectStatus": "BLOCKED",
+      "context": {
+        "phase": "196",
+        "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+        "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+        "verifierPassed": true,
+        "qaPassed": false
+      }
+    },
+    {
+      "name": "block_remote_main_mismatch",
+      "expectStatus": "BLOCKED",
+      "context": {
+        "phase": "196",
+        "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+        "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+        "verifierPassed": true,
+        "qaPassed": true,
+        "mergeSucceeded": true,
+        "pushMainSucceeded": true,
+        "pushTagSucceeded": true,
+        "localHead": "1111111111111111111111111111111111111111",
+        "remoteMain": "2222222222222222222222222222222222222222",
+        "localTagCommit": "1111111111111111111111111111111111111111",
+        "remoteTagCommit": "1111111111111111111111111111111111111111"
+      }
+    },
+    {
+      "name": "block_remote_tag_mismatch",
+      "expectStatus": "BLOCKED",
+      "context": {
+        "phase": "196",
+        "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+        "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+        "verifierPassed": true,
+        "qaPassed": true,
+        "mergeSucceeded": true,
+        "pushMainSucceeded": true,
+        "pushTagSucceeded": true,
+        "localHead": "1111111111111111111111111111111111111111",
+        "remoteMain": "1111111111111111111111111111111111111111",
+        "localTagCommit": "1111111111111111111111111111111111111111",
+        "remoteTagCommit": "3333333333333333333333333333333333333333"
+      }
+    },
+    {
+      "name": "block_wrong_phase_handoff",
+      "expectStatus": "BLOCKED",
+      "context": {
+        "phase": "196",
+        "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+        "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+        "verifierPassed": true,
+        "qaPassed": true,
+        "mergeSucceeded": true,
+        "pushMainSucceeded": true,
+        "pushTagSucceeded": true,
+        "localHead": "1111111111111111111111111111111111111111",
+        "remoteMain": "1111111111111111111111111111111111111111",
+        "localTagCommit": "1111111111111111111111111111111111111111",
+        "remoteTagCommit": "1111111111111111111111111111111111111111",
+        "finalHandoffText": "Status: CLOSED_CLEANLY\nPhase: s.e.r.a_phase195_full_autopilot_cold_run_v1_overlay"
+      }
+    }
+  ]
+}

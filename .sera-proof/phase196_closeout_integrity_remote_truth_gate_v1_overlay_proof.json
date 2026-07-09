@@ -1,0 +1,28 @@
+{
+  "schema": "sera-overlay-proof-v1",
+  "phase": 196,
+  "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+  "phaseName": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+  "commandContract": {
+    "commandId": "phase196-json-rerun-after-identity-guard-20260709110936",
+    "runNonce": "phase196-json-rerun-after-identity-guard-20260709110936",
+    "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+    "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false
+  },
+  "proof": {
+    "closeoutHardStop": true,
+    "qaBlockedAfterVerifierFailure": true,
+    "mergeTagPushBlockedAfterVerifierOrQaFailure": true,
+    "closedCleanlyRequiresRemoteTruth": true,
+    "finalHandoffIdentityRequired": true,
+    "manifestDriftMustBlockOrBeExplicitlyRepaired": true,
+    "noPlainGitHelperSplatRequired": true,
+    "fixturesIncludedForPhase197": true,
+    "activeCommandIdentityGuardBaselineAcknowledged": true
+  },
+  "createdAt": "2026-07-09T18:20:00Z"
+}
