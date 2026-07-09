@@ -1,0 +1,9 @@
+{
+  "commandId": "phase195-full-autopilot-cold-run-v1-fresh-url-20260709065602",
+  "runNonce": "phase195-fresh-url-cold-run-20260709065602",
+  "phaseSlug": "phase195_full_autopilot_cold_run_v1",
+  "expectedZipFilename": "s.e.r.a_phase195_full_autopilot_cold_run_v1_overlay.zip",
+  "savedChatGptTargetOnly": true,
+  "allowRandomRecentChatFallback": false,
+  "allowNewChatFallback": false
+}
