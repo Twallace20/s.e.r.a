@@ -1,0 +1,29 @@
+{
+  "schema": "sera-overlay-proof-v1",
+  "phase": 198,
+  "phaseSlug": "phase198_second_consecutive_full_autopilot_production_stability_proof_v1",
+  "expectedZipFilename": "s.e.r.a_phase198_second_consecutive_full_autopilot_production_stability_proof_v1_overlay.zip",
+  "createdAt": "2026-07-09T20:25:00Z",
+  "zipRoot": "repo/",
+  "phase197TrustedBaseline": {
+    "commit": "8fb5e0d160f953a518ac1d3757d9fec66a35afc2",
+    "tag": "phase-197-full-autopilot-json-to-remote-truth-closeout-proof-v1"
+  },
+  "proofClaims": {
+    "secondConsecutiveFullAutopilotProofTarget": true,
+    "verifierIncluded": true,
+    "qaIncluded": true,
+    "fixtureProofIncluded": true,
+    "productionCleanupProofIncluded": true,
+    "exactZipFilenameRequired": true,
+    "phase197BaselineRequired": true,
+    "closedCleanlyRequiresRemoteTruthNoManualRescueAndPointerCleanup": true
+  },
+  "markers": [
+    "PHASE198_SECOND_CONSECUTIVE_FULL_AUTOPILOT_PROOF",
+    "PHASE198_NO_MANUAL_RESCUE_CLOSED_CLEANLY",
+    "PHASE198_POINTER_DIFF_CLEANUP_VERIFIED",
+    "PHASE198_PHASE197_TRUSTED_BASELINE_VERIFIED",
+    "PHASE198_FINAL_HANDOFF_IDENTITY_VERIFIED"
+  ]
+}
