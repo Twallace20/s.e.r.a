@@ -1,0 +1,40 @@
+{
+  "schema": "sera-phase196-closeout-integrity-contract-v1",
+  "phase": 196,
+  "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+  "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+  "requiredGatesInOrder": [
+    "exact_zip_verified",
+    "verifier_passed",
+    "qa_passed_after_verifier",
+    "merge_after_gates",
+    "push_main_after_merge",
+    "tag_after_merge",
+    "remote_main_verified",
+    "remote_tag_verified",
+    "final_handoff_identity_verified"
+  ],
+  "blockedInvariants": [
+    "qa_must_not_run_after_verifier_failure",
+    "merge_tag_push_cleanup_must_not_run_after_verifier_or_qa_failure",
+    "closed_cleanly_requires_remote_main_and_remote_tag_truth",
+    "wrong_phase_handoff_identity_must_block",
+    "stale_active_command_identity_must_skip_not_close",
+    "plain_git_helper_splat_failure_must_not_be_used_for_final_closeout"
+  ],
+  "watcherBaselineMarkers": [
+    "PHASE196_ACTIVE_COMMAND_IDENTITY_GUARD",
+    "PHASE196_ACTIVE_COMMAND_IDENTITY_CHANGED_SKIP",
+    "SKIPPED_STALE",
+    "status=skipped_stale"
+  ],
+  "phase197Readiness": {
+    "fixtureDrivenProofIncluded": true,
+    "simulatesVerifierFailure": true,
+    "simulatesQaFailure": true,
+    "simulatesRemoteMainMismatch": true,
+    "simulatesRemoteTagMismatch": true,
+    "simulatesWrongPhaseHandoff": true,
+    "simulatesValidCloseout": true
+  }
+}

@@ -1,74 +1,100 @@
 {
   "overlayFormat": "s.e.r.a.overlay.v1",
-  "phase": 195,
-  "phaseSlug": "phase195_full_autopilot_cold_run_v1",
-  "expectedZipFilename": "s.e.r.a_phase195_full_autopilot_cold_run_v1_overlay.zip",
-  "createdAt": "2026-07-09T14:07:48Z",
+  "schema": "sera-overlay-manifest-v1",
+  "phase": 196,
+  "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+  "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+  "createdAt": "2026-07-09T18:20:00Z",
   "zipRoot": "repo/",
+  "applyMode": "overlay-copy",
+  "summary": "Installs Phase196 closeout integrity remote truth gate with hard-stop verifier/QA behavior, remote main/tag truth checks, wrong-phase handoff rejection, and fixture proof for Phase197 readiness.",
   "commandContract": {
-    "commandId": "phase195-full-autopilot-cold-run-v1-fresh-url-20260709065602",
-    "runNonce": "phase195-fresh-url-cold-run-20260709065602",
-    "phaseSlug": "phase195_full_autopilot_cold_run_v1",
-    "expectedZipFilename": "s.e.r.a_phase195_full_autopilot_cold_run_v1_overlay.zip",
+    "commandId": "phase196-json-rerun-after-identity-guard-20260709110936",
+    "runNonce": "phase196-json-rerun-after-identity-guard-20260709110936",
+    "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
+    "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
     "savedChatGptTargetOnly": true,
     "allowRandomRecentChatFallback": false,
     "allowNewChatFallback": false
   },
-  "applyMode": "overlay-copy",
-  "summary": "Adds Phase 195 full-autopilot cold-run harness plus the required PowerShell verifier/QA closeout gates so BLOCKED and VERIFY_PASS/PASS_GUARANTEED handoffs are produced by standard scripts.",
+  "requirements": {
+    "directCloseoutHardStopsAfterVerifierFailure": true,
+    "qaMustNotRunAfterVerifierFailure": true,
+    "mergeTagPushRequireVerifierAndQaPass": true,
+    "closedCleanlyRequiresRemoteMainAndRemoteTagVerification": true,
+    "finalHandoffMustIncludeRemoteTruthAndZipSha": true,
+    "manifestHashDriftBlocksUnlessExplicitlyRepaired": true,
+    "avoidPlainGitHelperSplatFailure": true,
+    "testFixturesForPhase197Included": true,
+    "activeCommandIdentityGuardBaselineAcknowledged": true
+  },
   "files": [
     {
-      "path": "repo/.sera-proof/phase195_full_autopilot_cold_run_v1_overlay_proof.json",
-      "bytes": 2402,
-      "sha256": "185afeb62aae86257e47beff6007f45963082cb28ef7e0d22639b60f13b02602"
+      "path": "repo/.sera-proof/phase196_closeout_integrity_remote_truth_gate_v1_overlay_proof.json",
+      "bytes": 1239,
+      "sha256": "7d808d62a18c14a1d2838a3c68efd6943c0c981c3372e6ba76a9c4a751c73228"
     },
     {
-      "path": "repo/commands/phase195-full-autopilot-cold-run-v1.command.json",
-      "bytes": 398,
-      "sha256": "0727eaeda748affd8fda5905e612e714cd6b7a3b7d2f04c52ca5b6cce835b0ef"
+      "path": "repo/commands/phase196-closeout-integrity-remote-truth-gate-v1.command.json",
+      "bytes": 1072,
+      "sha256": "b228b77d93af6c7e22ac7f86f056d4ac71fe322bfad6d4d474e3466a00a7a711"
     },
     {
-      "path": "repo/docs/phases/PHASE_195_FULL_AUTOPILOT_COLD_RUN_V1.md",
-      "bytes": 4190,
-      "sha256": "d99b641687fcea4a7350020323a9aa083668fdcacf4f20776a0403430cdaf549"
+      "path": "repo/docs/phases/PHASE_196_CLOSEOUT_INTEGRITY_REMOTE_TRUTH_GATE_V1.md",
+      "bytes": 2334,
+      "sha256": "9e1228da38e49b5d4ce63587a22bc090021bb3608351320e38e439053ba71977"
     },
     {
-      "path": "repo/scripts/phase195-full-autopilot-cold-run.ts",
-      "bytes": 6951,
-      "sha256": "4f999413ef46d86c70f4df5d64350425d6ffc16e5a3f1f09d46829786b6f4242"
+      "path": "repo/scripts/phase196-closeout-integrity-remote-truth-gate-fixtures-v1.ps1",
+      "bytes": 1420,
+      "sha256": "04b29757ff9f4c8086bf024754b4e1317b669dd83f533e43fbdaa3f8098b7005"
     },
     {
-      "path": "repo/scripts/phase195-verify-overlay.mjs",
-      "bytes": 2062,
-      "sha256": "085b8eaa94906ca3831525f9318a95415b8a6e2ee71d8d05ca126218368c28e7"
+      "path": "repo/scripts/phase196-closeout-integrity-remote-truth-gate-v1.contract.json",
+      "bytes": 1393,
+      "sha256": "92c98470190925e29da3fa2a25d82fc481d71b46bfad492f4ae87d711ec71453"
     },
     {
-      "path": "repo/scripts/qa-phase195-full-autopilot-cold-run-v1.ps1",
-      "bytes": 4028,
-      "sha256": "5bda900fd14b813d70bd305a664cd0e0a06fa5b30b76bfdc5a55f1d7af77d872"
+      "path": "repo/scripts/phase196-closeout-integrity-remote-truth-gate-v1.ps1",
+      "bytes": 500,
+      "sha256": "0ac50b3b90a81e672ac557635c6f751868df1aad0687df0cd995e0ddb1343fcd"
     },
     {
-      "path": "repo/scripts/verify-phase195-full-autopilot-cold-run-v1.ps1",
-      "bytes": 7433,
-      "sha256": "54490fb0f8a85eeae76290bc29528be512e6d173cd159f763f79b11c4ac84e69"
+      "path": "repo/scripts/phase196-verify-overlay.mjs",
+      "bytes": 1557,
+      "sha256": "13830c7d25c2331df98294f151c4404624b25f8857b1bc8f28219f96119f4cbf"
     },
     {
-      "path": "repo/src/chatgpt/phase195FullAutopilotColdRun.ts",
-      "bytes": 7811,
-      "sha256": "927459d785f6c58d8524882ef62d15298d20c41920eda26abdc0cd83beeba35d"
+      "path": "repo/scripts/qa-phase196-closeout-integrity-remote-truth-gate-v1.ps1",
+      "bytes": 3143,
+      "sha256": "0f8e824735fb38ff9a0c292900b3c995e60067b7ae90ca3ccd50a27bdffe0bf6"
     },
     {
-      "path": "repo/tests/phase195-full-autopilot-cold-run.contract.test.ts",
-      "bytes": 3758,
-      "sha256": "eab7bf8c9afff4c2ad1f7f596b738ddd803c24e0bc823109bb512531c7a73024"
+      "path": "repo/scripts/sera-closeout-integrity-remote-truth-gate-v1.ps1",
+      "bytes": 4286,
+      "sha256": "5e4bea01b827c12055ec076affe33481ab5246e1967f65c008a81929951a26c8"
+    },
+    {
+      "path": "repo/scripts/verify-phase196-closeout-integrity-remote-truth-gate-v1.ps1",
+      "bytes": 4662,
+      "sha256": "c21f325c0e4454e486bd2654e6350b30782f7bf5821f0eaba1f85aa8412a01e4"
+    },
+    {
+      "path": "repo/tests/fixtures/phase196-closeout-integrity/cases.json",
+      "bytes": 4977,
+      "sha256": "a7b72bdb47f31c9f668fb05a9b41974ecafe85e6e7d9fdefee1f2648cab0a7b7"
+    },
+    {
+      "path": "repo/tests/phase196-closeout-integrity-remote-truth-gate-v1.contract.test.ts",
+      "bytes": 1543,
+      "sha256": "9a5e13132d7c3a19c286c12fefd95f68c2c3a562c8afae84ca7b75f9e6fb4930"
     }
   ],
   "postApplyValidation": [
-    "node scripts/phase195-verify-overlay.mjs .",
-    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-phase195-full-autopilot-cold-run-v1.ps1 -RepoRoot .",
-    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/qa-phase195-full-autopilot-cold-run-v1.ps1 -RepoRoot .",
-    "npx vitest --run tests/phase195-full-autopilot-cold-run.contract.test.ts",
-    "npx tsx scripts/phase195-full-autopilot-cold-run.ts --command commands/phase195-full-autopilot-cold-run-v1.command.json --saved-url-file .sera-local/saved-chatgpt-target.json --plan-only"
-  ],
-  "coldRunExecution": "npx tsx scripts/phase195-full-autopilot-cold-run.ts --command commands/phase195-full-autopilot-cold-run-v1.command.json --saved-url-file .sera-local/saved-chatgpt-target.json --chrome-ws-file chrome-ws.json --download-dir 13_chatgpt_downloads --execute"
+    "node scripts/phase196-verify-overlay.mjs .",
+    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-phase196-closeout-integrity-remote-truth-gate-v1.ps1 -RepoRoot .",
+    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/qa-phase196-closeout-integrity-remote-truth-gate-v1.ps1 -RepoRoot .",
+    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/phase196-closeout-integrity-remote-truth-gate-fixtures-v1.ps1 -RepoRoot .",
+    "npx vitest --run tests/phase196-closeout-integrity-remote-truth-gate-v1.contract.test.ts"
+  ]
 }
