@@ -1,0 +1,74 @@
+{
+  "overlayFormat": "s.e.r.a.overlay.v1",
+  "phase": 195,
+  "phaseSlug": "phase195_full_autopilot_cold_run_v1",
+  "expectedZipFilename": "s.e.r.a_phase195_full_autopilot_cold_run_v1_overlay.zip",
+  "createdAt": "2026-07-09T14:07:48Z",
+  "zipRoot": "repo/",
+  "commandContract": {
+    "commandId": "phase195-full-autopilot-cold-run-v1-fresh-url-20260709065602",
+    "runNonce": "phase195-fresh-url-cold-run-20260709065602",
+    "phaseSlug": "phase195_full_autopilot_cold_run_v1",
+    "expectedZipFilename": "s.e.r.a_phase195_full_autopilot_cold_run_v1_overlay.zip",
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false
+  },
+  "applyMode": "overlay-copy",
+  "summary": "Adds Phase 195 full-autopilot cold-run harness plus the required PowerShell verifier/QA closeout gates so BLOCKED and VERIFY_PASS/PASS_GUARANTEED handoffs are produced by standard scripts.",
+  "files": [
+    {
+      "path": "repo/.sera-proof/phase195_full_autopilot_cold_run_v1_overlay_proof.json",
+      "bytes": 2357,
+      "sha256": "c83b12c6ad364c542f4459cbacde17acf5d573b2be62cc40ee6827eac646c207"
+    },
+    {
+      "path": "repo/commands/phase195-full-autopilot-cold-run-v1.command.json",
+      "bytes": 389,
+      "sha256": "4864103ddf4467eb67d442ebed85206c5d4dc928609e06d096ae66bba813cb76"
+    },
+    {
+      "path": "repo/docs/phases/PHASE_195_FULL_AUTOPILOT_COLD_RUN_V1.md",
+      "bytes": 4064,
+      "sha256": "91d215084167c2e10161df143e119cd416441f1927022b480d234e79014fb1da"
+    },
+    {
+      "path": "repo/scripts/phase195-full-autopilot-cold-run.ts",
+      "bytes": 6778,
+      "sha256": "b70383d362f857fc44f703980db07e89642f8024e1271e5f3f353903a1b8a59c"
+    },
+    {
+      "path": "repo/scripts/phase195-verify-overlay.mjs",
+      "bytes": 2007,
+      "sha256": "55105c5dfe2eb59fd570d05dd52d1a4f2a7cdbd3034570cf2e53f2d4194e10bf"
+    },
+    {
+      "path": "repo/scripts/qa-phase195-full-autopilot-cold-run-v1.ps1",
+      "bytes": 3926,
+      "sha256": "07c5535da8231d5f6c7d471dada39812880c54f0714dbc1dafea68aa4841c282"
+    },
+    {
+      "path": "repo/scripts/verify-phase195-full-autopilot-cold-run-v1.ps1",
+      "bytes": 7268,
+      "sha256": "0354d5c3aba2e29067cf85b9b1bebb07b8032fead7746f76e007c274f07c1b10"
+    },
+    {
+      "path": "repo/src/chatgpt/phase195FullAutopilotColdRun.ts",
+      "bytes": 7604,
+      "sha256": "f3889b367fbc59c7b76e80cbf270f9fe20c772a415723eedb74120e61e992444"
+    },
+    {
+      "path": "repo/tests/phase195-full-autopilot-cold-run.contract.test.ts",
+      "bytes": 3684,
+      "sha256": "e8c02c359117201ddc54fe47f78222acc54d4a1208abb3150c9de7212a8fb204"
+    }
+  ],
+  "postApplyValidation": [
+    "node scripts/phase195-verify-overlay.mjs .",
+    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-phase195-full-autopilot-cold-run-v1.ps1 -RepoRoot .",
+    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/qa-phase195-full-autopilot-cold-run-v1.ps1 -RepoRoot .",
+    "npx vitest --run tests/phase195-full-autopilot-cold-run.contract.test.ts",
+    "npx tsx scripts/phase195-full-autopilot-cold-run.ts --command commands/phase195-full-autopilot-cold-run-v1.command.json --saved-url-file .sera-local/saved-chatgpt-target.json --plan-only"
+  ],
+  "coldRunExecution": "npx tsx scripts/phase195-full-autopilot-cold-run.ts --command commands/phase195-full-autopilot-cold-run-v1.command.json --saved-url-file .sera-local/saved-chatgpt-target.json --chrome-ws-file chrome-ws.json --download-dir 13_chatgpt_downloads --execute"
+}

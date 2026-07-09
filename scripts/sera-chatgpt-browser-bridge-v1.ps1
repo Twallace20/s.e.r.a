@@ -280,7 +280,31 @@ function Submit-ChatGptPrompt {
     box.dispatchEvent(new KeyboardEvent("keydown", { key:"Enter", code:"Enter", bubbles:true, cancelable:true }));
     box.dispatchEvent(new KeyboardEvent("keyup", { key:"Enter", code:"Enter", bubbles:true, cancelable:true }));
     await new Promise(r => setTimeout(r, 1200));
-    return { ok:true, action:"prompt_submitted_by_enter_fallback" };
+
+    const afterComposerText = (box.innerText || box.textContent || "").trim();
+    const stopOrGenerating = Array.from(document.querySelectorAll("button,[role='button']")).some(b => {
+      const label = [
+        b.getAttribute("aria-label"),
+        b.getAttribute("data-testid"),
+        b.getAttribute("title"),
+        b.innerText,
+        b.textContent
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      return label.includes("stop") || label.includes("generating") || label.includes("streaming");
+    });
+
+    if (stopOrGenerating) {
+      return { ok:true, action:"prompt_submitted_by_enter_fallback_verified_generating" };
+    }
+
+    return {
+      ok:false,
+      reason:"prompt_submit_unconfirmed_enter_fallback",
+      action:"enter_fallback_attempted_without_send_button",
+      composerTextLength: afterComposerText.length,
+      url: location.href
+    };
   }
 
   send.click();
@@ -547,3 +571,4 @@ try {
 # exact ZIP filename and SHA256/freshness verification before success
 # allowRandomRecentChatFallback false
 # allowNewChatFallback false
+

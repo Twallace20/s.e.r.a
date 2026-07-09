@@ -1,0 +1,46 @@
+{
+  "ok": true,
+  "phase": 195,
+  "phaseSlug": "phase195_full_autopilot_cold_run_v1",
+  "proofType": "overlay_generation_verification",
+  "createdAt": "2026-07-09T14:07:48Z",
+  "expectedZipFilename": "s.e.r.a_phase195_full_autopilot_cold_run_v1_overlay.zip",
+  "commandContract": {
+    "commandId": "phase195-full-autopilot-cold-run-v1-fresh-url-20260709065602",
+    "runNonce": "phase195-fresh-url-cold-run-20260709065602",
+    "phaseSlug": "phase195_full_autopilot_cold_run_v1",
+    "expectedZipFilename": "s.e.r.a_phase195_full_autopilot_cold_run_v1_overlay.zip",
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false
+  },
+  "requirements": {
+    "zipRootMustBeRepo": true,
+    "includeOverlayManifest": true,
+    "includeSeraProofVerificationFile": true,
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "noPreseededZipPermittedByRuntimeHarness": true,
+    "manualDownloadPermitted": false
+  },
+  "runtimeProofPathAfterExecution": ".sera-proof/phase195_full_autopilot_cold_run_v1_runtime_proof.json",
+  "overlayFiles": [
+    "repo/commands/phase195-full-autopilot-cold-run-v1.command.json",
+    "repo/docs/phases/PHASE_195_FULL_AUTOPILOT_COLD_RUN_V1.md",
+    "repo/src/chatgpt/phase195FullAutopilotColdRun.ts",
+    "repo/scripts/phase195-full-autopilot-cold-run.ts",
+    "repo/scripts/phase195-verify-overlay.mjs",
+    "repo/tests/phase195-full-autopilot-cold-run.contract.test.ts",
+    "repo/scripts/verify-phase195-full-autopilot-cold-run-v1.ps1",
+    "repo/scripts/qa-phase195-full-autopilot-cold-run-v1.ps1"
+  ],
+  "verificationNotes": [
+    "This proof verifies the overlay package content and the Phase 195 command contract.",
+    "The included runtime harness enforces the cold-run proof gates when executed in the S.E.R.A. repo with a saved ChatGPT conversation URL.",
+    "The harness rejects preseeded expected ZIP files before submitting the command JSON.",
+    "The harness rejects random recent chat fallback and new-chat fallback by exact contract checks.",
+    "Repair includes the required PowerShell verifier script expected by the production closeout gate.",
+    "Verifier and QA scripts write BLOCKED handoffs on failure so the operator receives a standard blocked result instead of a silent stop."
+  ]
+}
