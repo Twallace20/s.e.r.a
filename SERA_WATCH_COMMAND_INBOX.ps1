@@ -696,6 +696,75 @@ function Invoke-FullAutoLoopForCommand {
     throw "Unified request-ready runner failed with exit $UnifiedCode"
   }
 
+
+  # PHASE196_ACTIVE_COMMAND_IDENTITY_GUARD
+  # The unified runonce/router may archive a stale command and create a newer request.
+  # If that happens, this watcher must not continue with old $Info metadata and close the wrong phase.
+  if (!(Test-Path -LiteralPath $CommandPath)) {
+    Write-Step "PHASE196_ACTIVE_COMMAND_IDENTITY_CHANGED_SKIP reason=command_archived_after_unified_runonce command=$CommandPath phase=$($Info.PhaseSlug)"
+    Write-QueueEvent "PHASE196_ACTIVE_COMMAND_IDENTITY_CHANGED_SKIP" @{
+      reason = "command_archived_after_unified_runonce"
+      phaseSlug = $Info.PhaseSlug
+      expectedZip = $Info.ExpectedZip
+      commandPath = $CommandPath
+    }
+    return [pscustomobject]@{
+      Status = "SKIPPED_STALE"
+      Path = ""
+      PhaseName = Get-PhaseNameFromInfo -Info $Info
+      Reason = "Active command was archived or removed after unified runonce."
+    }
+  }
+
+  $CurrentCommandHash = Get-FileSha256 -Path $CommandPath
+  if ($CurrentCommandHash -ne $Command.Hash) {
+    Write-Step "PHASE196_ACTIVE_COMMAND_IDENTITY_CHANGED_SKIP reason=command_hash_changed_after_unified_runonce command=$CommandPath phase=$($Info.PhaseSlug)"
+    Write-QueueEvent "PHASE196_ACTIVE_COMMAND_IDENTITY_CHANGED_SKIP" @{
+      reason = "command_hash_changed_after_unified_runonce"
+      phaseSlug = $Info.PhaseSlug
+      expectedZip = $Info.ExpectedZip
+      commandPath = $CommandPath
+    }
+    return [pscustomobject]@{
+      Status = "SKIPPED_STALE"
+      Path = ""
+      PhaseName = Get-PhaseNameFromInfo -Info $Info
+      Reason = "Active command hash changed after unified runonce."
+    }
+  }
+
+  if (Test-Path -LiteralPath $QueueStatePath) {
+    try {
+      $CurrentQueueState = Get-Content -LiteralPath $QueueStatePath -Raw | ConvertFrom-Json
+      $QueuePhaseSlug = [string]$CurrentQueueState.phaseSlug
+      $QueueExpectedZip = [string]$CurrentQueueState.expectedZip
+
+      if (
+        -not [string]::IsNullOrWhiteSpace($QueuePhaseSlug) -and
+        -not [string]::IsNullOrWhiteSpace($QueueExpectedZip) -and
+        ($QueuePhaseSlug -ne [string]$Info.PhaseSlug -or $QueueExpectedZip -ne [string]$Info.ExpectedZip)
+      ) {
+        Write-Step "PHASE196_ACTIVE_COMMAND_IDENTITY_CHANGED_SKIP reason=queue_identity_changed activePhase=$($Info.PhaseSlug) queuePhase=$QueuePhaseSlug activeZip=$($Info.ExpectedZip) queueZip=$QueueExpectedZip"
+        Write-QueueEvent "PHASE196_ACTIVE_COMMAND_IDENTITY_CHANGED_SKIP" @{
+          reason = "queue_identity_changed"
+          activePhaseSlug = $Info.PhaseSlug
+          queuePhaseSlug = $QueuePhaseSlug
+          activeExpectedZip = $Info.ExpectedZip
+          queueExpectedZip = $QueueExpectedZip
+          commandPath = $CommandPath
+        }
+        return [pscustomobject]@{
+          Status = "SKIPPED_STALE"
+          Path = ""
+          PhaseName = Get-PhaseNameFromInfo -Info $Info
+          Reason = "Queue identity changed after unified runonce."
+        }
+      }
+    } catch {
+      Write-Step "PHASE196_QUEUE_IDENTITY_READ_WARNING $($_.Exception.Message)"
+    }
+  }
+
   $Prompt = Get-ChildItem $BridgeOutbox -File -Filter "*$($Info.PhaseSlug)*.md" -ErrorAction SilentlyContinue |
     Sort-Object LastWriteTime -Descending |
     Select-Object -First 1
@@ -870,6 +939,11 @@ while ($true) {
     Set-QueueState -Status "CLOSED_CLEANLY" -Info $Pending.Info -FinalHandoffPath $Result.Path
     Write-Step "FULL_LOOP_EXIT_CODE 0"
     Write-Step "WATCHER_RETURN_TO_WATCH_AFTER_RUN status=success command=$($Pending.Path) final=$($Result.Path)"
+  } elseif ($Result -and $Result.Status -eq "SKIPPED_STALE") {
+    $ExitCode = 0
+    Write-Step "FULL_LOOP_EXIT_CODE 0"
+    Write-Step "WATCHER_RETURN_TO_WATCH_AFTER_RUN status=skipped_stale command=$($Pending.Path) reason=$($Result.Reason)"
+    Write-QueueEvent "WATCHER_RETURN_TO_WATCH_AFTER_RUN" @{ status = "skipped_stale"; commandPath = $Pending.Path; phaseSlug = $Pending.Info.PhaseSlug; reason = $Result.Reason }
   } elseif ($Result -and $Result.Status -eq "BLOCKED") {
     $ExitCode = 1
     Set-QueueState -Status "BLOCKED" -Info $Pending.Info -FinalHandoffPath $Result.Path -Reason $ErrorReason
@@ -907,3 +981,6 @@ while ($true) {
 # RUN_DIRECT_ZIP_CLOSEOUT
 # WATCHER_RETURN_TO_WATCH_AFTER_RUN
 # BLOCKED_DOWNSTREAM_PHASES_PAUSED
+
+# PHASE196_ACTIVE_COMMAND_IDENTITY_GUARD
+# Prevents stale command metadata from continuing after unified runonce/router changes active phase identity.
