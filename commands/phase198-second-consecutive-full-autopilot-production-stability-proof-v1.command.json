@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "sera-autopilot-command-v1",
+  "schema": "sera-autopilot-command-v1",
+  "commandId": "phase198-second-full-autopilot-proof-20260709132030",
+  "runNonce": "phase198-second-full-autopilot-proof-20260709132030",
+  "phase": 198,
+  "phaseSlug": "phase198_second_consecutive_full_autopilot_production_stability_proof_v1",
+  "phaseToken": "second-consecutive-full-autopilot-production-stability-proof-v1",
+  "phaseTitle": "Second Consecutive Full Autopilot Production Stability Proof v1",
+  "expectedZipFilename": "s.e.r.a_phase198_second_consecutive_full_autopilot_production_stability_proof_v1_overlay.zip",
+  "expectedZip": "s.e.r.a_phase198_second_consecutive_full_autopilot_production_stability_proof_v1_overlay.zip",
+  "savedChatGptTargetOnly": true,
+  "savedChatGptTargetUrl": "https://chatgpt.com/g/g-p-68ddef884f4c8191bb9b2698e998e23d-s-e-r-a/c/6a4fa6c3-e120-83e8-9a23-6020d2171d0c",
+  "allowRandomRecentChatFallback": false,
+  "allowNewChatFallback": false,
+  "allowWhileBlocked": false,
+  "proofRun": true,
+  "proofMode": "second_consecutive_fresh_json_to_chatgpt_to_zip_to_verifier_to_qa_to_merge_to_push_to_tag_to_remote_truth_to_closed_cleanly",
+  "exactZipNameRequired": true,
+  "manualZipDownloadAllowed": false,
+  "forceFreshDownload": true,
+  "allowExistingZipReuse": false,
+  "phase197TrustedBaseline": {
+    "commit": "8fb5e0d160f953a518ac1d3757d9fec66a35afc2",
+    "tag": "phase-197-full-autopilot-json-to-remote-truth-closeout-proof-v1"
+  }
+}
