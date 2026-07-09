@@ -1,100 +1,106 @@
 {
   "overlayFormat": "s.e.r.a.overlay.v1",
   "schema": "sera-overlay-manifest-v1",
-  "phase": 196,
-  "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
-  "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
-  "createdAt": "2026-07-09T18:20:00Z",
+  "phase": 197,
+  "phaseSlug": "phase197_full_autopilot_json_to_remote_truth_closeout_proof_v1",
+  "expectedZipFilename": "s.e.r.a_phase197_full_autopilot_json_to_remote_truth_closeout_proof_v1_overlay.zip",
+  "createdAt": "2026-07-09T19:55:00Z",
   "zipRoot": "repo/",
   "applyMode": "overlay-copy",
-  "summary": "Installs Phase196 closeout integrity remote truth gate with hard-stop verifier/QA behavior, remote main/tag truth checks, wrong-phase handoff rejection, and fixture proof for Phase197 readiness.",
+  "summary": "Installs Phase197 full-autopilot JSON-to-remote-truth closeout proof, including verifier, QA, fixture proof, Phase196 trusted baseline verification, and no-manual-rescue remote truth gate.",
   "commandContract": {
-    "commandId": "phase196-json-rerun-after-identity-guard-20260709110936",
-    "runNonce": "phase196-json-rerun-after-identity-guard-20260709110936",
-    "phaseSlug": "phase196_closeout_integrity_remote_truth_gate_v1",
-    "expectedZipFilename": "s.e.r.a_phase196_closeout_integrity_remote_truth_gate_v1_overlay.zip",
+    "commandId": "phase197-full-autopilot-cold-proof-20260709125025",
+    "runNonce": "phase197-full-autopilot-cold-proof-20260709125025",
+    "phaseSlug": "phase197_full_autopilot_json_to_remote_truth_closeout_proof_v1",
+    "expectedZipFilename": "s.e.r.a_phase197_full_autopilot_json_to_remote_truth_closeout_proof_v1_overlay.zip",
     "savedChatGptTargetOnly": true,
     "allowRandomRecentChatFallback": false,
     "allowNewChatFallback": false
   },
+  "phase196TrustedBaseline": {
+    "commit": "7a060e9eb81af79b37b581ca9147b36869866e17",
+    "tag": "phase-196-closeout-integrity-remote-truth-gate-v1"
+  },
   "requirements": {
-    "directCloseoutHardStopsAfterVerifierFailure": true,
-    "qaMustNotRunAfterVerifierFailure": true,
-    "mergeTagPushRequireVerifierAndQaPass": true,
-    "closedCleanlyRequiresRemoteMainAndRemoteTagVerification": true,
-    "finalHandoffMustIncludeRemoteTruthAndZipSha": true,
-    "manifestHashDriftBlocksUnlessExplicitlyRepaired": true,
-    "avoidPlainGitHelperSplatFailure": true,
-    "testFixturesForPhase197Included": true,
-    "activeCommandIdentityGuardBaselineAcknowledged": true
+    "freshCommandJsonRequired": true,
+    "savedChatGptTargetOnly": true,
+    "promptSubmitRequired": true,
+    "exactZipDownloadRequired": true,
+    "exactZipShaRequired": true,
+    "verifierMustPassBeforeQa": true,
+    "qaMustPassBeforeMerge": true,
+    "closedCleanlyRequiresMergePushTagRemoteTruth": true,
+    "finalHandoffMustIncludeRemoteTruthVerifierQaZipSha": true,
+    "manualRescueForbiddenForProof": true,
+    "phase196TrustedBaselineRequired": true
   },
   "files": [
     {
-      "path": "repo/.sera-proof/phase196_closeout_integrity_remote_truth_gate_v1_overlay_proof.json",
-      "bytes": 1239,
-      "sha256": "7d808d62a18c14a1d2838a3c68efd6943c0c981c3372e6ba76a9c4a751c73228"
+      "path": "repo/.sera-proof/phase197_full_autopilot_json_to_remote_truth_closeout_proof_v1_overlay_proof.json",
+      "bytes": 1050,
+      "sha256": "6c766f2300981ffeddc431190454159c8e37bcdca2c551a5ffae0ef38cfe5104"
     },
     {
-      "path": "repo/commands/phase196-closeout-integrity-remote-truth-gate-v1.command.json",
-      "bytes": 1072,
-      "sha256": "b228b77d93af6c7e22ac7f86f056d4ac71fe322bfad6d4d474e3466a00a7a711"
+      "path": "repo/commands/phase197-full-autopilot-json-to-remote-truth-closeout-proof-v1.command.json",
+      "bytes": 1392,
+      "sha256": "cc1466b2b806ee62a6caa1d7bb4143efbe7e03985c61240316fa08f0fa0dacdf"
     },
     {
-      "path": "repo/docs/phases/PHASE_196_CLOSEOUT_INTEGRITY_REMOTE_TRUTH_GATE_V1.md",
-      "bytes": 2334,
-      "sha256": "9e1228da38e49b5d4ce63587a22bc090021bb3608351320e38e439053ba71977"
+      "path": "repo/docs/phases/PHASE_197_FULL_AUTOPILOT_JSON_TO_REMOTE_TRUTH_CLOSEOUT_PROOF_V1.md",
+      "bytes": 1831,
+      "sha256": "14f349ff4f9f0c120b355b453833e5e217a7edd57226f6bf1a7f132b2ae15829"
     },
     {
-      "path": "repo/scripts/phase196-closeout-integrity-remote-truth-gate-fixtures-v1.ps1",
-      "bytes": 1420,
-      "sha256": "04b29757ff9f4c8086bf024754b4e1317b669dd83f533e43fbdaa3f8098b7005"
+      "path": "repo/scripts/phase197-full-autopilot-json-to-remote-truth-closeout-proof-fixtures-v1.ps1",
+      "bytes": 1537,
+      "sha256": "e994d8687e1e454203b9c07cd9f790bbce88a05d36143493651d1c4ae119e0a3"
     },
     {
-      "path": "repo/scripts/phase196-closeout-integrity-remote-truth-gate-v1.contract.json",
-      "bytes": 1393,
-      "sha256": "92c98470190925e29da3fa2a25d82fc481d71b46bfad492f4ae87d711ec71453"
+      "path": "repo/scripts/phase197-full-autopilot-json-to-remote-truth-closeout-proof-v1.contract.json",
+      "bytes": 1039,
+      "sha256": "09d0e156286ab0519363210e6acdec3e40c7ef6c1096e30e12c3745344afbfd0"
     },
     {
-      "path": "repo/scripts/phase196-closeout-integrity-remote-truth-gate-v1.ps1",
-      "bytes": 500,
-      "sha256": "0ac50b3b90a81e672ac557635c6f751868df1aad0687df0cd995e0ddb1343fcd"
+      "path": "repo/scripts/phase197-full-autopilot-json-to-remote-truth-closeout-proof-v1.ps1",
+      "bytes": 514,
+      "sha256": "6a68a088d72fbda2e10c0a19148c4b109a82182ca8bd0bfb824bc2f8bc2bf12a"
     },
     {
-      "path": "repo/scripts/phase196-verify-overlay.mjs",
-      "bytes": 1557,
-      "sha256": "13830c7d25c2331df98294f151c4404624b25f8857b1bc8f28219f96119f4cbf"
+      "path": "repo/scripts/phase197-verify-overlay.mjs",
+      "bytes": 1954,
+      "sha256": "7930237d07e2fb1a10829a5b18ccced250bc8172fb1e15932bbfbabaa0bf7833"
     },
     {
-      "path": "repo/scripts/qa-phase196-closeout-integrity-remote-truth-gate-v1.ps1",
-      "bytes": 3143,
-      "sha256": "0f8e824735fb38ff9a0c292900b3c995e60067b7ae90ca3ccd50a27bdffe0bf6"
+      "path": "repo/scripts/qa-phase197-full-autopilot-json-to-remote-truth-closeout-proof-v1.ps1",
+      "bytes": 3600,
+      "sha256": "be6e783df3a8629e8a2e517dcc7c44da5a4952f520b208c47e073187880bfeec"
     },
     {
-      "path": "repo/scripts/sera-closeout-integrity-remote-truth-gate-v1.ps1",
-      "bytes": 4286,
-      "sha256": "5e4bea01b827c12055ec076affe33481ab5246e1967f65c008a81929951a26c8"
+      "path": "repo/scripts/sera-full-autopilot-json-to-remote-truth-closeout-proof-v1.ps1",
+      "bytes": 5275,
+      "sha256": "c8f5d87f2ce98f68e453c75e597ab481947ca52288716baebf06b019e9f0d956"
     },
     {
-      "path": "repo/scripts/verify-phase196-closeout-integrity-remote-truth-gate-v1.ps1",
-      "bytes": 4662,
-      "sha256": "c21f325c0e4454e486bd2654e6350b30782f7bf5821f0eaba1f85aa8412a01e4"
+      "path": "repo/scripts/verify-phase197-full-autopilot-json-to-remote-truth-closeout-proof-v1.ps1",
+      "bytes": 6622,
+      "sha256": "c32614045fe1e4ddf2ba8be73bb2b60d82100ce7be17d33de16dcd8996e8efaf"
     },
     {
-      "path": "repo/tests/fixtures/phase196-closeout-integrity/cases.json",
-      "bytes": 4977,
-      "sha256": "a7b72bdb47f31c9f668fb05a9b41974ecafe85e6e7d9fdefee1f2648cab0a7b7"
+      "path": "repo/tests/fixtures/phase197-full-autopilot/cases.json",
+      "bytes": 20802,
+      "sha256": "01e00df6801d425bb0dde609624dd9be9474a1061ef752d383af0eda225bc573"
     },
     {
-      "path": "repo/tests/phase196-closeout-integrity-remote-truth-gate-v1.contract.test.ts",
-      "bytes": 1543,
-      "sha256": "9a5e13132d7c3a19c286c12fefd95f68c2c3a562c8afae84ca7b75f9e6fb4930"
+      "path": "repo/tests/phase197-full-autopilot-json-to-remote-truth-closeout-proof-v1.contract.test.ts",
+      "bytes": 1207,
+      "sha256": "47d7623822e7184f0d663244f80c13a2241319542d45356888f565a355abf8cb"
     }
   ],
   "postApplyValidation": [
-    "node scripts/phase196-verify-overlay.mjs .",
-    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-phase196-closeout-integrity-remote-truth-gate-v1.ps1 -RepoRoot .",
-    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/qa-phase196-closeout-integrity-remote-truth-gate-v1.ps1 -RepoRoot .",
-    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/phase196-closeout-integrity-remote-truth-gate-fixtures-v1.ps1 -RepoRoot .",
-    "npx vitest --run tests/phase196-closeout-integrity-remote-truth-gate-v1.contract.test.ts"
+    "node scripts/phase197-verify-overlay.mjs .",
+    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-phase197-full-autopilot-json-to-remote-truth-closeout-proof-v1.ps1 -RepoRoot .",
+    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/qa-phase197-full-autopilot-json-to-remote-truth-closeout-proof-v1.ps1 -RepoRoot .",
+    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/phase197-full-autopilot-json-to-remote-truth-closeout-proof-fixtures-v1.ps1 -RepoRoot .",
+    "npx vitest --run tests/phase197-full-autopilot-json-to-remote-truth-closeout-proof-v1.contract.test.ts"
   ]
 }

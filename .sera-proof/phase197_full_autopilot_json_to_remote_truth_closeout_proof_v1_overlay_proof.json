@@ -1,0 +1,28 @@
+{
+  "schema": "sera-overlay-proof-v1",
+  "phase": 197,
+  "phaseSlug": "phase197_full_autopilot_json_to_remote_truth_closeout_proof_v1",
+  "expectedZipFilename": "s.e.r.a_phase197_full_autopilot_json_to_remote_truth_closeout_proof_v1_overlay.zip",
+  "createdAt": "2026-07-09T19:55:00Z",
+  "zipRoot": "repo/",
+  "phase196TrustedBaseline": {
+    "commit": "7a060e9eb81af79b37b581ca9147b36869866e17",
+    "tag": "phase-196-closeout-integrity-remote-truth-gate-v1"
+  },
+  "proofClaims": {
+    "freshCommandJsonToClosedCleanlyNoManualRescueProofTarget": true,
+    "verifierIncluded": true,
+    "qaIncluded": true,
+    "fixtureProofIncluded": true,
+    "fullAutopilotGateIncluded": true,
+    "exactZipFilenameRequired": true,
+    "phase196BaselineRequired": true,
+    "closedCleanlyRequiresRemoteTruthAndNoManualRescue": true
+  },
+  "markers": [
+    "PHASE197_FULL_AUTOPILOT_REMOTE_TRUTH_CLOSEOUT_PROOF",
+    "PHASE197_NO_MANUAL_RESCUE_CLOSED_CLEANLY",
+    "PHASE197_PHASE196_TRUSTED_BASELINE_VERIFIED",
+    "PHASE197_FINAL_HANDOFF_IDENTITY_VERIFIED"
+  ]
+}
