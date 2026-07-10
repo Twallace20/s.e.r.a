@@ -213,71 +213,211 @@ function Find-DownloadedArtifact {
 
 function Submit-ChatGptPrompt {
   param(
+    [Parameter(Mandatory=$true)]
     [string]$WsUrl,
-    [string]$PromptText
+
+    [Parameter(Mandatory=$true)]
+    [Alias("PromptFile","Path")]
+    [string]$PromptPath
   )
 
-  $PromptBytes = [System.Text.Encoding]::UTF8.GetBytes($PromptText)
-  $PromptB64 = [Convert]::ToBase64String($PromptBytes)
-  $PromptB64Json = $PromptB64 | ConvertTo-Json -Compress
+  if (!(Test-Path -LiteralPath $PromptPath)) {
+    throw "PromptPath does not exist: $PromptPath"
+  }
 
-  $SubmitJs = @"
+  $Prompt = Get-Content -LiteralPath $PromptPath -Raw
+  if ([string]::IsNullOrWhiteSpace($Prompt)) {
+    throw "Prompt is empty: $PromptPath"
+  }
+
+  $PromptJson = $Prompt | ConvertTo-Json -Compress
+
+  $FocusJs = @"
 (async () => {
-  const promptB64 = $PromptB64Json;
-  const prompt = new TextDecoder("utf-8").decode(Uint8Array.from(atob(promptB64), c => c.charCodeAt(0)));
+  const prompt = $PromptJson;
 
   function visible(el) {
-    const r = el.getBoundingClientRect();
+    if (!el) return false;
     const style = getComputedStyle(el);
-    return r.width > 0 && r.height > 0 && style.visibility !== "hidden" && style.display !== "none";
+    const rect = el.getBoundingClientRect();
+    return style.visibility !== "hidden" &&
+      style.display !== "none" &&
+      rect.width > 0 &&
+      rect.height > 0;
   }
 
-  function setText(el, text) {
-    el.focus();
+  function textOf(el) {
+    return (el?.value || el?.innerText || el?.textContent || "").trim();
+  }
 
-    if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
-      el.value = text;
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-      el.dispatchEvent(new Event("change", { bubbles: true }));
-      return true;
+  function findComposer() {
+    const selectors = [
+      "textarea",
+      "[contenteditable='true']",
+      "div[contenteditable='true']",
+      "[role='textbox']",
+      ".ProseMirror"
+    ].join(",");
+
+    const boxes = Array.from(document.querySelectorAll(selectors))
+      .filter(visible)
+      .filter(el => {
+        const rect = el.getBoundingClientRect();
+        return rect.top > 0 && rect.bottom > window.innerHeight * 0.35;
+      })
+      .sort((a,b) => b.getBoundingClientRect().bottom - a.getBoundingClientRect().bottom);
+
+    return boxes[0] || null;
+  }
+
+  const box = findComposer();
+  if (!box) {
+    return {
+      ok:false,
+      reason:"composer_not_found_for_native_cdp_insert",
+      url:location.href
+    };
+  }
+
+  box.focus();
+
+  try {
+    const sel = window.getSelection();
+    if (sel && box.isContentEditable) {
+      const range = document.createRange();
+      range.selectNodeContents(box);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand("delete", false, null);
     }
+  } catch {}
 
-    el.textContent = text;
-    el.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
-    return true;
+  if ("value" in box) {
+    box.value = "";
+  } else {
+    box.innerText = "";
+    box.textContent = "";
   }
 
-  const boxes = Array.from(document.querySelectorAll("textarea, [contenteditable='true'], [role='textbox'], #prompt-textarea"))
-    .filter(visible);
+  box.dispatchEvent(new InputEvent("input", {
+    bubbles:true,
+    cancelable:true,
+    inputType:"deleteContentBackward",
+    data:null
+  }));
 
-  const box = boxes[boxes.length - 1];
-  if (!box) return { ok:false, reason:"composer_not_found" };
+  window.__seraComposerBox = box;
+  window.__seraExpectedPrompt = prompt;
 
-  setText(box, prompt);
-  await new Promise(r => setTimeout(r, 800));
+  return {
+    ok:true,
+    action:"composer_focused_cleared_for_native_cdp_insert",
+    promptLength:prompt.length,
+    composerTag:box.tagName,
+    composerRole:box.getAttribute("role"),
+    composerEditable:box.isContentEditable,
+    url:location.href
+  };
+})()
+"@
 
-    function composerText() {
-    return (box.innerText || box.textContent || box.value || "").trim();
+  $FocusResult = Invoke-CdpMethod -WsUrl $WsUrl -Method "Runtime.evaluate" -Params @{
+    expression = $FocusJs
+    awaitPromise = $true
+    returnByValue = $true
   }
 
-  function setComposerText(text) {
+  $FocusValue = $FocusResult.result.result.value
+  Write-Step "PROMPT_FOCUS_RESULT $($FocusValue | ConvertTo-Json -Depth 12 -Compress)"
+
+  if (!$FocusValue -or $FocusValue.ok -ne $true) {
+    throw "Prompt focus failed: $($FocusValue.reason)"
+  }
+
+  Invoke-CdpMethod -WsUrl $WsUrl -Method "Input.insertText" -Params @{
+    text = $Prompt
+  } | Out-Null
+
+  Start-Sleep -Milliseconds 1200
+
+  $VerifyInsertJs = @"
+(async () => {
+  const prompt = $PromptJson;
+  const box = window.__seraComposerBox;
+
+  function textOf(el) {
+    return (el?.value || el?.innerText || el?.textContent || "").trim();
+  }
+
+  if (!box) {
+    return { ok:false, reason:"composer_reference_missing_after_insert" };
+  }
+
+  let current = textOf(box);
+
+  if (current.length < 20) {
     box.focus();
 
-    if ("value" in box) {
-      box.value = text;
-    } else {
-      box.innerText = text;
-      box.textContent = text;
+    try {
+      document.execCommand("insertText", false, prompt);
+    } catch {}
+
+    current = textOf(box);
+
+    if (current.length < 20) {
+      if ("value" in box) {
+        box.value = prompt;
+      } else {
+        box.innerText = prompt;
+        box.textContent = prompt;
+      }
+
+      box.dispatchEvent(new InputEvent("input", {
+        bubbles:true,
+        cancelable:true,
+        inputType:"insertText",
+        data:prompt
+      }));
+
+      box.dispatchEvent(new Event("change", { bubbles:true }));
+      current = textOf(box);
     }
+  }
 
-    box.dispatchEvent(new InputEvent("input", {
-      bubbles: true,
-      cancelable: true,
-      inputType: "insertText",
-      data: text
-    }));
+  return {
+    ok: current.length >= 20,
+    action:"composer_insert_verified_or_fallback_applied",
+    composerTextLength:current.length,
+    promptLength:prompt.length
+  };
+})()
+"@
 
-    box.dispatchEvent(new Event("change", { bubbles: true }));
+  $VerifyInsertResult = Invoke-CdpMethod -WsUrl $WsUrl -Method "Runtime.evaluate" -Params @{
+    expression = $VerifyInsertJs
+    awaitPromise = $true
+    returnByValue = $true
+  }
+
+  $VerifyInsertValue = $VerifyInsertResult.result.result.value
+  Write-Step "PROMPT_INSERT_VERIFY_RESULT $($VerifyInsertValue | ConvertTo-Json -Depth 12 -Compress)"
+
+  if (!$VerifyInsertValue -or $VerifyInsertValue.ok -ne $true) {
+    throw "Prompt insert failed: composerTextLength=$($VerifyInsertValue.composerTextLength)"
+  }
+
+  $FindSendJs = @"
+(async () => {
+  const prompt = $PromptJson;
+
+  function visible(el) {
+    if (!el) return false;
+    const style = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return style.visibility !== "hidden" &&
+      style.display !== "none" &&
+      rect.width > 0 &&
+      rect.height > 0;
   }
 
   function labelFor(el) {
@@ -291,160 +431,264 @@ function Submit-ChatGptPrompt {
     ].filter(Boolean).join(" ").toLowerCase();
   }
 
-  function findSendButton() {
-    const direct = Array.from(document.querySelectorAll([
-      "button[data-testid='send-button']",
-      "button[data-testid='composer-submit-button']",
-      "[role='button'][data-testid='send-button']",
-      "[role='button'][data-testid='composer-submit-button']",
-      "button[aria-label*='Send']",
-      "[role='button'][aria-label*='Send']",
-      "button[title*='Send']",
-      "[role='button'][title*='Send']",
-      "button",
-      "[role='button']"
-    ].join(","))).filter(visible);
-
-    return direct.find(b => {
-      const t = labelFor(b);
-      const rect = b.getBoundingClientRect();
-      const nearComposer = rect.top > (window.innerHeight * 0.45);
-      const iconLike = !!b.querySelector("svg") && rect.width <= 96 && rect.height <= 96;
-
-      return !b.disabled && (
-        t.includes("send") ||
-        t.includes("submit") ||
-        t.includes("composer-submit") ||
-        t.includes("send-button") ||
-        t.includes("arrow-up") ||
-        (nearComposer && iconLike && !t.includes("attach") && !t.includes("voice") && !t.includes("mic"))
-      );
-    });
+  function textOf(el) {
+    return (el?.value || el?.innerText || el?.textContent || "").trim();
   }
 
-  function stopOrGenerating() {
-    return Array.from(document.querySelectorAll("button,[role='button']")).some(b => {
-      const label = labelFor(b);
-      return label.includes("stop") || label.includes("generating") || label.includes("streaming");
-    });
+  function findComposer() {
+    return window.__seraComposerBox || Array.from(document.querySelectorAll("textarea,[contenteditable='true'],[role='textbox'],.ProseMirror"))
+      .filter(visible)
+      .sort((a,b) => b.getBoundingClientRect().bottom - a.getBoundingClientRect().bottom)[0];
   }
 
-  function userMessagePosted(promptText) {
-    const zipMatch = promptText.match(/s\.e\.r\.a_[a-z0-9_]+_overlay\.zip/i);
-    const slugMatch = promptText.match(/phase\d+_[a-z0-9_]+_v\d+/i);
-    const sentinel = (zipMatch && zipMatch[0]) || (slugMatch && slugMatch[0]) || promptText.slice(0, 80);
-    if (!sentinel) return false;
+  const box = findComposer();
+  const composerRect = box ? box.getBoundingClientRect() : null;
+  const composerTextLength = box ? textOf(box).length : 0;
 
-    const userTurns = Array.from(document.querySelectorAll([
-      "[data-message-author-role='user']",
-      "[data-testid*='conversation-turn']",
-      "article"
-    ].join(",")));
+  const buttons = Array.from(document.querySelectorAll("button,[role='button']"))
+    .filter(visible)
+    .filter(b => !b.disabled && b.getAttribute("aria-disabled") !== "true");
 
-    return userTurns.some(el => (el.innerText || el.textContent || "").includes(sentinel));
-  }
+  let candidates = buttons.map(b => {
+    const r = b.getBoundingClientRect();
+    const label = labelFor(b);
+    const nearComposer = composerRect
+      ? Math.abs((r.top + r.bottom) / 2 - (composerRect.top + composerRect.bottom) / 2) < 220
+      : r.top > window.innerHeight * 0.45;
+    const iconLike = !!b.querySelector("svg") && r.width <= 110 && r.height <= 110;
+    const explicit = label.includes("send") ||
+      label.includes("submit") ||
+      label.includes("composer-submit") ||
+      label.includes("send-button") ||
+      label.includes("arrow-up");
 
-  const originalPromptText = composerText();
+    const reject = label.includes("attach") ||
+      label.includes("voice") ||
+      label.includes("dictate") ||
+      label.includes("microphone") ||
+      label.includes("mic") ||
+      label.includes("tools") ||
+      label.includes("model") ||
+      label.includes("sidebar");
 
-  if (!originalPromptText || originalPromptText.length < 20) {
+    let score = 0;
+    if (explicit) score += 100;
+    if (nearComposer) score += 30;
+    if (iconLike) score += 20;
+    if (r.left > window.innerWidth * 0.45) score += 10;
+    if (reject) score -= 100;
+
+    return {
+      el:b,
+      score,
+      label,
+      x:r.left + r.width / 2,
+      y:r.top + r.height / 2,
+      width:r.width,
+      height:r.height,
+      top:r.top,
+      left:r.left
+    };
+  }).filter(c => c.score > 0)
+    .sort((a,b) => b.score - a.score);
+
+  const chosen = candidates[0];
+
+  if (!chosen) {
     return {
       ok:false,
-      reason:"prompt_submit_empty_composer_before_send",
-      action:"blocked_before_destructive_enter_fallback",
-      composerTextLength: originalPromptText.length,
-      url: location.href
+      reason:"send_button_not_found_after_native_insert",
+      composerTextLength,
+      buttonCount:buttons.length,
+      url:location.href
     };
   }
 
-  let lastComposerLength = originalPromptText.length;
-  let lastButtonSeen = false;
+  chosen.el.scrollIntoView({ block:"center", inline:"center" });
+  await new Promise(r => setTimeout(r, 250));
 
-  for (let attempt = 1; attempt <= 6; attempt++) {
-    if (composerText().length < 20) {
-      setComposerText(originalPromptText);
-      await new Promise(r => setTimeout(r, 650));
-    } else {
-      box.dispatchEvent(new InputEvent("input", {
-        bubbles: true,
-        cancelable: true,
-        inputType: "insertText",
-        data: ""
-      }));
-      await new Promise(r => setTimeout(r, 450));
-    }
-
-    lastComposerLength = composerText().length;
-    const send = findSendButton();
-    lastButtonSeen = !!send;
-
-    if (!send) {
-      await new Promise(r => setTimeout(r, 800));
-      continue;
-    }
-
-    send.scrollIntoView({ block: "center", inline: "center" });
-    await new Promise(r => setTimeout(r, 250));
-
-    send.dispatchEvent(new MouseEvent("mousedown", { bubbles:true, cancelable:true, view:window }));
-    send.dispatchEvent(new MouseEvent("mouseup", { bubbles:true, cancelable:true, view:window }));
-    send.click();
-
-    for (let confirm = 1; confirm <= 12; confirm++) {
-      await new Promise(r => setTimeout(r, 750));
-
-      const currentText = composerText();
-      const cleared = currentText.length < 20;
-
-      if (stopOrGenerating()) {
-        return {
-          ok:true,
-          action:"prompt_submitted_by_button_verified_generating",
-          attempt,
-          confirm,
-          composerTextLength: currentText.length
-        };
-      }
-
-      if (cleared && userMessagePosted(originalPromptText)) {
-        return {
-          ok:true,
-          action:"prompt_submitted_by_button_verified_user_message",
-          attempt,
-          confirm,
-          composerTextLength: currentText.length
-        };
-      }
-    }
-
-    if (composerText().length < 20 && !userMessagePosted(originalPromptText) && !stopOrGenerating()) {
-      setComposerText(originalPromptText);
-      await new Promise(r => setTimeout(r, 900));
-    }
-  }
+  const r = chosen.el.getBoundingClientRect();
 
   return {
-    ok:false,
-    reason:"prompt_submit_unconfirmed_after_retry",
-    action:"safe_block_no_zip_wait_until_submit_confirmed",
-    composerTextLength: lastComposerLength,
-    sendButtonSeen: lastButtonSeen,
-    url: location.href
+    ok:true,
+    action:"send_button_found_for_native_cdp_click",
+    x:r.left + r.width / 2,
+    y:r.top + r.height / 2,
+    label:chosen.label,
+    score:chosen.score,
+    composerTextLength,
+    url:location.href
   };
 })()
 "@
 
-  $SubmitResult = Invoke-CdpMethod -WsUrl $WsUrl -Method "Runtime.evaluate" -Params @{
-    expression = $SubmitJs
+  $FindSendResult = Invoke-CdpMethod -WsUrl $WsUrl -Method "Runtime.evaluate" -Params @{
+    expression = $FindSendJs
     awaitPromise = $true
     returnByValue = $true
   }
 
-  $Value = $SubmitResult.result.result.value
-  Write-Step "PROMPT_SUBMIT_RESULT $($Value | ConvertTo-Json -Depth 12 -Compress)"
+  $Button = $FindSendResult.result.result.value
+  Write-Step "PROMPT_SEND_BUTTON_RESULT $($Button | ConvertTo-Json -Depth 12 -Compress)"
 
-  if ($Value -and $Value.ok -eq $false) {
-    throw "Prompt submission failed: $($Value.reason)"
+  if ($Button -and $Button.ok -eq $true) {
+    $X = [double]$Button.x
+    $Y = [double]$Button.y
+
+    Invoke-CdpMethod -WsUrl $WsUrl -Method "Input.dispatchMouseEvent" -Params @{
+      type = "mouseMoved"
+      x = $X
+      y = $Y
+      button = "none"
+    } | Out-Null
+
+    Invoke-CdpMethod -WsUrl $WsUrl -Method "Input.dispatchMouseEvent" -Params @{
+      type = "mousePressed"
+      x = $X
+      y = $Y
+      button = "left"
+      clickCount = 1
+    } | Out-Null
+
+    Invoke-CdpMethod -WsUrl $WsUrl -Method "Input.dispatchMouseEvent" -Params @{
+      type = "mouseReleased"
+      x = $X
+      y = $Y
+      button = "left"
+      clickCount = 1
+    } | Out-Null
+  } else {
+    Write-Step "PROMPT_SEND_BUTTON_NOT_FOUND_USING_NATIVE_ENTER_FALLBACK"
+    Invoke-CdpMethod -WsUrl $WsUrl -Method "Input.dispatchKeyEvent" -Params @{
+      type = "keyDown"
+      key = "Enter"
+      code = "Enter"
+      windowsVirtualKeyCode = 13
+      nativeVirtualKeyCode = 13
+    } | Out-Null
+
+    Invoke-CdpMethod -WsUrl $WsUrl -Method "Input.dispatchKeyEvent" -Params @{
+      type = "keyUp"
+      key = "Enter"
+      code = "Enter"
+      windowsVirtualKeyCode = 13
+      nativeVirtualKeyCode = 13
+    } | Out-Null
   }
+
+  $ConfirmJs = @"
+(() => {
+  const prompt = $PromptJson;
+
+  function visible(el) {
+    if (!el) return false;
+    const style = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return style.visibility !== "hidden" &&
+      style.display !== "none" &&
+      rect.width > 0 &&
+      rect.height > 0;
+  }
+
+  function labelFor(el) {
+    return [
+      el.innerText,
+      el.textContent,
+      el.getAttribute("aria-label"),
+      el.getAttribute("title"),
+      el.getAttribute("data-testid"),
+      el.getAttribute("data-state")
+    ].filter(Boolean).join(" ").toLowerCase();
+  }
+
+  function textOf(el) {
+    return (el?.value || el?.innerText || el?.textContent || "").trim();
+  }
+
+  const zipMatch = prompt.match(/s\.e\.r\.a_[a-z0-9_]+_overlay\.zip/i);
+  const slugMatch = prompt.match(/phase\d+_[a-z0-9_]+_v\d+/i);
+  const sentinel = (zipMatch && zipMatch[0]) || (slugMatch && slugMatch[0]) || prompt.slice(0, 80);
+
+  const generating = Array.from(document.querySelectorAll("button,[role='button']")).some(b => {
+    const label = labelFor(b);
+    return label.includes("stop") || label.includes("generating") || label.includes("streaming");
+  });
+
+  const posted = Array.from(document.querySelectorAll([
+    "[data-message-author-role='user']",
+    "[data-testid*='conversation-turn']",
+    "article"
+  ].join(","))).some(el => (el.innerText || el.textContent || "").includes(sentinel));
+
+  const box = window.__seraComposerBox;
+  const composerTextLength = box ? textOf(box).length : -1;
+
+  return {
+    submitted: generating || posted,
+    generating,
+    posted,
+    sentinel,
+    composerTextLength,
+    url:location.href
+  };
+})()
+"@
+
+  for ($i = 1; $i -le 22; $i++) {
+    Start-Sleep -Milliseconds 750
+
+    $ConfirmResult = Invoke-CdpMethod -WsUrl $WsUrl -Method "Runtime.evaluate" -Params @{
+      expression = $ConfirmJs
+      awaitPromise = $true
+      returnByValue = $true
+    }
+
+    $ConfirmValue = $ConfirmResult.result.result.value
+    Write-Step "PROMPT_SUBMIT_CONFIRM_ATTEMPT attempt=$i result=$($ConfirmValue | ConvertTo-Json -Depth 12 -Compress)"
+
+    if ($ConfirmValue -and $ConfirmValue.submitted -eq $true) {
+      Write-Step "PROMPT_SUBMIT_RESULT {`"ok`":true,`"action`":`"prompt_submitted_by_native_cdp_verified`",`"attempt`":$i}"
+      return
+    }
+  }
+
+  Write-Step "PROMPT_NATIVE_CDP_ENTER_SECOND_FALLBACK"
+
+  Invoke-CdpMethod -WsUrl $WsUrl -Method "Input.dispatchKeyEvent" -Params @{
+    type = "keyDown"
+    key = "Enter"
+    code = "Enter"
+    windowsVirtualKeyCode = 13
+    nativeVirtualKeyCode = 13
+  } | Out-Null
+
+  Invoke-CdpMethod -WsUrl $WsUrl -Method "Input.dispatchKeyEvent" -Params @{
+    type = "keyUp"
+    key = "Enter"
+    code = "Enter"
+    windowsVirtualKeyCode = 13
+    nativeVirtualKeyCode = 13
+  } | Out-Null
+
+  for ($i = 1; $i -le 10; $i++) {
+    Start-Sleep -Milliseconds 750
+
+    $ConfirmResult = Invoke-CdpMethod -WsUrl $WsUrl -Method "Runtime.evaluate" -Params @{
+      expression = $ConfirmJs
+      awaitPromise = $true
+      returnByValue = $true
+    }
+
+    $ConfirmValue = $ConfirmResult.result.result.value
+    Write-Step "PROMPT_SUBMIT_ENTER_CONFIRM_ATTEMPT attempt=$i result=$($ConfirmValue | ConvertTo-Json -Depth 12 -Compress)"
+
+    if ($ConfirmValue -and $ConfirmValue.submitted -eq $true) {
+      Write-Step "PROMPT_SUBMIT_RESULT {`"ok`":true,`"action`":`"prompt_submitted_by_native_enter_verified`",`"attempt`":$i}"
+      return
+    }
+  }
+
+  throw "Prompt submission failed: native CDP insert/click/enter did not produce confirmed user message or generation."
 }
 
 function Invoke-ArtifactDownloadV6 {
@@ -692,5 +936,6 @@ try {
 # exact ZIP filename and SHA256/freshness verification before success
 # allowRandomRecentChatFallback false
 # allowNewChatFallback false
+
 
 
