@@ -1,4 +1,15 @@
-[CmdletBinding()]
+foreach ($Needle in @(
+  "PROMPT_INPUT_COMPAT_MODE",
+  "Input.insertText",
+  "PROMPT_FOCUS_RESULT",
+  "PROMPT_INSERT_VERIFY_RESULT",
+  "PROMPT_SEND_BUTTON_RESULT",
+  "PROMPT_SUBMIT_CONFIRM_ATTEMPT",
+  "prompt_submitted_by_native_cdp_verified",
+  "prompt_submitted_by_native_enter_verified"
+)) {
+  Assert-Contains $Bridge $Needle
+}[CmdletBinding()]
 param(
   [string]$RepoRoot = (Get-Location).Path,
   [string]$AutoOpsRoot = "$env:USERPROFILE\OneDrive\SERA-AutoOps"
@@ -56,3 +67,4 @@ try {
   Write-Host "BLOCKED phase=199 reason=$($_.Exception.Message) handoff=$Out"
   exit 1
 }
+
