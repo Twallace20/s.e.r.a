@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "sera-autopilot-command-v1",
+  "schema": "sera-autopilot-command-v1",
+  "commandId": "phase199-clean-repo-endurance-autopilot-20260709134247",
+  "runNonce": "phase199-clean-repo-endurance-autopilot-20260709134247",
+  "repairRerunCommandId": "phase199-browser-submit-repair-rerun-20260710070645",
+  "phase": 199,
+  "phaseSlug": "phase199_post_closeout_clean_repo_endurance_autopilot_v1",
+  "phaseToken": "post-closeout-clean-repo-endurance-autopilot-v1",
+  "phaseTitle": "Post Closeout Clean Repo Endurance Autopilot v1",
+  "expectedZipFilename": "s.e.r.a_phase199_post_closeout_clean_repo_endurance_autopilot_v1_overlay.zip",
+  "expectedZip": "s.e.r.a_phase199_post_closeout_clean_repo_endurance_autopilot_v1_overlay.zip",
+  "savedChatGptTargetOnly": true,
+  "allowRandomRecentChatFallback": false,
+  "allowNewChatFallback": false,
+  "allowWhileBlocked": true,
+  "proofRun": true,
+  "proofMode": "third_full_autopilot_run_plus_post_closeout_clean_repo_hardening",
+  "exactZipNameRequired": true,
+  "manualZipDownloadAllowed": false,
+  "forceFreshDownload": true,
+  "allowExistingZipReuse": false,
+  "trustedBaselines": {
+    "phase198": "edbb3d2e842a1353eb88955b8cc702b92e0ce287",
+    "browserSubmitHotfix": "5348b8410e2101d20567c6356eef09404fc295cb"
+  }
+}

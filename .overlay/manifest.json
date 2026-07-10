@@ -1,113 +1,116 @@
 {
   "overlayFormat": "s.e.r.a.overlay.v1",
   "schema": "sera-overlay-manifest-v1",
-  "phase": 198,
-  "phaseSlug": "phase198_second_consecutive_full_autopilot_production_stability_proof_v1",
-  "expectedZipFilename": "s.e.r.a_phase198_second_consecutive_full_autopilot_production_stability_proof_v1_overlay.zip",
-  "createdAt": "2026-07-09T20:25:00Z",
+  "phase": 199,
+  "phaseSlug": "phase199_post_closeout_clean_repo_endurance_autopilot_v1",
+  "expectedZipFilename": "s.e.r.a_phase199_post_closeout_clean_repo_endurance_autopilot_v1_overlay.zip",
+  "createdAt": "2026-07-10T14:15:00Z",
   "zipRoot": "repo/",
   "applyMode": "overlay-copy",
-  "summary": "Installs Phase198 second consecutive full-autopilot production stability proof, including verifier, QA, fixture proof, Phase197 trusted baseline verification, no-manual-rescue gate, and current phase pointer cleanup proof.",
+  "summary": "Installs Phase199 third full-autopilot clean-repo endurance proof, including Phase198 remote truth verification, browser-submit hotfix baseline verification, clean pointer file proof, verifier, QA, and gate fixtures.",
   "commandContract": {
-    "commandId": "phase198-second-full-autopilot-proof-20260709132030",
-    "runNonce": "phase198-second-full-autopilot-proof-20260709132030",
-    "phaseSlug": "phase198_second_consecutive_full_autopilot_production_stability_proof_v1",
-    "expectedZipFilename": "s.e.r.a_phase198_second_consecutive_full_autopilot_production_stability_proof_v1_overlay.zip",
+    "commandId": "phase199-clean-repo-endurance-autopilot-20260709134247",
+    "runNonce": "phase199-clean-repo-endurance-autopilot-20260709134247",
+    "repairRerunCommandId": "phase199-browser-submit-repair-rerun-20260710070645",
+    "phaseSlug": "phase199_post_closeout_clean_repo_endurance_autopilot_v1",
+    "expectedZipFilename": "s.e.r.a_phase199_post_closeout_clean_repo_endurance_autopilot_v1_overlay.zip",
     "savedChatGptTargetOnly": true,
     "allowRandomRecentChatFallback": false,
-    "allowNewChatFallback": false
+    "allowNewChatFallback": false,
+    "allowWhileBlocked": true
   },
-  "phase197TrustedBaseline": {
-    "commit": "8fb5e0d160f953a518ac1d3757d9fec66a35afc2",
-    "tag": "phase-197-full-autopilot-json-to-remote-truth-closeout-proof-v1"
+  "phase198TrustedBaseline": {
+    "commit": "edbb3d2e842a1353eb88955b8cc702b92e0ce287",
+    "tag": "phase-198-second-consecutive-full-autopilot-production-stability-proof-v1"
+  },
+  "browserSubmitHotfixBaseline": {
+    "commit": "5348b8410e2101d20567c6356eef09404fc295cb"
   },
   "requirements": {
     "freshCommandJsonRequired": true,
     "savedChatGptTargetOnly": true,
-    "promptSubmitRequired": true,
+    "confirmedPromptSubmitRequired": true,
     "exactZipDownloadRequired": true,
     "exactZipShaRequired": true,
     "verifierMustPassBeforeQa": true,
     "qaMustPassBeforeMerge": true,
     "closedCleanlyRequiresMergePushTagRemoteTruth": true,
-    "finalHandoffMustIncludeRemoteTruthVerifierQaZipSha": true,
+    "postCloseoutCleanGitStatusRequired": true,
+    "pointerDiffCleanupRequired": true,
     "manualRescueForbiddenForProof": true,
-    "phase197TrustedBaselineRequired": true,
-    "pointerDiffCleanupRequired": true
+    "phase198TrustedBaselineRequired": true,
+    "browserSubmitHotfixBaselineRequired": true
   },
   "files": [
     {
-      "path": "repo/.sera-proof/phase198_second_consecutive_full_autopilot_production_stability_proof_v1_overlay_proof.json",
-      "bytes": 1131,
-      "sha256": "b65b212dc2c7e8d6e84629e42f23a7c8960e244cc32a97fea828f7ea7febe970"
+      "path": "repo/.overlay/manifest.json",
+      "bytes": 4877,
+      "sha256": null
     },
     {
-      "path": "repo/commands/phase198-second-consecutive-full-autopilot-production-stability-proof-v1.command.json",
-      "bytes": 1479,
-      "sha256": "1caf94970d6d6fceb8c519542e32ec2cb7352c0ce10d7828d4e3a8f8b6dea42f"
+      "path": "repo/.sera-proof/phase199_post_closeout_clean_repo_endurance_autopilot_v1_overlay_proof.json",
+      "bytes": 1619,
+      "sha256": "b3033f9c435c98d0878242c14f103d4e05a61b2374ee649a8d8ac0169cfa2e24"
     },
     {
-      "path": "repo/docs/phases/PHASE_198_SECOND_CONSECUTIVE_FULL_AUTOPILOT_PRODUCTION_STABILITY_PROOF_V1.md",
-      "bytes": 1471,
-      "sha256": "77b808ad1209127f9a7f2dafa185f2a30e2aeacb3ec82f9009039db038b8e0c5"
+      "path": "repo/commands/phase199-post-closeout-clean-repo-endurance-autopilot-v1.command.json",
+      "bytes": 1277,
+      "sha256": "7ce2cc759c6250a7d5b48894e7e3cd839cc78ae9bbaf9af116a531a08459c55d"
     },
     {
-      "path": "repo/scripts/phase198-second-consecutive-full-autopilot-production-stability-proof-fixtures-v1.ps1",
-      "bytes": 1539,
-      "sha256": "faf4fbe7482077b98a2cbad62c063c3de642ba6404382948fa9a3f7fa9a21a44"
+      "path": "repo/scripts/sera-post-closeout-clean-repo-endurance-autopilot-v1.ps1",
+      "bytes": 1685,
+      "sha256": "67927e3f7fedafadc76ef386d017915f23e07f4372e53707ab297f40c802ec15"
     },
     {
-      "path": "repo/scripts/phase198-second-consecutive-full-autopilot-production-stability-proof-v1.contract.json",
-      "bytes": 1155,
-      "sha256": "3d558d659716c3ca35ca17bf1e62644d6523f726f3aef9195eda77b557a9a644"
+      "path": "repo/tests/fixtures/phase199-clean-repo-endurance/cases.json",
+      "bytes": 3035,
+      "sha256": "9103a865d77de2c88ac9acd12ce73502f14429324a99e3c8b78cb21ff3ac0eea"
     },
     {
-      "path": "repo/scripts/phase198-second-consecutive-full-autopilot-production-stability-proof-v1.ps1",
-      "bytes": 517,
-      "sha256": "5f82f9a2772754bc584eb9ae4be025de4477f7f86c15cbb6684b39a17d211251"
+      "path": "repo/scripts/phase199-post-closeout-clean-repo-endurance-autopilot-fixtures-v1.ps1",
+      "bytes": 1352,
+      "sha256": "5b39a4d325547e83dadb587397349616a089aa7b465852c564030b7190d2329e"
     },
     {
-      "path": "repo/scripts/phase198-verify-overlay.mjs",
-      "bytes": 1874,
-      "sha256": "e4c68592229fd831ee64eb8fd51bc540b56eadd79089eb80c1a193b125bd89bd"
+      "path": "repo/scripts/sera-phase199-current-phase-pointer-clean-repo-proof-v1.ps1",
+      "bytes": 2143,
+      "sha256": "235a81cb7012f180468a3c5be69ba1f73348aafe3a1f2e571af7869bc576cd5e"
     },
     {
-      "path": "repo/scripts/qa-phase198-second-consecutive-full-autopilot-production-stability-proof-v1.ps1",
-      "bytes": 3793,
-      "sha256": "36a95463000c8f87e253314362cc3524dccb49130e53507bf5178d6dd223a46c"
+      "path": "repo/scripts/phase199-post-closeout-clean-repo-endurance-autopilot-v1.contract.json",
+      "bytes": 817,
+      "sha256": "e86a2cfc97972261e0d83e1cdd924081d26e3b2cc17c33a34e0d7cac286d309e"
     },
     {
-      "path": "repo/scripts/sera-phase198-current-phase-pointer-cleanup-proof-v1.ps1",
-      "bytes": 683,
-      "sha256": "52c2cec611587f78fbed9c7efcca7c84fc9d10eef425d7f6217297ce2a398aa4"
+      "path": "repo/scripts/verify-phase199-post-closeout-clean-repo-endurance-autopilot-v1.ps1",
+      "bytes": 7287,
+      "sha256": "697523265ef393e5f4b1fb92bdc1652b980f41e07d25145a7ae21629b872e61f"
     },
     {
-      "path": "repo/scripts/sera-second-consecutive-full-autopilot-production-stability-proof-v1.ps1",
-      "bytes": 5471,
-      "sha256": "156f81c4682a0efe7aa89150faef996fc9f2955978afd3d6917740dc7a9c709f"
+      "path": "repo/scripts/qa-phase199-post-closeout-clean-repo-endurance-autopilot-v1.ps1",
+      "bytes": 3009,
+      "sha256": "2369f9f3c92da68e9dd0bc80a9938ec423d67ba9b73a89e4d7dd5fc988cdec78"
     },
     {
-      "path": "repo/scripts/verify-phase198-second-consecutive-full-autopilot-production-stability-proof-v1.ps1",
-      "bytes": 6635,
-      "sha256": "d1097f7e268a8e53bfd4dff5a697e5c6095dbce5dcfc6ec8425189a04ab9a75e"
+      "path": "repo/scripts/phase199-post-closeout-clean-repo-endurance-autopilot-v1.ps1",
+      "bytes": 501,
+      "sha256": "f4d0bfa805c4d102d42a9a9896a32ff5b1852d574d50938bcf252f1fc76e555c"
     },
     {
-      "path": "repo/tests/fixtures/phase198-full-autopilot/cases.json",
-      "bytes": 22303,
-      "sha256": "c44c3bde793443e5e90df76888b645eb2a8d9bcb4c1ca1dc0bb8530ed85e9081"
+      "path": "repo/scripts/phase199-verify-overlay.mjs",
+      "bytes": 1394,
+      "sha256": "ca2cf13967fdf6f1dfe8c9cea2aa200944a7719c8df3c6fd06b5d09dff62e2c4"
     },
     {
-      "path": "repo/tests/phase198-second-consecutive-full-autopilot-production-stability-proof-v1.contract.test.ts",
-      "bytes": 1110,
-      "sha256": "a45d301bb035b8f58e494cc98988f8f7b3febec6343cfb31801c912e9ff89ddf"
+      "path": "repo/tests/phase199-post-closeout-clean-repo-endurance-autopilot-v1.contract.test.ts",
+      "bytes": 1367,
+      "sha256": "4c6c17c38c0b2b5231c4664c44b4f68b3b0fbe51efc4999ac7f6cfaf0c239ee5"
+    },
+    {
+      "path": "repo/docs/phases/PHASE_199_POST_CLOSEOUT_CLEAN_REPO_ENDURANCE_AUTOPILOT_V1.md",
+      "bytes": 2211,
+      "sha256": "43505ac1137a534faad562d48516e8b0eeb2c05e9f33ec8c9776a104914babd1"
     }
-  ],
-  "postApplyValidation": [
-    "node scripts/phase198-verify-overlay.mjs .",
-    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-phase198-second-consecutive-full-autopilot-production-stability-proof-v1.ps1 -RepoRoot .",
-    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/qa-phase198-second-consecutive-full-autopilot-production-stability-proof-v1.ps1 -RepoRoot .",
-    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/phase198-second-consecutive-full-autopilot-production-stability-proof-fixtures-v1.ps1 -RepoRoot .",
-    "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sera-phase198-current-phase-pointer-cleanup-proof-v1.ps1 -RepoRoot .",
-    "npx vitest --run tests/phase198-second-consecutive-full-autopilot-production-stability-proof-v1.contract.test.ts"
   ]
 }
