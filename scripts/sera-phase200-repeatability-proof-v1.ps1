@@ -9,6 +9,9 @@ param(
   [object]$VerifierGateReady = $null,
   [object]$VerifierPassed = $null,
   [object]$QaPassed = $null,
+  [object]$Verified = $null,
+  [object]$Passed = $null,
+  [object]$QaVerified = $null,
   [object]$CleanBaselineVerified = $null,
   [object]$Phase199RemoteTruthVerified = $null,
   [object]$PromptTextCompatVerified = $null,
@@ -124,3 +127,4 @@ if ($Missing.Count -gt 0) {
 } | ConvertTo-Json -Depth 10
 
 exit 0
+

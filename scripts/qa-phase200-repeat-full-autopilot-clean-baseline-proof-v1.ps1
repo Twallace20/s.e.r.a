@@ -74,7 +74,7 @@ try {
   $Repeatability = Join-Path $RepoRoot "scripts\sera-phase200-repeatability-proof-v1.ps1"
   Assert-File $Repeatability
   & powershell -NoProfile -ExecutionPolicy Bypass -File $Repeatability -ConfirmedPromptSubmit:$true -ExactDomDownload:$true -Verified:$true -Qa:$true -Merged:$true -PushMain:$true -PushTag:$true -RemoteMain:$true -RemoteTag:$true -HandoffIdentity:$true -ZipSha:$true -PostCloseoutCleanRepo:$true -NoMidRunRepair:$true
-  if ($LASTEXITCODE -ne 0) { throw "Phase200 repeatability proof failed during QA." }
+  if ($LASTEXITCODE -ne 0) { throw "Phase200 repeatability proof failed during QA.`nPHASE200_QA_REPEATABILITY_STDOUT_BEGIN`n$RepeatabilityText`nPHASE200_QA_REPEATABILITY_STDOUT_END" }
   $Status = @(Invoke-Git status --short --untracked-files=all)
   if ($Status.Count -gt 0) { throw "Repo dirty after QA proof: $($Status -join '; ')" }
   $Proof = @"
@@ -104,4 +104,5 @@ RepoStatus=clean
   Write-Host "BLOCKED phase=200 reason=$Reason handoff=$Out"
   exit 1
 }
+
 
