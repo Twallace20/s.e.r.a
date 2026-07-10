@@ -216,19 +216,31 @@ function Submit-ChatGptPrompt {
     [Parameter(Mandatory=$true)]
     [string]$WsUrl,
 
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [string]$PromptText,
+
+    [Parameter(Mandatory=$false)]
     [Alias("PromptFile","Path")]
     [string]$PromptPath
   )
 
-  if (!(Test-Path -LiteralPath $PromptPath)) {
-    throw "PromptPath does not exist: $PromptPath"
+  if (![string]::IsNullOrWhiteSpace($PromptText)) {
+    $Prompt = $PromptText
+  } elseif (![string]::IsNullOrWhiteSpace($PromptPath)) {
+    if (!(Test-Path -LiteralPath $PromptPath)) {
+      throw "PromptPath does not exist: $PromptPath"
+    }
+
+    $Prompt = Get-Content -LiteralPath $PromptPath -Raw
+  } else {
+    throw "PromptText or PromptPath is required."
   }
 
-  $Prompt = Get-Content -LiteralPath $PromptPath -Raw
   if ([string]::IsNullOrWhiteSpace($Prompt)) {
-    throw "Prompt is empty: $PromptPath"
+    throw "Prompt is empty."
   }
+
+  Write-Step "PROMPT_INPUT_COMPAT_MODE promptTextProvided=$(-not [string]::IsNullOrWhiteSpace($PromptText)) promptPathProvided=$(-not [string]::IsNullOrWhiteSpace($PromptPath)) promptLength=$($Prompt.Length)"
 
   $PromptJson = $Prompt | ConvertTo-Json -Compress
 
@@ -936,6 +948,7 @@ try {
 # exact ZIP filename and SHA256/freshness verification before success
 # allowRandomRecentChatFallback false
 # allowNewChatFallback false
+
 
 
 
