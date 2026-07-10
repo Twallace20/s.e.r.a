@@ -1,0 +1,126 @@
+{
+  "schema": "phase199-clean-repo-endurance-fixtures-v1",
+  "cases": [
+    {
+      "name": "valid_all_gates_pass",
+      "expect": "CLOSED_CLEANLY",
+      "flags": [
+        "VerifierPassed",
+        "QaPassed",
+        "MergePassed",
+        "PushMainPassed",
+        "PushTagPassed",
+        "RemoteMainVerified",
+        "RemoteTagVerified",
+        "FinalHandoffIdentityVerified",
+        "ExactZipShaVerified",
+        "PostCloseoutGitStatusClean"
+      ]
+    },
+    {
+      "name": "block_verifier_failure",
+      "expect": "BLOCKED",
+      "flags": [
+        "QaPassed",
+        "MergePassed",
+        "PushMainPassed",
+        "PushTagPassed",
+        "RemoteMainVerified",
+        "RemoteTagVerified",
+        "FinalHandoffIdentityVerified",
+        "ExactZipShaVerified",
+        "PostCloseoutGitStatusClean"
+      ]
+    },
+    {
+      "name": "block_qa_failure",
+      "expect": "BLOCKED",
+      "flags": [
+        "VerifierPassed",
+        "MergePassed",
+        "PushMainPassed",
+        "PushTagPassed",
+        "RemoteMainVerified",
+        "RemoteTagVerified",
+        "FinalHandoffIdentityVerified",
+        "ExactZipShaVerified",
+        "PostCloseoutGitStatusClean"
+      ]
+    },
+    {
+      "name": "block_remote_main_missing",
+      "expect": "BLOCKED",
+      "flags": [
+        "VerifierPassed",
+        "QaPassed",
+        "MergePassed",
+        "PushMainPassed",
+        "PushTagPassed",
+        "RemoteTagVerified",
+        "FinalHandoffIdentityVerified",
+        "ExactZipShaVerified",
+        "PostCloseoutGitStatusClean"
+      ]
+    },
+    {
+      "name": "block_remote_tag_missing",
+      "expect": "BLOCKED",
+      "flags": [
+        "VerifierPassed",
+        "QaPassed",
+        "MergePassed",
+        "PushMainPassed",
+        "PushTagPassed",
+        "RemoteMainVerified",
+        "FinalHandoffIdentityVerified",
+        "ExactZipShaVerified",
+        "PostCloseoutGitStatusClean"
+      ]
+    },
+    {
+      "name": "block_final_handoff_identity_missing",
+      "expect": "BLOCKED",
+      "flags": [
+        "VerifierPassed",
+        "QaPassed",
+        "MergePassed",
+        "PushMainPassed",
+        "PushTagPassed",
+        "RemoteMainVerified",
+        "RemoteTagVerified",
+        "ExactZipShaVerified",
+        "PostCloseoutGitStatusClean"
+      ]
+    },
+    {
+      "name": "block_exact_zip_sha_missing",
+      "expect": "BLOCKED",
+      "flags": [
+        "VerifierPassed",
+        "QaPassed",
+        "MergePassed",
+        "PushMainPassed",
+        "PushTagPassed",
+        "RemoteMainVerified",
+        "RemoteTagVerified",
+        "FinalHandoffIdentityVerified",
+        "PostCloseoutGitStatusClean"
+      ]
+    },
+    {
+      "name": "block_dirty_post_closeout_git_status",
+      "expect": "BLOCKED",
+      "flags": [
+        "VerifierPassed",
+        "QaPassed",
+        "MergePassed",
+        "PushMainPassed",
+        "PushTagPassed",
+        "RemoteMainVerified",
+        "RemoteTagVerified",
+        "FinalHandoffIdentityVerified",
+        "ExactZipShaVerified"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "phase199-clean-repo-endurance-contract-v1",
+  "phase": 199,
+  "phaseSlug": "phase199_post_closeout_clean_repo_endurance_autopilot_v1",
+  "expectedZipFilename": "s.e.r.a_phase199_post_closeout_clean_repo_endurance_autopilot_v1_overlay.zip",
+  "requires": [
+    "exact ZIP filename",
+    "Phase198 remote truth baseline",
+    "browser-submit hotfix baseline",
+    "verifier before QA",
+    "QA before merge",
+    "remote main and tag verification",
+    "final handoff identity",
+    "exact ZIP SHA",
+    "post-closeout clean git status"
+  ],
+  "forbids": [
+    "CLOSED_CLEANLY before verifier",
+    "CLOSED_CLEANLY before QA",
+    "CLOSED_CLEANLY before remote truth",
+    "CLOSED_CLEANLY with dirty pointer files",
+    "random recent chat fallback",
+    "new chat fallback",
+    "manual ZIP reuse"
+  ]
+}
