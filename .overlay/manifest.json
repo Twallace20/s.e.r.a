@@ -89,8 +89,8 @@
     },
     {
       "path": "repo/scripts/qa-phase199-post-closeout-clean-repo-endurance-autopilot-v1.ps1",
-      "bytes": 3341,
-      "sha256": "30d45d8414c834ccd48e3669910f5caaa8a7899c186f368c1855c62e85ed7605"
+      "bytes": 4280,
+      "sha256": "50378b0483e6b7047c521d7522cf0eaf79620133cf3b73d7a26f57bf3ba22b5d"
     },
     {
       "path": "repo/scripts/phase199-post-closeout-clean-repo-endurance-autopilot-v1.ps1",
