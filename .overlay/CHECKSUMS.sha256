@@ -8,7 +8,7 @@ faaaec95f4852f9b99026843bc0e5b1955493bc0170ba8f049fb423cdb143546  repo/scripts/p
 902ac114f5a4d0fc050c6405f86f2f522ec2b8095dbba00f29bb5da473923a9d  repo/scripts/qa-phase200-repeat-full-autopilot-clean-baseline-proof-v1.ps1
 498bcd09d0518de0aa205bf43dd8734e7560d2c229eb964c726cc46af22cf34b  repo/scripts/sera-phase200-current-phase-pointer-clean-repo-proof-v1.ps1
 1fea739ab7e219f49d1dee71a7174cfecb0aaf76c23566853c5ce42f3b2d09df  repo/scripts/sera-phase200-direct-closeout-gate-v1.ps1
-9194d598858c45bed26c0dd03713ad2ff0bad50531610952f2c511d6a16333c9  repo/scripts/sera-phase200-repeatability-proof-v1.ps1
-e628f42af1c7dc797deeba43d851012af9776776554a331e78f4a6d99d324e2a  repo/scripts/verify-phase200-repeat-full-autopilot-clean-baseline-proof-v1.ps1
+2647f88bbfcd3587c511a845fab3336f341846f216d05306cac378dd2ca3b743  repo/scripts/sera-phase200-repeatability-proof-v1.ps1
+ef6b5323bd60a4b61ab8178ee7fe9e0294952fcbaddbb94631a5cf59d804403e  repo/scripts/verify-phase200-repeat-full-autopilot-clean-baseline-proof-v1.ps1
 e9cbe424cef1909fade7cb8beb381c60e2b673ba8b9c5c22756cc34b36ab2787  repo/tests/fixtures/phase200-repeat-full-autopilot/cases.json
 862e3dfc88117481f0405fc64f4fd37e80c56baf2df1efc6e9278858c35d85a3  repo/tests/phase200-repeat-full-autopilot-clean-baseline-proof-v1.contract.test.ts
