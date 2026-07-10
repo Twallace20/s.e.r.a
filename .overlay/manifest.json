@@ -88,13 +88,13 @@
     },
     {
       "path": "repo/scripts/sera-phase200-repeatability-proof-v1.ps1",
-      "bytes": 4864,
-      "sha256": "2647f88bbfcd3587c511a845fab3336f341846f216d05306cac378dd2ca3b743"
+      "bytes": 4966,
+      "sha256": "ed150d31fd387bd31f0fdc117406c70920ca182bb437f17df397639e491ae89e"
     },
     {
       "path": "repo/scripts/verify-phase200-repeat-full-autopilot-clean-baseline-proof-v1.ps1",
-      "bytes": 12255,
-      "sha256": "ef6b5323bd60a4b61ab8178ee7fe9e0294952fcbaddbb94631a5cf59d804403e"
+      "bytes": 9827,
+      "sha256": "a2ee76f10e79465ac12a8bc3df96781d2793df27e5d5408151906dbe79da2f96"
     },
     {
       "path": "repo/tests/fixtures/phase200-repeat-full-autopilot/cases.json",

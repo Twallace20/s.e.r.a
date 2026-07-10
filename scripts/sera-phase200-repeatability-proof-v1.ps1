@@ -1,10 +1,14 @@
 [CmdletBinding()]
 param(
   [object]$ConfirmedPromptSubmit = $null,
+  [object]$ExactDomDownload = $null,
   [object]$ExactDomArtifactClick = $null,
   [object]$ExactZipDownloaded = $null,
+  [object]$ExactZipShaVerified = $null,
   [object]$ZipShaVerified = $null,
   [object]$VerifierGateReady = $null,
+  [object]$VerifierPassed = $null,
+  [object]$QaPassed = $null,
   [object]$CleanBaselineVerified = $null,
   [object]$Phase199RemoteTruthVerified = $null,
   [object]$PromptTextCompatVerified = $null,
@@ -53,7 +57,7 @@ if ($ZipExists) {
 $LogDir = Join-Path $AutoOpsRoot "00_control_center\logs"
 $RecentLogs = @(Get-ChildItem $LogDir -File -Filter "*.log" -ErrorAction SilentlyContinue |
   Sort-Object LastWriteTime -Descending |
-  Select-Object -First 8)
+  Select-Object -First 10)
 
 $LogText = ""
 foreach ($Log in $RecentLogs) {
@@ -63,7 +67,6 @@ foreach ($Log in $RecentLogs) {
 
 $CurrentBranch = (Invoke-Git branch --show-current | Select-Object -First 1).Trim()
 $Status = @(Invoke-Git status --short --untracked-files=all)
-
 $OriginMain = (Invoke-Git rev-parse origin/main | Select-Object -First 1).Trim()
 $LocalTag = (Invoke-Git rev-parse "$Phase199Tag^{commit}" | Select-Object -First 1).Trim()
 $Head = (Invoke-Git rev-parse HEAD | Select-Object -First 1).Trim()
@@ -101,7 +104,7 @@ if ($Missing.Count -gt 0) {
     phase199TagCommit = $LocalTag
     zipPath = $ZipPath
     zipSha256 = $ZipSha
-  } | ConvertTo-Json -Depth 8
+  } | ConvertTo-Json -Depth 10
   exit 1
 }
 
@@ -117,7 +120,7 @@ if ($Missing.Count -gt 0) {
   phase199TagCommit = $LocalTag
   zipPath = $ZipPath
   zipSha256 = $ZipSha
-  note = "This proves browser/download repeatability, but if this script was repaired after the run, Phase201 is still required for no-rescue certification."
-} | ConvertTo-Json -Depth 8
+  note = "Phase200 repeatability gates passed after repair; Phase201 is still required for no-rescue certification."
+} | ConvertTo-Json -Depth 10
 
 exit 0
