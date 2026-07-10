@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "sera-autopilot-command-v1",
+  "phase": 201,
+  "phaseSlug": "phase201_autopilot_control_plane_capability_architecture_v1",
+  "phaseTitle": "Autopilot Control Plane Capability Architecture v1",
+  "expectedZipFilename": "s.e.r.a_phase201_autopilot_control_plane_capability_architecture_v1_overlay.zip",
+  "savedChatGptTargetOnly": true,
+  "manualZipDownloadAllowed": false,
+  "forceFreshDownload": true,
+  "proofMode": "phase201_autopilot_control_plane_capability_architecture_pivot",
+  "contractPath": "scripts/phase-contracts/phase201.contract.json",
+  "noTruthFlagParameterSoup": true,
+  "closeoutRule": "Only close Phase201 if verifier and QA pass through the shared contract system with no mid-run script repair."
+}

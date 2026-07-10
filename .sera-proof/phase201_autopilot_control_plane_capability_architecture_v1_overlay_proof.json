@@ -1,0 +1,15 @@
+{
+  "phase": 201,
+  "phaseSlug": "phase201_autopilot_control_plane_capability_architecture_v1",
+  "expectedZipFilename": "s.e.r.a_phase201_autopilot_control_plane_capability_architecture_v1_overlay.zip",
+  "overlayPurpose": "Autopilot Control Plane v1 and Capability Architecture pivot",
+  "criticalGuarantees": [
+    "Verifier and QA read shared contract",
+    "Child process stdout/stderr/exit code captured",
+    "No truth-flag parameter soup between gates",
+    "BLOCKED handoffs include full diagnostics",
+    "PASS handoffs include evidence fields",
+    "Phase201 is the clean architecture proof; Phase200 remains repaired-after-blocker only if closed"
+  ],
+  "createdAt": "2026-07-10T18:30:53Z"
+}

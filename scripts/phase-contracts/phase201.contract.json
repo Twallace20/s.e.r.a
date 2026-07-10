@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "sera-phase-contract-v1",
+  "phaseNumber": 201,
+  "phaseSlug": "phase201_autopilot_control_plane_capability_architecture_v1",
+  "phaseTitle": "Autopilot Control Plane Capability Architecture v1",
+  "expectedZipFilename": "s.e.r.a_phase201_autopilot_control_plane_capability_architecture_v1_overlay.zip",
+  "expectedBranch": "work/phase201-autopilot-control-plane-capability-architecture-v1",
+  "expectedTag": "phase-201-autopilot-control-plane-capability-architecture-v1",
+  "purpose": "Install Autopilot Control Plane v1 and pivot S.E.R.A. toward capability-based autonomous operating system architecture.",
+  "primaryObjective": "Create a shared autopilot contract layer so verifier, QA, repeatability, and closeout read the same contract and derive truth from evidence instead of passing drifting boolean flags.",
+  "architectureLayers": [
+    "Kernel",
+    "Knowledge / Project Intelligence",
+    "Memory",
+    "Planning",
+    "Workers",
+    "Tools",
+    "Reflection",
+    "Evolution"
+  ],
+  "baseline": {
+    "lastCleanCertifiedPhase": 199,
+    "phase199Commit": "51128d59aadb81a11aa0001e58778530295b4454",
+    "phase199Tag": "phase-199-post-closeout-clean-repo-endurance-autopilot-v1",
+    "phase199ArtifactSha256": "b6c8a320b12583cfbcf04c167ed74010d16e0cd093c10bc6f183bbf8c3b77a2d",
+    "phase200Status": "browser-artifact-repeatability-proved-but-contract-drift-blocked-clean-certification",
+    "phase200Policy": "Phase200 may only be described as repaired-after-blocker if closed. Phase201 is the first clean architecture proof."
+  },
+  "deliverables": {
+    "requiredFiles": [
+      "scripts/phase-contracts/phase201.contract.json",
+      "scripts/lib/SeraPhaseGate.psm1",
+      "scripts/sera-autopilot-control-plane-v1.ps1",
+      "docs/architecture/SERA_CAPABILITY_ARCHITECTURE_V1.md",
+      "docs/autopilot/AUTOPILOT_CONTROL_PLANE_V1.md",
+      "docs/autopilot/AUTOPILOT_FAILURE_HANDOFF_STANDARD_V1.md",
+      "docs/architecture/PROJECT_INTELLIGENCE_ENGINE_V0.md",
+      "scripts/sera-project-intelligence-index-v0.ps1",
+      "scripts/verify-phase201-autopilot-control-plane-capability-architecture-v1.ps1",
+      "scripts/qa-phase201-autopilot-control-plane-capability-architecture-v1.ps1",
+      "tests/fixtures/phase201-autopilot-control-plane/child-success-with-stderr.ps1",
+      "tests/fixtures/phase201-autopilot-control-plane/child-failure-with-stderr.ps1",
+      "tests/fixtures/phase201-autopilot-control-plane/phase201-child-process-capture-fixture.ps1",
+      "tests/phase201-autopilot-control-plane.contract.test.ts"
+    ]
+  },
+  "sharedSchemas": [
+    "GateResult",
+    "ChildProcessResult",
+    "HandoffResult",
+    "PhaseContract",
+    "RemoteTruthResult"
+  ],
+  "requiredFunctions": [
+    "Read-SeraPhaseContract",
+    "Invoke-SeraChildProcess",
+    "Test-SeraZip",
+    "Test-SeraBaseline",
+    "Test-SeraBrowserMarkers",
+    "Test-SeraPointerCleanup",
+    "Test-SeraRepeatability",
+    "Write-SeraHandoff",
+    "Test-SeraRemoteTruth",
+    "Test-SeraRepoClean"
+  ],
+  "autopilotRules": {
+    "truthSource": "shared-contract-plus-evidence",
+    "noTruthFlagParameterSoup": true,
+    "repeatabilityDerivesTruthFromEvidence": true,
+    "childProcessFailureRule": "Only child process exit code determines child process failure; stderr is evidence and must be captured.",
+    "lineByLineContinuationIsInvalid": true,
+    "closeoutRequiresVerifierAndQaPass": true
+  },
+  "forbiddenParameterSuffixes": [
+    "Merged",
+    "Qa",
+    "RemoteMain",
+    "RemoteTag",
+    "PushMain",
+    "PushTag",
+    "HandoffIdentity",
+    "PostCloseoutCleanRepo",
+    "NoMidRunRepair"
+  ],
+  "handoffRequiredFields": {
+    "blocked": [
+      "Reason",
+      "InnerFailure",
+      "FullErrorRecord",
+      "InvocationInfo",
+      "PositionMessage",
+      "ScriptStackTrace",
+      "ChildCommandLine",
+      "ChildStdout",
+      "ChildStderr",
+      "CurrentBranch",
+      "RepoStatus",
+      "LatestRelevantHandoff"
+    ],
+    "pass": [
+      "ZipPath",
+      "ZipSha256",
+      "Head",
+      "OriginMain",
+      "LocalTagCommit",
+      "RemoteTagCommit",
+      "VerifierHandoffPath",
+      "QaHandoffPath",
+      "RepoStatus"
+    ]
+  },
+  "requiredEvidence": {
+    "browserMarkers": [
+      "PROMPT_INPUT_COMPAT_MODE",
+      "Input.insertText",
+      "PROMPT_FOCUS_RESULT",
+      "PROMPT_INSERT_VERIFY_RESULT",
+      "PROMPT_SEND_BUTTON_RESULT",
+      "PROMPT_SUBMIT_CONFIRM_ATTEMPT",
+      "prompt_submitted_by_native"
+    ],
+    "autopilotMarkers": [
+      "PROMPT_SUBMIT_RESULT",
+      "ARTIFACT_DOWNLOAD_V6_CLICK_RESULT",
+      "ARTIFACT_DOWNLOAD_V6_DOWNLOADED",
+      "ARTIFACT_DOWNLOAD_V6_PROOF_PASS",
+      "ZIP_READY",
+      "RUN_DIRECT_ZIP_CLOSEOUT phase=201"
+    ]
+  },
+  "closeoutRule": "Only close Phase201 if verifier and QA pass through the shared contract system with no mid-run script repair.",
+  "createdAt": "2026-07-10T18:30:53Z"
+}
