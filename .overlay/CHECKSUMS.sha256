@@ -12,3 +12,4 @@ ed150d31fd387bd31f0fdc117406c70920ca182bb437f17df397639e491ae89e  repo/scripts/s
 a2ee76f10e79465ac12a8bc3df96781d2793df27e5d5408151906dbe79da2f96  repo/scripts/verify-phase200-repeat-full-autopilot-clean-baseline-proof-v1.ps1
 e9cbe424cef1909fade7cb8beb381c60e2b673ba8b9c5c22756cc34b36ab2787  repo/tests/fixtures/phase200-repeat-full-autopilot/cases.json
 862e3dfc88117481f0405fc64f4fd37e80c56baf2df1efc6e9278858c35d85a3  repo/tests/phase200-repeat-full-autopilot-clean-baseline-proof-v1.contract.test.ts
+d3b5dfd19ac40a88761e9c39014fc419542fdf2dd6daafef51222124be69f577  repo/scripts/phase200-repeat-full-autopilot-clean-baseline-proof-fixtures-v1.ps1

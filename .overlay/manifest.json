@@ -105,6 +105,11 @@
       "path": "repo/tests/phase200-repeat-full-autopilot-clean-baseline-proof-v1.contract.test.ts",
       "bytes": 946,
       "sha256": "862e3dfc88117481f0405fc64f4fd37e80c56baf2df1efc6e9278858c35d85a3"
+    },
+    {
+      "path": "repo/scripts/phase200-repeat-full-autopilot-clean-baseline-proof-fixtures-v1.ps1",
+      "bytes": 3189,
+      "sha256": "d3b5dfd19ac40a88761e9c39014fc419542fdf2dd6daafef51222124be69f577"
     }
   ]
 }
