@@ -93,8 +93,8 @@
     },
     {
       "path": "repo/scripts/verify-phase200-repeat-full-autopilot-clean-baseline-proof-v1.ps1",
-      "bytes": 10587,
-      "sha256": "0e5b923eac0596550bb6d0d27cf056f72f70b56459889d61481a1fcbcb8e87c4"
+      "bytes": 11733,
+      "sha256": "ac3706e95a55956af062063e0163a0509688c40a0a0c1d7a72ce232499be57de"
     },
     {
       "path": "repo/tests/fixtures/phase200-repeat-full-autopilot/cases.json",

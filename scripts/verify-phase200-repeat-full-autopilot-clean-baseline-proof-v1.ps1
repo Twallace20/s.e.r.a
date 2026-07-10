@@ -22,6 +22,46 @@ $StateDir = Join-Path $AutoOpsRoot "00_control_center\state"
 
 New-Item -ItemType Directory -Force $HandoffDir | Out-Null
 
+function Quote-Arg {
+  param([string]$Value)
+  '"' + ($Value -replace '"','\"') + '"'
+}
+
+function Invoke-ChildPowerShell {
+  param(
+    [Parameter(Mandatory=$true)][string]$File,
+    [string[]]$Arguments = @()
+  )
+
+  $AllArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $File) + $Arguments
+
+  $Psi = New-Object System.Diagnostics.ProcessStartInfo
+  $Psi.FileName = "powershell.exe"
+  $Psi.Arguments = (($AllArgs | ForEach-Object { Quote-Arg ([string]$_) }) -join " ")
+  $Psi.UseShellExecute = $false
+  $Psi.RedirectStandardOutput = $true
+  $Psi.RedirectStandardError = $true
+  $Psi.CreateNoWindow = $true
+
+  $P = New-Object System.Diagnostics.Process
+  $P.StartInfo = $Psi
+  [void]$P.Start()
+  $StdOut = $P.StandardOutput.ReadToEnd()
+  $StdErr = $P.StandardError.ReadToEnd()
+  $P.WaitForExit()
+
+  $Text = $StdOut
+  if (![string]::IsNullOrWhiteSpace($StdErr)) {
+    $Text += "`nSTDERR:`n$StdErr"
+  }
+
+  [pscustomobject]@{
+    ExitCode = $P.ExitCode
+    Text = $Text
+    CommandLine = "$($Psi.FileName) $($Psi.Arguments)"
+  }
+}
+
 function Invoke-Git {
   param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Args)
   Push-Location $RepoRoot
@@ -212,43 +252,37 @@ try {
 
   $Fixture = Join-Path $RepoRoot "scripts\phase200-repeat-full-autopilot-clean-baseline-proof-fixtures-v1.ps1"
   Assert-File $Fixture
-  $FixtureOut = & powershell -NoProfile -ExecutionPolicy Bypass `
-    -File $Fixture `
-    -RepoRoot $RepoRoot `
-    -AutoOpsRoot $AutoOpsRoot 2>&1
-  $FixtureText = ($FixtureOut | Out-String)
-  if ($LASTEXITCODE -ne 0) {
-    throw "Phase200 fixture proof failed.`nPHASE200_FIXTURE_STDOUT_BEGIN`n$FixtureText`nPHASE200_FIXTURE_STDOUT_END"
+  $FixtureResult = Invoke-ChildPowerShell -File $Fixture -Arguments @("-RepoRoot", $RepoRoot, "-AutoOpsRoot", $AutoOpsRoot)
+  if ($FixtureResult.ExitCode -ne 0) {
+    throw "Phase200 fixture proof failed.`nCommand=$($FixtureResult.CommandLine)`nPHASE200_FIXTURE_STDOUT_BEGIN`n$($FixtureResult.Text)`nPHASE200_FIXTURE_STDOUT_END"
   }
 
   $PointerProof = Join-Path $RepoRoot "scripts\sera-phase200-current-phase-pointer-clean-repo-proof-v1.ps1"
   Assert-File $PointerProof
-  $PointerOut = & powershell -NoProfile -ExecutionPolicy Bypass -File $PointerProof -RepoRoot $RepoRoot -AutoOpsRoot $AutoOpsRoot 2>&1
-  $PointerText = ($PointerOut | Out-String)
-  if ($LASTEXITCODE -ne 0) {
-    throw "Phase200 pointer clean-repo proof failed.`nPHASE200_POINTER_STDOUT_BEGIN`n$PointerText`nPHASE200_POINTER_STDOUT_END"
+  $PointerResult = Invoke-ChildPowerShell -File $PointerProof -Arguments @("-RepoRoot", $RepoRoot, "-AutoOpsRoot", $AutoOpsRoot)
+  if ($PointerResult.ExitCode -ne 0) {
+    throw "Phase200 pointer clean-repo proof failed.`nCommand=$($PointerResult.CommandLine)`nPHASE200_POINTER_STDOUT_BEGIN`n$($PointerResult.Text)`nPHASE200_POINTER_STDOUT_END"
   }
 
   $Repeatability = Join-Path $RepoRoot "scripts\sera-phase200-repeatability-proof-v1.ps1"
   Assert-File $Repeatability
-  $RepeatabilityOut = & powershell -NoProfile -ExecutionPolicy Bypass `
-    -File $Repeatability `
-    -RepoRoot $RepoRoot `
-    -AutoOpsRoot $AutoOpsRoot `
-    -ConfirmedPromptSubmit "true" `
-    -ExactDomDownload "true" `
-    -ExactDomArtifactClick "true" `
-    -ExactZipDownloaded "true" `
-    -ExactZipShaVerified "true" `
-    -ZipShaVerified "true" `
-    -VerifierGateReady "true" `
-    -CleanBaselineVerified "true" `
-    -Phase199RemoteTruthVerified "true" `
-    -PromptTextCompatVerified "true" 2>&1
+  $RepeatabilityResult = Invoke-ChildPowerShell -File $Repeatability -Arguments @(
+    "-RepoRoot", $RepoRoot,
+    "-AutoOpsRoot", $AutoOpsRoot,
+    "-ConfirmedPromptSubmit", "true",
+    "-ExactDomDownload", "true",
+    "-ExactDomArtifactClick", "true",
+    "-ExactZipDownloaded", "true",
+    "-ExactZipShaVerified", "true",
+    "-ZipShaVerified", "true",
+    "-VerifierGateReady", "true",
+    "-CleanBaselineVerified", "true",
+    "-Phase199RemoteTruthVerified", "true",
+    "-PromptTextCompatVerified", "true"
+  )
 
-  $RepeatabilityText = ($RepeatabilityOut | Out-String)
-  if ($LASTEXITCODE -ne 0) {
-    throw "Phase200 repeatability gate contract failed.`nPHASE200_REPEATABILITY_STDOUT_BEGIN`n$RepeatabilityText`nPHASE200_REPEATABILITY_STDOUT_END"
+  if ($RepeatabilityResult.ExitCode -ne 0) {
+    throw "Phase200 repeatability gate contract failed.`nCommand=$($RepeatabilityResult.CommandLine)`nPHASE200_REPEATABILITY_STDOUT_BEGIN`n$($RepeatabilityResult.Text)`nPHASE200_REPEATABILITY_STDOUT_END"
   }
 
   $RepoStatus = @(Invoke-Git status --short --untracked-files=all)
@@ -270,8 +304,14 @@ FixtureProof=PASS
 PointerCleanRepoProof=PASS
 RepeatabilityProof=PASS
 
+FixtureOutput:
+$($FixtureResult.Text)
+
+PointerOutput:
+$($PointerResult.Text)
+
 RepeatabilityOutput:
-$RepeatabilityText
+$($RepeatabilityResult.Text)
 
 ImportantQualification:
 Phase200 verifier passed only after repair. Phase200 is not the clean no-rescue certification. Phase201 must prove no-rescue repeatability.
@@ -284,7 +324,6 @@ Phase200 verifier passed only after repair. Phase200 is not the clean no-rescue 
 } catch {
   $Err = $_
   $Reason = $Err.Exception.Message
-
   $FullErrorRecord = ($Err | Format-List * -Force | Out-String)
   $Invocation = ""
   $Position = ""
@@ -321,5 +360,3 @@ Blocked handoffs must include inner failing subcommand output, full error record
 "@
   Fail-Phase -Reason $Reason -Proof $Proof
 }
-
-
