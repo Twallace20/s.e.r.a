@@ -212,7 +212,10 @@ try {
 
   $Fixture = Join-Path $RepoRoot "scripts\phase200-repeat-full-autopilot-clean-baseline-proof-fixtures-v1.ps1"
   Assert-File $Fixture
-  $FixtureOut = & powershell -NoProfile -ExecutionPolicy Bypass -File $Fixture 2>&1
+  $FixtureOut = & powershell -NoProfile -ExecutionPolicy Bypass `
+    -File $Fixture `
+    -RepoRoot $RepoRoot `
+    -AutoOpsRoot $AutoOpsRoot 2>&1
   $FixtureText = ($FixtureOut | Out-String)
   if ($LASTEXITCODE -ne 0) {
     throw "Phase200 fixture proof failed.`nPHASE200_FIXTURE_STDOUT_BEGIN`n$FixtureText`nPHASE200_FIXTURE_STDOUT_END"
@@ -318,4 +321,5 @@ Blocked handoffs must include inner failing subcommand output, full error record
 "@
   Fail-Phase -Reason $Reason -Proof $Proof
 }
+
 

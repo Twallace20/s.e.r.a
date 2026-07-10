@@ -1,10 +1,22 @@
 [CmdletBinding()]
 param(
-  [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path,
-  [string]$AutoOpsRoot = "$env:USERPROFILE\OneDrive\SERA-AutoOps"
+  [string]$RepoRoot = "",
+  [string]$AutoOpsRoot = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+# PHASE200_FIXTURE_DEFAULT_ROOTS_HARDENED
+if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
+  if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
+    throw "RepoRoot was not supplied and PSScriptRoot is empty."
+  }
+  $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+}
+
+if ([string]::IsNullOrWhiteSpace($AutoOpsRoot)) {
+  $AutoOpsRoot = "$env:USERPROFILE\OneDrive\SERA-AutoOps"
+}
 
 $Expected = [ordered]@{
   phase = "200"
@@ -63,3 +75,4 @@ Assert-True "clean_repo_pointer_proof_required" (Test-Path -LiteralPath (Join-Pa
 
 Write-Host "PHASE200_FIXTURE_PROOF_PASS cases=$($Cases.Count)"
 exit 0
+
