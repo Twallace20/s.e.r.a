@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "sera-autopilot-command-v1",
+  "schema": "sera-autopilot-command-v1",
+  "commandId": "phase200-clean-baseline-repeat-full-autopilot-proof-20260710090000",
+  "runNonce": "phase200-clean-baseline-repeat-full-autopilot-proof-20260710090000",
+  "phase": 200,
+  "phaseSlug": "phase200_repeat_full_autopilot_clean_baseline_proof_v1",
+  "phaseToken": "repeat-full-autopilot-clean-baseline-proof-v1",
+  "phaseTitle": "Repeat Full Autopilot Clean Baseline Proof v1",
+  "expectedZipFilename": "s.e.r.a_phase200_repeat_full_autopilot_clean_baseline_proof_v1_overlay.zip",
+  "expectedZip": "s.e.r.a_phase200_repeat_full_autopilot_clean_baseline_proof_v1_overlay.zip",
+  "savedChatGptTargetOnly": true,
+  "savedChatGptTargetUrl": "https://chatgpt.com/g/g-p-68ddef884f4c8191bb9b2698e998e23d/c/6a4fa6c3-e120-83e8-9a23-6020d2171d0c",
+  "allowRandomRecentChatFallback": false,
+  "allowNewChatFallback": false,
+  "allowWhileBlocked": false,
+  "proofRun": true,
+  "proofMode": "phase200_repeat_full_autopilot_from_phase199_clean_closed_baseline",
+  "exactZipNameRequired": true,
+  "manualZipDownloadAllowed": false,
+  "forceFreshDownload": true,
+  "allowExistingZipReuse": false,
+  "phase199CertifiedBaseline": {
+    "phase": 199,
+    "phaseSlug": "phase199_post_closeout_clean_repo_endurance_autopilot_v1",
+    "commit": "51128d59aadb81a11aa0001e58778530295b4454",
+    "tag": "phase-199-post-closeout-clean-repo-endurance-autopilot-v1",
+    "expectedZipFilename": "s.e.r.a_phase199_post_closeout_clean_repo_endurance_autopilot_v1_overlay.zip",
+    "zipSha256": "b6c8a320b12583cfbcf04c167ed74010d16e0cd093c10bc6f183bbf8c3b77a2d",
+    "closeoutStatus": "CLOSED_CLEANLY"
+  },
+  "requiredCurrentBaseline": {
+    "main": "51128d59aadb81a11aa0001e58778530295b4454",
+    "originMain": "51128d59aadb81a11aa0001e58778530295b4454",
+    "localTag": {
+      "name": "phase-199-post-closeout-clean-repo-endurance-autopilot-v1",
+      "commit": "51128d59aadb81a11aa0001e58778530295b4454"
+    },
+    "remoteTag": {
+      "name": "phase-199-post-closeout-clean-repo-endurance-autopilot-v1",
+      "commit": "51128d59aadb81a11aa0001e58778530295b4454"
+    }
+  },
+  "browserSubmitRequirements": {
+    "promptTextCompatibilityCommit": "2404acb035e061857856f664eba4a4c76254020b",
+    "requiredMarkers": [
+      "PROMPT_INPUT_COMPAT_MODE",
+      "Input.insertText",
+      "PROMPT_FOCUS_RESULT",
+      "PROMPT_INSERT_VERIFY_RESULT",
+      "PROMPT_SEND_BUTTON_RESULT",
+      "PROMPT_SUBMIT_CONFIRM_ATTEMPT",
+      "prompt_submitted_by_native_cdp_verified",
+      "prompt_submitted_by_native_enter_verified"
+    ],
+    "requiredRuntimeProofMarkers": [
+      "COMMAND_JSON_FOUND phase=200",
+      "REQUEST_READY phase=200",
+      "PROMPT_INPUT_COMPAT_MODE",
+      "PROMPT_SUBMIT_RESULT",
+      "ARTIFACT_DOWNLOAD_V6_CLICK_RESULT",
+      "ARTIFACT_DOWNLOAD_V6_DOWNLOADED",
+      "ARTIFACT_DOWNLOAD_V6_PROOF_PASS",
+      "ZIP_READY",
+      "RUN_DIRECT_ZIP_CLOSEOUT phase=200"
+    ]
+  },
+  "closeoutRequirements": {
+    "verifierBeforeQa": true,
+    "qaBeforeMerge": true,
+    "mergeBeforePushMain": true,
+    "pushMainBeforeTagPush": true,
+    "remoteMainTruthRequired": true,
+    "remoteTagTruthRequired": true,
+    "exactZipShaRequired": true,
+    "postCloseoutGitStatusCleanRequired": true,
+    "finalHandoffRequired": true,
+    "manualRescueAllowed": false
+  },
+  "ownerGuidance": "Phase200 clean-baseline repeat full-autopilot proof. Prove the repaired production loop repeats unattended from clean Phase199 closeout baseline; do not rely on any manually downloaded ZIP."
+}

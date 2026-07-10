@@ -1,0 +1,22 @@
+{
+  "phase": 200,
+  "phaseSlug": "phase200_repeat_full_autopilot_clean_baseline_proof_v1",
+  "expectedZipFilename": "s.e.r.a_phase200_repeat_full_autopilot_clean_baseline_proof_v1_overlay.zip",
+  "tag": "phase-200-repeat-full-autopilot-clean-baseline-proof-v1",
+  "baseline": {
+    "phase199Tag": "phase-199-post-closeout-clean-repo-endurance-autopilot-v1",
+    "phase199Commit": "51128d59aadb81a11aa0001e58778530295b4454",
+    "phase199ArtifactSha256": "b6c8a320b12583cfbcf04c167ed74010d16e0cd093c10bc6f183bbf8c3b77a2d",
+    "promptTextCompatibilityRepairCommit": "2404acb035e061857856f664eba4a4c76254020b"
+  },
+  "gates": {
+    "confirmedPromptSubmit": true,
+    "exactDomDownload": true,
+    "verifierBeforeQa": true,
+    "qaBeforeMerge": true,
+    "remoteTruthBeforeClosedCleanly": true,
+    "cleanRepoBeforeReadyForNextPhase": true,
+    "manualZipDownloadAllowed": false,
+    "midRunRepairsAllowed": false
+  }
+}

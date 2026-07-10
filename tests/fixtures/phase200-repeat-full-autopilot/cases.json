@@ -1,0 +1,271 @@
+{
+  "schema": "phase200-repeatability-proof-cases-v1",
+  "cases": [
+    {
+      "name": "all gates pass",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": true,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "CLOSED_CLEANLY"
+    },
+    {
+      "name": "missing confirmedPromptSubmit blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": false,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": true,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing exactDomDownload blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": false,
+        "verified": true,
+        "qa": true,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing verified blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": false,
+        "qa": true,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing qa blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": false,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing merged blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": true,
+        "merged": false,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing pushMain blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": true,
+        "merged": true,
+        "pushMain": false,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing pushTag blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": true,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": false,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing remoteMain blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": true,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": false,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing remoteTag blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": true,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": false,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing handoffIdentity blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": true,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": false,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing zipSha blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": true,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": false,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing postCloseoutCleanRepo blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": true,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": false,
+        "noMidRunRepair": true
+      },
+      "expectedStatus": "BLOCKED"
+    },
+    {
+      "name": "missing noMidRunRepair blocks closeout",
+      "gates": {
+        "confirmedPromptSubmit": true,
+        "exactDomDownload": true,
+        "verified": true,
+        "qa": true,
+        "merged": true,
+        "pushMain": true,
+        "pushTag": true,
+        "remoteMain": true,
+        "remoteTag": true,
+        "handoffIdentity": true,
+        "zipSha": true,
+        "postCloseoutCleanRepo": true,
+        "noMidRunRepair": false
+      },
+      "expectedStatus": "BLOCKED"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "sera-overlay-proof-v1",
+  "phase": 200,
+  "phaseSlug": "phase200_repeat_full_autopilot_clean_baseline_proof_v1",
+  "phaseName": "s.e.r.a_phase200_repeat_full_autopilot_clean_baseline_proof_v1_overlay",
+  "expectedZipFilename": "s.e.r.a_phase200_repeat_full_autopilot_clean_baseline_proof_v1_overlay.zip",
+  "createdAt": "2026-07-10T09:00:00-07:00",
+  "commandContract": {
+    "commandId": "phase200-clean-baseline-repeat-full-autopilot-proof-20260710090000",
+    "runNonce": "phase200-clean-baseline-repeat-full-autopilot-proof-20260710090000",
+    "phaseSlug": "phase200_repeat_full_autopilot_clean_baseline_proof_v1",
+    "expectedZipFilename": "s.e.r.a_phase200_repeat_full_autopilot_clean_baseline_proof_v1_overlay.zip",
+    "savedChatGptTargetOnly": true,
+    "allowRandomRecentChatFallback": false,
+    "allowNewChatFallback": false,
+    "manualZipDownloadAllowed": false,
+    "forceFreshDownload": true
+  },
+  "trustedBaselines": {
+    "phase199Tag": "phase-199-post-closeout-clean-repo-endurance-autopilot-v1",
+    "phase199Commit": "51128d59aadb81a11aa0001e58778530295b4454",
+    "phase199ArtifactSha256": "b6c8a320b12583cfbcf04c167ed74010d16e0cd093c10bc6f183bbf8c3b77a2d",
+    "promptTextCompatibilityRepairCommit": "2404acb035e061857856f664eba4a4c76254020b"
+  },
+  "requiredGates": [
+    "fresh command identity",
+    "confirmed PromptText-compatible native CDP submit",
+    "exact DOM artifact click",
+    "exact Phase200 zip download",
+    "zip SHA256 verification",
+    "verifier VERIFY_PASS",
+    "QA PASS_GUARANTEED",
+    "merge",
+    "push main",
+    "push tag",
+    "remote main truth",
+    "remote tag truth",
+    "final handoff identity",
+    "post-closeout clean repo proof"
+  ],
+  "autopilotAssertion": "Phase200 may only certify CLOSED_CLEANLY if this run used the browser bridge to submit the Phase200 prompt and download the exact expected ZIP; no manual rescue is permitted.",
+  "cleanRepoAssertion": "CURRENT_PHASE_CLOSED_CLEANLY.md and CURRENT_PHASE_FINAL_HANDOFF.md must support tracked and untracked cleanup and leave final git status clean."
+}
