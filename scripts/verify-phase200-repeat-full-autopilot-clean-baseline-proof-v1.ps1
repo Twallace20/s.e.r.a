@@ -279,15 +279,43 @@ Phase200 verifier passed only after repair. Phase200 is not the clean no-rescue 
   exit 0
 
 } catch {
-  $Reason = $_.Exception.Message
+  $Err = $_
+  $Reason = $Err.Exception.Message
+
+  $FullErrorRecord = ($Err | Format-List * -Force | Out-String)
+  $Invocation = ""
+  $Position = ""
+  $ScriptStack = ""
+
+  try { $Invocation = ($Err.InvocationInfo | Format-List * -Force | Out-String) } catch {}
+  try { $Position = [string]$Err.InvocationInfo.PositionMessage } catch {}
+  try { $ScriptStack = [string]$Err.ScriptStackTrace } catch {}
+
+  if ([string]::IsNullOrWhiteSpace($Reason)) {
+    $Reason = "Phase200 verifier failed with empty exception message. See Proof full error record."
+  }
+
   $Proof = @"
 VERIFY_BLOCKED phase=200
 
 InnerFailure:
 $Reason
 
+FullErrorRecord:
+$FullErrorRecord
+
+InvocationInfo:
+$Invocation
+
+PositionMessage:
+$Position
+
+ScriptStackTrace:
+$ScriptStack
+
 DiagnosticContract:
-Blocked handoffs must include inner failing subcommand output, not only the wrapper reason.
+Blocked handoffs must include inner failing subcommand output, full error record, invocation info, position message, and script stack trace.
 "@
   Fail-Phase -Reason $Reason -Proof $Proof
 }
+
