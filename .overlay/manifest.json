@@ -73,8 +73,8 @@
     },
     {
       "path": "repo/scripts/qa-phase200-repeat-full-autopilot-clean-baseline-proof-v1.ps1",
-      "bytes": 5588,
-      "sha256": "35d6e2448e1335f2c5c1ebaa45ba0d6f3bdf137998c4fb94783cbb425e6301aa"
+      "bytes": 5590,
+      "sha256": "06bfa04c9b97736c27fd43f21a5a6163721d2ce55555896dc84d3c837605623a"
     },
     {
       "path": "repo/scripts/sera-phase200-current-phase-pointer-clean-repo-proof-v1.ps1",
@@ -88,8 +88,8 @@
     },
     {
       "path": "repo/scripts/sera-phase200-repeatability-proof-v1.ps1",
-      "bytes": 5055,
-      "sha256": "b016f654ff3d95ec9987ca1b4bef68d8b7fec06be2ab7d4f5d73f4da011d7df9"
+      "bytes": 5026,
+      "sha256": "64568b72fb5bafc96cac006f4ce3aeff1bee0a9da821eb5b008b05765f7d7f76"
     },
     {
       "path": "repo/scripts/verify-phase200-repeat-full-autopilot-clean-baseline-proof-v1.ps1",
