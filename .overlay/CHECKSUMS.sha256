@@ -3,7 +3,7 @@ b3033f9c435c98d0878242c14f103d4e05a61b2374ee649a8d8ac0169cfa2e24  repo/.sera-pro
 67927e3f7fedafadc76ef386d017915f23e07f4372e53707ab297f40c802ec15  repo/scripts/sera-post-closeout-clean-repo-endurance-autopilot-v1.ps1
 9103a865d77de2c88ac9acd12ce73502f14429324a99e3c8b78cb21ff3ac0eea  repo/tests/fixtures/phase199-clean-repo-endurance/cases.json
 5b39a4d325547e83dadb587397349616a089aa7b465852c564030b7190d2329e  repo/scripts/phase199-post-closeout-clean-repo-endurance-autopilot-fixtures-v1.ps1
-fa22633a13f2f9df41ebb3fe1f34ad8adc30fd17ba39bb84921ff1cd443dcf1e  repo/scripts/sera-phase199-current-phase-pointer-clean-repo-proof-v1.ps1
+efa8108345b6e970f4e7cac6ee2f6fc63184cd35028f71a5d267e42b1768d65d  repo/scripts/sera-phase199-current-phase-pointer-clean-repo-proof-v1.ps1
 e86a2cfc97972261e0d83e1cdd924081d26e3b2cc17c33a34e0d7cac286d309e  repo/scripts/phase199-post-closeout-clean-repo-endurance-autopilot-v1.contract.json
 01ea7ee0e1aa1e69048ce3e03b184d5f9940ca14d52dc15b29ddd91334e552f1  repo/scripts/verify-phase199-post-closeout-clean-repo-endurance-autopilot-v1.ps1
 2369f9f3c92da68e9dd0bc80a9938ec423d67ba9b73a89e4d7dd5fc988cdec78  repo/scripts/qa-phase199-post-closeout-clean-repo-endurance-autopilot-v1.ps1
