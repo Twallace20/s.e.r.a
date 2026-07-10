@@ -75,7 +75,7 @@
     {
       "path": "repo/scripts/sera-phase199-current-phase-pointer-clean-repo-proof-v1.ps1",
       "bytes": 2143,
-      "sha256": "235a81cb7012f180468a3c5be69ba1f73348aafe3a1f2e571af7869bc576cd5e"
+      "sha256": "fa22633a13f2f9df41ebb3fe1f34ad8adc30fd17ba39bb84921ff1cd443dcf1e"
     },
     {
       "path": "repo/scripts/phase199-post-closeout-clean-repo-endurance-autopilot-v1.contract.json",
@@ -85,7 +85,7 @@
     {
       "path": "repo/scripts/verify-phase199-post-closeout-clean-repo-endurance-autopilot-v1.ps1",
       "bytes": 7287,
-      "sha256": "697523265ef393e5f4b1fb92bdc1652b980f41e07d25145a7ae21629b872e61f"
+      "sha256": "01ea7ee0e1aa1e69048ce3e03b184d5f9940ca14d52dc15b29ddd91334e552f1"
     },
     {
       "path": "repo/scripts/qa-phase199-post-closeout-clean-repo-endurance-autopilot-v1.ps1",

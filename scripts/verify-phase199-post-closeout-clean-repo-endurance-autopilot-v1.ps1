@@ -88,7 +88,18 @@ try {
   $HotfixInHistory = $(git merge-base --is-ancestor $BrowserSubmitHotfixCommit HEAD; if ($LASTEXITCODE -eq 0) { "true" } else { "false" })
   if ($HotfixInHistory -ne "true") { throw "Browser-submit hotfix commit is not in HEAD ancestry: $BrowserSubmitHotfixCommit" }
   Assert-File $Bridge
-  foreach ($Needle in @("prompt_submit_empty_composer_before_send","prompt_submit_unconfirmed_after_retry","safe_block_no_zip_wait_until_submit_confirmed","prompt_submitted_by_button_verified_user_message","prompt_submitted_by_button_verified_generating")) { Assert-Contains $Bridge $Needle }
+  foreach ($Needle in @(
+  "PROMPT_INPUT_COMPAT_MODE",
+  "Input.insertText",
+  "PROMPT_FOCUS_RESULT",
+  "PROMPT_INSERT_VERIFY_RESULT",
+  "PROMPT_SEND_BUTTON_RESULT",
+  "PROMPT_SUBMIT_CONFIRM_ATTEMPT",
+  "prompt_submitted_by_native_cdp_verified",
+  "prompt_submitted_by_native_enter_verified"
+)) {
+  Assert-Contains $Bridge $Needle
+}
 
   & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $FixtureScript -RepoRoot $RepoRoot
   if ($LASTEXITCODE -ne 0) { throw "Phase199 fixture proof failed." }
@@ -115,4 +126,5 @@ try {
   Write-Host "BLOCKED phase=199 reason=$Reason handoff=$Out"
   exit 1
 }
+
 
