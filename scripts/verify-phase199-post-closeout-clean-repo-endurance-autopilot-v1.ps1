@@ -85,7 +85,7 @@ try {
   if ($Phase198Local -ne $Phase198Commit) { throw "Phase198 local tag mismatch: $Phase198Local" }
   $Phase198Remote = (git ls-remote --tags origin "refs/tags/$Phase198Tag" | ForEach-Object { ($_ -split "\s+")[0] } | Select-Object -First 1)
   if ($Phase198Remote -ne $Phase198Commit) { throw "Phase198 remote tag mismatch: $Phase198Remote" }
-  $HotfixInHistory = (git merge-base --is-ancestor $BrowserSubmitHotfixCommit HEAD; if ($LASTEXITCODE -eq 0) { "true" } else { "false" })
+  $HotfixInHistory = $(git merge-base --is-ancestor $BrowserSubmitHotfixCommit HEAD; if ($LASTEXITCODE -eq 0) { "true" } else { "false" })
   if ($HotfixInHistory -ne "true") { throw "Browser-submit hotfix commit is not in HEAD ancestry: $BrowserSubmitHotfixCommit" }
   Assert-File $Bridge
   foreach ($Needle in @("prompt_submit_empty_composer_before_send","prompt_submit_unconfirmed_after_retry","safe_block_no_zip_wait_until_submit_confirmed","prompt_submitted_by_button_verified_user_message","prompt_submitted_by_button_verified_generating")) { Assert-Contains $Bridge $Needle }
@@ -115,3 +115,4 @@ try {
   Write-Host "BLOCKED phase=199 reason=$Reason handoff=$Out"
   exit 1
 }
+
