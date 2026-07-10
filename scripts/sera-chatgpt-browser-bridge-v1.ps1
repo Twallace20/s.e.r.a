@@ -256,59 +256,180 @@ function Submit-ChatGptPrompt {
   setText(box, prompt);
   await new Promise(r => setTimeout(r, 800));
 
-  const buttons = Array.from(document.querySelectorAll("button, [role='button']"))
-    .filter(visible);
+    function composerText() {
+    return (box.innerText || box.textContent || box.value || "").trim();
+  }
 
-  const send = buttons.find(b => {
-    const t = [
-      b.innerText,
-      b.textContent,
-      b.getAttribute("aria-label"),
-      b.getAttribute("title"),
-      b.getAttribute("data-testid")
-    ].filter(Boolean).join(" ").toLowerCase();
+  function setComposerText(text) {
+    box.focus();
 
-    return !b.disabled && (
-      t.includes("send") ||
-      t.includes("submit") ||
-      t.includes("composer-submit") ||
-      t.includes("arrow-up")
-    );
-  });
-
-  if (!send) {
-    box.dispatchEvent(new KeyboardEvent("keydown", { key:"Enter", code:"Enter", bubbles:true, cancelable:true }));
-    box.dispatchEvent(new KeyboardEvent("keyup", { key:"Enter", code:"Enter", bubbles:true, cancelable:true }));
-    await new Promise(r => setTimeout(r, 1200));
-
-    const afterComposerText = (box.innerText || box.textContent || "").trim();
-    const stopOrGenerating = Array.from(document.querySelectorAll("button,[role='button']")).some(b => {
-      const label = [
-        b.getAttribute("aria-label"),
-        b.getAttribute("data-testid"),
-        b.getAttribute("title"),
-        b.innerText,
-        b.textContent
-      ].filter(Boolean).join(" ").toLowerCase();
-
-      return label.includes("stop") || label.includes("generating") || label.includes("streaming");
-    });
-
-    if (stopOrGenerating) {
-      return { ok:true, action:"prompt_submitted_by_enter_fallback_verified_generating" };
+    if ("value" in box) {
+      box.value = text;
+    } else {
+      box.innerText = text;
+      box.textContent = text;
     }
 
+    box.dispatchEvent(new InputEvent("input", {
+      bubbles: true,
+      cancelable: true,
+      inputType: "insertText",
+      data: text
+    }));
+
+    box.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function labelFor(el) {
+    return [
+      el.innerText,
+      el.textContent,
+      el.getAttribute("aria-label"),
+      el.getAttribute("title"),
+      el.getAttribute("data-testid"),
+      el.getAttribute("data-state")
+    ].filter(Boolean).join(" ").toLowerCase();
+  }
+
+  function findSendButton() {
+    const direct = Array.from(document.querySelectorAll([
+      "button[data-testid='send-button']",
+      "button[data-testid='composer-submit-button']",
+      "[role='button'][data-testid='send-button']",
+      "[role='button'][data-testid='composer-submit-button']",
+      "button[aria-label*='Send']",
+      "[role='button'][aria-label*='Send']",
+      "button[title*='Send']",
+      "[role='button'][title*='Send']",
+      "button",
+      "[role='button']"
+    ].join(","))).filter(visible);
+
+    return direct.find(b => {
+      const t = labelFor(b);
+      const rect = b.getBoundingClientRect();
+      const nearComposer = rect.top > (window.innerHeight * 0.45);
+      const iconLike = !!b.querySelector("svg") && rect.width <= 96 && rect.height <= 96;
+
+      return !b.disabled && (
+        t.includes("send") ||
+        t.includes("submit") ||
+        t.includes("composer-submit") ||
+        t.includes("send-button") ||
+        t.includes("arrow-up") ||
+        (nearComposer && iconLike && !t.includes("attach") && !t.includes("voice") && !t.includes("mic"))
+      );
+    });
+  }
+
+  function stopOrGenerating() {
+    return Array.from(document.querySelectorAll("button,[role='button']")).some(b => {
+      const label = labelFor(b);
+      return label.includes("stop") || label.includes("generating") || label.includes("streaming");
+    });
+  }
+
+  function userMessagePosted(promptText) {
+    const zipMatch = promptText.match(/s\.e\.r\.a_[a-z0-9_]+_overlay\.zip/i);
+    const slugMatch = promptText.match(/phase\d+_[a-z0-9_]+_v\d+/i);
+    const sentinel = (zipMatch && zipMatch[0]) || (slugMatch && slugMatch[0]) || promptText.slice(0, 80);
+    if (!sentinel) return false;
+
+    const userTurns = Array.from(document.querySelectorAll([
+      "[data-message-author-role='user']",
+      "[data-testid*='conversation-turn']",
+      "article"
+    ].join(",")));
+
+    return userTurns.some(el => (el.innerText || el.textContent || "").includes(sentinel));
+  }
+
+  const originalPromptText = composerText();
+
+  if (!originalPromptText || originalPromptText.length < 20) {
     return {
       ok:false,
-      reason:"prompt_submit_unconfirmed_enter_fallback",
-      action:"enter_fallback_attempted_without_send_button",
-      composerTextLength: afterComposerText.length,
+      reason:"prompt_submit_empty_composer_before_send",
+      action:"blocked_before_destructive_enter_fallback",
+      composerTextLength: originalPromptText.length,
       url: location.href
     };
   }
 
-  send.click();
-  return { ok:true, action:"prompt_submitted_by_button" };
+  let lastComposerLength = originalPromptText.length;
+  let lastButtonSeen = false;
+
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    if (composerText().length < 20) {
+      setComposerText(originalPromptText);
+      await new Promise(r => setTimeout(r, 650));
+    } else {
+      box.dispatchEvent(new InputEvent("input", {
+        bubbles: true,
+        cancelable: true,
+        inputType: "insertText",
+        data: ""
+      }));
+      await new Promise(r => setTimeout(r, 450));
+    }
+
+    lastComposerLength = composerText().length;
+    const send = findSendButton();
+    lastButtonSeen = !!send;
+
+    if (!send) {
+      await new Promise(r => setTimeout(r, 800));
+      continue;
+    }
+
+    send.scrollIntoView({ block: "center", inline: "center" });
+    await new Promise(r => setTimeout(r, 250));
+
+    send.dispatchEvent(new MouseEvent("mousedown", { bubbles:true, cancelable:true, view:window }));
+    send.dispatchEvent(new MouseEvent("mouseup", { bubbles:true, cancelable:true, view:window }));
+    send.click();
+
+    for (let confirm = 1; confirm <= 12; confirm++) {
+      await new Promise(r => setTimeout(r, 750));
+
+      const currentText = composerText();
+      const cleared = currentText.length < 20;
+
+      if (stopOrGenerating()) {
+        return {
+          ok:true,
+          action:"prompt_submitted_by_button_verified_generating",
+          attempt,
+          confirm,
+          composerTextLength: currentText.length
+        };
+      }
+
+      if (cleared && userMessagePosted(originalPromptText)) {
+        return {
+          ok:true,
+          action:"prompt_submitted_by_button_verified_user_message",
+          attempt,
+          confirm,
+          composerTextLength: currentText.length
+        };
+      }
+    }
+
+    if (composerText().length < 20 && !userMessagePosted(originalPromptText) && !stopOrGenerating()) {
+      setComposerText(originalPromptText);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  }
+
+  return {
+    ok:false,
+    reason:"prompt_submit_unconfirmed_after_retry",
+    action:"safe_block_no_zip_wait_until_submit_confirmed",
+    composerTextLength: lastComposerLength,
+    sendButtonSeen: lastButtonSeen,
+    url: location.href
+  };
 })()
 "@
 
@@ -571,4 +692,5 @@ try {
 # exact ZIP filename and SHA256/freshness verification before success
 # allowRandomRecentChatFallback false
 # allowNewChatFallback false
+
 
