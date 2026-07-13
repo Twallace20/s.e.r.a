@@ -1,56 +1,61 @@
-{
-  "files": [],
-  "references": [
-    {
-      "path": "packages/shared"
-    },
-    {
-      "path": "packages/safety"
-    },
-    {
-      "path": "packages/artifacts"
-    },
-    {
-      "path": "packages/workspace"
-    },
-    {
-      "path": "packages/tools"
-    },
-    {
-      "path": "packages/workers"
-    },
-    {
-      "path": "packages/memory"
-    },
-    {
-      "path": "packages/planner"
-    },
-    {
-      "path": "packages/knowledge"
-    },
-    {
-      "path": "packages/model-provider"
-    },
-    {
-      "path": "packages/autonomy"
-    },
-    {
-      "path": "packages/operator-console"
-    },
-    {
-      "path": "packages/self-improvement"
-    },
-    {
-      "path": "packages/research"
-    },
-    {
-      "path": "packages/kernel"
-    },
-    {
-      "path": "packages/certs"
-    },
-    {
-      "path": "apps/cli"
-    }
-  ]
+﻿{
+    "files":  [
+
+              ],
+    "references":  [
+                       {
+                           "path":  "packages/shared"
+                       },
+                       {
+                           "path":  "packages/contracts"
+                       },
+                       {
+                           "path":  "packages/safety"
+                       },
+                       {
+                           "path":  "packages/artifacts"
+                       },
+                       {
+                           "path":  "packages/workspace"
+                       },
+                       {
+                           "path":  "packages/tools"
+                       },
+                       {
+                           "path":  "packages/workers"
+                       },
+                       {
+                           "path":  "packages/memory"
+                       },
+                       {
+                           "path":  "packages/planner"
+                       },
+                       {
+                           "path":  "packages/knowledge"
+                       },
+                       {
+                           "path":  "packages/model-provider"
+                       },
+                       {
+                           "path":  "packages/autonomy"
+                       },
+                       {
+                           "path":  "packages/operator-console"
+                       },
+                       {
+                           "path":  "packages/self-improvement"
+                       },
+                       {
+                           "path":  "packages/research"
+                       },
+                       {
+                           "path":  "packages/kernel"
+                       },
+                       {
+                           "path":  "packages/certs"
+                       },
+                       {
+                           "path":  "apps/cli"
+                       }
+                   ]
 }

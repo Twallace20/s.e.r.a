@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "sera.capability-inventory.v1",
+  "status": "starter",
+  "milestone": "repository-truth-v1",
+  "classifications": [
+    "production-module",
+    "evaluation-asset",
+    "failure-fixture",
+    "legacy-reference",
+    "obsolete"
+  ],
+  "requiredScopes": [
+    "apps",
+    "packages",
+    "scripts",
+    "tests",
+    "docs",
+    "commands",
+    "runtime-directories",
+    "phase-artifacts",
+    "git-adapters",
+    "browser-and-zip-pipeline"
+  ],
+  "seedClassifications": [
+    {
+      "pattern": "packages/*",
+      "classification": "review-required",
+      "migrationTarget": "permanent runtime package or consolidation source"
+    },
+    {
+      "pattern": "scripts/phase*",
+      "classification": "review-required",
+      "migrationTarget": "production module, evaluation asset, failure fixture, or legacy"
+    },
+    {
+      "pattern": "browser/zip/overlay/pointer orchestration",
+      "classification": "legacy-reference",
+      "migrationTarget": "legacy/browser-pipeline"
+    },
+    {
+      "pattern": "Phase 201 deterministic recovery failure",
+      "classification": "failure-fixture",
+      "migrationTarget": "control-plane terminal-state regression"
+    }
+  ],
+  "acceptanceCriteria": [
+    "all active repository surfaces inventoried",
+    "every phase asset classified",
+    "no certified behavior silently removed",
+    "legacy browser and overlay transport isolated",
+    "no new phase-numbered production orchestrator",
+    "trusted baseline remains reproducible"
+  ]
+}
