@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@sera/kernel": "0.1.0",
-    "@sera/autonomy": "0.1.0"
+    "@sera/autonomy": "0.1.0",
+    "@sera/repository-snapshot": "0.1.0"
   }
 }

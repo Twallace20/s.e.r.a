@@ -66,6 +66,8 @@ Usage:
   sera console report
   sera console history
   sera console summary
+  sera repository snapshot
+  sera snapshot
 
 NPM examples:
   npm run sera -- run "create hello file"
@@ -101,6 +103,7 @@ NPM examples:
   npm run sera -- auto summary
   npm run sera -- console status
   npm run sera -- console report
+  npm run sera -- repository snapshot
 
 Secure base behavior:
   - runs locally
@@ -897,6 +900,46 @@ async function main(): Promise<void> {
       process.exit(0);
     }
     throw new Error("Console command must be 'status', 'health', 'report', 'history', or 'summary'.");
+  }
+
+  if (cmd === "repository") {
+    const [repositoryMode] = rest;
+    if (repositoryMode !== "snapshot") {
+      throw new Error("Repository command must be 'snapshot'.");
+    }
+    const result = kernel.runRepositorySnapshot();
+    console.log(JSON.stringify({
+      ok: result.ok,
+      status: result.status,
+      message: result.message,
+      snapshotId: result.snapshotId,
+      outputRoot: ".sera/repository",
+      manifest: result.manifest,
+      warningCount: result.warnings.length,
+      errorCount: result.errors.length,
+      summary: result.summary,
+      modelUse: false,
+      networkUse: false
+    }, null, 2));
+    process.exit(result.ok ? 0 : 1);
+  }
+
+  if (cmd === "snapshot") {
+    const result = kernel.runRepositorySnapshot();
+    console.log(JSON.stringify({
+      ok: result.ok,
+      status: result.status,
+      message: result.message,
+      snapshotId: result.snapshotId,
+      outputRoot: ".sera/repository",
+      manifest: result.manifest,
+      warningCount: result.warnings.length,
+      errorCount: result.errors.length,
+      summary: result.summary,
+      modelUse: false,
+      networkUse: false
+    }, null, 2));
+    process.exit(result.ok ? 0 : 1);
   }
 
   console.error(`Unknown command: ${cmd}`);

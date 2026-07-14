@@ -62,6 +62,9 @@
       ],
       "@sera/research": [
         "packages/research/src/index.ts"
+      ],
+      "@sera/repository-snapshot": [
+        "packages/repository-snapshot/src/index.ts"
       ]
     }
   }

@@ -63,7 +63,7 @@ The first reference capability is Website Studio.
 The locked implementation order is:
 
 1. Constitution and Layer Model — `sera-os-constitution-v1`
-2. Repository Snapshot — `repository-snapshot-v1`
+2. Repository Snapshot — `repository-snapshot-v1` — implemented as a deterministic Runtime-layer fact scanner that writes `.sera/repository/` evidence
 3. Repository Truth — `repository-truth-v1`
 4. Unified Control Plane — `local-control-plane-v1`
 5. SQLite Runtime State — `local-state-store-v1`

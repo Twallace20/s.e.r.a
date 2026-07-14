@@ -10,6 +10,9 @@
                            "path":  "packages/contracts"
                        },
                        {
+                           "path":  "packages/repository-snapshot"
+                       },
+                       {
                            "path":  "packages/safety"
                        },
                        {

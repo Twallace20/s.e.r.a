@@ -74,14 +74,29 @@
     {
       "id": "repository-snapshot",
       "targetLayer": "Runtime",
-      "currentMaturity": "not-implemented",
-      "status": "proposed",
+      "currentMaturity": "implemented",
+      "status": "certification-pending",
       "dependencies": [
         "sera-os-kernel",
-        "runtime-control-plane"
+        "runtime-control-plane",
+        "packages/repository-snapshot",
+        "apps/cli",
+        "packages/certs"
       ],
       "certificationTarget": "repository-snapshot-v1",
-      "notes": "Deterministic bounded inventory of repository source, runtime data, generated artifacts, and legacy surfaces. Must precede Repository Truth."
+      "evidence": [
+        "packages/repository-snapshot/src/repository-snapshot.ts",
+        "tests/repository-snapshot-v1.test.ts",
+        "docs/architecture/REPOSITORY_SNAPSHOT_V1.md"
+      ],
+      "limitations": [
+        "does not classify architecture or legacy status",
+        "does not infer callers or semantic dependency graphs",
+        "Git metadata is optional and local-only",
+        "test ownership is heuristic and must include confidence and evidence"
+      ],
+      "nextGate": "Repository Snapshot v1 certification and actual-repository proof",
+      "notes": "Deterministic bounded inventory of repository source, runtime data, generated artifacts, and legacy surfaces. Must precede Repository Truth. Mark as certified only after the full validation and certification suite passes."
     },
     {
       "id": "repository-truth",

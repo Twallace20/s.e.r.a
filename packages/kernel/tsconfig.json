@@ -51,6 +51,9 @@
     },
     {
       "path": "../autonomy"
+    },
+    {
+      "path": "../repository-snapshot"
     }
   ]
 }

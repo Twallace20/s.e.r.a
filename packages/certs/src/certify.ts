@@ -6,6 +6,7 @@ import { KnowledgeStore } from "@sera/knowledge";
 import { MemoryStore } from "@sera/memory";
 import { ModelProviderStore } from "@sera/model-provider";
 import { OperatorConsoleStore } from "@sera/operator-console";
+import { runRepositorySnapshot } from "@sera/repository-snapshot";
 
 export interface CertCheck {
   id: string;
@@ -39,6 +40,7 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runModelProviderV1Checks());
   checks.push(...runAutonomousDevLoopV1Checks());
   checks.push(...runOperatorConsoleV1Checks());
+  checks.push(...runRepositorySnapshotV1Checks());
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -52,6 +54,7 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   const modelProviderV1ChecksPass = checks.filter((c) => c.id.startsWith("model_provider_")).every((c) => c.pass);
   const autonomyV1ChecksPass = checks.filter((c) => c.id.startsWith("autonomy_")).every((c) => c.pass);
   const operatorConsoleV1ChecksPass = checks.filter((c) => c.id.startsWith("console_")).every((c) => c.pass);
+  const repositorySnapshotV1ChecksPass = checks.filter((c) => c.id.startsWith("repository_snapshot_")).every((c) => c.pass);
   const pass = checks.every((c) => c.pass);
   const level = pass && operatorConsoleV1ChecksPass
     ? "operator-console-v1"
@@ -866,6 +869,96 @@ function runOperatorConsoleV1Checks(): CertCheck[] {
       pass: summary.snapshotCount >= 2 && summary.eventCount >= 3 && summary.reportCount >= 1 && summary.lastStatus !== "none",
       detail: JSON.stringify(summary)
     }
+  ];
+}
+
+function runRepositorySnapshotV1Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-repository-snapshot-cert-"));
+  fs.mkdirSync(path.join(root, "packages", "alpha", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "apps", "web", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "tests"), { recursive: true });
+  fs.mkdirSync(path.join(root, "node_modules"), { recursive: true });
+  fs.mkdirSync(path.join(root, "dist"), { recursive: true });
+  fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({
+    name: "snapshot-cert-root",
+    version: "1.0.0",
+    private: true,
+    workspaces: ["packages/*", "apps/*", "missing/*"],
+    scripts: { test: "vitest run", build: "tsc -b" }
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "tsconfig.json"), JSON.stringify({
+    files: [],
+    references: [{ path: "packages/alpha" }, { path: "missing-ref" }]
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "alpha", "package.json"), JSON.stringify({
+    name: "@sera/alpha",
+    version: "0.1.0",
+    private: true,
+    scripts: { test: "vitest run alpha" },
+    dependencies: { "@sera/missing": "0.1.0" }
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "alpha", "tsconfig.json"), "{}", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "alpha", "src", "index.ts"), "export const alpha = 1;\n", "utf8");
+  fs.writeFileSync(path.join(root, "apps", "web", "package.json"), JSON.stringify({ name: "@sera/web", version: "0.1.0", private: true }), "utf8");
+  fs.writeFileSync(path.join(root, "apps", "web", "src", "main.ts"), "console.log('web');\n", "utf8");
+  fs.writeFileSync(path.join(root, "tests", "alpha.test.ts"), "test('alpha', () => undefined);\n", "utf8");
+  fs.writeFileSync(path.join(root, "README.md"), "# Snapshot Cert\n", "utf8");
+  fs.writeFileSync(path.join(root, "dist", "ignored.test.ts"), "throw new Error('ignored');\n", "utf8");
+
+  const clock = { now: () => new Date("2026-07-14T00:00:00.000Z") };
+  const first = runRepositorySnapshot({ repositoryRoot: root, clock });
+  const required = ["snapshot.json", "workspaces.json", "packages.json", "scripts.json", "tests.json", "references.json", "documents.json", "summary.json"];
+  const parsed = required.map((name) => {
+    const absolutePath = path.join(root, ".sera", "repository", name);
+    return {
+      name,
+      exists: fs.existsSync(absolutePath),
+      value: fs.existsSync(absolutePath) ? JSON.parse(fs.readFileSync(absolutePath, "utf8")) : undefined
+    };
+  });
+  const firstSummaryText = fs.readFileSync(path.join(root, ".sera", "repository", "summary.json"), "utf8");
+  const failed = runRepositorySnapshot({ repositoryRoot: root, clock, simulateFailureAfterStaging: true });
+  const afterFailureSummaryText = fs.readFileSync(path.join(root, ".sera", "repository", "summary.json"), "utf8");
+  const second = runRepositorySnapshot({ repositoryRoot: root, clock });
+  const secondSummaryText = fs.readFileSync(path.join(root, ".sera", "repository", "summary.json"), "utf8");
+  const snapshot = parsed.find((item) => item.name === "snapshot.json")?.value;
+  const summary = JSON.parse(secondSummaryText);
+  const tests = JSON.parse(fs.readFileSync(path.join(root, ".sera", "repository", "tests.json"), "utf8"));
+  const references = JSON.parse(fs.readFileSync(path.join(root, ".sera", "repository", "references.json"), "utf8"));
+  const workspaces = JSON.parse(fs.readFileSync(path.join(root, ".sera", "repository", "workspaces.json"), "utf8"));
+  const allJson = JSON.stringify(parsed.map((item) => item.value));
+  const portablePaths = !allJson.includes(root) && !/[A-Z]:\\\\/.test(allJson);
+
+  let symlinkExcluded = true;
+  try {
+    const outside = fs.mkdtempSync(path.join(os.tmpdir(), "sera-repository-snapshot-outside-cert-"));
+    fs.writeFileSync(path.join(outside, "outside.test.ts"), "outside\n", "utf8");
+    fs.symlinkSync(outside, path.join(root, "outside-link"), "junction");
+    runRepositorySnapshot({ repositoryRoot: root, clock });
+    const symlinkSummary = JSON.parse(fs.readFileSync(path.join(root, ".sera", "repository", "summary.json"), "utf8"));
+    symlinkExcluded = symlinkSummary.exclusions.some((item: { path: string; reason: string }) => item.path === "outside-link" && item.reason.includes("not followed"));
+  } catch {
+    symlinkExcluded = true;
+  }
+
+  const nonGitRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-repository-snapshot-nongit-cert-"));
+  fs.writeFileSync(path.join(nonGitRoot, "package.json"), JSON.stringify({ name: "nongit", workspaces: [] }), "utf8");
+  fs.writeFileSync(path.join(nonGitRoot, "tsconfig.json"), JSON.stringify({ files: [] }), "utf8");
+  const nonGit = runRepositorySnapshot({ repositoryRoot: nonGitRoot, clock });
+
+  return [
+    { id: "repository_snapshot_required_outputs_exist", name: "Repository Snapshot writes every required output file", pass: first.ok && parsed.every((item) => item.exists), detail: first.outputRoot },
+    { id: "repository_snapshot_schemas_parse", name: "Repository Snapshot output schemas parse", pass: parsed.every((item) => item.value?.schemaVersion === "sera.repository-snapshot.v1"), detail: required.join(", ") },
+    { id: "repository_snapshot_paths_are_portable", name: "Repository Snapshot paths are repository-relative and portable", pass: portablePaths, detail: "persistent JSON contains no fixture absolute path" },
+    { id: "repository_snapshot_traversal_is_deterministic", name: "Repository Snapshot normalized repeatability succeeds", pass: first.ok && second.ok && firstSummaryText === afterFailureSummaryText && JSON.parse(secondSummaryText).totalFilesObserved === JSON.parse(firstSummaryText).totalFilesObserved, detail: path.join(root, ".sera", "repository", "summary.json") },
+    { id: "repository_snapshot_excludes_generated_directories", name: "Repository Snapshot excludes generated directories", pass: summary.exclusions.some((item: { path: string }) => item.path === "node_modules") && summary.exclusions.some((item: { path: string }) => item.path === "dist") && !tests.testFiles.some((file: { path: string }) => file.path.startsWith("dist/")), detail: JSON.stringify(summary.exclusions.slice(0, 5)) },
+    { id: "repository_snapshot_symlink_not_followed", name: "Repository Snapshot does not follow outside-root symlinks or junctions", pass: symlinkExcluded, detail: "outside-link excluded when symlink creation is available" },
+    { id: "repository_snapshot_non_git_operation_succeeds", name: "Repository Snapshot succeeds without requiring Git repository metadata", pass: nonGit.ok, detail: nonGit.message },
+    { id: "repository_snapshot_git_optional_local_only", name: "Repository Snapshot records Git as optional and local-only", pass: snapshot.modelUse === false && snapshot.networkUse === false && snapshot.repository.git.available !== undefined, detail: JSON.stringify(snapshot.repository.git) },
+    { id: "repository_snapshot_missing_paths_recorded", name: "Repository Snapshot records missing workspaces and references", pass: workspaces.missingDeclaredWorkspacePaths.includes("missing/*") && references.missingReferencedPaths.includes("missing-ref"), detail: "missing/* and missing-ref" },
+    { id: "repository_snapshot_no_model_or_network", name: "Repository Snapshot records no model or network use", pass: snapshot.modelUse === false && snapshot.networkUse === false, detail: "modelUse=false networkUse=false" },
+    { id: "repository_snapshot_no_partial_promotion", name: "Repository Snapshot does not promote partial output after simulated failure", pass: failed.status === "FAILED" && firstSummaryText === afterFailureSummaryText, detail: failed.message },
+    { id: "repository_snapshot_public_api_consumable", name: "Repository Snapshot is consumable through typed public API", pass: Boolean(first.manifest.find((item) => item.path.endsWith("snapshot.json"))) && first.execution.status === "COMPLETED", detail: first.execution.evidenceDirectory ?? "missing evidence directory" }
   ];
 }
 

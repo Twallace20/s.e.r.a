@@ -21,6 +21,7 @@
     "@sera/model-provider": "0.1.0",
     "@sera/autonomy": "0.1.0",
     "@sera/operator-console": "0.1.0",
-    "@sera/research": "0.1.0"
+    "@sera/research": "0.1.0",
+    "@sera/repository-snapshot": "0.1.0"
   }
 }

@@ -59,6 +59,11 @@ import {
   OperatorConsoleSummaryResult
 } from "@sera/operator-console";
 import {
+  RepositorySnapshotOptions,
+  RepositorySnapshotResult,
+  runRepositorySnapshot
+} from "@sera/repository-snapshot";
+import {
   CreateQueuedTaskInput,
   QueuedTaskRecord,
   QueuedTaskStatus,
@@ -288,6 +293,10 @@ export interface OperatorConsoleHealthTaskResult extends OperatorConsoleHealthRe
 export interface OperatorConsoleReportTaskResult extends OperatorConsoleReportResult {}
 export interface OperatorConsoleHistoryTaskResult extends OperatorConsoleHistoryResult {}
 export interface OperatorConsoleSummaryTaskResult extends OperatorConsoleSummaryResult {}
+export interface RepositorySnapshotTaskInput extends Omit<RepositorySnapshotOptions, "repositoryRoot"> {
+  repositoryRoot?: string;
+}
+export interface RepositorySnapshotTaskResult extends RepositorySnapshotResult {}
 
 export class SeraKernel {
   private readonly workspaceManager = new WorkspaceManager();
@@ -926,6 +935,13 @@ export class SeraKernel {
 
   getOperatorConsoleSummary(): OperatorConsoleSummaryTaskResult {
     return new OperatorConsoleStore(this.options.rootDir).getSummary();
+  }
+
+  runRepositorySnapshot(input: RepositorySnapshotTaskInput = {}): RepositorySnapshotTaskResult {
+    return runRepositorySnapshot({
+      ...input,
+      repositoryRoot: input.repositoryRoot ?? this.options.rootDir
+    });
   }
 
   private createTask(prompt: string): SeraTask {

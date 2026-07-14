@@ -12,7 +12,8 @@ export default defineConfig({
       "@sera/workspace": r("./packages/workspace/src/index.ts"),
       "@sera/tools": r("./packages/tools/src/index.ts"),
       "@sera/kernel": r("./packages/kernel/src/index.ts"),
-      "@sera/certs": r("./packages/certs/src/index.ts")
+      "@sera/certs": r("./packages/certs/src/index.ts"),
+      "@sera/repository-snapshot": r("./packages/repository-snapshot/src/index.ts")
     }
   },
   test: {

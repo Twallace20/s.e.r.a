@@ -76,7 +76,8 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - review-only lesson workbench packets for human governance of candidates, approvals, activations, and regression rules
 - optional local model provider readiness through `ollama-local`, while certification continues to pass without Ollama, paid APIs, or downloaded models
 - local recursive learning cycles that synthesize evidence into human-governed next actions
-- local research/knowledge worker answers with citations, comparison packets, summaries, confidence labels, and missing-evidence refusal
+  - local research/knowledge worker answers with citations, comparison packets, summaries, confidence labels, and missing-evidence refusal
+  - deterministic Repository Snapshot evidence under `.sera/repository/` without model, browser, network, GitHub, pasted prompts, or ZIP overlays
 
 ## What is intentionally not here yet
 
@@ -346,10 +347,27 @@ S.E.R.A. includes a local operator console that summarizes memory, tasks, knowle
 ```powershell
 npm run sera -- console status
 npm run sera -- console health
-npm run sera -- console report
-npm run sera -- console history
-npm run sera -- console summary
+  npm run sera -- console report
+  npm run sera -- console history
+  npm run sera -- console summary
+  npm run sera -- repository snapshot
 ```
+
+## Repository Snapshot v1
+
+Repository Snapshot v1 measures observable repository facts and writes portable JSON evidence for future Repository Truth classification.
+
+```bash
+npm run sera -- repository snapshot
+```
+
+The short alias is:
+
+```bash
+npm run sera -- snapshot
+```
+
+Snapshot output is generated under `.sera/repository/` and is ignored by Git.
 
 Current certified level after Phase 12:
 
