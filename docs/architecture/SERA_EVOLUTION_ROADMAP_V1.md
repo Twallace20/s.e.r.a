@@ -58,6 +58,28 @@ The MVP is not “S.E.R.A. can code.”
 
 The first reference capability is Website Studio.
 
+## Base MVP Scope Lock
+
+The Base MVP milestone manifest is frozen:
+
+```text
+totalMilestones: 16
+completedMilestones: 4
+remainingMilestones: 12
+currentMilestone: 5
+baseMvpCompletionMilestone: 16
+```
+
+Milestone 4 is complete only when the Unified Control Plane implementation and its three required support changes are retained, validated, and included in final closeout:
+
+- `.gitignore` excludes generated `.sera/control-plane/` evidence
+- Repository Snapshot excludes `.sera/control-plane/` from source measurement
+- `tsconfig.base.json` provides the `@sera/control-plane` path alias
+
+Milestone 5 remains `Runtime Host and SQLite Operational State`.
+
+Milestone 5A is the immediate next implementation: `Local Runtime Host v1`.
+
 ## Consolidation milestones
 
 The locked implementation order is:
@@ -65,8 +87,8 @@ The locked implementation order is:
 1. Constitution and Layer Model — `sera-os-constitution-v1`
 2. Repository Snapshot — `repository-snapshot-v1` — implemented and locally proven as a deterministic Runtime-layer fact scanner that writes `.sera/repository/` evidence
 3. Repository Truth — `repository-truth-v1` — implemented and locally proven as the deterministic classification pass over Snapshot evidence
-4. Unified Control Plane — `local-control-plane-v1` — implemented and under validation as the permanent Runtime attempt, gate, evidence, terminal-decision, verification, and closeout authority
-5. SQLite Runtime State — `local-state-store-v1` — next unimplemented milestone
+4. Unified Control Plane — `local-control-plane-v1` — implemented and under validation as the permanent Runtime attempt, gate, evidence, terminal-decision, verification, and closeout authority; final completion requires the three support changes named in Base MVP Scope Lock
+5. Runtime Host and SQLite Operational State — `local-runtime-host-v1` starts Milestone 5A as the immediate next implementation; `local-state-store-v1` remains inside Milestone 5 and is not started by Milestone 4 closeout
 6. Isolated Execution — `isolated-execution-v1`
 7. Evaluation Engine — `evaluation-engine-v1`
 8. Ollama Model Runtime — `offline-model-runtime-v1`

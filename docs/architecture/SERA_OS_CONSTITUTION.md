@@ -32,6 +32,16 @@ Given a safe objective and sufficient resources, S.E.R.A. identifies required kn
 14. Every permanent component must belong to a defined architectural layer.
 15. Legacy systems may be preserved as evidence but cannot remain runtime authority.
 
+## Model-Independence Law
+
+Models are replaceable providers of bounded intelligence. No model, vendor, architecture, or provider is S.E.R.A.'s identity or source of governing authority.
+
+Models propose. Governed S.E.R.A. systems decide.
+
+Model outputs are untrusted until validated against evidence, policy, capability contracts, and authorized runtime decisions. A model cannot promote its own outputs, grant itself permissions, or become the source of S.E.R.A.'s identity.
+
+Replacing a model, vendor, architecture, or provider must not require redesigning S.E.R.A.
+
 ## Architectural Layers
 
 SERA OS has exactly seven architectural layers:
@@ -115,6 +125,41 @@ Learning requires:
 - rollback information
 
 Saving text alone is not learning. A note, summary, prompt, chat transcript, or memory record becomes learning only when it changes future capability through evaluated, reversible, promotion-gated improvement.
+
+## Learning Versus Innovation
+
+Learning improves an existing capability. It creates a candidate revision, then requires evaluation and promotion before the improved behavior becomes reusable.
+
+Innovation creates a materially new capability, composition, or workflow. It starts as an innovation candidate, requires stronger evaluation and governance, and cannot create a new Core System during the architecture freeze.
+
+During the Base MVP freeze, innovation may create only experimental or provisional capability candidates unless a separate approved promotion path explicitly allows more.
+
+## Intelligence Pipeline Standard
+
+Every governed Capability and Application follows the Intelligence Pipeline:
+
+Intent -> Governed Intake -> Evidence Grounding -> Understanding -> Planning -> Authorization -> Execution -> Evaluation -> Learning or Innovation Candidate -> Promotion Decision -> Knowledge / Strategy / Capability Update -> Evidence and Closeout.
+
+Unified Control Plane owns authorization and terminal decisions. Models may propose outputs, but they cannot authorize, execute, or promote them.
+
+## North-Star Metric
+
+The north-star metric for S.E.R.A. capability growth is Time-to-Certified-Capability.
+
+Time-to-Certified-Capability is the elapsed time between approval of a bounded capability gap and successful certification of the correct reusable capability at the required maturity.
+
+Guardrail metrics:
+
+- first-pass certification rate
+- regression escape rate
+- repeatability score
+- evidence completeness
+- rollback success rate
+- capability reuse rate
+- human intervention rate
+- post-promotion failure rate
+
+The objective is not raw speed. The objective is to safely reduce the time required to acquire a correct, certified, reusable capability.
 
 ## Provider Independence
 

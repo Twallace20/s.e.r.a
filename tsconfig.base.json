@@ -68,6 +68,9 @@
       ],
       "@sera/repository-truth": [
         "packages/repository-truth/src/index.ts"
+      ],
+      "@sera/control-plane": [
+        "packages/control-plane/src/index.ts"
       ]
     }
   }

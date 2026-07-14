@@ -2,6 +2,58 @@
   "schemaVersion": "sera.capability-inventory.v1",
   "status": "starter",
   "milestone": "repository-truth-v1",
+  "architectureStandards": [
+    {
+      "id": "intelligence-pipeline-v1",
+      "name": "Intelligence Pipeline v1",
+      "kind": "architectural-standard",
+      "status": "active",
+      "executableCapability": false,
+      "runtimeService": false,
+      "document": "docs/architecture/SERA_INTELLIGENCE_PIPELINE_V1.md",
+      "records": "Intent to closeout lifecycle for governed Capabilities and Applications."
+    },
+    {
+      "id": "intelligence-promotion-model-v1",
+      "name": "Intelligence Promotion Model v1",
+      "kind": "architectural-standard",
+      "status": "active",
+      "executableCapability": false,
+      "runtimeService": false,
+      "document": "docs/architecture/INTELLIGENCE_PROMOTION_MODEL_V1.md",
+      "records": "Evidence, Knowledge, Understanding, and Strategy promotion terms."
+    },
+    {
+      "id": "architecture-freeze-v1",
+      "name": "Architecture Freeze v1",
+      "kind": "governance-standard",
+      "status": "frozen-through-base-mvp-milestone-16",
+      "executableCapability": false,
+      "runtimeService": false,
+      "document": "docs/architecture/ARCHITECTURE_FREEZE_V1.md",
+      "records": "Base MVP architecture freeze, allowed changes, prohibited changes, and emergency ADR process."
+    },
+    {
+      "id": "learning-innovation-governance-v1",
+      "name": "Learning Versus Innovation Governance v1",
+      "kind": "governance-standard",
+      "status": "active",
+      "executableCapability": false,
+      "runtimeService": false,
+      "document": "docs/architecture/SERA_OS_CONSTITUTION.md",
+      "records": "Learning improves existing capabilities; innovation creates materially new candidates under stronger governance."
+    },
+    {
+      "id": "time-to-certified-capability-v1",
+      "name": "Time-to-Certified-Capability v1",
+      "kind": "metric-standard",
+      "status": "active",
+      "executableCapability": false,
+      "runtimeService": false,
+      "document": "docs/architecture/SERA_OS_CONSTITUTION.md",
+      "records": "North-star metric and guardrails for safe capability growth."
+    }
+  ],
   "classifications": [
     "production-module",
     "evaluation-asset",

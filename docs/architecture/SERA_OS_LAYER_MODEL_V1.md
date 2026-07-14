@@ -162,6 +162,12 @@ Evidence expectations:
 - evaluation summary
 - state mutation summary
 
+### Runtime Identity Reservation
+
+Milestone 5A introduces persistent `installationId` and per-start `runtimeInstanceId`.
+
+This reservation does not implement Runtime Host, SQLite state, Hive Mode, networking, distributed discovery, remote workers, or cloud execution.
+
 ## Provider
 
 Purpose: connect replaceable external or local resources through declared interfaces without making them Kernel dependencies.
@@ -303,6 +309,12 @@ Evidence expectations:
 - input and output evidence
 - evaluation result
 
+### Capability Engine Name
+
+The permanent engine name is `Capability Engine`.
+
+Do not rename it to "Capability and Intelligence Engine". The Intelligence Pipeline is a cross-system standard, not a reason to turn the Capability Engine into a monolith.
+
 ## Studio
 
 Purpose: compose certified capabilities into domain production workflows.
@@ -369,6 +381,18 @@ Evidence expectations:
 - generated deliverables
 - QA and evaluation results
 - known limitations
+
+### Application Versus Studio
+
+An Application is the internal technical composition of capabilities, workflows, permissions, evaluations, runtime services, and providers.
+
+A Studio is the user-facing experience built on an Application.
+
+Example:
+
+Website Studio -> Website Application -> Certified Capability Composition -> Runtime Services and Providers.
+
+The term `Studio` remains part of S.E.R.A.'s architecture for user-facing production surfaces.
 
 ## Desktop
 

@@ -165,6 +165,7 @@ const DEFAULT_EXCLUSIONS = [
   ".overlay",
   ".sera/repository",
   ".sera/repository-truth",
+  ".sera/control-plane",
   ".sera-runs",
   ".sera-cert",
   ".sera-local",

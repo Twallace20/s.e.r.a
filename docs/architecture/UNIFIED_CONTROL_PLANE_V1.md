@@ -4,6 +4,12 @@ Unified Control Plane v1 is a permanent Runtime-layer subsystem for local attemp
 
 It owns typed attempt specifications, stage execution records, gate decisions, evidence validation, terminal decision precedence, verification, and closeout records. It does not run shell commands, perform Git actions, invoke models, use the network, install packages, merge, push, tag, or begin SQLite Runtime State.
 
+Milestone 4 closeout requires three support changes:
+
+- generated `.sera/control-plane/` evidence is ignored by source control
+- Repository Snapshot excludes `.sera/control-plane/` from source measurement
+- `@sera/control-plane` is available as a TypeScript path alias
+
 ## Commands
 
 ```bash
