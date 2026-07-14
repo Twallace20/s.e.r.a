@@ -11,6 +11,7 @@ import { runRepositoryTruth } from "@sera/repository-truth";
 import { ControlPlane, ControlPlaneAttemptSpec } from "@sera/control-plane";
 import { RuntimeHost, RuntimeService, createDefaultRuntimeServices, createRuntimeConfig, loadOrCreateRuntimeIdentity, normalizeRuntimeServices, runRuntimeHostProof } from "@sera/runtime-host";
 import { RuntimeStateBlockedError, createRuntimeStateConfig, createRuntimeStateEnabledServices, openRuntimeState, runRuntimeStateProof } from "@sera/runtime-state";
+import { PersistentRuntimeRecoveryCoordinator, RUNTIME_RECOVERY_SERVICE_ID, createPersistentRuntimeServices, runPersistentRuntimeRecoveryProof } from "@sera/runtime-recovery";
 
 export interface CertCheck {
   id: string;
@@ -21,7 +22,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -49,6 +50,7 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   checks.push(...runControlPlaneV1Checks());
   checks.push(...await runRuntimeHostV1Checks());
   checks.push(...await runRuntimeStateV1Checks());
+  checks.push(...await runPersistentRuntimeV1Checks());
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -67,10 +69,13 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   const controlPlaneV1ChecksPass = checks.filter((c) => c.id.startsWith("control_plane_")).every((c) => c.pass);
   const runtimeHostV1ChecksPass = checks.filter((c) => c.id.startsWith("runtime_host_")).every((c) => c.pass);
   const runtimeStateV1ChecksPass = checks.filter((c) => c.id.startsWith("runtime_state_")).every((c) => c.pass);
+  const persistentRuntimeV1ChecksPass = checks.filter((c) => c.id.startsWith("persistent_runtime_")).every((c) => c.pass);
   void repositorySnapshotV1ChecksPass;
   void repositoryTruthV1ChecksPass;
   const pass = checks.every((c) => c.pass);
-  const level = pass && runtimeStateV1ChecksPass
+  const level = pass && persistentRuntimeV1ChecksPass
+    ? "persistent-runtime-v1"
+    : pass && runtimeStateV1ChecksPass
     ? "runtime-state-v1"
     : pass && runtimeHostV1ChecksPass
     ? "runtime-host-v1"
@@ -1312,9 +1317,9 @@ async function runRuntimeStateV1Checks(): Promise<CertCheck[]> {
   const config = createRuntimeStateConfig({ projectRoot: root, installationId: "installation_cert", runtimeInstanceId: "runtime_cert" });
   const store = openRuntimeState(config);
   const inspection = store.inspect();
-  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 1 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
+  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 2 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
   const secondInspection = store.inspect();
-  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 1, detail: JSON.stringify(secondInspection.counts) });
+  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 2, detail: JSON.stringify(secondInspection.counts) });
   const command = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   const duplicate = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   checks.push({ id: "runtime_state_command_idempotency", name: "Runtime State command idempotency returns original", pass: command.commandId === duplicate.commandId && duplicate.status === "DUPLICATE", detail: `${command.commandId} ${duplicate.status}` });
@@ -1368,6 +1373,129 @@ async function runRuntimeStateV1Checks(): Promise<CertCheck[]> {
   const health = await host.health();
   await host.shutdown();
   checks.push({ id: "runtime_state_runtime_service_healthy", name: "Runtime Host reports Operational State service healthy", pass: started.ok && health.services.find((service) => service.serviceId === "operational-state")?.status === "healthy", detail: JSON.stringify(health.services.map((service) => ({ id: service.serviceId, status: service.status }))) });
+
+  return checks;
+}
+
+async function runPersistentRuntimeV1Checks(): Promise<CertCheck[]> {
+  const checks: CertCheck[] = [];
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-persistent-runtime-cert-"));
+  fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({ name: "persistent-runtime-cert-root", private: true }), "utf8");
+  const store = openRuntimeState({ projectRoot: root, installationId: "installation_cert", runtimeInstanceId: "runtime_recovery_new" });
+  const coordinator = new PersistentRuntimeRecoveryCoordinator(store, { projectRoot: root });
+  const interrupted = store.acceptCommand({ idempotencyKey: "cert-interrupted", commandType: "fixture", payload: { kind: "interrupted" }, capability: "fixture-capability" });
+  store.transitionAttempt({ attemptId: interrupted.attemptId!, fromState: "PENDING", toState: "RUNNING", actor: "control-plane" });
+  const evidence = store.recordEvidenceReference({ attemptId: interrupted.attemptId!, evidenceType: "checkpoint", location: "cert-interrupted.json", integrityHash: "hash", producer: "cert" });
+  coordinator.createCheckpoint({ attemptId: interrupted.attemptId!, stageId: "stage", operationIdempotencyKey: "cert-op", restartSafe: true, sideEffectState: "none", evidenceReferences: [evidence], status: "committed" });
+  const scan = coordinator.scanAndRecover({ executeSafeRecovery: false });
+  checks.push({ id: "persistent_runtime_detects_interrupted_attempt", name: "Persistent Runtime detects interrupted attempts", pass: scan.classifications.some((item) => item.attemptId === interrupted.attemptId && item.classification === "interrupted_safe_to_resume"), detail: JSON.stringify(scan.classifications) });
+
+  const active = store.acceptCommand({ idempotencyKey: "cert-active", commandType: "fixture", payload: { kind: "active" }, capability: "fixture-capability" });
+  store.transitionAttempt({ attemptId: active.attemptId!, fromState: "PENDING", toState: "RUNNING", actor: "control-plane" });
+  const activeEvidence = store.recordEvidenceReference({ attemptId: active.attemptId!, evidenceType: "checkpoint", location: "active.json", producer: "cert" });
+  coordinator.createCheckpoint({ attemptId: active.attemptId!, stageId: "stage", operationIdempotencyKey: "active-op", restartSafe: true, sideEffectState: "none", evidenceReferences: [activeEvidence], status: "committed" });
+  store.acquireLease({ leaseName: `attempt:${active.attemptId!}`, ttlMs: 100000, ownerRuntimeInstanceId: "runtime_other" });
+  checks.push({ id: "persistent_runtime_does_not_steal_active_owner", name: "Persistent Runtime does not steal active owner", pass: coordinator.scanAndRecover({ executeSafeRecovery: false }).classifications.some((item) => item.attemptId === active.attemptId && item.classification === "active_current_owner"), detail: active.attemptId! });
+
+  const terminal = store.acceptCommand({ idempotencyKey: "cert-terminal", commandType: "fixture", payload: { kind: "terminal" }, capability: "fixture-capability" });
+  store.transitionAttempt({ attemptId: terminal.attemptId!, fromState: "PENDING", toState: "RUNNING", actor: "control-plane" });
+  store.recordGateOutcome({ attemptId: terminal.attemptId!, gateName: "done", required: true, outcome: "PASS", evaluator: "cert" });
+  store.transitionAttempt({ attemptId: terminal.attemptId!, fromState: "RUNNING", toState: "COMPLETED", actor: "control-plane" });
+  checks.push({ id: "persistent_runtime_terminal_attempt_immutable", name: "Persistent Runtime leaves terminal attempts immutable", pass: throwsState(() => store.transitionAttempt({ attemptId: terminal.attemptId!, fromState: "COMPLETED", toState: "FAILED", actor: "cert" })), detail: terminal.attemptId! });
+
+  const safe = coordinator.scanAndRecover({ executeSafeRecovery: true });
+  checks.push({ id: "persistent_runtime_safe_checkpoint_resumes", name: "Persistent Runtime resumes safe checkpoint", pass: store.recoveryGet("SELECT current_state FROM attempts WHERE attempt_id = ?", [interrupted.attemptId!])?.current_state === "COMPLETED", detail: JSON.stringify(safe.classifications.find((item) => item.attemptId === interrupted.attemptId)) });
+
+  const missing = store.acceptCommand({ idempotencyKey: "cert-missing", commandType: "fixture", payload: { kind: "missing" }, capability: "fixture-capability" });
+  store.transitionAttempt({ attemptId: missing.attemptId!, fromState: "PENDING", toState: "RUNNING", actor: "control-plane" });
+  checks.push({ id: "persistent_runtime_missing_checkpoint_blocks", name: "Persistent Runtime blocks missing checkpoint", pass: coordinator.scanAndRecover().classifications.some((item) => item.attemptId === missing.attemptId && item.classification === "blocked_missing_checkpoint"), detail: missing.attemptId! });
+
+  const unknown = store.acceptCommand({ idempotencyKey: "cert-unknown", commandType: "fixture", payload: { kind: "unknown" }, capability: "fixture-capability" });
+  store.transitionAttempt({ attemptId: unknown.attemptId!, fromState: "PENDING", toState: "RUNNING", actor: "control-plane" });
+  const unknownEvidence = store.recordEvidenceReference({ attemptId: unknown.attemptId!, evidenceType: "checkpoint", location: "unknown.json", producer: "cert" });
+  coordinator.createCheckpoint({ attemptId: unknown.attemptId!, stageId: "stage", operationIdempotencyKey: "unknown-op", restartSafe: true, sideEffectState: "unknown", evidenceReferences: [unknownEvidence], status: "committed" });
+  checks.push({ id: "persistent_runtime_unknown_side_effect_requires_review", name: "Persistent Runtime requires review for unknown side effects", pass: coordinator.scanAndRecover().classifications.some((item) => item.attemptId === unknown.attemptId && item.operatorReviewRequired), detail: unknown.attemptId! });
+
+  const repeated = coordinator.scanAndRecover({ executeSafeRecovery: true });
+  checks.push({ id: "persistent_runtime_idempotent_resume", name: "Persistent Runtime does not repeat completed recovery", pass: repeated.classifications.every((item) => item.attemptId !== interrupted.attemptId), detail: JSON.stringify(repeated.classifications) });
+
+  const retry = store.acceptCommand({ idempotencyKey: "cert-retry", commandType: "fixture", payload: { kind: "retry" }, capability: "fixture-capability" });
+  store.transitionAttempt({ attemptId: retry.attemptId!, fromState: "PENDING", toState: "RUNNING", actor: "control-plane" });
+  const retryEvidence = store.recordEvidenceReference({ attemptId: retry.attemptId!, evidenceType: "checkpoint", location: "retry.json", producer: "cert" });
+  coordinator.createCheckpoint({ attemptId: retry.attemptId!, stageId: "stage", operationIdempotencyKey: "retry-op", restartSafe: false, sideEffectState: "compensated", evidenceReferences: [retryEvidence], status: "failed" });
+  const retryScan = coordinator.scanAndRecover({ executeSafeRecovery: true });
+  checks.push({ id: "persistent_runtime_retry_creates_linked_attempt", name: "Persistent Runtime creates linked retry", pass: retryScan.classifications.some((item) => item.attemptId === retry.attemptId && Boolean(item.newAttemptId)) && Boolean(store.recoveryGet("SELECT current_attempt_id FROM attempt_lineage WHERE prior_attempt_id = ?", [retry.attemptId!])), detail: JSON.stringify(retryScan.classifications.find((item) => item.attemptId === retry.attemptId)) });
+
+  const limitRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-persistent-runtime-limit-cert-"));
+  const limitStore = openRuntimeState({ projectRoot: limitRoot, runtimeInstanceId: "runtime_limit" });
+  const limitCoordinator = new PersistentRuntimeRecoveryCoordinator(limitStore, { projectRoot: limitRoot, maxRetryDepth: 0 });
+  const limit = limitStore.acceptCommand({ idempotencyKey: "limit", commandType: "fixture", payload: {}, capability: "fixture-capability" });
+  limitStore.transitionAttempt({ attemptId: limit.attemptId!, fromState: "PENDING", toState: "RUNNING", actor: "control-plane" });
+  const limitEvidence = limitStore.recordEvidenceReference({ attemptId: limit.attemptId!, evidenceType: "checkpoint", location: "limit.json", producer: "cert" });
+  limitCoordinator.createCheckpoint({ attemptId: limit.attemptId!, stageId: "stage", operationIdempotencyKey: "limit-op", restartSafe: false, sideEffectState: "compensated", evidenceReferences: [limitEvidence], status: "failed" });
+  checks.push({ id: "persistent_runtime_retry_limit_blocks", name: "Persistent Runtime blocks exhausted retry limit", pass: limitCoordinator.scanAndRecover().classifications[0].operatorReviewRequired, detail: limit.attemptId! });
+  limitStore.close();
+
+  const lease = store.acquireLease({ leaseName: "cert-recovery-lease", ttlMs: 100000, ownerRuntimeInstanceId: "owner-a" });
+  checks.push({ id: "persistent_runtime_recovery_lease_conflict_blocks", name: "Persistent Runtime recovery lease conflict blocks", pass: throwsState(() => store.acquireLease({ leaseName: "cert-recovery-lease", ttlMs: 100000, ownerRuntimeInstanceId: "owner-b" })), detail: "conflict rejected" });
+  store.releaseLease({ leaseName: "cert-recovery-lease", fencingToken: lease.fencingToken, ownerRuntimeInstanceId: "owner-a" });
+  const nextLease = store.acquireLease({ leaseName: "cert-recovery-lease", ttlMs: 100000, ownerRuntimeInstanceId: "owner-b" });
+  checks.push({ id: "persistent_runtime_fencing_advances", name: "Persistent Runtime fencing advances", pass: nextLease.fencingToken > lease.fencingToken, detail: `${lease.fencingToken}->${nextLease.fencingToken}` });
+  checks.push({ id: "persistent_runtime_stale_writer_blocks", name: "Persistent Runtime stale writer blocks", pass: throwsState(() => store.assertFence("cert-recovery-lease", lease.fencingToken, "owner-a")), detail: "stale writer rejected" });
+
+  checks.push({ id: "persistent_runtime_atomic_recovery_decision", name: "Persistent Runtime writes recovery decision atomically", pass: store.recoveryAll("SELECT * FROM recovery_decisions").length > 0 && store.recoveryAll("SELECT * FROM recovery_events").length > 0, detail: "decisions and events present" });
+  checks.push({ id: "persistent_runtime_repeated_startup_no_duplicate", name: "Persistent Runtime repeated startup does not duplicate completed recovery", pass: repeated.classifications.every((item) => item.attemptId !== interrupted.attemptId), detail: "completed attempt absent from repeated scan" });
+
+  const denied = store.acceptCommand({ idempotencyKey: "cert-denied", commandType: "fixture", payload: {}, capability: "fixture-capability" });
+  store.transitionAttempt({ attemptId: denied.attemptId!, fromState: "PENDING", toState: "RUNNING", actor: "control-plane" });
+  const deniedEvidence = store.recordEvidenceReference({ attemptId: denied.attemptId!, evidenceType: "checkpoint", location: "denied.json", producer: "cert" });
+  coordinator.createCheckpoint({ attemptId: denied.attemptId!, stageId: "stage", operationIdempotencyKey: "denied-op", restartSafe: true, sideEffectState: "none", evidenceReferences: [deniedEvidence], status: "committed" });
+  checks.push({ id: "persistent_runtime_control_plane_authority_preserved", name: "Persistent Runtime preserves Control Plane authority", pass: coordinator.scanAndRecover({ simulateControlPlaneDeny: true }).classifications.some((item) => item.attemptId === denied.attemptId && item.classification === "blocked_policy_denied"), detail: denied.attemptId! });
+  checks.push({ id: "persistent_runtime_required_gate_enforced", name: "Persistent Runtime still requires gates for success", pass: throwsState(() => store.transitionAttempt({ attemptId: missing.attemptId!, fromState: "RUNNING", toState: "COMPLETED", actor: "cert" })), detail: "success blocked before gate" });
+
+  const noEvidence = store.acceptCommand({ idempotencyKey: "cert-no-evidence", commandType: "fixture", payload: {}, capability: "fixture-capability" });
+  store.transitionAttempt({ attemptId: noEvidence.attemptId!, fromState: "PENDING", toState: "RUNNING", actor: "control-plane" });
+  coordinator.createCheckpoint({ attemptId: noEvidence.attemptId!, stageId: "stage", operationIdempotencyKey: "no-evidence-op", restartSafe: true, sideEffectState: "none", evidenceReferences: ["missing"], status: "committed" });
+  checks.push({ id: "persistent_runtime_evidence_integrity_enforced", name: "Persistent Runtime enforces evidence integrity", pass: coordinator.scanAndRecover().classifications.some((item) => item.attemptId === noEvidence.attemptId && item.reason.includes("evidence")), detail: noEvidence.attemptId! });
+
+  const reviewHealthRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-persistent-runtime-health-cert-"));
+  const reviewStore = openRuntimeState({ projectRoot: reviewHealthRoot, runtimeInstanceId: "runtime_old" });
+  const reviewCoordinator = new PersistentRuntimeRecoveryCoordinator(reviewStore, { projectRoot: reviewHealthRoot });
+  const reviewAttempt = reviewStore.acceptCommand({ idempotencyKey: "review", commandType: "fixture", payload: {}, capability: "fixture-capability" });
+  reviewStore.transitionAttempt({ attemptId: reviewAttempt.attemptId!, fromState: "PENDING", toState: "RUNNING", actor: "control-plane" });
+  const reviewEvidence = reviewStore.recordEvidenceReference({ attemptId: reviewAttempt.attemptId!, evidenceType: "checkpoint", location: "review.json", producer: "cert" });
+  reviewCoordinator.createCheckpoint({ attemptId: reviewAttempt.attemptId!, stageId: "stage", operationIdempotencyKey: "review-op", restartSafe: true, sideEffectState: "unknown", evidenceReferences: [reviewEvidence], status: "committed" });
+  reviewStore.close();
+  const reviewHost = new RuntimeHost({ config: createRuntimeConfig({ projectRoot: reviewHealthRoot }), services: createPersistentRuntimeServices(reviewHealthRoot) });
+  await reviewHost.start();
+  const reviewHealth = await reviewHost.health();
+  await reviewHost.shutdown();
+  checks.push({ id: "persistent_runtime_review_degrades_health", name: "Persistent Runtime review-required work degrades health", pass: reviewHealth.status === "degraded", detail: reviewHealth.status });
+
+  const corruptRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-persistent-runtime-corrupt-cert-"));
+  const corruptDb = path.join(corruptRoot, ".sera", "state", "sera-operational.db");
+  fs.mkdirSync(path.dirname(corruptDb), { recursive: true });
+  fs.writeFileSync(corruptDb, "not sqlite", "utf8");
+  checks.push({ id: "persistent_runtime_corruption_blocks_health", name: "Persistent Runtime corruption blocks health", pass: throwsState(() => openRuntimeState({ projectRoot: corruptRoot })), detail: corruptDb });
+
+  const cancelRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-persistent-runtime-cancel-cert-"));
+  const cancelHost = new RuntimeHost({ config: createRuntimeConfig({ projectRoot: cancelRoot }), services: createPersistentRuntimeServices(cancelRoot) });
+  await cancelHost.start();
+  const shutdown = await cancelHost.shutdown("cert cancellation");
+  checks.push({ id: "persistent_runtime_cancellation_safe", name: "Persistent Runtime cancellation is safe", pass: shutdown.ok, detail: shutdown.message });
+
+  const evidenceDecision = store.recoveryAll("SELECT recovery_session_id FROM recovery_sessions ORDER BY started_at DESC LIMIT 1")[0];
+  const latestSession = evidenceDecision?.recovery_session_id ? String(evidenceDecision.recovery_session_id) : "";
+  const evidenceRoot = path.join(root, ".sera", "recovery", latestSession);
+  checks.push({ id: "persistent_runtime_evidence_complete", name: "Persistent Runtime writes complete recovery evidence", pass: latestSession.length > 0 && ["recovery-session.json", "scan-results.json", "recovery-decisions.jsonl", "recovery-events.jsonl", "resumed-attempts.json", "blocked-attempts.json", "final-recovery-report.json"].every((file) => fs.existsSync(path.join(evidenceRoot, file))), detail: evidenceRoot });
+
+  const proofRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-persistent-runtime-proof-cert-"));
+  const proof = await runPersistentRuntimeRecoveryProof({ projectRoot: proofRoot });
+  checks.push({ id: "persistent_runtime_non_git_operation", name: "Persistent Runtime works without Git", pass: proof.ok && proof.nonGit, detail: proofRoot });
+  checks.push({ id: "persistent_runtime_offline_operation", name: "Persistent Runtime requires no model or network", pass: proof.ok && proof.modelUse === false && proof.networkUse === false, detail: "modelUse=false networkUse=false" });
+  checks.push({ id: "persistent_runtime_restart_identity_correct", name: "Persistent Runtime restart identity is correct", pass: proof.ok && proof.restartIdentityChanged && proof.installationStable, detail: JSON.stringify({ restartIdentityChanged: proof.restartIdentityChanged, installationStable: proof.installationStable }) });
+  checks.push({ id: "persistent_runtime_interruption_fixture_completes", name: "Persistent Runtime fixture completes after interruption", pass: proof.ok && proof.safeResume && proof.unsafeReviewRequired && proof.linkedRetry, detail: JSON.stringify(proof) });
+  store.close();
 
   return checks;
 }

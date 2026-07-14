@@ -10,6 +10,7 @@ coverage/
 .sera/repository-truth/
 .sera/control-plane/
 .sera/runtime-host/
+.sera/recovery/
 .sera/state/
 .sera-local/
 *.log

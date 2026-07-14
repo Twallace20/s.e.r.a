@@ -1,11 +1,12 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createControlPlaneRuntimeService, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
 
 export const RUNTIME_STATE_VERSION = "runtime-state-v1";
-export const RUNTIME_STATE_SCHEMA_VERSION = 1;
+export const RUNTIME_STATE_SCHEMA_VERSION = 2;
 export const RUNTIME_STATE_EXPORT_SCHEMA = "sera.runtime-state-export.v1";
 
 export type RuntimeStateStatus = "healthy" | "blocked";
@@ -67,6 +68,8 @@ export interface AcceptedCommand {
 export interface RuntimeStateProofResult {
   ok: boolean;
   status: RuntimeStateStatus;
+  proofRoot: string;
+  stateRoot: string;
   databasePath: string;
   command: AcceptedCommand;
   duplicate: AcceptedCommand;
@@ -104,7 +107,12 @@ const TABLES = [
   "gate_outcomes",
   "evidence_references",
   "runtime_leases",
-  "state_events"
+  "state_events",
+  "recovery_checkpoints",
+  "recovery_sessions",
+  "recovery_decisions",
+  "recovery_events",
+  "attempt_lineage"
 ] as const;
 
 const TERMINAL_STATES = new Set<AttemptState>(["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"]);
@@ -235,6 +243,97 @@ CREATE INDEX idx_transitions_attempt ON attempt_transitions(attempt_id, sequence
 CREATE INDEX idx_gates_attempt ON gate_outcomes(attempt_id, gate_name);
 CREATE INDEX idx_evidence_attempt ON evidence_references(attempt_id, created_at);
 CREATE INDEX idx_events_time ON state_events(timestamp, event_id);
+`
+  },
+  {
+    version: 2,
+    name: "persistent_runtime_recovery_v1",
+    sql: `
+CREATE TABLE recovery_checkpoints (
+  checkpoint_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  stage_id TEXT NOT NULL,
+  checkpoint_type TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  runtime_instance_id TEXT NOT NULL,
+  stage_sequence INTEGER NOT NULL,
+  operation_idempotency_key TEXT NOT NULL,
+  restart_safe INTEGER NOT NULL,
+  side_effect_state TEXT NOT NULL,
+  evidence_json TEXT NOT NULL,
+  input_fingerprint TEXT,
+  output_fingerprint TEXT,
+  status TEXT NOT NULL,
+  capability_version TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE TABLE recovery_sessions (
+  recovery_session_id TEXT PRIMARY KEY,
+  installation_id TEXT NOT NULL,
+  recovery_runtime_instance_id TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  completed_at TEXT,
+  status TEXT NOT NULL,
+  scan_count INTEGER NOT NULL,
+  recoverable_count INTEGER NOT NULL,
+  blocked_count INTEGER NOT NULL,
+  resumed_count INTEGER NOT NULL,
+  new_attempt_count INTEGER NOT NULL,
+  error_summary TEXT
+);
+
+CREATE TABLE recovery_decisions (
+  recovery_decision_id TEXT PRIMARY KEY,
+  recovery_session_id TEXT NOT NULL,
+  attempt_id TEXT NOT NULL,
+  classification TEXT NOT NULL,
+  decision TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  control_plane_authorization_ref TEXT NOT NULL,
+  checkpoint_id TEXT,
+  created_at TEXT NOT NULL,
+  decided_by TEXT NOT NULL,
+  operator_review_required INTEGER NOT NULL,
+  fencing_token INTEGER NOT NULL,
+  FOREIGN KEY(recovery_session_id) REFERENCES recovery_sessions(recovery_session_id),
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id),
+  FOREIGN KEY(checkpoint_id) REFERENCES recovery_checkpoints(checkpoint_id)
+);
+
+CREATE TABLE recovery_events (
+  event_id TEXT PRIMARY KEY,
+  recovery_session_id TEXT NOT NULL,
+  attempt_id TEXT,
+  event_type TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  runtime_instance_id TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  message TEXT NOT NULL,
+  details_json TEXT NOT NULL,
+  FOREIGN KEY(recovery_session_id) REFERENCES recovery_sessions(recovery_session_id)
+);
+
+CREATE TABLE attempt_lineage (
+  lineage_id TEXT PRIMARY KEY,
+  current_attempt_id TEXT NOT NULL,
+  prior_attempt_id TEXT NOT NULL,
+  relationship TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  FOREIGN KEY(current_attempt_id) REFERENCES attempts(attempt_id),
+  FOREIGN KEY(prior_attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE INDEX idx_recovery_checkpoints_attempt ON recovery_checkpoints(attempt_id, stage_sequence, created_at);
+CREATE INDEX idx_recovery_sessions_time ON recovery_sessions(started_at, recovery_session_id);
+CREATE INDEX idx_recovery_decisions_session ON recovery_decisions(recovery_session_id, attempt_id);
+CREATE INDEX idx_recovery_decisions_attempt ON recovery_decisions(attempt_id, created_at);
+CREATE INDEX idx_recovery_events_session ON recovery_events(recovery_session_id, timestamp, event_id);
+CREATE INDEX idx_attempt_lineage_prior ON attempt_lineage(prior_attempt_id, current_attempt_id);
 `
   }
 ];
@@ -579,8 +678,37 @@ export class RuntimeStateStore {
       gateOutcomes: all(db, "SELECT gate_outcome_id, attempt_id, gate_name, required, outcome, evaluated_at, evidence_json, message, evaluator FROM gate_outcomes ORDER BY attempt_id, gate_name"),
       evidenceReferences: all(db, "SELECT evidence_reference_id, attempt_id, evidence_type, location, integrity_hash, created_at, producer, metadata_json FROM evidence_references ORDER BY attempt_id, evidence_reference_id"),
       runtimeLeases: all(db, "SELECT lease_name, owning_runtime_instance_id, acquired_at, renewed_at, expires_at, fencing_token, released_at, status FROM runtime_leases ORDER BY lease_name"),
-      stateEvents: all(db, "SELECT event_id, event_type, timestamp, installation_id, runtime_instance_id, related_command_id, related_attempt_id, outcome, message, details_json FROM state_events ORDER BY timestamp, event_id")
+      stateEvents: all(db, "SELECT event_id, event_type, timestamp, installation_id, runtime_instance_id, related_command_id, related_attempt_id, outcome, message, details_json FROM state_events ORDER BY timestamp, event_id"),
+      recoveryCheckpoints: this.tableExists("recovery_checkpoints") ? all(db, "SELECT checkpoint_id, attempt_id, stage_id, checkpoint_type, created_at, runtime_instance_id, stage_sequence, operation_idempotency_key, restart_safe, side_effect_state, evidence_json, input_fingerprint, output_fingerprint, status, capability_version, policy_version, metadata_json FROM recovery_checkpoints ORDER BY attempt_id, stage_sequence, checkpoint_id") : [],
+      recoverySessions: this.tableExists("recovery_sessions") ? all(db, "SELECT recovery_session_id, installation_id, recovery_runtime_instance_id, started_at, completed_at, status, scan_count, recoverable_count, blocked_count, resumed_count, new_attempt_count, error_summary FROM recovery_sessions ORDER BY started_at, recovery_session_id") : [],
+      recoveryDecisions: this.tableExists("recovery_decisions") ? all(db, "SELECT recovery_decision_id, recovery_session_id, attempt_id, classification, decision, reason, policy_version, control_plane_authorization_ref, checkpoint_id, created_at, decided_by, operator_review_required, fencing_token FROM recovery_decisions ORDER BY recovery_session_id, created_at, recovery_decision_id") : [],
+      recoveryEvents: this.tableExists("recovery_events") ? all(db, "SELECT event_id, recovery_session_id, attempt_id, event_type, timestamp, runtime_instance_id, outcome, message, details_json FROM recovery_events ORDER BY recovery_session_id, timestamp, event_id") : [],
+      attemptLineage: this.tableExists("attempt_lineage") ? all(db, "SELECT lineage_id, current_attempt_id, prior_attempt_id, relationship, created_at, reason FROM attempt_lineage ORDER BY prior_attempt_id, current_attempt_id") : []
     }) as Record<string, unknown>;
+  }
+
+  recoveryTransaction<T>(fn: (db: DatabaseSync) => T): T {
+    return this.transaction(() => fn(this.requireDb()));
+  }
+
+  recoveryAll(sql: string, params: SQLInputValue[] = []): Array<Record<string, unknown>> {
+    return this.requireDb().prepare(sql).all(...params) as Array<Record<string, unknown>>;
+  }
+
+  recoveryGet(sql: string, params: SQLInputValue[] = []): Record<string, unknown> | undefined {
+    return this.requireDb().prepare(sql).get(...params) as Record<string, unknown> | undefined;
+  }
+
+  recoveryRun(sql: string, params: SQLInputValue[] = []): void {
+    this.run(sql, params);
+  }
+
+  currentRuntimeInstanceId(): string {
+    return this.config.runtimeInstanceId;
+  }
+
+  currentInstallationId(): string {
+    return this.config.installationId;
   }
 
   private configureDatabase(): void {
@@ -624,6 +752,10 @@ export class RuntimeStateStore {
     const db = this.requireDb();
     const row = db.prepare("SELECT COALESCE(MAX(version), 0) AS version FROM schema_migrations").get() as { version: number };
     return Number(row.version);
+  }
+
+  private tableExists(tableName: string): boolean {
+    return Boolean(this.get<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", [tableName]));
   }
 
   private assertIntegrity(): void {
@@ -780,7 +912,12 @@ export function openRuntimeState(input: RuntimeStateConfigInput = {}, clock?: Ru
 }
 
 export async function runRuntimeStateProof(input: RuntimeStateConfigInput = {}, clock: RuntimeStateClock = { now: () => new Date() }): Promise<RuntimeStateProofResult> {
-  const config = createRuntimeStateConfig(input);
+  const usesExplicitState =
+    input.projectRoot !== undefined ||
+    input.stateRoot !== undefined ||
+    input.databasePath !== undefined;
+  const proofRoot = usesExplicitState ? path.resolve(input.projectRoot ?? process.cwd()) : fs.mkdtempSync(path.join(os.tmpdir(), "sera-runtime-state-proof-"));
+  const config = createRuntimeStateConfig(usesExplicitState ? input : { ...input, projectRoot: proofRoot });
   const store = new RuntimeStateStore(config, clock);
   store.initialize();
   try {
@@ -843,6 +980,8 @@ export async function runRuntimeStateProof(input: RuntimeStateConfigInput = {}, 
     return {
       ok: command.ok && duplicate.ok && conflictingIdempotencyBlocked && invalidTransitionBlocked && gateEnforced && terminalImmutable && conflictBlocked && staleFenceBlocked && reacquired.fencingToken > staleToken && exportA === exportB && backup.ok && restartPersists,
       status: "healthy",
+      proofRoot,
+      stateRoot: config.stateRoot,
       databasePath: config.databasePath,
       command,
       duplicate,

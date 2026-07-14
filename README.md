@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `runtime-state-v1`.
+Current runtime certification: `persistent-runtime-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -25,6 +25,7 @@ Certified runtime ladder completed so far:
 - `control-plane-v1`
 - `runtime-host-v1`
 - `runtime-state-v1`
+- `persistent-runtime-v1`
 
 Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
@@ -75,6 +76,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - local operator console status, health, history, summary, and report commands
 - local Runtime Host identity, health, proof, lifecycle evidence, and Control Plane service hosting
 - local SQLite Operational State for command idempotency, attempt state, gates, evidence references, leases, backups, and deterministic exports
+- persistent runtime recovery for interrupted attempts using checkpoints, leases, recovery decisions, linked retries, and review-required blocking
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
@@ -95,7 +97,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - no multi-file transaction worker yet
 - no cloud dependency
 - no external database requirement
-- no persistent attempt recovery yet
+- no isolated execution engine yet
 - no automatic lesson activation
 - no automatic task execution
 - no silent lesson-driven behavior changes
@@ -116,7 +118,7 @@ npm run verify
 Expected current certification result:
 
 ```text
-S.E.R.A. certify: PASS level=runtime-state-v1
+S.E.R.A. certify: PASS level=persistent-runtime-v1
 ```
 
 ## Starter secure-base run
@@ -194,6 +196,18 @@ npm run sera -- state export
 
 Operational State is local-only and uses Node's built-in SQLite runtime. It does not add persistent recovery, distributed coordination, network listeners, model invocation, Git authority, or Control Plane terminal-decision authority.
 
+Persistent Runtime Recovery scans durable nonterminal attempts, classifies interrupted work, resumes only certified restart-safe checkpoints, creates linked retries at clear failed boundaries, and blocks uncertain work for operator review:
+
+```bash
+npm run sera -- recovery inspect
+npm run sera -- recovery scan
+npm run sera -- recovery prove
+npm run sera -- recovery pending
+npm run sera -- recovery decisions
+```
+
+Recovery does not claim exactly-once execution for arbitrary side effects and does not implement Milestone 6 isolated execution.
+
 ## Developer Worker v2 and Self-Improvement Loop v1
 
 Inspect mode fingerprints a file without changing it:
@@ -252,6 +266,7 @@ Nothing gets called working unless it has:
 - `@sera/control-plane` — local attempt, stage, gate, evidence, terminal-decision, verification, and closeout authority
 - `@sera/runtime-host` — local Runtime Service lifecycle, identity, health, cancellation, shutdown, and evidence
 - `@sera/runtime-state` — local SQLite Operational State for attempts, gates, evidence references, command idempotency, leases, backups, and exports
+- `@sera/runtime-recovery` — persistent local recovery coordinator for checkpointed interrupted attempts, linked retries, review-required decisions, and recovery evidence
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1

@@ -105,7 +105,7 @@
         "runtime-control-plane"
       ],
       "certificationTarget": "runtime-host-v1",
-      "notes": "Local Runtime Host v1 starts Runtime Services in deterministic dependency order, preserves installation identity, creates per-start runtime instance identity, reports health, writes lifecycle evidence, and shuts down cleanly. SQLite Operational State is implemented as a separate required Runtime Service; persistent attempt recovery remains future work."
+      "notes": "Local Runtime Host v1 starts Runtime Services in deterministic dependency order, preserves installation identity, creates per-start runtime instance identity, reports health, writes lifecycle evidence, and shuts down cleanly. SQLite Operational State and Persistent Runtime Recovery are separate required Runtime Services."
     },
     {
       "id": "sera-os-kernel",
@@ -223,13 +223,41 @@
         "docs/architecture/SQLITE_OPERATIONAL_STATE_V1.md"
       ],
       "limitations": [
-        "does not implement persistent attempt recovery",
+        "persistent recovery is implemented by runtime-recovery",
         "does not implement distributed coordination",
         "does not use HTTP, network listeners, cloud services, or model calls",
         "does not replace Unified Control Plane terminal-decision authority"
       ],
-      "nextGate": "Persistent Runtime Recovery v1",
+      "nextGate": "Isolated Execution Engine v1",
       "notes": "SQLite-backed local operational state for command idempotency, attempts, transitions, gate outcomes, evidence references, leases, backups, deterministic exports, and integrity checks. Existing JSON/JSONL stores remain useful evidence but should converge behind one Runtime-owned state boundary over time."
+    },
+    {
+      "id": "persistent-runtime-recovery",
+      "targetLayer": "Runtime",
+      "currentMaturity": "implemented",
+      "status": "certification-pending",
+      "dependencies": [
+        "local-runtime-host",
+        "runtime-state-store",
+        "runtime-control-plane",
+        "packages/runtime-recovery",
+        "apps/cli",
+        "packages/certs"
+      ],
+      "certificationTarget": "persistent-runtime-v1",
+      "evidence": [
+        "packages/runtime-recovery/src/runtime-recovery.ts",
+        "tests/persistent-runtime-recovery-v1.test.ts",
+        "docs/architecture/PERSISTENT_RUNTIME_RECOVERY_V1.md"
+      ],
+      "limitations": [
+        "does not implement isolated execution",
+        "does not execute arbitrary subprocess workloads",
+        "does not implement distributed recovery, Hive Mode, or remote workers",
+        "does not claim exactly-once arbitrary side effects"
+      ],
+      "nextGate": "Isolated Execution Engine v1",
+      "notes": "Bounded local recovery coordinator for durable nonterminal attempts. It resumes only restart-safe checkpoints, creates linked retries at clear failed boundaries, blocks uncertain side effects for review, and writes recovery evidence under Runtime Host health."
     },
     {
       "id": "evaluation-engine",

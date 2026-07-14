@@ -1,12 +1,12 @@
-# Current System State After Phase 12
+# Current System State After Milestone 5C
 
 ## Current runtime certification
 
 ```text
-operator-console-v1
+persistent-runtime-v1
 ```
 
-The secure local foundation is complete through Phase 12.
+The secure local foundation is complete through Milestone 5C.
 
 ## What S.E.R.A. can do now
 
@@ -46,6 +46,15 @@ S.E.R.A. can:
 - run health checks
 - write local operator reports
 - summarize memory, tasks, knowledge, models, and autonomy from one console
+- start the local Runtime Host
+- persist operational command and attempt state in local SQLite
+- record leases, gates, transitions, and evidence references in operational state
+- inspect persisted attempts after restart
+- resume only certified restart-safe checkpoints
+- create linked retry attempts for retry-safe failed checkpoints
+- protect active attempt owners from takeover
+- require operator review for unsafe, unknown, or unresolved side effects
+- write local persistent recovery evidence
 
 ## What S.E.R.A. intentionally does not do yet
 
@@ -62,7 +71,7 @@ S.E.R.A. does not yet:
 - apply multi-file transactional patches
 - deploy apps
 - manage cloud infrastructure
-- use SQLite or production persistence
+- run isolated arbitrary subprocess workloads
 - expose a GUI
 - support multi-user permissions
 
@@ -76,7 +85,7 @@ The intended loop is:
 observe → retrieve knowledge → reason → act safely → validate → remember → extract lesson → review → activate rule/tool/skill → improve future behavior
 ```
 
-Through Phase 12, the foundation for this loop exists, but the system is still local, bounded, and operator-governed.
+Through Milestone 5C, the foundation for this loop exists, but the system is still local, bounded, and operator-governed. Milestone 6 is the next boundary for isolated execution.
 
 ## Next build arc
 

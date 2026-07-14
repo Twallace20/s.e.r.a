@@ -4,7 +4,7 @@ SQLite Operational State v1 is S.E.R.A.'s durable local Runtime state boundary.
 
 It records commands, attempts, attempt transitions, gate outcomes, evidence references, runtime leases, idempotency records, schema migrations, backups, exports, and operational events in a local SQLite database.
 
-It does not recover or continue attempts after a crash. Persistent recovery belongs to Milestone 5C.
+Persistent recovery is implemented separately by Persistent Runtime Recovery v1. SQLite Operational State supplies its durable tables, checkpoints, leases, and evidence references.
 
 ## Architecture Position
 
@@ -38,6 +38,8 @@ The state root, database path, backup root, and export root are configurable. Ge
 ## Schema And Migrations
 
 Core tables are `schema_migrations`, `idempotency_records`, `commands`, `attempts`, `attempt_transitions`, `gate_outcomes`, `evidence_references`, `runtime_leases`, and `state_events`.
+
+Migration 2 adds recovery tables: `recovery_checkpoints`, `recovery_sessions`, `recovery_decisions`, `recovery_events`, and `attempt_lineage`.
 
 Migrations are ordered, contiguous, transactional, and checksum-recorded. Idempotent initialization is supported. Unsupported future schema versions, unknown migration versions, modified historical migration identity, migration gaps, and failed migrations block startup.
 
@@ -82,6 +84,6 @@ npm run sera -- state export
 
 ## Limitations
 
-No persistent attempt recovery, crash-resume orchestration, autonomous continuation, distributed coordination, network leases, HTTP server, model invocation, or cloud storage is implemented.
+No isolated execution, arbitrary subprocess workload execution, distributed coordination, network leases, HTTP server, model invocation, or cloud storage is implemented.
 
-Milestone 5C is next.
+Persistent recovery is owned by `@sera/runtime-recovery`. Milestone 6 is next.
