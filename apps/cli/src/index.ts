@@ -68,6 +68,10 @@ Usage:
   sera console summary
   sera repository snapshot
   sera repository truth
+  sera control-plane inspect
+  sera control-plane run --spec <relative-json-file>
+  sera control-plane verify --attempt <attempt-id-or-relative-path>
+  sera control-plane closeout --attempt <attempt-id-or-relative-path>
   sera snapshot
   sera truth
 
@@ -107,6 +111,8 @@ NPM examples:
   npm run sera -- console report
   npm run sera -- repository snapshot
   npm run sera -- repository truth
+  npm run sera -- control-plane inspect
+  npm run sera -- control-plane run --spec .sera/control-plane/specs/example.json
 
 Secure base behavior:
   - runs locally
@@ -130,6 +136,7 @@ Secure base behavior:
   - Local Model Provider v1 registers an optional Ollama local adapter while keeping certification subscription-free
   - Autonomous Dev Loop can propose bounded dev changes and only applies them behind validation gates
   - Operator Console summarizes health, evidence, tasks, knowledge, models, and autonomy from one local command
+  - Unified Control Plane coordinates local attempts, stages, gates, evidence, verification, and closeout without shell execution
   - does not require an LLM provider
 `);
 }
@@ -148,6 +155,18 @@ function parseExpectedOccurrences(value: string | undefined): number | undefined
     throw new Error("Expected occurrences must be a non-negative integer when supplied.");
   }
   return parsed;
+}
+
+function readJsonSpec(relativePath: string): unknown {
+  if (relativePath.includes("..") || relativePath.startsWith("/") || /^[A-Za-z]:/.test(relativePath)) {
+    throw new Error("Spec path must be repository-relative.");
+  }
+  return JSON.parse(fs.readFileSync(relativePath, "utf8"));
+}
+
+function optionValue(args: string[], name: string): string | undefined {
+  const index = args.indexOf(name);
+  return index >= 0 ? args[index + 1] : undefined;
 }
 
 async function main(): Promise<void> {
@@ -903,6 +922,74 @@ async function main(): Promise<void> {
       process.exit(0);
     }
     throw new Error("Console command must be 'status', 'health', 'report', 'history', or 'summary'.");
+  }
+
+  if (cmd === "control-plane") {
+    const [controlMode, ...controlRest] = rest;
+    if (controlMode === "inspect") {
+      const result = kernel.inspectControlPlane();
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        outputRoot: result.outputRoot,
+        summary: result.summary,
+        modelUse: false,
+        networkUse: false
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (controlMode === "run") {
+      const specPath = requireArg(optionValue(controlRest, "--spec"), "--spec");
+      const spec = readJsonSpec(specPath) as any;
+      const result = kernel.runControlPlane({ spec });
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        attemptId: result.attemptId,
+        attemptPath: result.attemptPath,
+        outputRoot: result.outputRoot,
+        terminalDecision: result.terminalDecision,
+        summary: result.summary,
+        modelUse: false,
+        networkUse: false
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (controlMode === "verify") {
+      const attempt = requireArg(optionValue(controlRest, "--attempt"), "--attempt");
+      const result = kernel.verifyControlPlaneAttempt(attempt);
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        attemptId: result.attemptId,
+        attemptPath: result.attemptPath,
+        terminalDecision: result.terminalDecision,
+        summary: result.summary,
+        modelUse: false,
+        networkUse: false
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (controlMode === "closeout") {
+      const attempt = requireArg(optionValue(controlRest, "--attempt"), "--attempt");
+      const result = kernel.closeoutControlPlaneAttempt(attempt);
+      console.log(JSON.stringify({
+        ok: result.ok,
+        status: result.status,
+        message: result.message,
+        attemptId: result.attemptId,
+        attemptPath: result.attemptPath,
+        terminalDecision: result.terminalDecision,
+        summary: result.summary,
+        modelUse: false,
+        networkUse: false
+      }, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    throw new Error("Control Plane command must be 'inspect', 'run', 'verify', or 'closeout'.");
   }
 
   if (cmd === "repository") {

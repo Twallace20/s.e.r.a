@@ -14,7 +14,8 @@ export default defineConfig({
       "@sera/kernel": r("./packages/kernel/src/index.ts"),
       "@sera/certs": r("./packages/certs/src/index.ts"),
       "@sera/repository-snapshot": r("./packages/repository-snapshot/src/index.ts"),
-      "@sera/repository-truth": r("./packages/repository-truth/src/index.ts")
+      "@sera/repository-truth": r("./packages/repository-truth/src/index.ts"),
+      "@sera/control-plane": r("./packages/control-plane/src/index.ts")
     }
   },
   test: {

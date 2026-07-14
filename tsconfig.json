@@ -16,6 +16,9 @@
                            "path":  "packages/repository-truth"
                        },
                        {
+                           "path":  "packages/control-plane"
+                       },
+                       {
                            "path":  "packages/safety"
                        },
                        {

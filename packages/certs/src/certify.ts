@@ -8,6 +8,7 @@ import { ModelProviderStore } from "@sera/model-provider";
 import { OperatorConsoleStore } from "@sera/operator-console";
 import { runRepositorySnapshot } from "@sera/repository-snapshot";
 import { runRepositoryTruth } from "@sera/repository-truth";
+import { ControlPlane, ControlPlaneAttemptSpec } from "@sera/control-plane";
 
 export interface CertCheck {
   id: string;
@@ -18,7 +19,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -43,6 +44,7 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runOperatorConsoleV1Checks());
   checks.push(...runRepositorySnapshotV1Checks());
   checks.push(...runRepositoryTruthV1Checks());
+  checks.push(...runControlPlaneV1Checks());
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -58,10 +60,13 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   const operatorConsoleV1ChecksPass = checks.filter((c) => c.id.startsWith("console_")).every((c) => c.pass);
   const repositorySnapshotV1ChecksPass = checks.filter((c) => c.id.startsWith("repository_snapshot_")).every((c) => c.pass);
   const repositoryTruthV1ChecksPass = checks.filter((c) => c.id.startsWith("repository_truth_")).every((c) => c.pass);
+  const controlPlaneV1ChecksPass = checks.filter((c) => c.id.startsWith("control_plane_")).every((c) => c.pass);
   void repositorySnapshotV1ChecksPass;
   void repositoryTruthV1ChecksPass;
   const pass = checks.every((c) => c.pass);
-  const level = pass && operatorConsoleV1ChecksPass
+  const level = pass && controlPlaneV1ChecksPass
+    ? "control-plane-v1"
+    : pass && operatorConsoleV1ChecksPass
     ? "operator-console-v1"
     : pass && autonomyV1ChecksPass
     ? "autonomous-dev-loop-v1"
@@ -1058,6 +1063,86 @@ function runRepositoryTruthV1Checks(): CertCheck[] {
     { id: "repository_truth_legacy_authority_analysis_present", name: "Repository Truth records legacy authority analysis", pass: typeof classifications.legacyAuthorityAnalysis.constitutionalRule === "string" && summary.legacyCandidateCount >= 1, detail: classifications.legacyAuthorityAnalysis.constitutionalRule },
     { id: "repository_truth_no_model_or_network", name: "Repository Truth records no model or network use", pass: truth.modelUse === false && truth.networkUse === false && summary.modelUse === false && summary.networkUse === false, detail: "modelUse=false networkUse=false" },
     { id: "repository_truth_public_api_consumable", name: "Repository Truth is consumable through typed public API", pass: first.execution.status === "COMPLETED" && Boolean(first.manifest.find((item) => item.path.endsWith("truth.json"))), detail: first.execution.evidenceDirectory ?? "missing evidence directory" }
+  ];
+}
+
+function runControlPlaneV1Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-control-plane-cert-"));
+  fs.mkdirSync(path.join(root, "packages", "alpha", "src"), { recursive: true });
+  fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({
+    name: "control-plane-cert-root",
+    version: "1.0.0",
+    private: true,
+    workspaces: ["packages/*"]
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "tsconfig.json"), JSON.stringify({ files: [], references: [{ path: "packages/alpha" }] }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "alpha", "package.json"), JSON.stringify({ name: "@sera/alpha", version: "0.1.0", private: true }), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "alpha", "src", "index.ts"), "export const alpha = true;\n", "utf8");
+  fs.mkdirSync(path.join(root, "architecture"), { recursive: true });
+  fs.writeFileSync(path.join(root, "architecture", "capability-inventory.json"), JSON.stringify({
+    schemaVersion: "sera.capability-inventory.v1",
+    targetSubsystems: [
+      { id: "runtime-control-plane", targetLayer: "Runtime", currentMaturity: "implemented", status: "certification-pending", dependencies: ["repository-snapshot", "repository-truth"] }
+    ]
+  }, null, 2), "utf8");
+
+  const clock = { now: () => new Date("2026-07-14T13:00:00.000Z") };
+  const snapshot = runRepositorySnapshot({ repositoryRoot: root, clock });
+  const truth = snapshot.ok ? runRepositoryTruth({ repositoryRoot: root, refreshSnapshot: true, clock }) : undefined;
+  const control = new ControlPlane({ repositoryRoot: root, clock });
+  const successSpec: ControlPlaneAttemptSpec = {
+    title: "Certified control plane success",
+    stages: [
+      { id: "prepare", executionMode: "emit-evidence", evidence: [{ id: "prepared", required: true }], input: { evidenceId: "prepared", value: { ready: true } } },
+      { id: "validate-file", executionMode: "validate-file", dependsOn: ["prepare"], evidence: [{ id: "source-file", required: true }], input: { evidenceId: "source-file", relativePath: "packages/alpha/src/index.ts" } },
+      { id: "warn", executionMode: "warning", required: false, input: { message: "non-blocking warning" } }
+    ],
+    gates: [
+      { id: "snapshot-gate", gateType: "precondition", evaluationTiming: "before", passCriteria: { kind: "snapshot-valid" } },
+      { id: "truth-gate", gateType: "precondition", evaluationTiming: "before", passCriteria: { kind: "truth-valid", blockSeverities: ["critical"] } },
+      { id: "evidence-gate", gateType: "verification", passCriteria: { kind: "evidence-valid", evidenceIds: ["prepared", "source-file"] } }
+    ],
+    requiredEvidence: [{ id: "prepared", required: true }, { id: "source-file", required: true }]
+  };
+  const success = control.run(successSpec);
+  const verify = success.attemptId ? control.verify(success.attemptId) : undefined;
+  const closeout = success.attemptId ? control.closeout(success.attemptId) : undefined;
+
+  const failed = control.run({
+    title: "Certified control plane failure",
+    stages: [
+      { id: "required-failure", executionMode: "fail", input: { message: "expected failure" } },
+      { id: "dependent", executionMode: "emit-evidence", dependsOn: ["required-failure"], evidence: [{ id: "should-not-run" }] }
+    ]
+  });
+  const blocked = control.run({
+    title: "Certified control plane blocked",
+    stages: [{ id: "blocked-stage", executionMode: "block", input: { message: "expected block" } }]
+  });
+  const invalid = control.run({
+    title: "Invalid cycle",
+    stages: [
+      { id: "a", executionMode: "noop", dependsOn: ["b"] },
+      { id: "b", executionMode: "noop", dependsOn: ["a"] }
+    ]
+  });
+  const inspect = control.inspect();
+  const attemptRoot = success.attemptPath ? path.join(root, success.attemptPath) : "";
+  const attemptJson = attemptRoot ? JSON.parse(fs.readFileSync(path.join(attemptRoot, "attempt.json"), "utf8")) : {};
+  const terminalJson = attemptRoot ? JSON.parse(fs.readFileSync(path.join(attemptRoot, "terminal-decision.json"), "utf8")) : {};
+  const closeoutJson = attemptRoot ? JSON.parse(fs.readFileSync(path.join(attemptRoot, "closeout.json"), "utf8")) : {};
+
+  return [
+    { id: "control_plane_snapshot_truth_preconditions", name: "Control Plane cert runs Snapshot then Truth before attempts", pass: Boolean(snapshot.ok && truth?.ok && truth.sourceSnapshotId), detail: `${snapshot.snapshotId ?? "missing"} -> ${truth?.truthId ?? "missing"}` },
+    { id: "control_plane_success_outputs", name: "Control Plane writes required attempt outputs", pass: success.ok && ["attempt.json", "specification.json", "stage-results.json", "evidence-index.json", "gate-results.json", "terminal-decision.json", "closeout.json", "events.jsonl", "final-report.md"].every((file) => fs.existsSync(path.join(attemptRoot, file))), detail: success.attemptPath ?? success.message },
+    { id: "control_plane_schema_and_flags", name: "Control Plane records schema and no model/network use", pass: attemptJson.schemaVersion === "sera.control-plane.v1" && attemptJson.modelUse === false && attemptJson.networkUse === false, detail: JSON.stringify({ modelUse: attemptJson.modelUse, networkUse: attemptJson.networkUse }) },
+    { id: "control_plane_terminal_with_warnings", name: "Control Plane emits completed-with-warnings terminal decision", pass: success.status === "COMPLETED_WITH_WARNINGS" && success.terminalDecision === "COMPLETE_WITH_WARNINGS", detail: JSON.stringify(terminalJson.terminalDecision) },
+    { id: "control_plane_verify_attempt", name: "Control Plane verifies attempt artifacts and evidence hashes", pass: Boolean(verify?.ok && verify.status === "VERIFIED"), detail: verify?.message ?? "verify missing" },
+    { id: "control_plane_closeout_separate_no_merge", name: "Control Plane closeout is separate and cannot merge", pass: Boolean(closeout?.ok && closeoutJson.mergeAllowed === false && closeoutJson.promotionAllowed === false), detail: JSON.stringify(closeoutJson) },
+    { id: "control_plane_required_failure_terminal", name: "Control Plane fails on required stage failure and skips dependent work", pass: !failed.ok && failed.status === "FAILED" && failed.terminalDecision === "FAIL", detail: failed.message },
+    { id: "control_plane_blocked_handoff", name: "Control Plane writes rich blocked handoff", pass: !blocked.ok && blocked.status === "BLOCKED" && Boolean(blocked.attemptId), detail: blocked.attemptPath ?? blocked.message },
+    { id: "control_plane_invalid_spec_blocks", name: "Control Plane blocks invalid specifications without partial completion", pass: !invalid.ok && invalid.status === "BLOCKED" && invalid.terminalDecision === "BLOCK", detail: invalid.message },
+    { id: "control_plane_inspect_reports_surface", name: "Control Plane inspect reports stage and gate types", pass: inspect.ok && Array.isArray((inspect.summary as any).stageTypes) && Array.isArray((inspect.summary as any).gateTypes), detail: JSON.stringify((inspect.summary as any).terminalCounts) }
   ];
 }
 

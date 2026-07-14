@@ -20,6 +20,9 @@
     },
     {
       "path": "../../packages/repository-truth"
+    },
+    {
+      "path": "../../packages/control-plane"
     }
   ]
 }

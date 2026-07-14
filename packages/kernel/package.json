@@ -23,6 +23,7 @@
     "@sera/operator-console": "0.1.0",
     "@sera/research": "0.1.0",
     "@sera/repository-snapshot": "0.1.0",
-    "@sera/repository-truth": "0.1.0"
+    "@sera/repository-truth": "0.1.0",
+    "@sera/control-plane": "0.1.0"
   }
 }

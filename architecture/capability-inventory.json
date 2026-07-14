@@ -60,16 +60,32 @@
     {
       "id": "runtime-control-plane",
       "targetLayer": "Runtime",
-      "currentMaturity": "starter",
-      "status": "proposed",
+      "currentMaturity": "implemented",
+      "status": "certification-pending",
       "dependencies": [
         "sera-os-kernel",
-        "packages/workspace",
-        "packages/artifacts",
-        "packages/planner"
+        "repository-snapshot",
+        "repository-truth",
+        "packages/control-plane",
+        "packages/kernel",
+        "apps/cli",
+        "packages/certs"
       ],
       "certificationTarget": "local-control-plane-v1",
-      "notes": "Local attempt, task, approval, and execution coordination. Must replace phase-numbered orchestration as production authority."
+      "evidence": [
+        "packages/control-plane/src/control-plane.ts",
+        "tests/control-plane-v1.test.ts",
+        "docs/architecture/UNIFIED_CONTROL_PLANE_V1.md"
+      ],
+      "limitations": [
+        "reference executor does not run shell commands",
+        "does not perform Git merge, push, tag, reset, stash, or branch actions",
+        "does not begin SQLite Runtime State",
+        "owner approvals are explicit spec fields in v1",
+        "legacy phase, browser, OneDrive, and ZIP workflows remain evidence only"
+      ],
+      "nextGate": "SQLite Runtime State v1",
+      "notes": "Local attempt, stage, gate, evidence, terminal-decision, verification, and closeout authority. Replaces phase-numbered orchestration as production authority for terminal state, while preserving legacy workflows as evidence only."
     },
     {
       "id": "repository-snapshot",

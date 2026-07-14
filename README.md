@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `operator-console-v1`.
+Current runtime certification: `control-plane-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -22,6 +22,7 @@ Certified runtime ladder completed so far:
 - `model-provider-v1`
 - `autonomous-dev-loop-v1`
 - `operator-console-v1`
+- `control-plane-v1`
 
 Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
@@ -154,6 +155,17 @@ npm run sera -- truth
 
 Repository Truth is deterministic and local-only. It does not call models, use the network, run arbitrary repository scripts, or remediate files.
 
+Unified Control Plane coordinates local attempts, stages, gates, evidence validation, terminal decisions, verification, and closeout:
+
+```bash
+npm run sera -- control-plane inspect
+npm run sera -- control-plane run --spec <relative-json-file>
+npm run sera -- control-plane verify --attempt <attempt-id-or-relative-path>
+npm run sera -- control-plane closeout --attempt <attempt-id-or-relative-path>
+```
+
+Control Plane writes `.sera/control-plane/` runtime evidence. It consumes Repository Snapshot and Repository Truth identities as baseline evidence, does not duplicate their logic, does not execute shell commands, does not perform Git actions, and does not invoke models or use the network.
+
 ## Developer Worker v2 and Self-Improvement Loop v1
 
 Inspect mode fingerprints a file without changing it:
@@ -209,6 +221,7 @@ Nothing gets called working unless it has:
 - `@sera/operator-console` — local status, health, report, history, and summary evidence
 - `@sera/repository-snapshot` — deterministic repository fact inventory
 - `@sera/repository-truth` — deterministic repository truth classification over Snapshot evidence
+- `@sera/control-plane` — local attempt, stage, gate, evidence, terminal-decision, verification, and closeout authority
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1

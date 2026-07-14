@@ -69,6 +69,12 @@ import {
   runRepositoryTruth
 } from "@sera/repository-truth";
 import {
+  ControlPlane,
+  ControlPlaneAttemptSpec,
+  ControlPlaneOptions,
+  ControlPlaneResult
+} from "@sera/control-plane";
+import {
   CreateQueuedTaskInput,
   QueuedTaskRecord,
   QueuedTaskStatus,
@@ -306,6 +312,13 @@ export interface RepositoryTruthTaskInput extends Omit<RepositoryTruthOptions, "
   repositoryRoot?: string;
 }
 export interface RepositoryTruthTaskResult extends RepositoryTruthResult {}
+export interface ControlPlaneTaskInput extends Omit<ControlPlaneOptions, "repositoryRoot"> {
+  repositoryRoot?: string;
+}
+export interface ControlPlaneRunTaskInput extends ControlPlaneTaskInput {
+  spec: ControlPlaneAttemptSpec;
+}
+export interface ControlPlaneTaskResult extends ControlPlaneResult {}
 
 export class SeraKernel {
   private readonly workspaceManager = new WorkspaceManager();
@@ -959,6 +972,34 @@ export class SeraKernel {
       ...input,
       repositoryRoot: input.repositoryRoot ?? this.options.rootDir
     });
+  }
+
+  inspectControlPlane(input: ControlPlaneTaskInput = {}): ControlPlaneTaskResult {
+    return new ControlPlane({
+      ...input,
+      repositoryRoot: input.repositoryRoot ?? this.options.rootDir
+    }).inspect();
+  }
+
+  runControlPlane(input: ControlPlaneRunTaskInput): ControlPlaneTaskResult {
+    return new ControlPlane({
+      ...input,
+      repositoryRoot: input.repositoryRoot ?? this.options.rootDir
+    }).run(input.spec);
+  }
+
+  verifyControlPlaneAttempt(attemptIdOrPath: string, input: ControlPlaneTaskInput = {}): ControlPlaneTaskResult {
+    return new ControlPlane({
+      ...input,
+      repositoryRoot: input.repositoryRoot ?? this.options.rootDir
+    }).verify(attemptIdOrPath);
+  }
+
+  closeoutControlPlaneAttempt(attemptIdOrPath: string, input: ControlPlaneTaskInput = {}): ControlPlaneTaskResult {
+    return new ControlPlane({
+      ...input,
+      repositoryRoot: input.repositoryRoot ?? this.options.rootDir
+    }).closeout(attemptIdOrPath);
   }
 
   private createTask(prompt: string): SeraTask {

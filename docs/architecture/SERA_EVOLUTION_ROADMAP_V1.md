@@ -64,9 +64,9 @@ The locked implementation order is:
 
 1. Constitution and Layer Model — `sera-os-constitution-v1`
 2. Repository Snapshot — `repository-snapshot-v1` — implemented and locally proven as a deterministic Runtime-layer fact scanner that writes `.sera/repository/` evidence
-3. Repository Truth — `repository-truth-v1` — implemented and under acceptance closure; it remains uncommitted until acceptance closes
-4. Unified Control Plane — `local-control-plane-v1` — next unimplemented milestone
-5. SQLite Runtime State — `local-state-store-v1`
+3. Repository Truth — `repository-truth-v1` — implemented and locally proven as the deterministic classification pass over Snapshot evidence
+4. Unified Control Plane — `local-control-plane-v1` — implemented and under validation as the permanent Runtime attempt, gate, evidence, terminal-decision, verification, and closeout authority
+5. SQLite Runtime State — `local-state-store-v1` — next unimplemented milestone
 6. Isolated Execution — `isolated-execution-v1`
 7. Evaluation Engine — `evaluation-engine-v1`
 8. Ollama Model Runtime — `offline-model-runtime-v1`
