@@ -43,6 +43,150 @@
       "migrationTarget": "control-plane terminal-state regression"
     }
   ],
+  "targetSubsystems": [
+    {
+      "id": "sera-os-kernel",
+      "targetLayer": "Kernel",
+      "currentMaturity": "starter",
+      "status": "proposed",
+      "dependencies": [
+        "packages/shared",
+        "packages/contracts",
+        "packages/safety"
+      ],
+      "certificationTarget": "sera-os-constitution-v1",
+      "notes": "Permanent contract, identity, safety, lifecycle, and terminal-state authority. Current package placement is provisional until upward dependencies are removed."
+    },
+    {
+      "id": "runtime-control-plane",
+      "targetLayer": "Runtime",
+      "currentMaturity": "starter",
+      "status": "proposed",
+      "dependencies": [
+        "sera-os-kernel",
+        "packages/workspace",
+        "packages/artifacts",
+        "packages/planner"
+      ],
+      "certificationTarget": "local-control-plane-v1",
+      "notes": "Local attempt, task, approval, and execution coordination. Must replace phase-numbered orchestration as production authority."
+    },
+    {
+      "id": "repository-snapshot",
+      "targetLayer": "Runtime",
+      "currentMaturity": "not-implemented",
+      "status": "proposed",
+      "dependencies": [
+        "sera-os-kernel",
+        "runtime-control-plane"
+      ],
+      "certificationTarget": "repository-snapshot-v1",
+      "notes": "Deterministic bounded inventory of repository source, runtime data, generated artifacts, and legacy surfaces. Must precede Repository Truth."
+    },
+    {
+      "id": "repository-truth",
+      "targetLayer": "Runtime",
+      "currentMaturity": "starter",
+      "status": "proposed",
+      "dependencies": [
+        "repository-snapshot",
+        "sera-os-kernel"
+      ],
+      "certificationTarget": "repository-truth-v1",
+      "notes": "Classifies snapshot evidence into active modules, evaluation assets, failure fixtures, legacy references, and obsolete assets without relying on heuristic certainty."
+    },
+    {
+      "id": "runtime-state-store",
+      "targetLayer": "Runtime",
+      "currentMaturity": "starter",
+      "status": "proposed",
+      "dependencies": [
+        "sera-os-kernel",
+        "runtime-control-plane"
+      ],
+      "certificationTarget": "local-state-store-v1",
+      "notes": "SQLite-backed local operational state. Existing JSON/JSONL stores are useful evidence but should converge behind one Runtime-owned state boundary."
+    },
+    {
+      "id": "evaluation-engine",
+      "targetLayer": "Runtime",
+      "currentMaturity": "starter",
+      "status": "proposed",
+      "dependencies": [
+        "sera-os-kernel",
+        "runtime-state-store",
+        "packages/certs"
+      ],
+      "certificationTarget": "evaluation-engine-v1",
+      "notes": "Unified deterministic and rubric-based evaluation. Existing certs, phase verifiers, and tests require classification before consolidation."
+    },
+    {
+      "id": "learning-engine",
+      "targetLayer": "Runtime",
+      "currentMaturity": "starter",
+      "status": "proposed",
+      "dependencies": [
+        "evaluation-engine",
+        "runtime-state-store",
+        "packages/memory",
+        "packages/knowledge"
+      ],
+      "certificationTarget": "capability-learning-v1",
+      "notes": "Learning requires baseline, attempted strategy, observed result, diagnosis, candidate improvement, repeat evaluation, promotion decision, and rollback information."
+    },
+    {
+      "id": "model-runtime",
+      "targetLayer": "Provider",
+      "currentMaturity": "starter",
+      "status": "proposed",
+      "dependencies": [
+        "sera-os-kernel",
+        "packages/model-provider"
+      ],
+      "certificationTarget": "offline-model-runtime-v1",
+      "notes": "Replaceable local model provider runtime. Ollama is a first real local target, but Kernel must remain model-independent."
+    },
+    {
+      "id": "multimodal-intake",
+      "targetLayer": "Capability",
+      "currentMaturity": "not-implemented",
+      "status": "proposed",
+      "dependencies": [
+        "runtime-control-plane",
+        "repository-truth",
+        "model-runtime"
+      ],
+      "certificationTarget": "multimodal-evidence-runtime-v1",
+      "notes": "Normalizes text, documents, code, images, audio, video, links, and future sensor inputs into evidence records. Provider use must be explicit."
+    },
+    {
+      "id": "desktop-operator",
+      "targetLayer": "Desktop",
+      "currentMaturity": "starter",
+      "status": "proposed",
+      "dependencies": [
+        "runtime-control-plane",
+        "apps/cli",
+        "apps/operator-console"
+      ],
+      "certificationTarget": "desktop-operator-v1",
+      "notes": "Downloadable local operator surface. Current operator console is provisional because UI and capability logic are mixed."
+    },
+    {
+      "id": "website-studio",
+      "targetLayer": "Studio",
+      "currentMaturity": "not-implemented",
+      "status": "proposed",
+      "dependencies": [
+        "desktop-operator",
+        "multimodal-intake",
+        "evaluation-engine",
+        "learning-engine"
+      ],
+      "certificationTarget": "website-studio-provisional-v1",
+      "notes": "First reference MVP capability. Must accept a goal, ingest local evidence, identify missing capability, plan, execute in isolation, evaluate, learn, persist state, and run offline."
+    }
+  ],
   "acceptanceCriteria": [
     "all active repository surfaces inventoried",
     "every phase asset classified",

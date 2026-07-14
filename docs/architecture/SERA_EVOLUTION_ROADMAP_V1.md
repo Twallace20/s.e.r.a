@@ -60,19 +60,23 @@ The first reference capability is Website Studio.
 
 ## Consolidation milestones
 
-1. Repository Truth and Legacy Freeze — `repository-truth-v1`
-2. Unified Contracts — `shared-contracts-v1`
-3. Unified Control Plane — `local-control-plane-v1`
-4. SQLite Operational State — `local-state-store-v1`
-5. Isolated Execution Engine — `isolated-execution-v1`
-6. Local Model Runtime — `offline-model-runtime-v1`
-7. Repository and Multimodal Intelligence — `multimodal-evidence-runtime-v1`
-8. Unified Evaluation Engine — `evaluation-engine-v1`
-9. Learning Engine and Capability Genome — `capability-learning-v1`
-10. Desktop Operator — `desktop-operator-v1`
-11. Website Studio MVP — `website-studio-provisional-v1`
-12. Offline Recursive Capability Proof — `offline-recursive-capability-v1`
-13. Portable Release — `portable-offline-release-v1`
+The locked implementation order is:
+
+1. Constitution and Layer Model — `sera-os-constitution-v1`
+2. Repository Snapshot — `repository-snapshot-v1`
+3. Repository Truth — `repository-truth-v1`
+4. Unified Control Plane — `local-control-plane-v1`
+5. SQLite Runtime State — `local-state-store-v1`
+6. Isolated Execution — `isolated-execution-v1`
+7. Evaluation Engine — `evaluation-engine-v1`
+8. Ollama Model Runtime — `offline-model-runtime-v1`
+9. Knowledge and Multimodal Intake — `multimodal-evidence-runtime-v1`
+10. Capability Genome and Learning Engine — `capability-learning-v1`
+11. Desktop Operator — `desktop-operator-v1`
+12. Website Studio MVP — `website-studio-provisional-v1`
+13. Portable Offline Release — `portable-offline-release-v1`
+
+Repository Snapshot precedes Repository Truth so S.E.R.A. can inventory source, generated artifacts, runtime directories, legacy evidence, and provider-adapter surfaces with deterministic scanners before making classification claims. Repository Truth then classifies that snapshot against the SERA OS Constitution and Layer Model.
 
 ## Immediate rule
 
