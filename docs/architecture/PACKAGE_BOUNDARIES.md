@@ -78,6 +78,40 @@ Boundary rules:
 - does not bypass safety gates
 - does not allow direct model-to-tool authority
 
+## `@sera/runtime-host` / `packages/runtime-host`
+
+Local Runtime Service lifecycle, identity, health, cancellation, shutdown, and lifecycle evidence.
+
+Boundary rules:
+
+- owns process and service lifecycle only
+- does not own attempt terminal decisions
+- does not execute arbitrary workloads
+- reports degraded or blocked health honestly
+
+## `@sera/runtime-state` / `packages/runtime-state`
+
+SQLite Operational State for commands, attempts, transitions, gates, evidence references, leases, migrations, backups, exports, checkpoints, recovery records, and attempt lineage.
+
+Boundary rules:
+
+- owns durable local operational records
+- enforces transactional persistence invariants
+- does not replace Unified Control Plane transition authority
+- does not silently rebuild or replace corrupt operational truth
+
+## `@sera/runtime-recovery` / `packages/runtime-recovery`
+
+Persistent Runtime Recovery for interrupted attempts, checkpoint classification, safe same-attempt resume, linked retry, review-required blocking, and recovery evidence.
+
+Boundary rules:
+
+- scans and classifies durable nonterminal attempts
+- resumes only certified restart-safe checkpoints with Control Plane authorization references
+- blocks unknown side effects for review
+- does not implement isolated execution or arbitrary workload execution
+- does not claim exactly-once execution for arbitrary side effects
+
 ## `@sera/certs` / `packages/certs`
 
 Certification runner and capability checks.

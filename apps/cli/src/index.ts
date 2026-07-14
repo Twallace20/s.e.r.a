@@ -3,7 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { SeraKernel } from "@sera/kernel";
 import { RuntimeHost, createRuntimeConfig, loadOrCreateRuntimeIdentity, runRuntimeHostProof } from "@sera/runtime-host";
-import { createRuntimeStateConfig, createRuntimeStateEnabledServices, openRuntimeState, runRuntimeStateProof } from "@sera/runtime-state";
+import { createRuntimeStateConfig, openRuntimeState, runRuntimeStateProof } from "@sera/runtime-state";
+import { PersistentRuntimeRecoveryCoordinator, createPersistentRuntimeServices, runPersistentRuntimeRecoveryProof } from "@sera/runtime-recovery";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -85,6 +86,11 @@ Usage:
   sera state integrity
   sera state backup
   sera state export
+  sera recovery inspect
+  sera recovery scan
+  sera recovery prove
+  sera recovery pending
+  sera recovery decisions
   sera snapshot
   sera truth
 
@@ -130,6 +136,7 @@ NPM examples:
   npm run sera -- runtime health
   npm run sera -- runtime prove
   npm run sera -- state prove
+  npm run sera -- recovery prove
 
 Secure base behavior:
   - runs locally
@@ -156,6 +163,7 @@ Secure base behavior:
   - Unified Control Plane coordinates local attempts, stages, gates, evidence, verification, and closeout without shell execution
   - Runtime Host starts local Runtime Services, reports health, preserves installation identity, and shuts down cleanly
   - SQLite Operational State stores durable local command, attempt, gate, evidence, lease, migration, backup, and export records
+  - Persistent Runtime Recovery scans interrupted attempts, resumes only certified-safe checkpoints, and blocks uncertain work for review
   - does not require an LLM provider
 `);
 }
@@ -1027,7 +1035,7 @@ async function main(): Promise<void> {
       process.exit(0);
     }
     if (runtimeMode === "health" || runtimeMode === "prove") {
-      const proof = await runRuntimeHostProof(config, createRuntimeStateEnabledServices(config.projectRoot));
+      const proof = await runRuntimeHostProof(config, createPersistentRuntimeServices(config.projectRoot));
       console.log(JSON.stringify({
         ok: proof.ok,
         status: proof.status,
@@ -1042,7 +1050,7 @@ async function main(): Promise<void> {
       process.exit(proof.ok ? 0 : 1);
     }
     if (runtimeMode === "start") {
-      const host = new RuntimeHost({ config, services: createRuntimeStateEnabledServices(config.projectRoot) });
+      const host = new RuntimeHost({ config, services: createPersistentRuntimeServices(config.projectRoot) });
       const started = await host.start();
       console.log(JSON.stringify({
         ok: started.ok,
@@ -1093,7 +1101,7 @@ async function main(): Promise<void> {
       }
     }
     if (stateMode === "prove") {
-      const result = await runRuntimeStateProof(config);
+      const result = await runRuntimeStateProof();
       console.log(JSON.stringify(result, null, 2));
       process.exit(result.ok ? 0 : 1);
     }
@@ -1118,6 +1126,40 @@ async function main(): Promise<void> {
       }
     }
     throw new Error("State command must be 'init', 'inspect', 'prove', 'integrity', 'backup', or 'export'.");
+  }
+
+  if (cmd === "recovery") {
+    const [recoveryMode] = rest;
+    const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
+    if (recoveryMode === "prove") {
+      const result = await runPersistentRuntimeRecoveryProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const store = openRuntimeState(config);
+    try {
+      const coordinator = new PersistentRuntimeRecoveryCoordinator(store, { projectRoot: process.cwd() });
+      if (recoveryMode === "inspect") {
+        console.log(JSON.stringify(coordinator.inspect(), null, 2));
+        process.exit(0);
+      }
+      if (recoveryMode === "scan") {
+        const result = coordinator.scanAndRecover({ executeSafeRecovery: false });
+        console.log(JSON.stringify(result, null, 2));
+        process.exit(result.ok ? 0 : 1);
+      }
+      if (recoveryMode === "pending") {
+        console.log(JSON.stringify({ ok: true, status: "healthy", pending: coordinator.pendingAttempts(), modelUse: false, networkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (recoveryMode === "decisions") {
+        console.log(JSON.stringify({ ok: true, status: "healthy", decisions: coordinator.listDecisions(), modelUse: false, networkUse: false }, null, 2));
+        process.exit(0);
+      }
+    } finally {
+      store.close();
+    }
+    throw new Error("Recovery command must be 'inspect', 'scan', 'prove', 'pending', or 'decisions'.");
   }
 
   if (cmd === "repository") {

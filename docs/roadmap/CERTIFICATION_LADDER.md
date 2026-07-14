@@ -5,10 +5,10 @@ S.E.R.A. only advances when the cert runner proves the current runtime level. Do
 ## Current runtime certification
 
 ```text
-operator-console-v1
+persistent-runtime-v1
 ```
 
-Phase 13 is a repo-truth alignment phase. It preserves the Phase 12 runtime certification and updates documentation so the repo accurately reflects the current system.
+Milestone 5C is the current runtime certification. It proves persistent runtime recovery for interrupted attempts, restart-safe checkpoint resume, linked retry creation, active-owner protection, lease/fencing protection, review-required blocking, and local evidence generation without network or model use.
 
 ## Level 1 — `secure-base`
 
@@ -81,6 +81,18 @@ This is not uncontrolled autonomy. It is local, auditable, validation-gated orch
 ## Level 12 — `operator-console-v1`
 
 S.E.R.A. can summarize subsystem state through a local operator console, run health checks, write operator reports, preserve console history, and report memory, task, knowledge, model-provider, and autonomy state without enabling new mutation authority.
+
+## Milestone 5A — `runtime-host-v1`
+
+S.E.R.A. can start a local runtime host with explicit service registration, dependency ordering, health reporting, lifecycle evidence, and no model or network dependency.
+
+## Milestone 5B — `runtime-state-v1`
+
+S.E.R.A. can persist operational runtime state in local SQLite: commands, attempts, transitions, leases, gates, evidence references, and restart-visible identity.
+
+## Milestone 5C — `persistent-runtime-v1`
+
+S.E.R.A. can inspect persisted attempts after restart, classify interrupted work conservatively, resume only restart-safe checkpoints, create linked retries for retry-safe failures, protect active owners, enforce leases and fencing, require review for unsafe side effects, and write recovery evidence.
 
 ## Phase 13 — `phase-13-documentation-repo-truth-alignment-v1`
 

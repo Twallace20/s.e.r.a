@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import crypto from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -48,15 +49,19 @@ function accepted(store: RuntimeStateStore) {
   return store.acceptCommand({ idempotencyKey: "idem-1", commandType: "demo", payload: { value: 1 }, capability: "control-plane" });
 }
 
+function sha256File(filePath: string): string {
+  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
+
 describe("SQLite Operational State v1", () => {
   it("creates the supported schema and reports SQLite settings", () => {
     withStore("state-init", (store) => {
       const inspect = store.inspect();
-      expect(inspect.schemaVersion).toBe(1);
+      expect(inspect.schemaVersion).toBe(2);
       expect(inspect.sqlite.foreignKeys).toBe(true);
       expect(inspect.sqlite.journalMode).toBe("wal");
       expect(inspect.sqlite.implementation).toBe("node:sqlite DatabaseSync");
-      expect(inspect.counts.schema_migrations).toBe(1);
+      expect(inspect.counts.schema_migrations).toBe(2);
     });
   });
 
@@ -68,7 +73,7 @@ describe("SQLite Operational State v1", () => {
     first.close();
     const second = new RuntimeStateStore(config, fixedClock());
     second.initialize();
-    expect(second.inspect().counts.schema_migrations).toBe(1);
+    expect(second.inspect().counts.schema_migrations).toBe(2);
     second.close();
   });
 
@@ -368,5 +373,54 @@ describe("SQLite Operational State v1", () => {
     const root = tempRoot("state-proof-restart");
     const proof = await runRuntimeStateProof({ projectRoot: root, installationId: "installation_test", runtimeInstanceId: "runtime_test" });
     expect(proof.restartPersists).toBe(true);
+  });
+
+  it("default runtime state proof is isolated and repeatable", async () => {
+    const first = await runRuntimeStateProof({}, fixedClock());
+    const second = await runRuntimeStateProof({}, fixedClock());
+    expect(first.ok).toBe(true);
+    expect(second.ok).toBe(true);
+    expect(first.proofRoot).not.toBe(second.proofRoot);
+    expect(first.databasePath).not.toBe(second.databasePath);
+    expect(fs.existsSync(first.databasePath)).toBe(true);
+    expect(fs.existsSync(second.databasePath)).toBe(true);
+  });
+
+  it("default runtime state proof does not mutate an unrelated live database", async () => {
+    const root = tempRoot("state-proof-live-untouched");
+    const store = openRuntimeState({ projectRoot: root, installationId: "installation_live", runtimeInstanceId: "runtime_live" }, fixedClock());
+    const liveDatabasePath = store.inspect().databasePath;
+    store.close();
+    const beforeHash = sha256File(liveDatabasePath);
+
+    const proof = await runRuntimeStateProof({}, fixedClock());
+    expect(proof.ok).toBe(true);
+    expect(proof.databasePath).not.toBe(liveDatabasePath);
+    expect(sha256File(liveDatabasePath)).toBe(beforeHash);
+  });
+
+  it("a completed explicit proof attempt cannot interfere with a later default proof", async () => {
+    const root = tempRoot("state-proof-completed-isolation");
+    const explicit = await runRuntimeStateProof({ projectRoot: root, installationId: "installation_test", runtimeInstanceId: "runtime_test" }, fixedClock());
+    expect(explicit.ok).toBe(true);
+    const later = await runRuntimeStateProof({}, fixedClock());
+    expect(later.ok).toBe(true);
+    expect(later.databasePath).not.toBe(explicit.databasePath);
+  });
+
+  it("migration checksums remain stable across repeated initialization", () => {
+    const root = tempRoot("state-migration-checksum-stable");
+    const first = openRuntimeState({ projectRoot: root, installationId: "installation_test", runtimeInstanceId: "runtime_test" }, fixedClock());
+    const before = first.recoveryAll("SELECT version, name, checksum FROM schema_migrations ORDER BY version");
+    first.close();
+
+    const second = openRuntimeState({ projectRoot: root, installationId: "installation_test", runtimeInstanceId: "runtime_test" }, fixedClock());
+    try {
+      const after = second.recoveryAll("SELECT version, name, checksum FROM schema_migrations ORDER BY version");
+      expect(after).toEqual(before);
+      expect(after.map((row: any) => row.version)).toEqual([1, 2]);
+    } finally {
+      second.close();
+    }
   });
 });

@@ -123,6 +123,7 @@ Current repository candidates:
 | `packages/certs` | provisional; depends upward on console today |
 | `packages/autonomy` | review-required; mixes runtime orchestration and capability behavior |
 | `packages/runtime-state` | confirmed; SQLite Operational State v1 |
+| `packages/runtime-recovery` | confirmed; Persistent Runtime Recovery v1 |
 | `.sera-*` runtime directories | legacy/runtime-data; not source authority |
 
 Migration targets:
@@ -139,6 +140,7 @@ Valid components:
 
 - local Runtime Host
 - SQLite state store via `@sera/runtime-state`
+- persistent recovery coordinator via `@sera/runtime-recovery`
 - attempt ledger
 - evaluation runner
 - learning promotion record
@@ -171,7 +173,9 @@ Milestone 5A introduces persistent `installationId` and per-start `runtimeInstan
 
 Milestone 5B introduces local SQLite Operational State for command idempotency, attempt state, gate outcomes, evidence references, leases, backups, and deterministic exports.
 
-These Runtime milestones do not implement Hive Mode, networking, distributed discovery, remote workers, cloud execution, persistent attempt recovery, or Desktop authority.
+Milestone 5C introduces Persistent Runtime Recovery for checkpointed interrupted attempts, linked retries, review-required blocking, recovery evidence, and Runtime health integration.
+
+These Runtime milestones do not implement Hive Mode, networking, distributed discovery, remote workers, cloud execution, isolated execution, arbitrary subprocess workloads, or Desktop authority.
 
 ## Provider
 

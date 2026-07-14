@@ -25,6 +25,9 @@
                            "path":  "packages/runtime-state"
                        },
                        {
+                           "path":  "packages/runtime-recovery"
+                       },
+                       {
                            "path":  "packages/safety"
                        },
                        {

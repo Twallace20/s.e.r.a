@@ -77,6 +77,9 @@
       ],
       "@sera/runtime-state": [
         "packages/runtime-state/src/index.ts"
+      ],
+      "@sera/runtime-recovery": [
+        "packages/runtime-recovery/src/index.ts"
       ]
     }
   }

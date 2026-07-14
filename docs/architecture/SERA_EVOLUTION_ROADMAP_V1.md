@@ -65,8 +65,9 @@ The Base MVP milestone manifest is frozen:
 ```text
 totalMilestones: 16
 completedMilestones: 4
-remainingMilestones: 12
-currentMilestone: 5
+completedMilestones: 5
+remainingMilestones: 11
+currentMilestone: 6
 baseMvpCompletionMilestone: 16
 ```
 
@@ -80,13 +81,14 @@ Milestone 5 remains `Runtime Host and SQLite Operational State`.
 
 Milestone 5A is `Local Runtime Host v1`.
 
-After Milestone 5A:
+After Milestone 5C:
 
 ```text
 Milestone 5A - Local Runtime Host v1: COMPLETE
 Milestone 5B - SQLite Operational State v1: COMPLETE
-Milestone 5C - Persistent Runtime Recovery v1: NEXT
-Milestone 5 overall: IN PROGRESS
+Milestone 5C - Persistent Runtime Recovery v1: COMPLETE
+Milestone 5 overall: COMPLETE
+Milestone 6 - Isolated Execution Engine: NEXT
 ```
 
 ## Consolidation milestones
@@ -97,8 +99,8 @@ The locked implementation order is:
 2. Repository Snapshot — `repository-snapshot-v1` — implemented and locally proven as a deterministic Runtime-layer fact scanner that writes `.sera/repository/` evidence
 3. Repository Truth — `repository-truth-v1` — implemented and locally proven as the deterministic classification pass over Snapshot evidence
 4. Unified Control Plane — `local-control-plane-v1` — implemented and under validation as the permanent Runtime attempt, gate, evidence, terminal-decision, verification, and closeout authority; final completion requires the three support changes named in Base MVP Scope Lock
-5. Runtime Host and SQLite Operational State — `local-runtime-host-v1` completes Milestone 5A; `runtime-state-v1` completes Milestone 5B; Persistent Runtime Recovery v1 is Milestone 5C next; Milestone 5 remains in progress
-6. Isolated Execution — `isolated-execution-v1`
+5. Runtime Host and SQLite Operational State — `local-runtime-host-v1` completes Milestone 5A; `runtime-state-v1` completes Milestone 5B; `persistent-runtime-v1` completes Milestone 5C and Milestone 5
+6. Isolated Execution — `isolated-execution-v1` — NEXT
 7. Evaluation Engine — `evaluation-engine-v1`
 8. Ollama Model Runtime — `offline-model-runtime-v1`
 9. Knowledge and Multimodal Intake — `multimodal-evidence-runtime-v1`
