@@ -25,6 +25,9 @@
       "path": "../runtime-host"
     },
     {
+      "path": "../runtime-state"
+    },
+    {
       "path": "../shared"
     },
     {

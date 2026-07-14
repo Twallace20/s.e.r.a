@@ -74,6 +74,9 @@
       ],
       "@sera/runtime-host": [
         "packages/runtime-host/src/index.ts"
+      ],
+      "@sera/runtime-state": [
+        "packages/runtime-state/src/index.ts"
       ]
     }
   }

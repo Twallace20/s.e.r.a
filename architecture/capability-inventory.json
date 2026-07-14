@@ -105,7 +105,7 @@
         "runtime-control-plane"
       ],
       "certificationTarget": "runtime-host-v1",
-      "notes": "Local Runtime Host v1 starts Runtime Services in deterministic dependency order, preserves installation identity, creates per-start runtime instance identity, reports health, writes lifecycle evidence, and shuts down cleanly. It does not implement SQLite Operational State or attempt recovery."
+      "notes": "Local Runtime Host v1 starts Runtime Services in deterministic dependency order, preserves installation identity, creates per-start runtime instance identity, reports health, writes lifecycle evidence, and shuts down cleanly. SQLite Operational State is implemented as a separate required Runtime Service; persistent attempt recovery remains future work."
     },
     {
       "id": "sera-os-kernel",
@@ -206,14 +206,30 @@
     {
       "id": "runtime-state-store",
       "targetLayer": "Runtime",
-      "currentMaturity": "starter",
-      "status": "proposed",
+      "currentMaturity": "implemented",
+      "status": "certification-pending",
       "dependencies": [
         "sera-os-kernel",
-        "runtime-control-plane"
+        "runtime-control-plane",
+        "local-runtime-host",
+        "packages/runtime-state",
+        "apps/cli",
+        "packages/certs"
       ],
-      "certificationTarget": "local-state-store-v1",
-      "notes": "SQLite-backed local operational state. Existing JSON/JSONL stores are useful evidence but should converge behind one Runtime-owned state boundary."
+      "certificationTarget": "runtime-state-v1",
+      "evidence": [
+        "packages/runtime-state/src/runtime-state.ts",
+        "tests/runtime-state-v1.test.ts",
+        "docs/architecture/SQLITE_OPERATIONAL_STATE_V1.md"
+      ],
+      "limitations": [
+        "does not implement persistent attempt recovery",
+        "does not implement distributed coordination",
+        "does not use HTTP, network listeners, cloud services, or model calls",
+        "does not replace Unified Control Plane terminal-decision authority"
+      ],
+      "nextGate": "Persistent Runtime Recovery v1",
+      "notes": "SQLite-backed local operational state for command idempotency, attempts, transitions, gate outcomes, evidence references, leases, backups, deterministic exports, and integrity checks. Existing JSON/JSONL stores remain useful evidence but should converge behind one Runtime-owned state boundary over time."
     },
     {
       "id": "evaluation-engine",
