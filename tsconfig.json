@@ -19,6 +19,9 @@
                            "path":  "packages/control-plane"
                        },
                        {
+                           "path":  "packages/runtime-host"
+                       },
+                       {
                            "path":  "packages/safety"
                        },
                        {

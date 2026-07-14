@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import path from "node:path";
 import { SeraKernel } from "@sera/kernel";
+import { RuntimeHost, createDefaultRuntimeServices, createRuntimeConfig, loadOrCreateRuntimeIdentity, runRuntimeHostProof } from "@sera/runtime-host";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -72,6 +74,10 @@ Usage:
   sera control-plane run --spec <relative-json-file>
   sera control-plane verify --attempt <attempt-id-or-relative-path>
   sera control-plane closeout --attempt <attempt-id-or-relative-path>
+  sera runtime identity
+  sera runtime health
+  sera runtime start
+  sera runtime prove
   sera snapshot
   sera truth
 
@@ -113,6 +119,9 @@ NPM examples:
   npm run sera -- repository truth
   npm run sera -- control-plane inspect
   npm run sera -- control-plane run --spec .sera/control-plane/specs/example.json
+  npm run sera -- runtime identity
+  npm run sera -- runtime health
+  npm run sera -- runtime prove
 
 Secure base behavior:
   - runs locally
@@ -137,6 +146,7 @@ Secure base behavior:
   - Autonomous Dev Loop can propose bounded dev changes and only applies them behind validation gates
   - Operator Console summarizes health, evidence, tasks, knowledge, models, and autonomy from one local command
   - Unified Control Plane coordinates local attempts, stages, gates, evidence, verification, and closeout without shell execution
+  - Runtime Host starts local Runtime Services, reports health, preserves installation identity, and shuts down cleanly
   - does not require an LLM provider
 `);
 }
@@ -990,6 +1000,62 @@ async function main(): Promise<void> {
       process.exit(result.ok ? 0 : 1);
     }
     throw new Error("Control Plane command must be 'inspect', 'run', 'verify', or 'closeout'.");
+  }
+
+  if (cmd === "runtime") {
+    const [runtimeMode] = rest;
+    const config = createRuntimeConfig({ projectRoot: process.cwd() });
+    if (runtimeMode === "identity") {
+      const identity = loadOrCreateRuntimeIdentity(config);
+      console.log(JSON.stringify({
+        ok: true,
+        status: "COMPLETED",
+        identity,
+        identityLocation: path.join(config.stateRoot, "identity.json"),
+        modelUse: false,
+        networkUse: false
+      }, null, 2));
+      process.exit(0);
+    }
+    if (runtimeMode === "health" || runtimeMode === "prove") {
+      const proof = await runRuntimeHostProof(config);
+      console.log(JSON.stringify({
+        ok: proof.ok,
+        status: proof.status,
+        message: proof.message,
+        identity: proof.identity,
+        health: proof.health,
+        shutdown: proof.shutdown,
+        evidenceRoot: proof.evidenceRoot,
+        modelUse: false,
+        networkUse: false
+      }, null, 2));
+      process.exit(proof.ok ? 0 : 1);
+    }
+    if (runtimeMode === "start") {
+      const host = new RuntimeHost({ config, services: createDefaultRuntimeServices(config.projectRoot) });
+      const started = await host.start();
+      console.log(JSON.stringify({
+        ok: started.ok,
+        status: started.status,
+        message: started.message,
+        identity: started.identity,
+        health: started.health,
+        evidenceRoot: started.evidenceRoot,
+        modelUse: false,
+        networkUse: false
+      }, null, 2));
+      if (!started.ok) process.exit(1);
+      host.bindProcessSignals();
+      await new Promise<void>((resolve) => {
+        process.once("SIGINT", () => resolve());
+        process.once("SIGTERM", () => resolve());
+      });
+      const shutdown = await host.shutdown("Runtime Host CLI stop requested.");
+      console.log(JSON.stringify({ ok: shutdown.ok, status: shutdown.status, shutdown }, null, 2));
+      process.exit(shutdown.ok ? 0 : 1);
+    }
+    throw new Error("Runtime command must be 'identity', 'health', 'start', or 'prove'.");
   }
 
   if (cmd === "repository") {

@@ -97,6 +97,17 @@
   ],
   "targetSubsystems": [
     {
+      "id": "local-runtime-host",
+      "targetLayer": "Runtime",
+      "currentMaturity": "implemented",
+      "status": "certification-pending",
+      "dependencies": [
+        "runtime-control-plane"
+      ],
+      "certificationTarget": "runtime-host-v1",
+      "notes": "Local Runtime Host v1 starts Runtime Services in deterministic dependency order, preserves installation identity, creates per-start runtime instance identity, reports health, writes lifecycle evidence, and shuts down cleanly. It does not implement SQLite Operational State or attempt recovery."
+    },
+    {
       "id": "sera-os-kernel",
       "targetLayer": "Kernel",
       "currentMaturity": "starter",

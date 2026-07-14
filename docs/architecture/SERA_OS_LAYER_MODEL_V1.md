@@ -126,6 +126,7 @@ Current repository candidates:
 
 Migration targets:
 
+- `local-runtime-host`
 - `runtime-control-plane`
 - `repository-snapshot`
 - `repository-truth`
@@ -135,6 +136,7 @@ Migration targets:
 
 Valid components:
 
+- local Runtime Host
 - SQLite state store
 - attempt ledger
 - evaluation runner
