@@ -9,6 +9,7 @@ import { OperatorConsoleStore } from "@sera/operator-console";
 import { runRepositorySnapshot } from "@sera/repository-snapshot";
 import { runRepositoryTruth } from "@sera/repository-truth";
 import { ControlPlane, ControlPlaneAttemptSpec } from "@sera/control-plane";
+import { RuntimeHost, RuntimeService, createDefaultRuntimeServices, createRuntimeConfig, loadOrCreateRuntimeIdentity, normalizeRuntimeServices, runRuntimeHostProof } from "@sera/runtime-host";
 
 export interface CertCheck {
   id: string;
@@ -19,12 +20,12 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1";
   pass: boolean;
   checks: CertCheck[];
 }
 
-export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
+export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertReport> {
   const certRoot = path.join(rootDir, ".sera-cert");
   fs.mkdirSync(certRoot, { recursive: true });
   const sandboxRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-cert-"));
@@ -45,6 +46,7 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runRepositorySnapshotV1Checks());
   checks.push(...runRepositoryTruthV1Checks());
   checks.push(...runControlPlaneV1Checks());
+  checks.push(...await runRuntimeHostV1Checks());
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -61,10 +63,13 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   const repositorySnapshotV1ChecksPass = checks.filter((c) => c.id.startsWith("repository_snapshot_")).every((c) => c.pass);
   const repositoryTruthV1ChecksPass = checks.filter((c) => c.id.startsWith("repository_truth_")).every((c) => c.pass);
   const controlPlaneV1ChecksPass = checks.filter((c) => c.id.startsWith("control_plane_")).every((c) => c.pass);
+  const runtimeHostV1ChecksPass = checks.filter((c) => c.id.startsWith("runtime_host_")).every((c) => c.pass);
   void repositorySnapshotV1ChecksPass;
   void repositoryTruthV1ChecksPass;
   const pass = checks.every((c) => c.pass);
-  const level = pass && controlPlaneV1ChecksPass
+  const level = pass && runtimeHostV1ChecksPass
+    ? "runtime-host-v1"
+    : pass && controlPlaneV1ChecksPass
     ? "control-plane-v1"
     : pass && operatorConsoleV1ChecksPass
     ? "operator-console-v1"
@@ -1146,11 +1151,187 @@ function runControlPlaneV1Checks(): CertCheck[] {
   ];
 }
 
+async function runRuntimeHostV1Checks(): Promise<CertCheck[]> {
+  const checks: CertCheck[] = [];
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-runtime-host-cert-"));
+  fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({ name: "runtime-host-cert-root", private: true }), "utf8");
+  const config = createRuntimeConfig({ projectRoot: root });
+  const firstIdentity = loadOrCreateRuntimeIdentity(config);
+  const secondIdentity = loadOrCreateRuntimeIdentity(config);
+  checks.push({
+    id: "runtime_host_installation_identity_persists",
+    name: "Runtime Host installation identity persists",
+    pass: firstIdentity.installationId === secondIdentity.installationId,
+    detail: path.join(config.stateRoot, "identity.json")
+  });
+  checks.push({
+    id: "runtime_host_instance_identity_changes",
+    name: "Runtime Host instance identity changes per start",
+    pass: firstIdentity.runtimeInstanceId !== secondIdentity.runtimeInstanceId,
+    detail: `${firstIdentity.runtimeInstanceId} -> ${secondIdentity.runtimeInstanceId}`
+  });
+
+  const orderLog: string[] = [];
+  const orderedHost = new RuntimeHost({
+    config,
+    services: [
+      certService("dependent", orderLog, { dependencies: ["middle"] }),
+      certService("base", orderLog),
+      certService("middle", orderLog, { dependencies: ["base"] })
+    ]
+  });
+  const orderedStart = await orderedHost.start();
+  const orderedShutdown = await orderedHost.shutdown();
+  checks.push({
+    id: "runtime_host_dependency_start_order",
+    name: "Runtime Host starts dependencies before dependents",
+    pass: orderedStart.ok && orderedStart.serviceOrder.join(",") === "base,middle,dependent" && orderLog.slice(0, 3).join(",") === "start:base,start:middle,start:dependent",
+    detail: orderLog.join(",")
+  });
+  checks.push({
+    id: "runtime_host_reverse_shutdown_order",
+    name: "Runtime Host stops dependents before dependencies",
+    pass: orderedShutdown.ok && orderedShutdown.stoppedServices.join(",") === "dependent,middle,base" && orderLog.slice(3).join(",") === "stop:dependent,stop:middle,stop:base",
+    detail: orderLog.join(",")
+  });
+
+  checks.push({
+    id: "runtime_host_missing_dependency_blocks",
+    name: "Runtime Host blocks missing service dependencies",
+    pass: throwsRuntimeHost(() => normalizeRuntimeServices([certService("needs-missing", [], { dependencies: ["missing"] })])),
+    detail: "missing dependency rejected"
+  });
+  checks.push({
+    id: "runtime_host_cycle_blocks",
+    name: "Runtime Host blocks dependency cycles",
+    pass: throwsRuntimeHost(() => normalizeRuntimeServices([certService("a", [], { dependencies: ["b"] }), certService("b", [], { dependencies: ["a"] })])),
+    detail: "cycle rejected"
+  });
+
+  const failureLog: string[] = [];
+  const failureHost = new RuntimeHost({
+    config: createRuntimeConfig({ projectRoot: root, evidenceRoot: path.join(root, ".sera", "runtime-host-failure") }),
+    services: [
+      certService("started", failureLog),
+      certService("fails", failureLog, {
+        dependencies: ["started"],
+        start: () => {
+          failureLog.push("start:fails");
+          throw new Error("required failure");
+        }
+      }),
+      certService("later", failureLog, { dependencies: ["fails"] })
+    ]
+  });
+  const failureStart = await failureHost.start();
+  checks.push({
+    id: "runtime_host_required_failure_cleans_up",
+    name: "Runtime Host blocks required failure and cleans up partial startup",
+    pass: !failureStart.ok && failureStart.status === "blocked" && failureStart.failedServiceId === "fails" && failureLog.join(",") === "start:started,start:fails,stop:started",
+    detail: failureLog.join(",")
+  });
+
+  const optionalLog: string[] = [];
+  const optionalHost = new RuntimeHost({
+    config: createRuntimeConfig({ projectRoot: root, evidenceRoot: path.join(root, ".sera", "runtime-host-optional") }),
+    services: [
+      certService("required", optionalLog),
+      certService("optional", optionalLog, {
+        required: false,
+        start: () => {
+          optionalLog.push("start:optional");
+          throw new Error("optional failure");
+        }
+      })
+    ]
+  });
+  const optionalStart = await optionalHost.start();
+  const optionalHealth = await optionalHost.health();
+  await optionalHost.shutdown();
+  checks.push({
+    id: "runtime_host_optional_failure_degrades",
+    name: "Runtime Host degrades on optional service failure",
+    pass: optionalStart.ok && optionalHealth.status === "degraded",
+    detail: optionalHealth.status
+  });
+
+  const idempotentLog: string[] = [];
+  const idempotentHost = new RuntimeHost({ config: createRuntimeConfig({ projectRoot: root, evidenceRoot: path.join(root, ".sera", "runtime-host-idempotent") }), services: [certService("idempotent", idempotentLog)] });
+  await idempotentHost.start();
+  const firstShutdown = await idempotentHost.shutdown();
+  const secondShutdown = await idempotentHost.shutdown();
+  checks.push({
+    id: "runtime_host_shutdown_idempotent",
+    name: "Runtime Host shutdown is idempotent",
+    pass: firstShutdown.ok && secondShutdown.ok && idempotentLog.join(",") === "start:idempotent,stop:idempotent",
+    detail: idempotentLog.join(",")
+  });
+
+  const proofRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-runtime-host-proof-cert-"));
+  fs.writeFileSync(path.join(proofRoot, "package.json"), JSON.stringify({ name: "runtime-host-proof", private: true }), "utf8");
+  const proof = await runRuntimeHostProof({ projectRoot: proofRoot });
+  const evidenceRoot = proof.evidenceRoot ?? "";
+  checks.push({
+    id: "runtime_host_evidence_complete",
+    name: "Runtime Host writes complete lifecycle evidence",
+    pass: proof.ok && ["identity.json", "configuration.json", "lifecycle-events.jsonl", "service-health.json", "final-runtime-report.json"].every((file) => fs.existsSync(path.join(evidenceRoot, file))),
+    detail: evidenceRoot
+  });
+  checks.push({
+    id: "runtime_host_non_git_operation",
+    name: "Runtime Host works without a Git repository",
+    pass: proof.ok && !fs.existsSync(path.join(proofRoot, ".git")),
+    detail: proofRoot
+  });
+  checks.push({
+    id: "runtime_host_offline_operation",
+    name: "Runtime Host records offline model/network posture",
+    pass: proof.ok && proof.modelUse === false && proof.networkUse === false && proof.identity?.permissionProfile === "offline-local" && proof.identity.networkPolicy === "offline-strict",
+    detail: JSON.stringify({ modelUse: proof.modelUse, networkUse: proof.networkUse, permissionProfile: proof.identity?.permissionProfile, networkPolicy: proof.identity?.networkPolicy })
+  });
+  const controlHealth = proof.health?.services.find((item) => item.serviceId === "unified-control-plane");
+  checks.push({
+    id: "runtime_host_control_plane_service_healthy",
+    name: "Runtime Host hosts Unified Control Plane as a required service",
+    pass: proof.ok && controlHealth?.status === "healthy" && controlHealth.details?.authority === "attempts-terminal-decisions-validation-evidence-closeout",
+    detail: JSON.stringify(controlHealth)
+  });
+
+  return checks;
+}
+
+function certService(id: string, log: string[], overrides: Partial<RuntimeService> = {}): RuntimeService {
+  return {
+    id,
+    version: "cert-v1",
+    required: overrides.required ?? true,
+    dependencies: overrides.dependencies ?? [],
+    start: overrides.start ?? (() => { log.push(`start:${id}`); }),
+    health: overrides.health ?? (() => ({ serviceId: id, status: "healthy", checkedAt: new Date().toISOString() })),
+    stop: overrides.stop ?? (() => { log.push(`stop:${id}`); }),
+    startupTimeoutMs: overrides.startupTimeoutMs,
+    shutdownTimeoutMs: overrides.shutdownTimeoutMs
+  };
+}
+
+function throwsRuntimeHost(action: () => unknown): boolean {
+  try {
+    action();
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 if (require.main === module) {
-  const report = runSecureBaseCert(process.cwd());
+  runSecureBaseCert(process.cwd()).then((report) => {
   console.log(`S.E.R.A. certify: ${report.pass ? "PASS" : "FAIL"} level=${report.level}`);
   for (const check of report.checks) {
     console.log(`${check.pass ? "✓" : "✗"} ${check.id} — ${check.detail}`);
   }
   process.exit(report.pass ? 0 : 1);
+  }).catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
 }

@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `control-plane-v1`.
+Current runtime certification: `runtime-host-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -23,6 +23,7 @@ Certified runtime ladder completed so far:
 - `autonomous-dev-loop-v1`
 - `operator-console-v1`
 - `control-plane-v1`
+- `runtime-host-v1`
 
 Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
@@ -71,6 +72,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - deterministic mock model provider adapter
 - bounded autonomous dev loop proposal and validation-gated apply modes
 - local operator console status, health, history, summary, and report commands
+- local Runtime Host identity, health, proof, lifecycle evidence, and Control Plane service hosting
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
@@ -91,6 +93,8 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - no multi-file transaction worker yet
 - no cloud dependency
 - no database requirement
+- no SQLite Operational State yet
+- no persistent attempt recovery yet
 - no automatic lesson activation
 - no automatic task execution
 - no silent lesson-driven behavior changes
@@ -108,10 +112,10 @@ npm run knowledge:verify
 npm run verify
 ```
 
-Expected current certification result after Phase 12, Phase 13 docs alignment, Phase 14 CI gate setup, and Phase 15 knowledge source mapping:
+Expected current certification result:
 
 ```text
-S.E.R.A. certify: PASS level=operator-console-v1
+S.E.R.A. certify: PASS level=runtime-host-v1
 ```
 
 ## Starter secure-base run
@@ -165,6 +169,16 @@ npm run sera -- control-plane closeout --attempt <attempt-id-or-relative-path>
 ```
 
 Control Plane writes `.sera/control-plane/` runtime evidence. It consumes Repository Snapshot and Repository Truth identities as baseline evidence, does not duplicate their logic, does not execute shell commands, does not perform Git actions, and does not invoke models or use the network.
+
+Local Runtime Host starts bounded Runtime Services, preserves installation identity, creates a new runtime instance identity per start, reports aggregate health, writes `.sera/runtime-host/` evidence, and shuts down services in reverse dependency order:
+
+```bash
+npm run sera -- runtime identity
+npm run sera -- runtime health
+npm run sera -- runtime prove
+```
+
+Runtime Host can expose Unified Control Plane as a required Runtime Service without moving attempt, terminal-decision, validation, evidence, or closeout authority out of Control Plane.
 
 ## Developer Worker v2 and Self-Improvement Loop v1
 
@@ -222,6 +236,7 @@ Nothing gets called working unless it has:
 - `@sera/repository-snapshot` — deterministic repository fact inventory
 - `@sera/repository-truth` — deterministic repository truth classification over Snapshot evidence
 - `@sera/control-plane` — local attempt, stage, gate, evidence, terminal-decision, verification, and closeout authority
+- `@sera/runtime-host` — local Runtime Service lifecycle, identity, health, cancellation, shutdown, and evidence
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1

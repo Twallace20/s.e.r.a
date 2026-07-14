@@ -9,6 +9,7 @@ coverage/
 .sera/repository/
 .sera/repository-truth/
 .sera/control-plane/
+.sera/runtime-host/
 .sera-local/
 *.log
 .DS_Store

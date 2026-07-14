@@ -166,6 +166,7 @@ const DEFAULT_EXCLUSIONS = [
   ".sera/repository",
   ".sera/repository-truth",
   ".sera/control-plane",
+  ".sera/runtime-host",
   ".sera-runs",
   ".sera-cert",
   ".sera-local",

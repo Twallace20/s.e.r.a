@@ -22,6 +22,9 @@
       "path": "../control-plane"
     },
     {
+      "path": "../runtime-host"
+    },
+    {
       "path": "../shared"
     },
     {

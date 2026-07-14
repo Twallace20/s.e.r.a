@@ -71,6 +71,9 @@
       ],
       "@sera/control-plane": [
         "packages/control-plane/src/index.ts"
+      ],
+      "@sera/runtime-host": [
+        "packages/runtime-host/src/index.ts"
       ]
     }
   }
