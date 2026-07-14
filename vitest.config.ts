@@ -16,7 +16,8 @@ export default defineConfig({
       "@sera/repository-snapshot": r("./packages/repository-snapshot/src/index.ts"),
       "@sera/repository-truth": r("./packages/repository-truth/src/index.ts"),
       "@sera/control-plane": r("./packages/control-plane/src/index.ts"),
-      "@sera/runtime-host": r("./packages/runtime-host/src/index.ts")
+      "@sera/runtime-host": r("./packages/runtime-host/src/index.ts"),
+      "@sera/runtime-state": r("./packages/runtime-state/src/index.ts")
     }
   },
   test: {

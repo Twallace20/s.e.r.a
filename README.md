@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `runtime-host-v1`.
+Current runtime certification: `runtime-state-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -24,6 +24,7 @@ Certified runtime ladder completed so far:
 - `operator-console-v1`
 - `control-plane-v1`
 - `runtime-host-v1`
+- `runtime-state-v1`
 
 Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
@@ -73,6 +74,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - bounded autonomous dev loop proposal and validation-gated apply modes
 - local operator console status, health, history, summary, and report commands
 - local Runtime Host identity, health, proof, lifecycle evidence, and Control Plane service hosting
+- local SQLite Operational State for command idempotency, attempt state, gates, evidence references, leases, backups, and deterministic exports
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
@@ -92,8 +94,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - no semantic code refactoring
 - no multi-file transaction worker yet
 - no cloud dependency
-- no database requirement
-- no SQLite Operational State yet
+- no external database requirement
 - no persistent attempt recovery yet
 - no automatic lesson activation
 - no automatic task execution
@@ -115,7 +116,7 @@ npm run verify
 Expected current certification result:
 
 ```text
-S.E.R.A. certify: PASS level=runtime-host-v1
+S.E.R.A. certify: PASS level=runtime-state-v1
 ```
 
 ## Starter secure-base run
@@ -180,6 +181,19 @@ npm run sera -- runtime prove
 
 Runtime Host can expose Unified Control Plane as a required Runtime Service without moving attempt, terminal-decision, validation, evidence, or closeout authority out of Control Plane.
 
+SQLite Operational State provides the local Runtime-owned state boundary for command idempotency, attempts, gate outcomes, evidence references, leases, integrity checks, backups, and deterministic exports:
+
+```bash
+npm run sera -- state init
+npm run sera -- state inspect
+npm run sera -- state prove
+npm run sera -- state integrity
+npm run sera -- state backup
+npm run sera -- state export
+```
+
+Operational State is local-only and uses Node's built-in SQLite runtime. It does not add persistent recovery, distributed coordination, network listeners, model invocation, Git authority, or Control Plane terminal-decision authority.
+
 ## Developer Worker v2 and Self-Improvement Loop v1
 
 Inspect mode fingerprints a file without changing it:
@@ -237,6 +251,7 @@ Nothing gets called working unless it has:
 - `@sera/repository-truth` — deterministic repository truth classification over Snapshot evidence
 - `@sera/control-plane` — local attempt, stage, gate, evidence, terminal-decision, verification, and closeout authority
 - `@sera/runtime-host` — local Runtime Service lifecycle, identity, health, cancellation, shutdown, and evidence
+- `@sera/runtime-state` — local SQLite Operational State for attempts, gates, evidence references, command idempotency, leases, backups, and exports
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1

@@ -2,7 +2,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { SeraKernel } from "@sera/kernel";
-import { RuntimeHost, createDefaultRuntimeServices, createRuntimeConfig, loadOrCreateRuntimeIdentity, runRuntimeHostProof } from "@sera/runtime-host";
+import { RuntimeHost, createRuntimeConfig, loadOrCreateRuntimeIdentity, runRuntimeHostProof } from "@sera/runtime-host";
+import { createRuntimeStateConfig, createRuntimeStateEnabledServices, openRuntimeState, runRuntimeStateProof } from "@sera/runtime-state";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -78,6 +79,12 @@ Usage:
   sera runtime health
   sera runtime start
   sera runtime prove
+  sera state init
+  sera state inspect
+  sera state prove
+  sera state integrity
+  sera state backup
+  sera state export
   sera snapshot
   sera truth
 
@@ -122,6 +129,7 @@ NPM examples:
   npm run sera -- runtime identity
   npm run sera -- runtime health
   npm run sera -- runtime prove
+  npm run sera -- state prove
 
 Secure base behavior:
   - runs locally
@@ -147,6 +155,7 @@ Secure base behavior:
   - Operator Console summarizes health, evidence, tasks, knowledge, models, and autonomy from one local command
   - Unified Control Plane coordinates local attempts, stages, gates, evidence, verification, and closeout without shell execution
   - Runtime Host starts local Runtime Services, reports health, preserves installation identity, and shuts down cleanly
+  - SQLite Operational State stores durable local command, attempt, gate, evidence, lease, migration, backup, and export records
   - does not require an LLM provider
 `);
 }
@@ -1018,7 +1027,7 @@ async function main(): Promise<void> {
       process.exit(0);
     }
     if (runtimeMode === "health" || runtimeMode === "prove") {
-      const proof = await runRuntimeHostProof(config);
+      const proof = await runRuntimeHostProof(config, createRuntimeStateEnabledServices(config.projectRoot));
       console.log(JSON.stringify({
         ok: proof.ok,
         status: proof.status,
@@ -1033,7 +1042,7 @@ async function main(): Promise<void> {
       process.exit(proof.ok ? 0 : 1);
     }
     if (runtimeMode === "start") {
-      const host = new RuntimeHost({ config, services: createDefaultRuntimeServices(config.projectRoot) });
+      const host = new RuntimeHost({ config, services: createRuntimeStateEnabledServices(config.projectRoot) });
       const started = await host.start();
       console.log(JSON.stringify({
         ok: started.ok,
@@ -1056,6 +1065,59 @@ async function main(): Promise<void> {
       process.exit(shutdown.ok ? 0 : 1);
     }
     throw new Error("Runtime command must be 'identity', 'health', 'start', or 'prove'.");
+  }
+
+  if (cmd === "state") {
+    const [stateMode] = rest;
+    const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
+    if (stateMode === "init" || stateMode === "inspect" || stateMode === "integrity") {
+      const store = openRuntimeState(config);
+      try {
+        const result = stateMode === "integrity" ? store.integrity() : store.inspect();
+        console.log(JSON.stringify({
+          ok: result.ok,
+          status: result.status,
+          message: result.message,
+          databasePath: result.databasePath,
+          schemaVersion: result.schemaVersion,
+          sqlite: result.sqlite,
+          counts: result.counts,
+          leases: result.leases,
+          lastEvent: result.lastEvent,
+          modelUse: false,
+          networkUse: false
+        }, null, 2));
+        process.exit(result.ok ? 0 : 1);
+      } finally {
+        store.close();
+      }
+    }
+    if (stateMode === "prove") {
+      const result = await runRuntimeStateProof(config);
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (stateMode === "backup") {
+      const store = openRuntimeState(config);
+      try {
+        const result = store.backup();
+        console.log(JSON.stringify({ ok: true, status: "healthy", backup: { path: result.path, sha256: result.sha256, bytes: result.bytes }, modelUse: false, networkUse: false }, null, 2));
+        process.exit(0);
+      } finally {
+        store.close();
+      }
+    }
+    if (stateMode === "export") {
+      const store = openRuntimeState(config);
+      try {
+        const result = store.exportJson();
+        console.log(JSON.stringify({ ok: true, status: "healthy", export: { path: result.path, sha256: result.sha256, recordCounts: result.recordCounts }, modelUse: false, networkUse: false }, null, 2));
+        process.exit(0);
+      } finally {
+        store.close();
+      }
+    }
+    throw new Error("State command must be 'init', 'inspect', 'prove', 'integrity', 'backup', or 'export'.");
   }
 
   if (cmd === "repository") {

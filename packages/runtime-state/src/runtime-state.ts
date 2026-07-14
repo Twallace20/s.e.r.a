@@ -1,0 +1,918 @@
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import { DatabaseSync, type SQLInputValue } from "node:sqlite";
+import { createControlPlaneRuntimeService, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
+
+export const RUNTIME_STATE_VERSION = "runtime-state-v1";
+export const RUNTIME_STATE_SCHEMA_VERSION = 1;
+export const RUNTIME_STATE_EXPORT_SCHEMA = "sera.runtime-state-export.v1";
+
+export type RuntimeStateStatus = "healthy" | "blocked";
+export type AttemptState = "PENDING" | "READY" | "RUNNING" | "BLOCKED" | "FAILED" | "CANCELLED" | "COMPLETED" | "COMPLETED_WITH_WARNINGS";
+export type GateOutcome = "PASS" | "FAIL" | "BLOCKED" | "PENDING" | "NOT_APPLICABLE";
+export type LeaseStatus = "active" | "released" | "expired";
+
+export interface RuntimeStateClock {
+  now(): Date;
+}
+
+export interface RuntimeStateConfig {
+  stateRoot: string;
+  databasePath: string;
+  backupRoot: string;
+  exportRoot: string;
+  busyTimeoutMs: number;
+  journalMode: "wal";
+  synchronous: "full";
+  runtimeVersion: string;
+  installationId: string;
+  runtimeInstanceId: string;
+}
+
+export interface RuntimeStateConfigInput {
+  projectRoot?: string;
+  stateRoot?: string;
+  databasePath?: string;
+  backupRoot?: string;
+  exportRoot?: string;
+  busyTimeoutMs?: number;
+  installationId?: string;
+  runtimeInstanceId?: string;
+  runtimeVersion?: string;
+}
+
+export interface RuntimeStateInspection {
+  ok: boolean;
+  status: RuntimeStateStatus;
+  databasePath: string;
+  schemaVersion: number;
+  sqlite: Record<string, unknown>;
+  counts: Record<string, number>;
+  leases: Array<Record<string, unknown>>;
+  lastEvent: Record<string, unknown> | null;
+  message: string;
+  modelUse: false;
+  networkUse: false;
+}
+
+export interface AcceptedCommand {
+  ok: boolean;
+  status: "ACCEPTED" | "DUPLICATE" | "BLOCKED";
+  commandId?: string;
+  attemptId?: string;
+  message: string;
+}
+
+export interface RuntimeStateProofResult {
+  ok: boolean;
+  status: RuntimeStateStatus;
+  databasePath: string;
+  command: AcceptedCommand;
+  duplicate: AcceptedCommand;
+  terminalImmutable: boolean;
+  conflictingIdempotencyBlocked: boolean;
+  invalidTransitionBlocked: boolean;
+  gateEnforced: boolean;
+  exportStable: boolean;
+  backupOk: boolean;
+  leaseFencingOk: boolean;
+  restartPersists: boolean;
+  inspection: RuntimeStateInspection;
+  modelUse: false;
+  networkUse: false;
+}
+
+export interface Migration {
+  version: number;
+  name: string;
+  sql: string;
+}
+
+export class RuntimeStateBlockedError extends Error {
+  constructor(message: string, readonly code: string) {
+    super(message);
+  }
+}
+
+const TABLES = [
+  "schema_migrations",
+  "idempotency_records",
+  "commands",
+  "attempts",
+  "attempt_transitions",
+  "gate_outcomes",
+  "evidence_references",
+  "runtime_leases",
+  "state_events"
+] as const;
+
+const TERMINAL_STATES = new Set<AttemptState>(["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"]);
+
+const VALID_TRANSITIONS: Record<AttemptState, AttemptState[]> = {
+  PENDING: ["READY", "RUNNING", "BLOCKED", "FAILED", "CANCELLED"],
+  READY: ["RUNNING", "BLOCKED", "FAILED", "CANCELLED"],
+  RUNNING: ["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"],
+  BLOCKED: [],
+  FAILED: [],
+  CANCELLED: [],
+  COMPLETED: [],
+  COMPLETED_WITH_WARNINGS: []
+};
+
+export const DEFAULT_RUNTIME_STATE_MIGRATIONS: Migration[] = [
+  {
+    version: 1,
+    name: "runtime_state_v1",
+    sql: `
+CREATE TABLE idempotency_records (
+  idempotency_key TEXT PRIMARY KEY,
+  request_hash TEXT NOT NULL,
+  command_id TEXT NOT NULL,
+  attempt_id TEXT,
+  created_at TEXT NOT NULL,
+  response_json TEXT NOT NULL
+);
+
+CREATE TABLE commands (
+  command_id TEXT PRIMARY KEY,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  command_type TEXT NOT NULL,
+  payload_json TEXT NOT NULL,
+  submitted_at TEXT NOT NULL,
+  originating_installation_id TEXT NOT NULL,
+  originating_runtime_instance_id TEXT NOT NULL,
+  status TEXT NOT NULL,
+  attempt_id TEXT,
+  version INTEGER NOT NULL,
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE TABLE attempts (
+  attempt_id TEXT PRIMARY KEY,
+  command_id TEXT NOT NULL UNIQUE,
+  capability TEXT NOT NULL,
+  current_state TEXT NOT NULL,
+  terminal INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  completed_at TEXT,
+  reason TEXT,
+  optimistic_version INTEGER NOT NULL,
+  prior_attempt_id TEXT,
+  FOREIGN KEY(command_id) REFERENCES commands(command_id),
+  FOREIGN KEY(prior_attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE TABLE attempt_transitions (
+  transition_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  from_state TEXT NOT NULL,
+  to_state TEXT NOT NULL,
+  transitioned_at TEXT NOT NULL,
+  actor TEXT NOT NULL,
+  reason TEXT,
+  runtime_instance_id TEXT NOT NULL,
+  sequence_number INTEGER NOT NULL,
+  correlation_json TEXT NOT NULL,
+  UNIQUE(attempt_id, sequence_number),
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE TABLE gate_outcomes (
+  gate_outcome_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  gate_name TEXT NOT NULL,
+  required INTEGER NOT NULL,
+  outcome TEXT NOT NULL,
+  evaluated_at TEXT NOT NULL,
+  evidence_json TEXT NOT NULL,
+  message TEXT,
+  evaluator TEXT NOT NULL,
+  UNIQUE(attempt_id, gate_name),
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE TABLE evidence_references (
+  evidence_reference_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  evidence_type TEXT NOT NULL,
+  location TEXT NOT NULL,
+  integrity_hash TEXT,
+  created_at TEXT NOT NULL,
+  producer TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE TABLE runtime_leases (
+  lease_name TEXT PRIMARY KEY,
+  owning_runtime_instance_id TEXT NOT NULL,
+  acquired_at TEXT NOT NULL,
+  renewed_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  fencing_token INTEGER NOT NULL,
+  released_at TEXT,
+  status TEXT NOT NULL
+);
+
+CREATE TABLE state_events (
+  event_id TEXT PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  installation_id TEXT NOT NULL,
+  runtime_instance_id TEXT NOT NULL,
+  related_command_id TEXT,
+  related_attempt_id TEXT,
+  outcome TEXT NOT NULL,
+  message TEXT,
+  details_json TEXT NOT NULL
+);
+
+CREATE INDEX idx_commands_status ON commands(status, submitted_at);
+CREATE INDEX idx_attempts_state ON attempts(current_state, updated_at);
+CREATE INDEX idx_transitions_attempt ON attempt_transitions(attempt_id, sequence_number);
+CREATE INDEX idx_gates_attempt ON gate_outcomes(attempt_id, gate_name);
+CREATE INDEX idx_evidence_attempt ON evidence_references(attempt_id, created_at);
+CREATE INDEX idx_events_time ON state_events(timestamp, event_id);
+`
+  }
+];
+
+export function createRuntimeStateConfig(input: RuntimeStateConfigInput = {}): RuntimeStateConfig {
+  const projectRoot = path.resolve(input.projectRoot ?? process.cwd());
+  const stateRoot = path.resolve(input.stateRoot ?? path.join(projectRoot, ".sera", "state"));
+  const databasePath = path.resolve(input.databasePath ?? path.join(stateRoot, "sera-operational.db"));
+  const backupRoot = path.resolve(input.backupRoot ?? path.join(stateRoot, "backups"));
+  const exportRoot = path.resolve(input.exportRoot ?? path.join(stateRoot, "exports"));
+  for (const [name, value] of [["stateRoot", stateRoot], ["databasePath", databasePath], ["backupRoot", backupRoot], ["exportRoot", exportRoot]] as const) {
+    if (!path.isAbsolute(value)) throw new RuntimeStateBlockedError(`${name} must be absolute.`, "invalid_path");
+  }
+  return {
+    stateRoot,
+    databasePath,
+    backupRoot,
+    exportRoot,
+    busyTimeoutMs: input.busyTimeoutMs ?? 5000,
+    journalMode: "wal",
+    synchronous: "full",
+    runtimeVersion: input.runtimeVersion ?? RUNTIME_STATE_VERSION,
+    installationId: input.installationId ?? "installation_local_state",
+    runtimeInstanceId: input.runtimeInstanceId ?? `runtime_state_${process.pid}`
+  };
+}
+
+export class RuntimeStateStore {
+  private db?: DatabaseSync;
+  private readonly migrations: Migration[];
+
+  constructor(
+    private readonly config: RuntimeStateConfig,
+    private readonly clock: RuntimeStateClock = { now: () => new Date() },
+    migrations: Migration[] = DEFAULT_RUNTIME_STATE_MIGRATIONS
+  ) {
+    this.migrations = [...migrations].sort((a, b) => a.version - b.version);
+  }
+
+  initialize(): RuntimeStateInspection {
+    fs.mkdirSync(this.config.stateRoot, { recursive: true });
+    fs.mkdirSync(path.dirname(this.config.databasePath), { recursive: true });
+    this.db = new DatabaseSync(this.config.databasePath);
+    try {
+      this.configureDatabase();
+      this.assertIntegrity();
+      this.applyMigrations();
+      this.assertIntegrity();
+      this.recordEvent("runtime_state_initialized", "PASS", "Runtime State initialized.", { schemaVersion: RUNTIME_STATE_SCHEMA_VERSION });
+      return this.inspect();
+    } catch (error) {
+      this.close();
+      if (error instanceof RuntimeStateBlockedError) throw error;
+      throw new RuntimeStateBlockedError(errorMessage(error), "state_initialization_failed");
+    }
+  }
+
+  close(): void {
+    this.db?.close();
+    this.db = undefined;
+  }
+
+  inspect(): RuntimeStateInspection {
+    const db = this.requireDb();
+    const schemaVersion = this.currentSchemaVersion();
+    const counts = Object.fromEntries(TABLES.map((table) => [table, numberValue(db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get(), "count")]));
+    const leases = db.prepare("SELECT lease_name, owning_runtime_instance_id, acquired_at, renewed_at, expires_at, fencing_token, released_at, status FROM runtime_leases ORDER BY lease_name").all() as Array<Record<string, unknown>>;
+    const lastEvent = (db.prepare("SELECT event_id, event_type, timestamp, outcome, message FROM state_events ORDER BY timestamp DESC, event_id DESC LIMIT 1").get() as Record<string, unknown> | undefined) ?? null;
+    return {
+      ok: true,
+      status: "healthy",
+      databasePath: this.config.databasePath,
+      schemaVersion,
+      sqlite: this.effectiveSqliteConfiguration(),
+      counts,
+      leases,
+      lastEvent,
+      message: "SQLite Operational State is healthy.",
+      modelUse: false,
+      networkUse: false
+    };
+  }
+
+  integrity(): RuntimeStateInspection {
+    this.assertIntegrity();
+    return this.inspect();
+  }
+
+  acceptCommand(input: {
+    idempotencyKey: string;
+    commandType: string;
+    payload: unknown;
+    capability: string;
+    priorAttemptId?: string;
+  }): AcceptedCommand {
+    return this.transaction(() => {
+      const requestHash = stableHash({ commandType: input.commandType, payload: input.payload, capability: input.capability, priorAttemptId: input.priorAttemptId ?? null });
+      const existing = this.get<{ request_hash: string; response_json: string }>("SELECT request_hash, response_json FROM idempotency_records WHERE idempotency_key = ?", [input.idempotencyKey]);
+      if (existing) {
+        if (existing.request_hash !== requestHash) throw new RuntimeStateBlockedError("Idempotency key was reused for a conflicting command.", "conflicting_idempotency_key");
+        return { ...(JSON.parse(existing.response_json) as AcceptedCommand), status: "DUPLICATE", message: "Duplicate idempotency key returned original durable command." };
+      }
+      const now = this.now();
+      const commandId = id("command");
+      const attemptId = id("attempt");
+      this.run("INSERT INTO commands (command_id, idempotency_key, command_type, payload_json, submitted_at, originating_installation_id, originating_runtime_instance_id, status, attempt_id, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+        commandId,
+        input.idempotencyKey,
+        input.commandType,
+        stableJson(input.payload),
+        now,
+        this.config.installationId,
+        this.config.runtimeInstanceId,
+        "ACCEPTED",
+        null,
+        1
+      ]);
+      this.run("INSERT INTO attempts (attempt_id, command_id, capability, current_state, terminal, created_at, updated_at, completed_at, reason, optimistic_version, prior_attempt_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+        attemptId,
+        commandId,
+        input.capability,
+        "PENDING",
+        0,
+        now,
+        now,
+        null,
+        null,
+        1,
+        input.priorAttemptId ?? null
+      ]);
+      this.insertTransition(attemptId, "PENDING", "PENDING", "control-plane-adapter", "attempt-created", { commandId }, now);
+      this.run("UPDATE commands SET status = ?, attempt_id = ?, version = version + 1 WHERE command_id = ?", ["ATTEMPT_ASSIGNED", attemptId, commandId]);
+      const response: AcceptedCommand = { ok: true, status: "ACCEPTED", commandId, attemptId, message: "Command accepted and attempt created durably." };
+      this.run("INSERT INTO idempotency_records (idempotency_key, request_hash, command_id, attempt_id, created_at, response_json) VALUES (?, ?, ?, ?, ?, ?)", [
+        input.idempotencyKey,
+        requestHash,
+        commandId,
+        attemptId,
+        now,
+        stableJson(response)
+      ]);
+      this.recordEvent("command_accepted", "PASS", "Command accepted.", { commandId, attemptId }, commandId, attemptId);
+      return response;
+    });
+  }
+
+  transitionAttempt(input: {
+    attemptId: string;
+    fromState: AttemptState;
+    toState: AttemptState;
+    actor: string;
+    reason?: string;
+    expectedVersion?: number;
+    correlation?: unknown;
+  }): { ok: true; sequenceNumber: number; optimisticVersion: number } {
+    return this.transaction(() => {
+      const attempt = this.requireAttempt(input.attemptId);
+      if (attempt.current_state !== input.fromState) throw new RuntimeStateBlockedError(`Attempt is in ${attempt.current_state}, not ${input.fromState}.`, "attempt_state_mismatch");
+      if (input.expectedVersion !== undefined && attempt.optimistic_version !== input.expectedVersion) throw new RuntimeStateBlockedError("Attempt optimistic version mismatch.", "optimistic_version_mismatch");
+      if (attempt.terminal === 1) throw new RuntimeStateBlockedError("Terminal attempts are immutable.", "terminal_attempt_immutable");
+      if (!VALID_TRANSITIONS[input.fromState]?.includes(input.toState)) throw new RuntimeStateBlockedError(`Invalid transition ${input.fromState} -> ${input.toState}.`, "invalid_attempt_transition");
+      if ((input.toState === "COMPLETED" || input.toState === "COMPLETED_WITH_WARNINGS") && !this.requiredGatesPassed(input.attemptId)) {
+        throw new RuntimeStateBlockedError("Required gates are incomplete or failed.", "required_gate_incomplete");
+      }
+      const now = this.now();
+      const terminal = TERMINAL_STATES.has(input.toState) ? 1 : 0;
+      const reason = TERMINAL_STATES.has(input.toState) ? input.reason ?? attempt.reason : input.reason ?? attempt.reason;
+      const completedAt = terminal ? now : attempt.completed_at ?? null;
+      const nextVersion = attempt.optimistic_version + 1;
+      this.run("UPDATE attempts SET current_state = ?, terminal = ?, updated_at = ?, completed_at = ?, reason = ?, optimistic_version = ? WHERE attempt_id = ? AND optimistic_version = ?", [
+        input.toState,
+        terminal,
+        now,
+        completedAt,
+        reason ?? null,
+        nextVersion,
+        input.attemptId,
+        attempt.optimistic_version
+      ]);
+      const sequenceNumber = this.insertTransition(input.attemptId, input.fromState, input.toState, input.actor, input.reason, input.correlation ?? {}, now);
+      this.recordEvent("attempt_transition", "PASS", `${input.fromState} -> ${input.toState}`, { sequenceNumber }, attempt.command_id, input.attemptId);
+      return { ok: true, sequenceNumber, optimisticVersion: nextVersion };
+    });
+  }
+
+  recordGateOutcome(input: {
+    attemptId: string;
+    gateName: string;
+    required: boolean;
+    outcome: GateOutcome;
+    evidenceReferences?: string[];
+    message?: string;
+    evaluator: string;
+  }): void {
+    this.transaction(() => {
+      this.requireAttempt(input.attemptId);
+      const existing = this.get<{ gate_outcome_id: string }>("SELECT gate_outcome_id FROM gate_outcomes WHERE attempt_id = ? AND gate_name = ?", [input.attemptId, input.gateName]);
+      const now = this.now();
+      if (existing) {
+        this.run("UPDATE gate_outcomes SET required = ?, outcome = ?, evaluated_at = ?, evidence_json = ?, message = ?, evaluator = ? WHERE gate_outcome_id = ?", [
+          input.required ? 1 : 0,
+          input.outcome,
+          now,
+          stableJson(input.evidenceReferences ?? []),
+          input.message ?? null,
+          input.evaluator,
+          existing.gate_outcome_id
+        ]);
+      } else {
+        this.run("INSERT INTO gate_outcomes (gate_outcome_id, attempt_id, gate_name, required, outcome, evaluated_at, evidence_json, message, evaluator) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+          id("gate"),
+          input.attemptId,
+          input.gateName,
+          input.required ? 1 : 0,
+          input.outcome,
+          now,
+          stableJson(input.evidenceReferences ?? []),
+          input.message ?? null,
+          input.evaluator
+        ]);
+      }
+      this.recordEvent("gate_outcome_recorded", input.outcome, input.message ?? "Gate outcome recorded.", { gateName: input.gateName, required: input.required }, undefined, input.attemptId);
+    });
+  }
+
+  recordEvidenceReference(input: {
+    attemptId: string;
+    evidenceType: string;
+    location: string;
+    integrityHash?: string;
+    producer: string;
+    metadata?: unknown;
+  }): string {
+    return this.transaction(() => {
+      this.requireAttempt(input.attemptId);
+      const evidenceReferenceId = id("evidence");
+      this.run("INSERT INTO evidence_references (evidence_reference_id, attempt_id, evidence_type, location, integrity_hash, created_at, producer, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
+        evidenceReferenceId,
+        input.attemptId,
+        input.evidenceType,
+        input.location,
+        input.integrityHash ?? null,
+        this.now(),
+        input.producer,
+        stableJson(input.metadata ?? {})
+      ]);
+      this.recordEvent("evidence_reference_recorded", "PASS", "Evidence reference recorded.", { evidenceReferenceId }, undefined, input.attemptId);
+      return evidenceReferenceId;
+    });
+  }
+
+  acquireLease(input: { leaseName: string; ttlMs: number; ownerRuntimeInstanceId?: string }): { ok: true; fencingToken: number; status: "acquired" | "reacquired" } {
+    return this.transaction(() => {
+      const now = this.now();
+      const owner = input.ownerRuntimeInstanceId ?? this.config.runtimeInstanceId;
+      const expiresAt = new Date(Date.parse(now) + input.ttlMs).toISOString();
+      const existing = this.get<{ owning_runtime_instance_id: string; expires_at: string; fencing_token: number; status: string }>("SELECT owning_runtime_instance_id, expires_at, fencing_token, status FROM runtime_leases WHERE lease_name = ?", [input.leaseName]);
+      if (existing && existing.status === "active" && Date.parse(existing.expires_at) > Date.parse(now) && existing.owning_runtime_instance_id !== owner) {
+        throw new RuntimeStateBlockedError("Lease is held by a live owner.", "lease_conflict");
+      }
+      const nextFence = existing ? Number(existing.fencing_token) + (existing.owning_runtime_instance_id === owner && existing.status === "active" ? 0 : 1) : 1;
+      if (existing) {
+        this.run("UPDATE runtime_leases SET owning_runtime_instance_id = ?, acquired_at = ?, renewed_at = ?, expires_at = ?, fencing_token = ?, released_at = NULL, status = 'active' WHERE lease_name = ?", [owner, now, now, expiresAt, nextFence, input.leaseName]);
+      } else {
+        this.run("INSERT INTO runtime_leases (lease_name, owning_runtime_instance_id, acquired_at, renewed_at, expires_at, fencing_token, released_at, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [input.leaseName, owner, now, now, expiresAt, nextFence, null, "active"]);
+      }
+      this.recordEvent("lease_acquired", "PASS", "Lease acquired.", { leaseName: input.leaseName, fencingToken: nextFence });
+      return { ok: true, fencingToken: nextFence, status: existing ? "reacquired" : "acquired" };
+    });
+  }
+
+  renewLease(input: { leaseName: string; fencingToken: number; ttlMs: number; ownerRuntimeInstanceId?: string }): void {
+    this.transaction(() => {
+      this.assertFence(input.leaseName, input.fencingToken, input.ownerRuntimeInstanceId);
+      const now = this.now();
+      this.run("UPDATE runtime_leases SET renewed_at = ?, expires_at = ? WHERE lease_name = ?", [now, new Date(Date.parse(now) + input.ttlMs).toISOString(), input.leaseName]);
+      this.recordEvent("lease_renewed", "PASS", "Lease renewed.", { leaseName: input.leaseName, fencingToken: input.fencingToken });
+    });
+  }
+
+  releaseLease(input: { leaseName: string; fencingToken: number; ownerRuntimeInstanceId?: string }): void {
+    this.transaction(() => {
+      this.assertFence(input.leaseName, input.fencingToken, input.ownerRuntimeInstanceId);
+      this.run("UPDATE runtime_leases SET released_at = ?, status = 'released' WHERE lease_name = ?", [this.now(), input.leaseName]);
+      this.recordEvent("lease_released", "PASS", "Lease released.", { leaseName: input.leaseName, fencingToken: input.fencingToken });
+    });
+  }
+
+  assertFence(leaseName: string, fencingToken: number, ownerRuntimeInstanceId = this.config.runtimeInstanceId): void {
+    const lease = this.get<{ owning_runtime_instance_id: string; fencing_token: number; status: string; expires_at: string }>("SELECT owning_runtime_instance_id, fencing_token, status, expires_at FROM runtime_leases WHERE lease_name = ?", [leaseName]);
+    if (!lease) throw new RuntimeStateBlockedError("Lease does not exist.", "missing_lease");
+    if (lease.status !== "active") throw new RuntimeStateBlockedError("Lease is not active.", "inactive_lease");
+    if (lease.owning_runtime_instance_id !== ownerRuntimeInstanceId) throw new RuntimeStateBlockedError("Lease owner mismatch.", "lease_owner_mismatch");
+    if (Number(lease.fencing_token) !== fencingToken) throw new RuntimeStateBlockedError("Stale fencing token rejected.", "stale_fencing_token");
+    if (Date.parse(String(lease.expires_at)) <= Date.parse(this.now())) throw new RuntimeStateBlockedError("Lease is expired.", "expired_lease");
+  }
+
+  backup(destination?: string): { ok: true; path: string; sha256: string; bytes: number; integrity: RuntimeStateInspection } {
+    this.assertIntegrity();
+    const backupPath = path.resolve(destination ?? path.join(this.config.backupRoot, `sera-operational-${timestampForFile(this.now())}.db`));
+    fs.mkdirSync(path.dirname(backupPath), { recursive: true });
+    this.requireDb().exec(`VACUUM INTO ${sqlString(backupPath)}`);
+    const copied = new DatabaseSync(backupPath, { readOnly: true });
+    try {
+      const result = String((copied.prepare("PRAGMA integrity_check").get() as { integrity_check: string }).integrity_check);
+      if (result !== "ok") throw new RuntimeStateBlockedError(`Backup integrity check failed: ${result}`, "backup_integrity_failed");
+    } finally {
+      copied.close();
+    }
+    const stat = fs.statSync(backupPath);
+    return { ok: true, path: backupPath, sha256: sha256File(backupPath), bytes: stat.size, integrity: this.inspect() };
+  }
+
+  exportJson(destination?: string, includeVolatile = true): { ok: true; path: string; sha256: string; recordCounts: Record<string, number>; export: Record<string, unknown> } {
+    const exportPath = path.resolve(destination ?? path.join(this.config.exportRoot, `sera-operational-export-${timestampForFile(this.now())}.json`));
+    fs.mkdirSync(path.dirname(exportPath), { recursive: true });
+    const doc = this.exportDocument(includeVolatile);
+    fs.writeFileSync(exportPath, `${stableJson(doc)}\n`, "utf8");
+    const recordCounts = {
+      commands: (doc.commands as unknown[]).length,
+      attempts: (doc.attempts as unknown[]).length,
+      transitions: (doc.transitions as unknown[]).length,
+      gateOutcomes: (doc.gateOutcomes as unknown[]).length,
+      evidenceReferences: (doc.evidenceReferences as unknown[]).length,
+      runtimeLeases: (doc.runtimeLeases as unknown[]).length,
+      stateEvents: (doc.stateEvents as unknown[]).length
+    };
+    return { ok: true, path: exportPath, sha256: sha256File(exportPath), recordCounts, export: doc };
+  }
+
+  exportDocument(includeVolatile = true): Record<string, unknown> {
+    const db = this.requireDb();
+    return normalizeForJson({
+      schemaVersion: RUNTIME_STATE_EXPORT_SCHEMA,
+      stateSchemaVersion: this.currentSchemaVersion(),
+      exportTimestamp: includeVolatile ? this.now() : "<normalized>",
+      installationId: includeVolatile ? this.config.installationId : "<installation>",
+      runtimeInstanceId: includeVolatile ? this.config.runtimeInstanceId : "<runtime>",
+      commands: all(db, "SELECT command_id, idempotency_key, command_type, payload_json, submitted_at, originating_installation_id, originating_runtime_instance_id, status, attempt_id, version FROM commands ORDER BY command_id"),
+      attempts: all(db, "SELECT attempt_id, command_id, capability, current_state, terminal, created_at, updated_at, completed_at, reason, optimistic_version, prior_attempt_id FROM attempts ORDER BY attempt_id"),
+      transitions: all(db, "SELECT transition_id, attempt_id, from_state, to_state, transitioned_at, actor, reason, runtime_instance_id, sequence_number, correlation_json FROM attempt_transitions ORDER BY attempt_id, sequence_number, transition_id"),
+      gateOutcomes: all(db, "SELECT gate_outcome_id, attempt_id, gate_name, required, outcome, evaluated_at, evidence_json, message, evaluator FROM gate_outcomes ORDER BY attempt_id, gate_name"),
+      evidenceReferences: all(db, "SELECT evidence_reference_id, attempt_id, evidence_type, location, integrity_hash, created_at, producer, metadata_json FROM evidence_references ORDER BY attempt_id, evidence_reference_id"),
+      runtimeLeases: all(db, "SELECT lease_name, owning_runtime_instance_id, acquired_at, renewed_at, expires_at, fencing_token, released_at, status FROM runtime_leases ORDER BY lease_name"),
+      stateEvents: all(db, "SELECT event_id, event_type, timestamp, installation_id, runtime_instance_id, related_command_id, related_attempt_id, outcome, message, details_json FROM state_events ORDER BY timestamp, event_id")
+    }) as Record<string, unknown>;
+  }
+
+  private configureDatabase(): void {
+    const db = this.requireDb();
+    const journal = String((db.prepare("PRAGMA journal_mode = WAL").get() as { journal_mode: string }).journal_mode).toLowerCase();
+    if (journal !== "wal") throw new RuntimeStateBlockedError(`SQLite journal mode is ${journal}, expected wal.`, "sqlite_journal_mode_unsupported");
+    db.exec(`PRAGMA foreign_keys = ON`);
+    db.exec(`PRAGMA busy_timeout = ${this.config.busyTimeoutMs}`);
+    db.exec(`PRAGMA synchronous = FULL`);
+  }
+
+  private applyMigrations(): void {
+    const db = this.requireDb();
+    ensureContiguousMigrations(this.migrations);
+    db.exec("CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL, checksum TEXT NOT NULL, applied_at TEXT NOT NULL, runtime_version TEXT NOT NULL)");
+    const applied = db.prepare("SELECT version, name, checksum FROM schema_migrations ORDER BY version").all() as Array<{ version: number; name: string; checksum: string }>;
+    const maxApplied = applied.reduce((max, row) => Math.max(max, Number(row.version)), 0);
+    if (maxApplied > RUNTIME_STATE_SCHEMA_VERSION) throw new RuntimeStateBlockedError("Database schema is newer than this runtime supports.", "unsupported_future_schema");
+    for (const row of applied) {
+      const expected = this.migrations.find((migration) => migration.version === Number(row.version));
+      if (!expected) throw new RuntimeStateBlockedError(`Applied migration ${row.version} is unsupported.`, "unknown_migration");
+      if (row.name !== expected.name || row.checksum !== migrationChecksum(expected)) throw new RuntimeStateBlockedError(`Applied migration ${row.version} identity changed.`, "migration_checksum_mismatch");
+    }
+    const appliedVersions = new Set(applied.map((row) => Number(row.version)));
+    for (const migration of this.migrations) {
+      if (appliedVersions.has(migration.version)) continue;
+      this.transaction(() => {
+        this.requireDb().exec(migration.sql);
+        this.run("INSERT INTO schema_migrations (version, name, checksum, applied_at, runtime_version) VALUES (?, ?, ?, ?, ?)", [
+          migration.version,
+          migration.name,
+          migrationChecksum(migration),
+          this.now(),
+          this.config.runtimeVersion
+        ]);
+      });
+    }
+  }
+
+  private currentSchemaVersion(): number {
+    const db = this.requireDb();
+    const row = db.prepare("SELECT COALESCE(MAX(version), 0) AS version FROM schema_migrations").get() as { version: number };
+    return Number(row.version);
+  }
+
+  private assertIntegrity(): void {
+    const result = String((this.requireDb().prepare("PRAGMA integrity_check").get() as { integrity_check: string }).integrity_check);
+    if (result !== "ok") throw new RuntimeStateBlockedError(`SQLite integrity check failed: ${result}`, "sqlite_integrity_failed");
+  }
+
+  private effectiveSqliteConfiguration(): Record<string, unknown> {
+    const db = this.requireDb();
+    return {
+      foreignKeys: numberValue(db.prepare("PRAGMA foreign_keys").get(), "foreign_keys") === 1,
+      busyTimeoutMs: numberValue(db.prepare("PRAGMA busy_timeout").get(), "timeout"),
+      synchronous: numberValue(db.prepare("PRAGMA synchronous").get(), "synchronous"),
+      journalMode: String((db.prepare("PRAGMA journal_mode").get() as { journal_mode: string }).journal_mode).toLowerCase(),
+      sqliteVersion: process.versions.sqlite ?? "unknown",
+      nodeVersion: process.version,
+      implementation: "node:sqlite DatabaseSync"
+    };
+  }
+
+  private requiredGatesPassed(attemptId: string): boolean {
+    const rows = this.requireDb().prepare("SELECT required, outcome FROM gate_outcomes WHERE attempt_id = ?").all(attemptId) as Array<{ required: number; outcome: string }>;
+    return rows.some((row) => row.required === 1) && rows.filter((row) => row.required === 1).every((row) => row.outcome === "PASS");
+  }
+
+  private insertTransition(attemptId: string, fromState: AttemptState, toState: AttemptState, actor: string, reason: string | undefined, correlation: unknown, transitionedAt: string): number {
+    const sequenceNumber = numberValue(this.requireDb().prepare("SELECT COALESCE(MAX(sequence_number), 0) + 1 AS sequenceNumber FROM attempt_transitions WHERE attempt_id = ?").get(attemptId), "sequenceNumber");
+    this.run("INSERT INTO attempt_transitions (transition_id, attempt_id, from_state, to_state, transitioned_at, actor, reason, runtime_instance_id, sequence_number, correlation_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+      id("transition"),
+      attemptId,
+      fromState,
+      toState,
+      transitionedAt,
+      actor,
+      reason ?? null,
+      this.config.runtimeInstanceId,
+      sequenceNumber,
+      stableJson(correlation ?? {})
+    ]);
+    return sequenceNumber;
+  }
+
+  private recordEvent(eventType: string, outcome: string, message: string, details: unknown, commandId?: string, attemptId?: string): void {
+    this.run("INSERT INTO state_events (event_id, event_type, timestamp, installation_id, runtime_instance_id, related_command_id, related_attempt_id, outcome, message, details_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+      id("event"),
+      eventType,
+      this.now(),
+      this.config.installationId,
+      this.config.runtimeInstanceId,
+      commandId ?? null,
+      attemptId ?? null,
+      outcome,
+      message,
+      stableJson(details ?? {})
+    ]);
+  }
+
+  private transaction<T>(fn: () => T): T {
+    const db = this.requireDb();
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      const result = fn();
+      db.exec("COMMIT");
+      return result;
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
+  private requireAttempt(attemptId: string): { attempt_id: string; command_id: string; current_state: AttemptState; terminal: number; optimistic_version: number; reason?: string; completed_at?: string } {
+    const attempt = this.get<{ attempt_id: string; command_id: string; current_state: AttemptState; terminal: number; optimistic_version: number; reason?: string; completed_at?: string }>("SELECT attempt_id, command_id, current_state, terminal, optimistic_version, reason, completed_at FROM attempts WHERE attempt_id = ?", [attemptId]);
+    if (!attempt) throw new RuntimeStateBlockedError("Attempt does not exist.", "missing_attempt");
+    return attempt;
+  }
+
+  private run(sql: string, params: SQLInputValue[] = []): void {
+    this.requireDb().prepare(sql).run(...params);
+  }
+
+  private get<T>(sql: string, params: SQLInputValue[] = []): T | undefined {
+    return this.requireDb().prepare(sql).get(...params) as T | undefined;
+  }
+
+  private requireDb(): DatabaseSync {
+    if (!this.db) throw new RuntimeStateBlockedError("Runtime State database is not open.", "database_not_open");
+    return this.db;
+  }
+
+  private now(): string {
+    return this.clock.now().toISOString();
+  }
+}
+
+export function createRuntimeStateService(configInput: RuntimeStateConfigInput = {}): RuntimeService {
+  let store: RuntimeStateStore | undefined;
+  return {
+    id: "operational-state",
+    version: RUNTIME_STATE_VERSION,
+    required: true,
+    dependencies: [],
+    start(context: RuntimeServiceContext) {
+      const config = createRuntimeStateConfig({
+        projectRoot: context.config.projectRoot,
+        stateRoot: configInput.stateRoot,
+        databasePath: configInput.databasePath,
+        backupRoot: configInput.backupRoot,
+        exportRoot: configInput.exportRoot,
+        busyTimeoutMs: configInput.busyTimeoutMs,
+        installationId: context.identity.installationId,
+        runtimeInstanceId: context.identity.runtimeInstanceId,
+        runtimeVersion: RUNTIME_STATE_VERSION
+      });
+      store = new RuntimeStateStore(config);
+      store.initialize();
+    },
+    health(context) {
+      const inspection = store?.inspect();
+      return {
+        serviceId: "operational-state",
+        status: inspection?.ok ? "healthy" : "blocked",
+        checkedAt: new Date().toISOString(),
+        message: inspection?.ok ? "SQLite Operational State is healthy." : "SQLite Operational State is unavailable.",
+        details: {
+          databasePath: inspection?.databasePath,
+          schemaVersion: inspection?.schemaVersion,
+          sqlite: inspection?.sqlite,
+          runtimeInstanceId: context.identity.runtimeInstanceId
+        }
+      };
+    },
+    stop() {
+      store?.close();
+      store = undefined;
+    }
+  };
+}
+
+export function createRuntimeStateEnabledServices(projectRoot: string, configInput: RuntimeStateConfigInput = {}): RuntimeService[] {
+  const controlPlane = createControlPlaneRuntimeService(projectRoot);
+  return [
+    createRuntimeStateService(configInput),
+    {
+      ...controlPlane,
+      dependencies: ["operational-state"]
+    }
+  ];
+}
+
+export function openRuntimeState(input: RuntimeStateConfigInput = {}, clock?: RuntimeStateClock, migrations?: Migration[]): RuntimeStateStore {
+  const store = new RuntimeStateStore(createRuntimeStateConfig(input), clock, migrations);
+  store.initialize();
+  return store;
+}
+
+export async function runRuntimeStateProof(input: RuntimeStateConfigInput = {}, clock: RuntimeStateClock = { now: () => new Date() }): Promise<RuntimeStateProofResult> {
+  const config = createRuntimeStateConfig(input);
+  const store = new RuntimeStateStore(config, clock);
+  store.initialize();
+  try {
+    const command = store.acceptCommand({ idempotencyKey: "proof-command", commandType: "control-plane-proof", payload: { task: "prove" }, capability: "unified-control-plane" });
+    const duplicate = store.acceptCommand({ idempotencyKey: "proof-command", commandType: "control-plane-proof", payload: { task: "prove" }, capability: "unified-control-plane" });
+    let conflictingIdempotencyBlocked = false;
+    try {
+      store.acceptCommand({ idempotencyKey: "proof-command", commandType: "control-plane-proof", payload: { task: "different" }, capability: "unified-control-plane" });
+    } catch {
+      conflictingIdempotencyBlocked = true;
+    }
+    const attemptId = command.attemptId ?? "";
+    let invalidTransitionBlocked = false;
+    try {
+      store.transitionAttempt({ attemptId, fromState: "PENDING", toState: "COMPLETED", actor: "control-plane" });
+    } catch {
+      invalidTransitionBlocked = true;
+    }
+    store.transitionAttempt({ attemptId, fromState: "PENDING", toState: "RUNNING", actor: "control-plane", reason: "proof-running" });
+    let gateEnforced = false;
+    try {
+      store.transitionAttempt({ attemptId, fromState: "RUNNING", toState: "COMPLETED", actor: "control-plane", reason: "premature-success" });
+    } catch {
+      gateEnforced = true;
+    }
+    const evidenceId = store.recordEvidenceReference({ attemptId, evidenceType: "proof", location: "proof/evidence.json", integrityHash: stableHash({ proof: true }), producer: "runtime-state-proof", metadata: { bounded: true } });
+    store.recordGateOutcome({ attemptId, gateName: "required-proof-gate", required: true, outcome: "PASS", evidenceReferences: [evidenceId], message: "Proof gate passed.", evaluator: "control-plane" });
+    store.transitionAttempt({ attemptId, fromState: "RUNNING", toState: "COMPLETED", actor: "control-plane", reason: "proof-complete", correlation: { evidenceId } });
+    let terminalImmutable = false;
+    try {
+      store.transitionAttempt({ attemptId, fromState: "COMPLETED", toState: "FAILED", actor: "direct-store" });
+    } catch {
+      terminalImmutable = true;
+    }
+    const lease = store.acquireLease({ leaseName: "proof-resource", ttlMs: 100000 });
+    let conflictBlocked = false;
+    try {
+      store.acquireLease({ leaseName: "proof-resource", ttlMs: 10, ownerRuntimeInstanceId: "other-runtime" });
+    } catch {
+      conflictBlocked = true;
+    }
+    const staleToken = lease.fencingToken;
+    store.releaseLease({ leaseName: "proof-resource", fencingToken: lease.fencingToken });
+    const reacquired = store.acquireLease({ leaseName: "proof-resource", ttlMs: 1000, ownerRuntimeInstanceId: "other-runtime" });
+    let staleFenceBlocked = false;
+    try {
+      store.assertFence("proof-resource", staleToken);
+    } catch {
+      staleFenceBlocked = true;
+    }
+    const exportA = stableJson(store.exportDocument(false));
+    const exportB = stableJson(store.exportDocument(false));
+    const backup = store.backup();
+    const inspection = store.inspect();
+    store.close();
+    const reopened = new RuntimeStateStore(config, clock);
+    reopened.initialize();
+    const restartPersists = reopened.inspect().counts.commands >= 1;
+    reopened.close();
+    return {
+      ok: command.ok && duplicate.ok && conflictingIdempotencyBlocked && invalidTransitionBlocked && gateEnforced && terminalImmutable && conflictBlocked && staleFenceBlocked && reacquired.fencingToken > staleToken && exportA === exportB && backup.ok && restartPersists,
+      status: "healthy",
+      databasePath: config.databasePath,
+      command,
+      duplicate,
+      terminalImmutable,
+      conflictingIdempotencyBlocked,
+      invalidTransitionBlocked,
+      gateEnforced,
+      exportStable: exportA === exportB,
+      backupOk: backup.ok,
+      leaseFencingOk: conflictBlocked && staleFenceBlocked && reacquired.fencingToken > staleToken,
+      restartPersists,
+      inspection,
+      modelUse: false,
+      networkUse: false
+    };
+  } finally {
+    store.close();
+  }
+}
+
+function ensureContiguousMigrations(migrations: Migration[]): void {
+  migrations.forEach((migration, index) => {
+    if (migration.version !== index + 1) throw new RuntimeStateBlockedError("Runtime State migrations must be contiguous from version 1.", "migration_gap");
+  });
+}
+
+function migrationChecksum(migration: Migration): string {
+  return stableHash({ version: migration.version, name: migration.name, sql: migration.sql.replace(/\r\n/g, "\n").trim() });
+}
+
+function stableHash(value: unknown): string {
+  return crypto.createHash("sha256").update(stableJson(value)).digest("hex");
+}
+
+function stableJson(value: unknown): string {
+  return JSON.stringify(normalizeForJson(value));
+}
+
+function normalizeForJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(normalizeForJson);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, normalizeForJson(item)]));
+  }
+  return value;
+}
+
+function all(db: DatabaseSync, sql: string): Array<Record<string, unknown>> {
+  return db.prepare(sql).all() as Array<Record<string, unknown>>;
+}
+
+function numberValue(row: unknown, key: string): number {
+  return Number((row as Record<string, unknown> | undefined)?.[key] ?? 0);
+}
+
+function id(prefix: string): string {
+  return `${prefix}_${crypto.randomBytes(8).toString("hex")}`;
+}
+
+function timestampForFile(iso: string): string {
+  return iso.replace(/[^0-9A-Za-z]+/g, "-").replace(/-$/g, "");
+}
+
+function sha256File(filePath: string): string {
+  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+function sqlString(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}

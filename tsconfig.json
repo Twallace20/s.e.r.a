@@ -22,6 +22,9 @@
                            "path":  "packages/runtime-host"
                        },
                        {
+                           "path":  "packages/runtime-state"
+                       },
+                       {
                            "path":  "packages/safety"
                        },
                        {

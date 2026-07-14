@@ -84,7 +84,8 @@ After Milestone 5A:
 
 ```text
 Milestone 5A - Local Runtime Host v1: COMPLETE
-Milestone 5B - SQLite Operational State v1: NEXT
+Milestone 5B - SQLite Operational State v1: COMPLETE
+Milestone 5C - Persistent Runtime Recovery v1: NEXT
 Milestone 5 overall: IN PROGRESS
 ```
 
@@ -96,7 +97,7 @@ The locked implementation order is:
 2. Repository Snapshot — `repository-snapshot-v1` — implemented and locally proven as a deterministic Runtime-layer fact scanner that writes `.sera/repository/` evidence
 3. Repository Truth — `repository-truth-v1` — implemented and locally proven as the deterministic classification pass over Snapshot evidence
 4. Unified Control Plane — `local-control-plane-v1` — implemented and under validation as the permanent Runtime attempt, gate, evidence, terminal-decision, verification, and closeout authority; final completion requires the three support changes named in Base MVP Scope Lock
-5. Runtime Host and SQLite Operational State — `local-runtime-host-v1` completes Milestone 5A; `local-state-store-v1` is Milestone 5B next; Milestone 5 remains in progress
+5. Runtime Host and SQLite Operational State — `local-runtime-host-v1` completes Milestone 5A; `runtime-state-v1` completes Milestone 5B; Persistent Runtime Recovery v1 is Milestone 5C next; Milestone 5 remains in progress
 6. Isolated Execution — `isolated-execution-v1`
 7. Evaluation Engine — `evaluation-engine-v1`
 8. Ollama Model Runtime — `offline-model-runtime-v1`

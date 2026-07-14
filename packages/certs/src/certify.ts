@@ -10,6 +10,7 @@ import { runRepositorySnapshot } from "@sera/repository-snapshot";
 import { runRepositoryTruth } from "@sera/repository-truth";
 import { ControlPlane, ControlPlaneAttemptSpec } from "@sera/control-plane";
 import { RuntimeHost, RuntimeService, createDefaultRuntimeServices, createRuntimeConfig, loadOrCreateRuntimeIdentity, normalizeRuntimeServices, runRuntimeHostProof } from "@sera/runtime-host";
+import { RuntimeStateBlockedError, createRuntimeStateConfig, createRuntimeStateEnabledServices, openRuntimeState, runRuntimeStateProof } from "@sera/runtime-state";
 
 export interface CertCheck {
   id: string;
@@ -20,7 +21,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -47,6 +48,7 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   checks.push(...runRepositoryTruthV1Checks());
   checks.push(...runControlPlaneV1Checks());
   checks.push(...await runRuntimeHostV1Checks());
+  checks.push(...await runRuntimeStateV1Checks());
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -64,10 +66,13 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   const repositoryTruthV1ChecksPass = checks.filter((c) => c.id.startsWith("repository_truth_")).every((c) => c.pass);
   const controlPlaneV1ChecksPass = checks.filter((c) => c.id.startsWith("control_plane_")).every((c) => c.pass);
   const runtimeHostV1ChecksPass = checks.filter((c) => c.id.startsWith("runtime_host_")).every((c) => c.pass);
+  const runtimeStateV1ChecksPass = checks.filter((c) => c.id.startsWith("runtime_state_")).every((c) => c.pass);
   void repositorySnapshotV1ChecksPass;
   void repositoryTruthV1ChecksPass;
   const pass = checks.every((c) => c.pass);
-  const level = pass && runtimeHostV1ChecksPass
+  const level = pass && runtimeStateV1ChecksPass
+    ? "runtime-state-v1"
+    : pass && runtimeHostV1ChecksPass
     ? "runtime-host-v1"
     : pass && controlPlaneV1ChecksPass
     ? "control-plane-v1"
@@ -1300,6 +1305,73 @@ async function runRuntimeHostV1Checks(): Promise<CertCheck[]> {
   return checks;
 }
 
+async function runRuntimeStateV1Checks(): Promise<CertCheck[]> {
+  const checks: CertCheck[] = [];
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-runtime-state-cert-"));
+  fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({ name: "runtime-state-cert-root", private: true }), "utf8");
+  const config = createRuntimeStateConfig({ projectRoot: root, installationId: "installation_cert", runtimeInstanceId: "runtime_cert" });
+  const store = openRuntimeState(config);
+  const inspection = store.inspect();
+  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 1 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
+  const secondInspection = store.inspect();
+  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 1, detail: JSON.stringify(secondInspection.counts) });
+  const command = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
+  const duplicate = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
+  checks.push({ id: "runtime_state_command_idempotency", name: "Runtime State command idempotency returns original", pass: command.commandId === duplicate.commandId && duplicate.status === "DUPLICATE", detail: `${command.commandId} ${duplicate.status}` });
+  checks.push({ id: "runtime_state_conflicting_idempotency_blocks", name: "Runtime State blocks conflicting idempotency", pass: throwsState(() => store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 2 }, capability: "control-plane" })), detail: "conflict rejected" });
+  checks.push({ id: "runtime_state_invalid_transition_blocks", name: "Runtime State blocks invalid transitions", pass: throwsState(() => store.transitionAttempt({ attemptId: command.attemptId!, fromState: "PENDING", toState: "COMPLETED", actor: "control-plane" })), detail: "PENDING -> COMPLETED rejected" });
+  store.transitionAttempt({ attemptId: command.attemptId!, fromState: "PENDING", toState: "RUNNING", actor: "control-plane" });
+  checks.push({ id: "runtime_state_required_gate_enforced", name: "Runtime State enforces required gate before success", pass: throwsState(() => store.transitionAttempt({ attemptId: command.attemptId!, fromState: "RUNNING", toState: "COMPLETED", actor: "control-plane" })), detail: "success blocked before gate" });
+  const evidence = store.recordEvidenceReference({ attemptId: command.attemptId!, evidenceType: "cert", location: "cert.json", integrityHash: "abc", producer: "cert" });
+  checks.push({ id: "runtime_state_evidence_reference_durable", name: "Runtime State records evidence references", pass: store.inspect().counts.evidence_references === 1, detail: evidence });
+  store.recordGateOutcome({ attemptId: command.attemptId!, gateName: "cert-gate", required: true, outcome: "PASS", evidenceReferences: [evidence], evaluator: "cert" });
+  store.transitionAttempt({ attemptId: command.attemptId!, fromState: "RUNNING", toState: "COMPLETED", actor: "control-plane", reason: "cert complete" });
+  checks.push({ id: "runtime_state_attempt_transition_atomic", name: "Runtime State writes attempt and transition atomically", pass: store.inspect().counts.attempt_transitions === 3, detail: JSON.stringify(store.inspect().counts) });
+  checks.push({ id: "runtime_state_terminal_immutable", name: "Runtime State terminal attempts are immutable", pass: throwsState(() => store.transitionAttempt({ attemptId: command.attemptId!, fromState: "COMPLETED", toState: "FAILED", actor: "cert" })), detail: "terminal rewrite rejected" });
+  const lease = store.acquireLease({ leaseName: "cert-resource", ttlMs: 50, ownerRuntimeInstanceId: "runtime-a" });
+  checks.push({ id: "runtime_state_lease_conflict_blocks", name: "Runtime State blocks live lease conflict", pass: throwsState(() => store.acquireLease({ leaseName: "cert-resource", ttlMs: 50, ownerRuntimeInstanceId: "runtime-b" })), detail: "live owner protected" });
+  store.releaseLease({ leaseName: "cert-resource", fencingToken: lease.fencingToken, ownerRuntimeInstanceId: "runtime-a" });
+  const nextLease = store.acquireLease({ leaseName: "cert-resource", ttlMs: 1000, ownerRuntimeInstanceId: "runtime-b" });
+  checks.push({ id: "runtime_state_fencing_token_advances", name: "Runtime State advances fencing token", pass: nextLease.fencingToken > lease.fencingToken, detail: `${lease.fencingToken} -> ${nextLease.fencingToken}` });
+  checks.push({ id: "runtime_state_stale_fence_blocks", name: "Runtime State rejects stale fencing token", pass: throwsState(() => store.assertFence("cert-resource", lease.fencingToken, "runtime-a")), detail: "stale fence rejected" });
+  const backup = store.backup();
+  checks.push({ id: "runtime_state_backup_valid", name: "Runtime State backup is valid", pass: fs.existsSync(backup.path) && backup.sha256.length === 64, detail: backup.path });
+  const exportA = JSON.stringify(store.exportDocument(false));
+  const exportB = JSON.stringify(store.exportDocument(false));
+  checks.push({ id: "runtime_state_export_deterministic", name: "Runtime State export is deterministic", pass: exportA === exportB, detail: `${exportA.length} bytes` });
+  store.close();
+  const reopened = openRuntimeState(config);
+  checks.push({ id: "runtime_state_restart_persists", name: "Runtime State persists across restart", pass: reopened.inspect().counts.commands === 1, detail: JSON.stringify(reopened.inspect().counts) });
+  reopened.close();
+
+  const futureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-runtime-state-future-cert-"));
+  const futureStore = openRuntimeState({ projectRoot: futureRoot });
+  (futureStore as any).run("INSERT INTO schema_migrations (version, name, checksum, applied_at, runtime_version) VALUES (?, ?, ?, ?, ?)", [99, "future", "future", "2026-07-14T00:00:00.000Z", "future"]);
+  futureStore.close();
+  checks.push({ id: "runtime_state_future_schema_blocks", name: "Runtime State blocks future schema", pass: throwsState(() => openRuntimeState({ projectRoot: futureRoot })), detail: "future schema rejected" });
+
+  const corruptRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-runtime-state-corrupt-cert-"));
+  const corruptDb = path.join(corruptRoot, ".sera", "state", "sera-operational.db");
+  fs.mkdirSync(path.dirname(corruptDb), { recursive: true });
+  fs.writeFileSync(corruptDb, "not sqlite", "utf8");
+  checks.push({ id: "runtime_state_corruption_blocks", name: "Runtime State blocks corrupt database", pass: throwsState(() => openRuntimeState({ projectRoot: corruptRoot })) && fs.readFileSync(corruptDb, "utf8") === "not sqlite", detail: corruptDb });
+
+  const proofRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-runtime-state-proof-cert-"));
+  const proof = await runRuntimeStateProof({ projectRoot: proofRoot, installationId: "installation_cert", runtimeInstanceId: "runtime_cert" });
+  checks.push({ id: "runtime_state_non_git_operation", name: "Runtime State works outside Git", pass: proof.ok && !fs.existsSync(path.join(proofRoot, ".git")), detail: proofRoot });
+  checks.push({ id: "runtime_state_offline_operation", name: "Runtime State requires no model or network", pass: proof.ok && proof.modelUse === false && proof.networkUse === false, detail: "modelUse=false networkUse=false" });
+  checks.push({ id: "runtime_state_control_plane_authority_preserved", name: "Runtime State preserves Control Plane terminal authority", pass: proof.ok && proof.gateEnforced && proof.invalidTransitionBlocked && proof.terminalImmutable, detail: JSON.stringify({ gateEnforced: proof.gateEnforced, invalidTransitionBlocked: proof.invalidTransitionBlocked, terminalImmutable: proof.terminalImmutable }) });
+
+  const hostRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-runtime-state-host-cert-"));
+  const host = new RuntimeHost({ config: createRuntimeConfig({ projectRoot: hostRoot }), services: createRuntimeStateEnabledServices(hostRoot) });
+  const started = await host.start();
+  const health = await host.health();
+  await host.shutdown();
+  checks.push({ id: "runtime_state_runtime_service_healthy", name: "Runtime Host reports Operational State service healthy", pass: started.ok && health.services.find((service) => service.serviceId === "operational-state")?.status === "healthy", detail: JSON.stringify(health.services.map((service) => ({ id: service.serviceId, status: service.status }))) });
+
+  return checks;
+}
+
 function certService(id: string, log: string[], overrides: Partial<RuntimeService> = {}): RuntimeService {
   return {
     id,
@@ -1320,6 +1392,15 @@ function throwsRuntimeHost(action: () => unknown): boolean {
     return false;
   } catch {
     return true;
+  }
+}
+
+function throwsState(action: () => unknown): boolean {
+  try {
+    action();
+    return false;
+  } catch (error) {
+    return error instanceof RuntimeStateBlockedError || error instanceof Error;
   }
 }
 

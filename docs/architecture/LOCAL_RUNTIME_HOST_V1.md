@@ -11,6 +11,7 @@ It starts Runtime Services in deterministic dependency order, preserves local in
 ```text
 Clients / Desktop Operator
 Runtime Host
+SQLite Operational State
 Unified Control Plane
 Runtime Services
 Capability Engine
@@ -19,6 +20,8 @@ Providers and Tools
 ```
 
 The Runtime Host manages process and service lifecycle.
+
+SQLite Operational State is hosted as a required Runtime Service before Unified Control Plane in Milestone 5B.
 
 The Unified Control Plane remains the authority over attempts, authorization, terminal status, validation, evidence, and closeout.
 
@@ -116,7 +119,7 @@ Generated Runtime Host evidence is ignored by Git and excluded from Repository S
 
 ## Non-Git And Offline Operation
 
-Runtime Host works from a temporary non-Git project root. It does not require Git, GitHub, ChatGPT, Codex, a model provider, internet access, a database, an HTTP server, or a network listener.
+Runtime Host works from a temporary non-Git project root. It does not require Git, GitHub, ChatGPT, Codex, a model provider, internet access, an external database, an HTTP server, or a network listener.
 
 Defaults:
 
@@ -139,7 +142,7 @@ The adapter proves that Runtime Host can start, report Control Plane health, and
 
 ## Limitations
 
-- No SQLite Operational State.
+- Runtime Host still does not own attempt authority; SQLite Operational State is a required Milestone 5B service.
 - No persistent attempt recovery.
 - No isolated execution.
 - No HTTP server or network listener.
@@ -150,4 +153,4 @@ The adapter proves that Runtime Host can start, report Control Plane health, and
 
 Milestone 5A completes Local Runtime Host v1 only.
 
-Milestone 5 remains in progress. Milestone 5B adds SQLite Operational State v1.
+Milestone 5B completes SQLite Operational State v1. Milestone 5 remains in progress; Persistent Runtime Recovery v1 is the next boundary.
