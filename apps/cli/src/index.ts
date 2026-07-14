@@ -67,7 +67,9 @@ Usage:
   sera console history
   sera console summary
   sera repository snapshot
+  sera repository truth
   sera snapshot
+  sera truth
 
 NPM examples:
   npm run sera -- run "create hello file"
@@ -104,6 +106,7 @@ NPM examples:
   npm run sera -- console status
   npm run sera -- console report
   npm run sera -- repository snapshot
+  npm run sera -- repository truth
 
 Secure base behavior:
   - runs locally
@@ -904,19 +907,21 @@ async function main(): Promise<void> {
 
   if (cmd === "repository") {
     const [repositoryMode] = rest;
-    if (repositoryMode !== "snapshot") {
-      throw new Error("Repository command must be 'snapshot'.");
+    if (repositoryMode !== "snapshot" && repositoryMode !== "truth") {
+      throw new Error("Repository command must be 'snapshot' or 'truth'.");
     }
-    const result = kernel.runRepositorySnapshot();
+    const result = repositoryMode === "snapshot" ? kernel.runRepositorySnapshot() : kernel.runRepositoryTruth({ refreshSnapshot: true });
     console.log(JSON.stringify({
       ok: result.ok,
       status: result.status,
       message: result.message,
-      snapshotId: result.snapshotId,
-      outputRoot: ".sera/repository",
+      snapshotId: "snapshotId" in result ? result.snapshotId : undefined,
+      truthId: "truthId" in result ? result.truthId : undefined,
+      sourceSnapshotId: "sourceSnapshotId" in result ? result.sourceSnapshotId : undefined,
+      outputRoot: repositoryMode === "snapshot" ? ".sera/repository" : ".sera/repository-truth",
       manifest: result.manifest,
-      warningCount: result.warnings.length,
-      errorCount: result.errors.length,
+      warningCount: "warnings" in result ? result.warnings.length : result.warningCount,
+      errorCount: "errors" in result ? result.errors.length : result.errorCount,
       summary: result.summary,
       modelUse: false,
       networkUse: false
@@ -935,6 +940,25 @@ async function main(): Promise<void> {
       manifest: result.manifest,
       warningCount: result.warnings.length,
       errorCount: result.errors.length,
+      summary: result.summary,
+      modelUse: false,
+      networkUse: false
+    }, null, 2));
+    process.exit(result.ok ? 0 : 1);
+  }
+
+  if (cmd === "truth") {
+    const result = kernel.runRepositoryTruth({ refreshSnapshot: true });
+    console.log(JSON.stringify({
+      ok: result.ok,
+      status: result.status,
+      message: result.message,
+      truthId: result.truthId,
+      sourceSnapshotId: result.sourceSnapshotId,
+      outputRoot: ".sera/repository-truth",
+      manifest: result.manifest,
+      warningCount: result.warningCount,
+      errorCount: result.errorCount,
       summary: result.summary,
       modelUse: false,
       networkUse: false

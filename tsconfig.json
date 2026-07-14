@@ -13,6 +13,9 @@
                            "path":  "packages/repository-snapshot"
                        },
                        {
+                           "path":  "packages/repository-truth"
+                       },
+                       {
                            "path":  "packages/safety"
                        },
                        {

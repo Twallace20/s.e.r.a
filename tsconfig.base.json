@@ -65,6 +65,9 @@
       ],
       "@sera/repository-snapshot": [
         "packages/repository-snapshot/src/index.ts"
+      ],
+      "@sera/repository-truth": [
+        "packages/repository-truth/src/index.ts"
       ]
     }
   }

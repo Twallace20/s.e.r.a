@@ -13,7 +13,8 @@ export default defineConfig({
       "@sera/tools": r("./packages/tools/src/index.ts"),
       "@sera/kernel": r("./packages/kernel/src/index.ts"),
       "@sera/certs": r("./packages/certs/src/index.ts"),
-      "@sera/repository-snapshot": r("./packages/repository-snapshot/src/index.ts")
+      "@sera/repository-snapshot": r("./packages/repository-snapshot/src/index.ts"),
+      "@sera/repository-truth": r("./packages/repository-truth/src/index.ts")
     }
   },
   test: {

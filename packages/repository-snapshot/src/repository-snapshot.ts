@@ -164,6 +164,7 @@ const DEFAULT_EXCLUSIONS = [
   "temp",
   ".overlay",
   ".sera/repository",
+  ".sera/repository-truth",
   ".sera-runs",
   ".sera-cert",
   ".sera-local",

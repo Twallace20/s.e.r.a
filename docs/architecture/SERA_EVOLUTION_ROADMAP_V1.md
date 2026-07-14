@@ -63,9 +63,9 @@ The first reference capability is Website Studio.
 The locked implementation order is:
 
 1. Constitution and Layer Model — `sera-os-constitution-v1`
-2. Repository Snapshot — `repository-snapshot-v1` — implemented as a deterministic Runtime-layer fact scanner that writes `.sera/repository/` evidence
-3. Repository Truth — `repository-truth-v1`
-4. Unified Control Plane — `local-control-plane-v1`
+2. Repository Snapshot — `repository-snapshot-v1` — implemented and locally proven as a deterministic Runtime-layer fact scanner that writes `.sera/repository/` evidence
+3. Repository Truth — `repository-truth-v1` — implemented and under acceptance closure; it remains uncommitted until acceptance closes
+4. Unified Control Plane — `local-control-plane-v1` — next unimplemented milestone
 5. SQLite Runtime State — `local-state-store-v1`
 6. Isolated Execution — `isolated-execution-v1`
 7. Evaluation Engine — `evaluation-engine-v1`
@@ -76,7 +76,7 @@ The locked implementation order is:
 12. Website Studio MVP — `website-studio-provisional-v1`
 13. Portable Offline Release — `portable-offline-release-v1`
 
-Repository Snapshot precedes Repository Truth so S.E.R.A. can inventory source, generated artifacts, runtime directories, legacy evidence, and provider-adapter surfaces with deterministic scanners before making classification claims. Repository Truth then classifies that snapshot against the SERA OS Constitution and Layer Model.
+Repository Snapshot precedes Repository Truth so S.E.R.A. can inventory source, generated artifacts, runtime directories, legacy evidence, and provider-adapter surfaces with deterministic scanners before making classification claims. Repository Truth then classifies that snapshot against the SERA OS Constitution and Layer Model. No later subsystem is complete merely because Repository Truth exists; the locked implementation order above remains intact.
 
 ## Immediate rule
 

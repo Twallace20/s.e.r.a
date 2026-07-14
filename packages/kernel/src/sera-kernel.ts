@@ -64,6 +64,11 @@ import {
   runRepositorySnapshot
 } from "@sera/repository-snapshot";
 import {
+  RepositoryTruthOptions,
+  RepositoryTruthResult,
+  runRepositoryTruth
+} from "@sera/repository-truth";
+import {
   CreateQueuedTaskInput,
   QueuedTaskRecord,
   QueuedTaskStatus,
@@ -297,6 +302,10 @@ export interface RepositorySnapshotTaskInput extends Omit<RepositorySnapshotOpti
   repositoryRoot?: string;
 }
 export interface RepositorySnapshotTaskResult extends RepositorySnapshotResult {}
+export interface RepositoryTruthTaskInput extends Omit<RepositoryTruthOptions, "repositoryRoot"> {
+  repositoryRoot?: string;
+}
+export interface RepositoryTruthTaskResult extends RepositoryTruthResult {}
 
 export class SeraKernel {
   private readonly workspaceManager = new WorkspaceManager();
@@ -939,6 +948,14 @@ export class SeraKernel {
 
   runRepositorySnapshot(input: RepositorySnapshotTaskInput = {}): RepositorySnapshotTaskResult {
     return runRepositorySnapshot({
+      ...input,
+      repositoryRoot: input.repositoryRoot ?? this.options.rootDir
+    });
+  }
+
+  runRepositoryTruth(input: RepositoryTruthTaskInput = {}): RepositoryTruthTaskResult {
+    return runRepositoryTruth({
+      refreshSnapshot: true,
       ...input,
       repositoryRoot: input.repositoryRoot ?? this.options.rootDir
     });

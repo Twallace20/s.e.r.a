@@ -17,6 +17,9 @@
     },
     {
       "path": "../../packages/autonomy"
+    },
+    {
+      "path": "../../packages/repository-truth"
     }
   ]
 }

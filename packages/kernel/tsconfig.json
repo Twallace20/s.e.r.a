@@ -54,6 +54,9 @@
     },
     {
       "path": "../repository-snapshot"
+    },
+    {
+      "path": "../repository-truth"
     }
   ]
 }

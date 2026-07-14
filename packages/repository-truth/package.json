@@ -1,5 +1,5 @@
 {
-  "name": "@sera/certs",
+  "name": "@sera/repository-truth",
   "version": "0.1.0",
   "private": true,
   "main": "dist/index.js",
@@ -8,10 +8,11 @@
     "build": "tsc -b"
   },
   "dependencies": {
-    "@sera/kernel": "0.1.0",
-    "@sera/shared": "0.1.0",
-    "@sera/operator-console": "0.1.0",
+    "@sera/contracts": "0.1.0",
     "@sera/repository-snapshot": "0.1.0",
-    "@sera/repository-truth": "0.1.0"
+    "@sera/shared": "0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
   }
 }

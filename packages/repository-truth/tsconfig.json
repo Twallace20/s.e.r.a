@@ -10,22 +10,13 @@
   ],
   "references": [
     {
-      "path": "../operator-console"
-    },
-    {
-      "path": "../repository-snapshot"
-    },
-    {
-      "path": "../repository-truth"
+      "path": "../contracts"
     },
     {
       "path": "../shared"
     },
     {
-      "path": "../kernel"
-    },
-    {
-      "path": "../model-provider"
+      "path": "../repository-snapshot"
     }
   ]
 }

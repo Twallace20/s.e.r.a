@@ -137,6 +137,23 @@ npm run sera -- dev apply examples/demo.txt "old text" "new text"
 
 Use suggested mode first for important files. Direct mode should stay narrow and reviewable.
 
+## Repository Runtime Evidence
+
+Repository Snapshot records local repository facts:
+
+```bash
+npm run sera -- repository snapshot
+```
+
+Repository Truth refreshes Snapshot by default and classifies validated evidence into components, declared dependency graph, test ownership, findings, and inventory reconciliation:
+
+```bash
+npm run sera -- repository truth
+npm run sera -- truth
+```
+
+Repository Truth is deterministic and local-only. It does not call models, use the network, run arbitrary repository scripts, or remediate files.
+
 ## Developer Worker v2 and Self-Improvement Loop v1
 
 Inspect mode fingerprints a file without changing it:
@@ -190,6 +207,8 @@ Nothing gets called working unless it has:
 - `@sera/model-provider` — optional model adapter records, deterministic mock provider, and redacted model events
 - `@sera/autonomy` — bounded autonomous dev loop orchestration with validation-gated apply
 - `@sera/operator-console` — local status, health, report, history, and summary evidence
+- `@sera/repository-snapshot` — deterministic repository fact inventory
+- `@sera/repository-truth` — deterministic repository truth classification over Snapshot evidence
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1

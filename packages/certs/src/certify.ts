@@ -7,6 +7,7 @@ import { MemoryStore } from "@sera/memory";
 import { ModelProviderStore } from "@sera/model-provider";
 import { OperatorConsoleStore } from "@sera/operator-console";
 import { runRepositorySnapshot } from "@sera/repository-snapshot";
+import { runRepositoryTruth } from "@sera/repository-truth";
 
 export interface CertCheck {
   id: string;
@@ -41,6 +42,7 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   checks.push(...runAutonomousDevLoopV1Checks());
   checks.push(...runOperatorConsoleV1Checks());
   checks.push(...runRepositorySnapshotV1Checks());
+  checks.push(...runRepositoryTruthV1Checks());
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -55,6 +57,9 @@ export function runSecureBaseCert(rootDir = process.cwd()): CertReport {
   const autonomyV1ChecksPass = checks.filter((c) => c.id.startsWith("autonomy_")).every((c) => c.pass);
   const operatorConsoleV1ChecksPass = checks.filter((c) => c.id.startsWith("console_")).every((c) => c.pass);
   const repositorySnapshotV1ChecksPass = checks.filter((c) => c.id.startsWith("repository_snapshot_")).every((c) => c.pass);
+  const repositoryTruthV1ChecksPass = checks.filter((c) => c.id.startsWith("repository_truth_")).every((c) => c.pass);
+  void repositorySnapshotV1ChecksPass;
+  void repositoryTruthV1ChecksPass;
   const pass = checks.every((c) => c.pass);
   const level = pass && operatorConsoleV1ChecksPass
     ? "operator-console-v1"
@@ -959,6 +964,100 @@ function runRepositorySnapshotV1Checks(): CertCheck[] {
     { id: "repository_snapshot_no_model_or_network", name: "Repository Snapshot records no model or network use", pass: snapshot.modelUse === false && snapshot.networkUse === false, detail: "modelUse=false networkUse=false" },
     { id: "repository_snapshot_no_partial_promotion", name: "Repository Snapshot does not promote partial output after simulated failure", pass: failed.status === "FAILED" && firstSummaryText === afterFailureSummaryText, detail: failed.message },
     { id: "repository_snapshot_public_api_consumable", name: "Repository Snapshot is consumable through typed public API", pass: Boolean(first.manifest.find((item) => item.path.endsWith("snapshot.json"))) && first.execution.status === "COMPLETED", detail: first.execution.evidenceDirectory ?? "missing evidence directory" }
+  ];
+}
+
+function runRepositoryTruthV1Checks(): CertCheck[] {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-repository-truth-cert-"));
+  fs.mkdirSync(path.join(root, "packages", "runtime-core", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "packages", "capability-tool", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "apps", "operator", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "scripts"), { recursive: true });
+  fs.mkdirSync(path.join(root, "docs", "architecture"), { recursive: true });
+  fs.mkdirSync(path.join(root, "architecture"), { recursive: true });
+  fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({
+    name: "truth-cert-root",
+    private: true,
+    workspaces: ["packages/*", "apps/*", "missing/*"],
+    scripts: {
+      build: "tsc -b",
+      test: "vitest run",
+      "phase100c:demo": "node scripts/run-phase-overlay-zip-builder-v1.mjs"
+    },
+    dependencies: { "@sera/capability-tool": "0.1.0" }
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "tsconfig.json"), JSON.stringify({ files: [], references: [{ path: "packages/runtime-core" }, { path: "missing-ref" }] }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "runtime-core", "package.json"), JSON.stringify({
+    name: "@sera/repository-truth",
+    private: true,
+    scripts: { build: "tsc -b", test: "vitest run" },
+    dependencies: { "@sera/capability-tool": "0.1.0", "@sera/missing": "0.1.0" }
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "runtime-core", "tsconfig.json"), "{}", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "runtime-core", "src", "index.ts"), "export const runtime = true;\n", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "runtime-core", "src", "runtime.test.ts"), "test('runtime', () => undefined);\n", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "capability-tool", "package.json"), JSON.stringify({
+    name: "@sera/capability-tool",
+    private: true,
+    dependencies: { "@sera/repository-truth": "0.1.0" }
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "capability-tool", "src", "index.ts"), "export const tool = true;\n", "utf8");
+  fs.writeFileSync(path.join(root, "apps", "operator", "package.json"), JSON.stringify({
+    name: "@sera/operator-app",
+    private: true,
+    dependencies: { "@sera/repository-truth": "0.1.0" }
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "apps", "operator", "src", "main.ts"), "console.log('operator');\n", "utf8");
+  fs.writeFileSync(path.join(root, "scripts", "run-phase-overlay-zip-builder-v1.mjs"), "console.log('legacy zip');\n", "utf8");
+  fs.writeFileSync(path.join(root, "docs", "architecture", "legacy-overlay.md"), "# Legacy overlay\n", "utf8");
+  fs.writeFileSync(path.join(root, "architecture", "capability-inventory.json"), JSON.stringify({
+    schemaVersion: "sera.capability-inventory.v1",
+    targetSubsystems: [
+      { id: "repository-truth", targetLayer: "Runtime", currentMaturity: "starter", status: "proposed", dependencies: ["repository-snapshot"] },
+      { id: "website-studio", targetLayer: "Studio", currentMaturity: "not-implemented", status: "proposed", dependencies: [] }
+    ]
+  }, null, 2), "utf8");
+
+  const clock = { now: () => new Date("2026-07-14T12:30:00.000Z") };
+  const first = runRepositoryTruth({ repositoryRoot: root, clock });
+  const required = ["truth.json", "components.json", "dependency-graph.json", "test-ownership.json", "findings.json", "classifications.json", "summary.json"];
+  const parsed = Object.fromEntries(required.map((name) => [name, JSON.parse(fs.readFileSync(path.join(root, ".sera", "repository-truth", name), "utf8"))]));
+  const firstSummaryText = fs.readFileSync(path.join(root, ".sera", "repository-truth", "summary.json"), "utf8");
+  const snapshotBeforeNoRefresh = fs.readFileSync(path.join(root, ".sera", "repository", "summary.json"), "utf8");
+  const noRefresh = runRepositoryTruth({ repositoryRoot: root, refreshSnapshot: false, clock });
+  const snapshotAfterNoRefresh = fs.readFileSync(path.join(root, ".sera", "repository", "summary.json"), "utf8");
+  const latestCompleteSummaryText = fs.readFileSync(path.join(root, ".sera", "repository-truth", "summary.json"), "utf8");
+  const failed = runRepositoryTruth({ repositoryRoot: root, refreshSnapshot: false, clock, simulateFailureAfterStaging: true });
+  const afterFailureSummaryText = fs.readFileSync(path.join(root, ".sera", "repository-truth", "summary.json"), "utf8");
+
+  const brokenRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-repository-truth-broken-cert-"));
+  fs.writeFileSync(path.join(brokenRoot, "package.json"), JSON.stringify({ name: "broken", workspaces: [] }), "utf8");
+  fs.writeFileSync(path.join(brokenRoot, "tsconfig.json"), JSON.stringify({ files: [] }), "utf8");
+  const blocked = runRepositoryTruth({ repositoryRoot: brokenRoot, refreshSnapshot: false, clock });
+
+  const allJson = JSON.stringify(parsed);
+  const graph = parsed["dependency-graph.json"];
+  const findings = parsed["findings.json"].findings as Array<{ certainty: string; confidence: number; automaticRemediationAllowed: boolean; ruleId: string; evidencePaths: string[] }>;
+  const tests = parsed["test-ownership.json"].tests as Array<{ ownershipClassification: string; confidence: number; candidateComponent?: string }>;
+  const classifications = parsed["classifications.json"];
+  const summary = parsed["summary.json"];
+  const truth = parsed["truth.json"];
+
+  return [
+    { id: "repository_truth_required_outputs_exist", name: "Repository Truth writes every required output", pass: first.ok && required.every((name) => fs.existsSync(path.join(root, ".sera", "repository-truth", name))), detail: first.outputRoot },
+    { id: "repository_truth_schemas_parse", name: "Repository Truth output schemas parse", pass: required.every((name) => parsed[name].schemaVersion === "sera.repository-truth.v1"), detail: required.join(", ") },
+    { id: "repository_truth_refreshes_snapshot_first", name: "Repository Truth refreshes Snapshot by default", pass: first.ok && summary.refreshedSnapshotFirst === true && truth.refreshedSnapshotFirst === true, detail: String(summary.refreshedSnapshotId ?? "missing") },
+    { id: "repository_truth_can_use_existing_snapshot", name: "Repository Truth can consume existing Snapshot without refresh", pass: noRefresh.ok && snapshotBeforeNoRefresh === snapshotAfterNoRefresh, detail: noRefresh.message },
+    { id: "repository_truth_blocks_incomplete_snapshot", name: "Repository Truth blocks incomplete Snapshot source", pass: !blocked.ok && blocked.status === "BLOCKED", detail: blocked.message },
+    { id: "repository_truth_no_partial_promotion", name: "Repository Truth does not promote partial output after simulated failure", pass: failed.status === "FAILED" && afterFailureSummaryText === latestCompleteSummaryText && firstSummaryText.length > 0, detail: failed.message },
+    { id: "repository_truth_paths_are_portable", name: "Repository Truth paths are repository-relative and portable", pass: !allJson.includes(root) && !/[A-Z]:\\\\/.test(allJson), detail: "persistent JSON contains no fixture absolute path" },
+    { id: "repository_truth_dependency_graph_declared_only", name: "Repository Truth dependency graph uses declared evidence", pass: graph.edges.some((edge: { edgeType: string; certainty: string; confidence: number }) => edge.edgeType === "workspace dependency" && edge.certainty === "FACT" && edge.confidence === 1) && graph.importCallerBoundary.certainty === "UNKNOWN", detail: JSON.stringify(graph.edgeCountsByType) },
+    { id: "repository_truth_findings_have_evidence_and_rules", name: "Repository Truth findings include evidence, rules, certainty, and no auto remediation", pass: findings.length > 0 && findings.every((finding) => finding.ruleId && Array.isArray(finding.evidencePaths) && finding.automaticRemediationAllowed === false) && findings.some((finding) => finding.certainty === "HEURISTIC" && finding.confidence < 1), detail: JSON.stringify(parsed["findings.json"].countsBySeverity) },
+    { id: "repository_truth_test_ownership_is_confidence_scored", name: "Repository Truth assigns confidence-scored test ownership", pass: tests.some((test) => test.candidateComponent && test.ownershipClassification === "HEURISTIC" && test.confidence < 1), detail: JSON.stringify(parsed["test-ownership.json"].unownedTests) },
+    { id: "repository_truth_inventory_reconciliation", name: "Repository Truth reconciles capability inventory", pass: classifications.inventoryReconciliation.inventoryEntriesWithNoImplementation.includes("website-studio") && classifications.inventoryReconciliation.inventoryEntries.some((entry: { inventoryId: string }) => entry.inventoryId === "repository-truth"), detail: JSON.stringify(classifications.inventoryReconciliation.inventoryReconciliationCounts ?? classifications.inventoryReconciliation.inventoryEntriesWithNoImplementation) },
+    { id: "repository_truth_legacy_authority_analysis_present", name: "Repository Truth records legacy authority analysis", pass: typeof classifications.legacyAuthorityAnalysis.constitutionalRule === "string" && summary.legacyCandidateCount >= 1, detail: classifications.legacyAuthorityAnalysis.constitutionalRule },
+    { id: "repository_truth_no_model_or_network", name: "Repository Truth records no model or network use", pass: truth.modelUse === false && truth.networkUse === false && summary.modelUse === false && summary.networkUse === false, detail: "modelUse=false networkUse=false" },
+    { id: "repository_truth_public_api_consumable", name: "Repository Truth is consumable through typed public API", pass: first.execution.status === "COMPLETED" && Boolean(first.manifest.find((item) => item.path.endsWith("truth.json"))), detail: first.execution.evidenceDirectory ?? "missing evidence directory" }
   ];
 }
 

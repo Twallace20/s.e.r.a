@@ -101,14 +101,28 @@
     {
       "id": "repository-truth",
       "targetLayer": "Runtime",
-      "currentMaturity": "starter",
-      "status": "proposed",
+      "currentMaturity": "implemented",
+      "status": "certification-pending",
       "dependencies": [
         "repository-snapshot",
-        "sera-os-kernel"
+        "sera-os-kernel",
+        "packages/repository-truth",
+        "apps/cli",
+        "packages/certs"
       ],
       "certificationTarget": "repository-truth-v1",
-      "notes": "Classifies snapshot evidence into active modules, evaluation assets, failure fixtures, legacy references, and obsolete assets without relying on heuristic certainty."
+      "evidence": [
+        "packages/repository-truth/src/repository-truth.ts",
+        "tests/repository-truth-v1.test.ts",
+        "docs/architecture/REPOSITORY_TRUTH_V1.md"
+      ],
+      "limitations": [
+        "consumes Repository Snapshot evidence and does not duplicate scanning",
+        "does not claim semantic import/caller authority",
+        "classification is deterministic and confidence-scored",
+        "does not remediate legacy or generated assets"
+      ],
+      "notes": "Classifies snapshot evidence into components, declared dependency graph, test ownership, findings, inventory reconciliation, and legacy authority risks without relying on heuristic certainty."
     },
     {
       "id": "runtime-state-store",
