@@ -71,6 +71,10 @@ Repository Snapshot excludes `.sera/model-runtime/` as generated Runtime evidenc
 
 Knowledge and Universal Intake Runtime v1 is a sibling Runtime boundary. Local Model Runtime may later enrich candidate knowledge only through separate Control Plane authorization. Model output must remain candidate, provenance-linked, and unable to replace original source evidence or become canonical truth automatically.
 
+## Relationship To Capability Engine
+
+Capability Engine may consume Local Model Runtime output only as candidate intelligence. Model output cannot directly create, certify, promote, activate, roll back, or mutate a capability version.
+
 ## CLI
 
 The CLI exposes:
@@ -93,7 +97,7 @@ Local Model Runtime v1 does not:
 - use public internet
 - store credentials
 - perform Knowledge Runtime behavior
-- perform Capability Engine learning
+- perform Capability Engine learning or promotion
 - implement Desktop Operator behavior
 - implement distributed inference
 - implement Hive Mode

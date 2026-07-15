@@ -20,6 +20,7 @@
     "@sera/execution-engine": "0.1.0",
     "@sera/evaluation-engine": "0.1.0",
     "@sera/model-runtime": "0.1.0",
-    "@sera/knowledge-runtime": "0.1.0"
+    "@sera/knowledge-runtime": "0.1.0",
+    "@sera/capability-engine": "0.1.0"
   }
 }

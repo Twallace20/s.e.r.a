@@ -79,3 +79,5 @@ Strategy is not universal advice. It is valid only inside the context, assumptio
 - Strategy requires evaluation, outcome support, rollback awareness, and promotion approval.
 - Models may propose Knowledge, Understanding, or Strategy, but they cannot promote their own outputs.
 - Unified Control Plane owns terminal promotion decisions when a governed update affects reusable S.E.R.A. behavior.
+- Capability Engine v1 may certify and promote exact capability versions only after evidence, evaluation, reproducibility, and rollback requirements are met.
+- Capability promotion is not truth promotion: an active capability version is a governed executable boundary, while its supporting Knowledge and Strategy remain traceable and revisable.

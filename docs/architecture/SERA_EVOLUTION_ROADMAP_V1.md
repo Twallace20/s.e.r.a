@@ -32,13 +32,16 @@ Milestone 8 — Local Model Runtime is COMPLETE. S.E.R.A. can route explicitly a
 
 Milestone 9 — Knowledge and Multimodal Intake is COMPLETE. S.E.R.A. can ingest authorized inline text, local files, local directories, predownloaded snapshots, URL references without fetching, and generated fixtures into durable candidate knowledge records with provenance, content hashes, deterministic extraction, opaque preservation, and bounded lexical retrieval.
 
+Milestone 10 — Capability Engine and Recursive Learning is COMPLETE. S.E.R.A. can run bounded learning sessions, assemble immutable candidate capability bundles, evaluate and compare candidates, certify exact digests, promote through Control Plane authority, activate versions atomically, and roll back with regression evidence.
+
 Milestone 7 - Evaluation Engine: COMPLETE
 Milestone 8 - Local Model Runtime: COMPLETE
 Milestone 9 - Knowledge and Multimodal Intake: COMPLETE
+Milestone 10 - Capability Engine and Recursive Learning: COMPLETE
 
-completedMilestones: 9
-remainingMilestones: 7
-currentMilestone: 10
+completedMilestones: 10
+remainingMilestones: 6
+currentMilestone: 11
 baseMvpCompletionMilestone: 16
 
 ### Era II — Cognition
@@ -79,9 +82,9 @@ The Base MVP milestone manifest is frozen:
 
 ```text
 totalMilestones: 16
-completedMilestones: 9
-remainingMilestones: 7
-currentMilestone: 10
+completedMilestones: 10
+remainingMilestones: 6
+currentMilestone: 11
 baseMvpCompletionMilestone: 16
 ```
 
@@ -108,6 +111,7 @@ Milestone 6 - Isolated Execution Engine: COMPLETE
 Milestone 7 - Evaluation Engine: COMPLETE
 Milestone 8 - Local Model Runtime: COMPLETE
 Milestone 9 - Knowledge and Multimodal Intake: COMPLETE
+Milestone 10 - Capability Engine and Recursive Learning: COMPLETE
 ```
 
 ## Consolidation milestones
@@ -123,7 +127,7 @@ The locked implementation order is:
 7. Evaluation Engine — `evaluation-engine-v1` — implemented and certified as deterministic evaluation over immutable execution evidence
 8. Local Model Runtime — `local-model-runtime-v1` — implemented as a provider-independent Runtime boundary with deterministic fixture proof and disabled real-local adapters
 9. Knowledge and Multimodal Intake — `knowledge-intake-runtime-v1` — implemented as a Runtime-owned intake and candidate knowledge boundary with deterministic extraction, opaque preservation, provenance, and lexical retrieval
-10. Capability Genome and Learning Engine — `capability-learning-v1`
+10. Capability Engine and Recursive Learning — `capability-engine-recursive-learning-v1` — implemented as the governed Capability-layer lifecycle for candidate bundles, evaluation, exact certification, explicit promotion, active versions, rollback, and recursive learning evidence
 11. Desktop Operator — `desktop-operator-v1`
 12. Website Studio MVP — `website-studio-provisional-v1`
 13. Portable Offline Release — `portable-offline-release-v1`

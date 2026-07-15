@@ -17,6 +17,8 @@ coverage/
 .sera/model-runtime/
 .sera/intake/
 .sera/knowledge/
+.sera/capability-engine/
+.sera/capabilities/
 .sera-local/
 *.log
 .DS_Store

@@ -14,6 +14,16 @@
       "records": "Authorized local intake boundary with content-addressed preservation, deterministic extraction, opaque media/archive preservation, SQLite knowledge records, provenance, candidate status, offline proofs, and bounded lexical retrieval."
     },
     {
+      "id": "capability-engine-recursive-learning-v1",
+      "name": "Capability Engine and Recursive Learning v1",
+      "kind": "capability-runtime",
+      "status": "complete",
+      "executableCapability": true,
+      "runtimeService": true,
+      "document": "docs/architecture/CAPABILITY_ENGINE_RECURSIVE_LEARNING_V1.md",
+      "records": "Governed recursive learning and capability version lifecycle with authorized sessions, immutable candidate bundles, isolated execution, deterministic evaluation, baseline comparison, exact certification, Control Plane promotion, active versions, regression evidence, rollback, and repeatable offline proof."
+    },
+    {
       "id": "local-model-runtime-v1",
       "name": "Local Model Runtime v1",
       "kind": "runtime-capability",
@@ -332,18 +342,34 @@
       "notes": "Unified deterministic and rubric-based evaluation. Existing certs, phase verifiers, and tests require classification before consolidation."
     },
     {
-      "id": "learning-engine",
-      "targetLayer": "Runtime",
-      "currentMaturity": "starter",
-      "status": "proposed",
+      "id": "capability-engine",
+      "targetLayer": "Capability",
+      "currentMaturity": "implemented",
+      "status": "certification-pending",
       "dependencies": [
         "evaluation-engine",
         "runtime-state-store",
-        "packages/memory",
-        "packages/knowledge"
+        "isolated-execution-engine",
+        "runtime-control-plane",
+        "model-runtime",
+        "multimodal-intake",
+        "packages/capability-engine"
       ],
-      "certificationTarget": "capability-learning-v1",
-      "notes": "Learning requires baseline, attempted strategy, observed result, diagnosis, candidate improvement, repeat evaluation, promotion decision, and rollback information."
+      "certificationTarget": "capability-engine-recursive-learning-v1",
+      "evidence": [
+        "packages/capability-engine/src/capability-engine.ts",
+        "tests/capability-engine-recursive-learning-v1.test.ts",
+        "docs/architecture/CAPABILITY_ENGINE_RECURSIVE_LEARNING_V1.md"
+      ],
+      "limitations": [
+        "does not load arbitrary code",
+        "does not execute unrestricted shell",
+        "does not invoke real models or public network",
+        "does not mutate core source automatically",
+        "does not implement Desktop Operator, Studio, distributed capability, or Hive Mode"
+      ],
+      "nextGate": "Desktop Operator v1",
+      "notes": "Capability Engine and Recursive Learning v1 creates authorized learning sessions, immutable candidate bundles, deterministic evaluation and comparison evidence, exact certification records, explicit Control Plane promotion, active-version state, and rollback evidence."
     },
     {
       "id": "model-runtime",

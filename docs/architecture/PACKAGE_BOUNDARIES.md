@@ -153,6 +153,20 @@ Boundary rules:
 - retrieval includes provenance and trust/candidate status
 - intake cannot execute imported content, render active HTML, invoke models, mutate source, approve gates, or replace Control Plane authority
 
+## `@sera/capability-engine` / `packages/capability-engine`
+
+Capability-layer engine for recursive learning and governed capability version lifecycles. It creates authorized learning sessions, accepts evidence-backed learning signals, assembles immutable candidate bundles, invokes Isolated Execution and Evaluation Engine, compares candidates to baselines, certifies exact digests, promotes only through explicit Control Plane authority, records active versions atomically, and preserves regression and rollback evidence in SQLite Operational State migration v7.
+
+Boundary rules:
+
+- learning improves existing capability contracts; innovation remains a blocked or future-governed candidate path
+- model and knowledge outputs are candidate input only
+- candidate bundles are content-addressed and immutable
+- certification is distinct from promotion
+- promotion activates only the exact certified digest
+- rollback requires explicit authorization and regression evidence
+- no arbitrary code loading, unrestricted shell, source mutation, cloud provider, public network, Git action, Desktop Operator, Studio, distributed capability, or Hive Mode authority is introduced
+
 ## `@sera/certs` / `packages/certs`
 
 Certification runner and capability checks.

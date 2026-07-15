@@ -6,7 +6,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createControlPlaneRuntimeService, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
 
 export const RUNTIME_STATE_VERSION = "runtime-state-v1";
-export const RUNTIME_STATE_SCHEMA_VERSION = 6;
+export const RUNTIME_STATE_SCHEMA_VERSION = 7;
 export const RUNTIME_STATE_EXPORT_SCHEMA = "sera.runtime-state-export.v1";
 
 export type RuntimeStateStatus = "healthy" | "blocked";
@@ -139,7 +139,22 @@ const TABLES = [
   "knowledge_provenance",
   "knowledge_versions",
   "knowledge_queries",
-  "knowledge_query_results"
+  "knowledge_query_results",
+  "capability_idempotency",
+  "capability_catalog",
+  "capability_learning_signals",
+  "capability_proposals",
+  "capability_versions",
+  "capability_experiments",
+  "capability_evaluation_links",
+  "capability_comparisons",
+  "capability_certifications",
+  "capability_promotions",
+  "capability_active_versions",
+  "capability_rollbacks",
+  "learning_sessions",
+  "learning_iterations",
+  "capability_events"
 ] as const;
 
 const TERMINAL_STATES = new Set<AttemptState>(["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"]);
@@ -866,6 +881,228 @@ CREATE INDEX idx_knowledge_documents_source_version ON knowledge_documents(sourc
 CREATE INDEX idx_knowledge_chunks_order ON knowledge_chunks(document_id, sequence);
 CREATE INDEX idx_knowledge_chunks_text ON knowledge_chunks(chunk_text);
 CREATE INDEX idx_knowledge_queries_normalized ON knowledge_queries(normalized_query, created_at);
+`
+  },
+  {
+    version: 7,
+    name: "capability_engine_recursive_learning_v1",
+    sql: `
+CREATE TABLE capability_idempotency (
+  idempotency_key TEXT PRIMARY KEY,
+  request_hash TEXT NOT NULL,
+  response_type TEXT NOT NULL,
+  proposal_id TEXT,
+  created_at TEXT NOT NULL,
+  response_json TEXT NOT NULL
+);
+
+CREATE TABLE capability_catalog (
+  capability_id TEXT PRIMARY KEY,
+  display_name TEXT NOT NULL,
+  source TEXT NOT NULL,
+  risk_class TEXT NOT NULL,
+  active_version_digest TEXT,
+  status TEXT NOT NULL,
+  limitations TEXT NOT NULL,
+  integrity_digest TEXT NOT NULL
+);
+
+CREATE TABLE capability_learning_signals (
+  signal_id TEXT PRIMARY KEY,
+  signal_type TEXT NOT NULL,
+  capability_id TEXT,
+  baseline_version_digest TEXT,
+  evidence_json TEXT NOT NULL,
+  observed_deficiency TEXT NOT NULL,
+  desired_outcome TEXT NOT NULL,
+  severity TEXT NOT NULL,
+  confidence_source TEXT NOT NULL,
+  trust_status TEXT NOT NULL,
+  candidate_status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE capability_proposals (
+  proposal_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  capability_id TEXT NOT NULL,
+  source TEXT NOT NULL,
+  source_evidence_json TEXT NOT NULL,
+  learning_lane TEXT NOT NULL,
+  risk_class TEXT NOT NULL,
+  requested_type TEXT NOT NULL,
+  desired_outcome TEXT NOT NULL,
+  candidate_request_hash TEXT NOT NULL,
+  model_generated INTEGER NOT NULL,
+  candidate_intelligence INTEGER NOT NULL,
+  provider_fingerprint TEXT,
+  request_hash TEXT,
+  response_hash TEXT,
+  created_at TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE capability_versions (
+  capability_id TEXT NOT NULL,
+  version_digest TEXT NOT NULL,
+  version TEXT NOT NULL,
+  manifest_json TEXT NOT NULL,
+  lifecycle_status TEXT NOT NULL,
+  learning_lane TEXT NOT NULL,
+  risk_class TEXT NOT NULL,
+  bundle_root TEXT NOT NULL,
+  bundle_hash TEXT NOT NULL,
+  candidate_bytes INTEGER NOT NULL,
+  baseline_version_digest TEXT,
+  created_at TEXT NOT NULL,
+  certified_at TEXT,
+  promoted_at TEXT,
+  superseded_at TEXT,
+  certification_level TEXT,
+  integrity_hash TEXT NOT NULL,
+  terminal INTEGER NOT NULL,
+  PRIMARY KEY(capability_id, version_digest)
+);
+
+CREATE TABLE capability_experiments (
+  experiment_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  capability_id TEXT NOT NULL,
+  version_digest TEXT NOT NULL,
+  authorization_id TEXT NOT NULL,
+  execution_id TEXT,
+  state TEXT NOT NULL,
+  workspace_root TEXT,
+  started_at TEXT,
+  completed_at TEXT,
+  evidence_json TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE capability_evaluation_links (
+  evaluation_link_id TEXT PRIMARY KEY,
+  experiment_id TEXT NOT NULL,
+  evaluation_id TEXT NOT NULL,
+  capability_id TEXT NOT NULL,
+  version_digest TEXT NOT NULL,
+  state TEXT NOT NULL,
+  evidence_json TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE capability_comparisons (
+  comparison_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  capability_id TEXT NOT NULL,
+  baseline_version_digest TEXT,
+  challenger_version_digest TEXT NOT NULL,
+  result TEXT NOT NULL,
+  normalized_result_json TEXT NOT NULL,
+  threshold REAL NOT NULL,
+  created_at TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE capability_certifications (
+  certification_id TEXT PRIMARY KEY,
+  capability_id TEXT NOT NULL,
+  version_digest TEXT NOT NULL,
+  experiment_ids_json TEXT NOT NULL,
+  evaluation_ids_json TEXT NOT NULL,
+  reproducibility_json TEXT NOT NULL,
+  comparison_json TEXT NOT NULL,
+  rollback_ready INTEGER NOT NULL,
+  certified_at TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE capability_promotions (
+  promotion_id TEXT PRIMARY KEY,
+  capability_id TEXT NOT NULL,
+  version_digest TEXT NOT NULL,
+  authorization_id TEXT NOT NULL,
+  certification_id TEXT NOT NULL,
+  promoted_at TEXT NOT NULL,
+  rollback_target_digest TEXT,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  request_hash TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE capability_active_versions (
+  capability_id TEXT NOT NULL,
+  activation_scope TEXT NOT NULL,
+  active_version_digest TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  authority_identity TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  PRIMARY KEY(capability_id, activation_scope)
+);
+
+CREATE TABLE capability_rollbacks (
+  rollback_id TEXT PRIMARY KEY,
+  capability_id TEXT NOT NULL,
+  current_version_digest TEXT NOT NULL,
+  target_version_digest TEXT NOT NULL,
+  authorization_id TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  regression_evidence_json TEXT NOT NULL,
+  rolled_back_at TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  request_hash TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE learning_sessions (
+  session_id TEXT PRIMARY KEY,
+  capability_id TEXT NOT NULL,
+  state TEXT NOT NULL,
+  learning_lane TEXT NOT NULL,
+  policy_json TEXT NOT NULL,
+  policy_hash TEXT NOT NULL,
+  iteration_count INTEGER NOT NULL,
+  recursion_depth INTEGER NOT NULL,
+  started_at TEXT NOT NULL,
+  completed_at TEXT,
+  terminal INTEGER NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE learning_iterations (
+  iteration_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  iteration_number INTEGER NOT NULL,
+  candidate_version_digest TEXT,
+  authorization_id TEXT NOT NULL,
+  state TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  completed_at TEXT,
+  evidence_json TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  UNIQUE(session_id, iteration_number)
+);
+
+CREATE TABLE capability_events (
+  event_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  capability_id TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  message TEXT NOT NULL,
+  details_json TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  UNIQUE(session_id, sequence)
+);
+
+CREATE INDEX idx_capability_versions_status ON capability_versions(capability_id, lifecycle_status, created_at);
+CREATE INDEX idx_capability_proposals_session ON capability_proposals(session_id, capability_id);
+CREATE INDEX idx_learning_sessions_state ON learning_sessions(state, started_at);
+CREATE INDEX idx_capability_events_order ON capability_events(session_id, sequence);
+CREATE INDEX idx_capability_active_scope ON capability_active_versions(activation_scope, capability_id);
 `
   }
 ];

@@ -5,10 +5,10 @@ S.E.R.A. only advances when the cert runner proves the current runtime level. Do
 ## Current runtime certification
 
 ```text
-isolated-execution-v1
+capability-engine-recursive-learning-v1
 ```
 
-Milestone 6 is the current runtime certification. It proves governed isolated execution for explicitly authorized local workloads, temporary workspace boundaries, shell-disabled process launch, bounded output capture, timeout, cancellation, durable execution records, cleanup, and local evidence generation without network or model use.
+Milestone 10 is the current runtime certification. It proves governed recursive learning and capability version lifecycle: authorized learning sessions, immutable candidate bundles, isolated execution, deterministic evaluation, baseline comparison, reproducibility, exact certification, Control Plane promotion, active-version records, rollback, complete evidence, offline operation, and no real model requirement.
 
 ## Level 1 — `secure-base`
 
@@ -71,6 +71,10 @@ S.E.R.A. can ingest local files, chunk them into `.sera-knowledge/`, perform det
 ## Runtime Level — `knowledge-intake-runtime-v1`
 
 S.E.R.A. can accept explicitly authorized local intake, preserve source bytes with content hashes, extract bounded deterministic text formats, preserve opaque media and archives without extraction, persist candidate knowledge and provenance in SQLite Operational State, and perform deterministic lexical retrieval without public internet or real model invocation.
+
+## Runtime/Capability Level — `capability-engine-recursive-learning-v1`
+
+S.E.R.A. can turn evidence-backed learning into a governed capability candidate, prove it through isolated execution and deterministic evaluation, certify an exact immutable digest, promote it only with Control Plane authority, activate the certified version atomically, and roll it back with regression evidence. Model and knowledge outputs remain candidate intelligence only.
 
 ## Level 10 — `model-provider-v1`
 

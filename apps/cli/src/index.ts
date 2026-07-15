@@ -9,6 +9,7 @@ import { IsolatedExecutionEngine, createIsolatedExecutionRuntimeServices, runIso
 import { EvaluationEngine, runEvaluationEngineProof } from "@sera/evaluation-engine";
 import { LocalModelRuntime, runLocalModelRuntimeProof } from "@sera/model-runtime";
 import { KnowledgeRuntime, createIntakeAuthorization, normalizeIntakeRequest, runKnowledgeIntakeProof, runKnowledgeRetrievalProof } from "@sera/knowledge-runtime";
+import { CapabilityEngine, runCapabilityEngineProof, runRecursiveLearningProof } from "@sera/capability-engine";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -119,6 +120,15 @@ Usage:
   sera model policy
   sera model inspect <invocation-id>
   sera model prove
+  sera capability catalog
+  sera capability proposals
+  sera capability sessions
+  sera capability policy
+  sera capability inspect <capability-id>
+  sera capability prove
+  sera learning status
+  sera learning inspect <session-id>
+  sera learning prove
   sera snapshot
   sera truth
 
@@ -205,6 +215,7 @@ Secure base behavior:
   - Evaluation Engine evaluates immutable execution evidence with deterministic registered evaluators and preserves Control Plane terminal authority
   - Local Model Runtime governs registered local providers and returns untrusted candidate intelligence without tool execution authority
   - Knowledge and Universal Intake Runtime preserves provenance-linked local information as candidate knowledge with deterministic lexical retrieval
+  - Capability Engine creates, evaluates, certifies, promotes and rolls back exact bounded capability versions under Control Plane authority
   - does not require an LLM provider
 `);
 }
@@ -1387,6 +1398,68 @@ async function main(): Promise<void> {
       store.close();
     }
     throw new Error("Model command must be 'providers', 'models', 'policy', 'inspect', or 'prove'.");
+  }
+
+  if (cmd === "capability") {
+    const [capabilityMode, capabilityId] = rest;
+    if (capabilityMode === "prove") {
+      const result = await runCapabilityEngineProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
+    const store = openRuntimeState(config);
+    try {
+      const engine = new CapabilityEngine(store, { projectRoot: process.cwd() });
+      if (capabilityMode === "catalog") {
+        console.log(JSON.stringify(engine.catalog(), null, 2));
+        process.exit(0);
+      }
+      if (capabilityMode === "proposals") {
+        console.log(JSON.stringify(engine.proposals(), null, 2));
+        process.exit(0);
+      }
+      if (capabilityMode === "sessions") {
+        console.log(JSON.stringify(engine.sessions(), null, 2));
+        process.exit(0);
+      }
+      if (capabilityMode === "policy") {
+        console.log(JSON.stringify(engine.policyReport(), null, 2));
+        process.exit(0);
+      }
+      if (capabilityMode === "inspect") {
+        console.log(JSON.stringify(engine.inspectCapability(requireArg(capabilityId, "capability id")), null, 2));
+        process.exit(0);
+      }
+    } finally {
+      store.close();
+    }
+    throw new Error("Capability command must be 'catalog', 'proposals', 'sessions', 'policy', 'inspect', or 'prove'.");
+  }
+
+  if (cmd === "learning") {
+    const [learningMode, sessionId] = rest;
+    if (learningMode === "prove") {
+      const result = await runRecursiveLearningProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
+    const store = openRuntimeState(config);
+    try {
+      const engine = new CapabilityEngine(store, { projectRoot: process.cwd() });
+      if (learningMode === "status") {
+        console.log(JSON.stringify(engine.sessions(), null, 2));
+        process.exit(0);
+      }
+      if (learningMode === "inspect") {
+        console.log(JSON.stringify(engine.inspectSession(requireArg(sessionId, "learning session id")), null, 2));
+        process.exit(0);
+      }
+    } finally {
+      store.close();
+    }
+    throw new Error("Learning command must be 'status', 'inspect', or 'prove'.");
   }
 
   if (cmd === "repository") {

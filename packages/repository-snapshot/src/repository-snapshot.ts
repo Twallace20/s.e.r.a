@@ -174,6 +174,8 @@ const DEFAULT_EXCLUSIONS = [
   ".sera/model-runtime",
   ".sera/intake",
   ".sera/knowledge",
+  ".sera/capability-engine",
+  ".sera/capabilities",
   ".sera-runs",
   ".sera-cert",
   ".sera-local",

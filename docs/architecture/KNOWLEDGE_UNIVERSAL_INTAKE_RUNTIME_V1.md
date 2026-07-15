@@ -77,7 +77,7 @@ Proofs use temporary non-Git roots and isolated SQLite state. They do not requir
 
 ## Milestone 10 Boundary
 
-Milestone 10 is Capability Engine and Recursive Learning. Milestone 9 does not implement capability learning, recursive promotion, autonomous web research, Desktop Operator behavior, distributed intake, or Hive Mode.
+Milestone 10 is Capability Engine and Recursive Learning. Capability Engine may consume Knowledge Runtime records only as candidate knowledge with provenance and trust state. Knowledge records cannot directly create, certify, promote, activate, roll back, or mutate a capability. Milestone 9 does not implement capability learning, recursive promotion, autonomous web research, Desktop Operator behavior, distributed intake, or Hive Mode.
 
 ## Certification
 

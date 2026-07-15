@@ -43,6 +43,9 @@
       "path": "../knowledge-runtime"
     },
     {
+      "path": "../capability-engine"
+    },
+    {
       "path": "../shared"
     },
     {

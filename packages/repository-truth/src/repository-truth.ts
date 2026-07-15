@@ -817,6 +817,7 @@ function classifyLayer(relativePath: string, name?: string): ArchitectureLayer {
   if (relativePath.startsWith("apps/operator") || name?.includes("operator-console")) return "desktop";
   if (relativePath.startsWith("apps/")) return "desktop";
   if (name?.includes("model-provider")) return "provider";
+  if (name?.includes("capability-engine")) return "capability";
   if (name?.includes("kernel") || name?.includes("contracts") || name?.includes("shared") || name?.includes("safety")) return "kernel";
   if (name && RUNTIME_PACKAGE_NAME_HINTS.some((hint) => name.includes(hint))) return "runtime";
   if (name?.includes("worker") || name?.includes("knowledge") || name?.includes("research") || name?.includes("autonomy") || name?.includes("self-improvement") || name?.includes("tools")) return "capability";
