@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "sera.base-mvp-manifest.v1",
+  "totalMilestones": 16,
+  "completedMilestones": 6,
+  "remainingMilestones": 10,
+  "currentMilestone": 7,
+  "baseMvpCompletionMilestone": 16,
+  "currentCertification": "isolated-execution-v1",
+  "architectureBranch": "architecture/local-autonomous-runtime-v1"
+}

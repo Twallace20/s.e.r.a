@@ -124,6 +124,8 @@ It is observability, not new authority. It must not apply patches, approve lesso
 
 ## Certification
 
-Certification is the gate that says what S.E.R.A. can claim. The current runtime certification is `operator-console-v1`.
+Certification is the gate that says what S.E.R.A. can claim. The current runtime certification is `isolated-execution-v1`.
+
+The canonical machine-readable Base MVP milestone record is `architecture/base-mvp-manifest.json`.
 
 No future phase should be treated as complete unless build, tests, and certification pass.

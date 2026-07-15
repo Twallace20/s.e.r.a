@@ -124,6 +124,7 @@ Current repository candidates:
 | `packages/autonomy` | review-required; mixes runtime orchestration and capability behavior |
 | `packages/runtime-state` | confirmed; SQLite Operational State v1 |
 | `packages/runtime-recovery` | confirmed; Persistent Runtime Recovery v1 |
+| `packages/execution-engine` | confirmed; Isolated Execution Engine v1 |
 | `.sera-*` runtime directories | legacy/runtime-data; not source authority |
 
 Migration targets:
@@ -141,6 +142,7 @@ Valid components:
 - local Runtime Host
 - SQLite state store via `@sera/runtime-state`
 - persistent recovery coordinator via `@sera/runtime-recovery`
+- isolated execution chamber via `@sera/execution-engine`
 - attempt ledger
 - evaluation runner
 - learning promotion record
@@ -175,7 +177,9 @@ Milestone 5B introduces local SQLite Operational State for command idempotency, 
 
 Milestone 5C introduces Persistent Runtime Recovery for checkpointed interrupted attempts, linked retries, review-required blocking, recovery evidence, and Runtime health integration.
 
-These Runtime milestones do not implement Hive Mode, networking, distributed discovery, remote workers, cloud execution, isolated execution, arbitrary subprocess workloads, or Desktop authority.
+Milestone 6 introduces Isolated Execution Engine for explicitly authorized local workloads, temporary workspace boundaries, direct shell-disabled process launch, bounded output capture, timeout/cancellation, SQLite execution records, cleanup, and execution evidence.
+
+These Runtime milestones do not implement Hive Mode, networking, distributed discovery, remote workers, cloud execution, arbitrary subprocess workloads, hostile-code sandboxing, containers, virtual machines, or Desktop authority.
 
 ## Provider
 

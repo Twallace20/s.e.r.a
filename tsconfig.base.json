@@ -80,6 +80,9 @@
       ],
       "@sera/runtime-recovery": [
         "packages/runtime-recovery/src/index.ts"
+      ],
+      "@sera/execution-engine": [
+        "packages/execution-engine/src/index.ts"
       ]
     }
   }

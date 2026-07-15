@@ -24,7 +24,7 @@ The Runtime Host manages process and service lifecycle.
 
 SQLite Operational State is hosted as a required Runtime Service before Unified Control Plane in Milestone 5B.
 
-Persistent Runtime Recovery is hosted after Unified Control Plane in Milestone 5C.
+Persistent Runtime Recovery is hosted after Unified Control Plane in Milestone 5C. Isolated Execution Engine v1 is hosted after Persistent Runtime Recovery in Milestone 6 and depends on `operational-state`, `unified-control-plane`, and `persistent-runtime-recovery`.
 
 The Unified Control Plane remains the authority over attempts, authorization, terminal status, validation, evidence, and closeout.
 
@@ -158,4 +158,4 @@ Milestone 5A completes Local Runtime Host v1 only.
 
 Milestone 5B completes SQLite Operational State v1.
 
-Milestone 5C completes Persistent Runtime Recovery v1 and completes Milestone 5. Milestone 6, Isolated Execution Engine, is next.
+Milestone 6 completes Isolated Execution Engine v1. Milestone 7, Evaluation Engine, is next.

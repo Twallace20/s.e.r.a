@@ -5,10 +5,10 @@ S.E.R.A. only advances when the cert runner proves the current runtime level. Do
 ## Current runtime certification
 
 ```text
-persistent-runtime-v1
+isolated-execution-v1
 ```
 
-Milestone 5C is the current runtime certification. It proves persistent runtime recovery for interrupted attempts, restart-safe checkpoint resume, linked retry creation, active-owner protection, lease/fencing protection, review-required blocking, and local evidence generation without network or model use.
+Milestone 6 is the current runtime certification. It proves governed isolated execution for explicitly authorized local workloads, temporary workspace boundaries, shell-disabled process launch, bounded output capture, timeout, cancellation, durable execution records, cleanup, and local evidence generation without network or model use.
 
 ## Level 1 — `secure-base`
 
@@ -93,6 +93,10 @@ S.E.R.A. can persist operational runtime state in local SQLite: commands, attemp
 ## Milestone 5C — `persistent-runtime-v1`
 
 S.E.R.A. can inspect persisted attempts after restart, classify interrupted work conservatively, resume only restart-safe checkpoints, create linked retries for retry-safe failures, protect active owners, enforce leases and fencing, require review for unsafe side effects, and write recovery evidence.
+
+## Milestone 6 — `isolated-execution-v1`
+
+S.E.R.A. can run explicitly authorized local workloads in temporary bounded workspaces without shell execution or arbitrary executable paths. Certification proves authorization, request integrity, workspace boundaries, path escape blocking, input hashes, minimized environment, offline policy, stdout/stderr capture, output limits, timeout, cancellation, durable execution events, output harvesting, source non-mutation, cleanup, Runtime Host service health, conservative restart classification, complete evidence, non-Git operation, offline operation, and no model requirement.
 
 ## Phase 13 — `phase-13-documentation-repo-truth-alignment-v1`
 

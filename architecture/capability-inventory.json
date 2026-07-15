@@ -260,6 +260,35 @@
       "notes": "Bounded local recovery coordinator for durable nonterminal attempts. It resumes only restart-safe checkpoints, creates linked retries at clear failed boundaries, blocks uncertain side effects for review, and writes recovery evidence under Runtime Host health."
     },
     {
+      "id": "isolated-execution-engine",
+      "targetLayer": "Runtime",
+      "currentMaturity": "implemented",
+      "status": "certification-pending",
+      "dependencies": [
+        "local-runtime-host",
+        "runtime-control-plane",
+        "runtime-state-store",
+        "persistent-runtime-recovery",
+        "packages/execution-engine",
+        "apps/cli",
+        "packages/certs"
+      ],
+      "certificationTarget": "isolated-execution-v1",
+      "evidence": [
+        "packages/execution-engine/src/execution-engine.ts",
+        "tests/isolated-execution-v1.test.ts",
+        "docs/architecture/ISOLATED_EXECUTION_ENGINE_V1.md"
+      ],
+      "limitations": [
+        "not a hostile-code sandbox",
+        "does not expose unrestricted shell execution",
+        "does not accept arbitrary executable paths",
+        "does not implement containers, virtual machines, network namespaces, distributed execution, or Evaluation Engine behavior"
+      ],
+      "nextGate": "Evaluation Engine v1",
+      "notes": "Governed local execution chamber for explicitly authorized workloads. It creates temporary workspaces outside the repository, launches approved executable adapters with shell disabled, enforces output/timeout/cancellation limits, writes SQLite execution records, harvests declared outputs, cleans up, and preserves Control Plane terminal authority."
+    },
+    {
       "id": "evaluation-engine",
       "targetLayer": "Runtime",
       "currentMaturity": "starter",

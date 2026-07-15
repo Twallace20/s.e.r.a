@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `persistent-runtime-v1`.
+Current runtime certification: `isolated-execution-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -26,6 +26,7 @@ Certified runtime ladder completed so far:
 - `runtime-host-v1`
 - `runtime-state-v1`
 - `persistent-runtime-v1`
+- `isolated-execution-v1`
 
 Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
@@ -77,6 +78,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - local Runtime Host identity, health, proof, lifecycle evidence, and Control Plane service hosting
 - local SQLite Operational State for command idempotency, attempt state, gates, evidence references, leases, backups, and deterministic exports
 - persistent runtime recovery for interrupted attempts using checkpoints, leases, recovery decisions, linked retries, and review-required blocking
+- isolated execution for authorized deterministic local workloads in temporary workspaces with shell disabled, bounded output capture, timeout, cancellation, cleanup, SQLite execution records, and `.sera/executions/` evidence
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
@@ -97,7 +99,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - no multi-file transaction worker yet
 - no cloud dependency
 - no external database requirement
-- no isolated execution engine yet
+- no hostile-code sandbox, container, VM, kernel sandbox, or network namespace
 - no automatic lesson activation
 - no automatic task execution
 - no silent lesson-driven behavior changes
@@ -118,7 +120,7 @@ npm run verify
 Expected current certification result:
 
 ```text
-S.E.R.A. certify: PASS level=persistent-runtime-v1
+S.E.R.A. certify: PASS level=isolated-execution-v1
 ```
 
 ## Starter secure-base run
@@ -206,7 +208,18 @@ npm run sera -- recovery pending
 npm run sera -- recovery decisions
 ```
 
-Recovery does not claim exactly-once execution for arbitrary side effects and does not implement Milestone 6 isolated execution.
+Recovery does not claim exactly-once execution for arbitrary side effects and does not resume arbitrary operating-system processes from memory.
+
+Isolated Execution Engine runs explicitly authorized local workloads in bounded temporary workspaces:
+
+```bash
+npm run sera -- execution policy
+npm run sera -- execution list
+npm run sera -- execution inspect <execution-id>
+npm run sera -- execution prove
+```
+
+The engine uses approved executable adapters only, launches with `shell: false`, materializes approved inputs, captures bounded stdout/stderr, records durable execution rows, harvests declared outputs, cleans temporary workspaces, and writes `.sera/executions/<execution-id>/` evidence. Isolated Execution Engine v1 is a governed process and workspace boundary for approved local workloads. It is not a complete hostile-code security boundary, container sandbox, virtual machine, kernel sandbox, or network namespace. Process success means only `SUCCEEDED_PROCESS`; Unified Control Plane keeps terminal attempt authority.
 
 ## Developer Worker v2 and Self-Improvement Loop v1
 
@@ -267,6 +280,7 @@ Nothing gets called working unless it has:
 - `@sera/runtime-host` — local Runtime Service lifecycle, identity, health, cancellation, shutdown, and evidence
 - `@sera/runtime-state` — local SQLite Operational State for attempts, gates, evidence references, command idempotency, leases, backups, and exports
 - `@sera/runtime-recovery` — persistent local recovery coordinator for checkpointed interrupted attempts, linked retries, review-required decisions, and recovery evidence
+- `@sera/execution-engine` — governed local execution chamber for authorized workloads, bounded workspaces, direct process launch, output capture, cleanup, and execution evidence
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1

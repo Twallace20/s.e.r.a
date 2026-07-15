@@ -104,6 +104,10 @@ Boundary rules:
 
 Persistent Runtime Recovery for interrupted attempts, checkpoint classification, safe same-attempt resume, linked retry, review-required blocking, and recovery evidence.
 
+## `@sera/execution-engine` / `packages/execution-engine`
+
+Governed local execution chamber for explicitly authorized workloads. It validates Control Plane-scoped authorization, creates temporary workspaces outside the repository by default, materializes approved inputs, launches approved executable adapters with `shell: false`, captures bounded stdout/stderr, enforces timeout and cancellation, harvests declared outputs, cleans up, records SQLite execution rows, and writes `.sera/executions/` evidence. It does not expose arbitrary shell commands, arbitrary executable paths, containers, virtual machines, network listeners, distributed execution, or Evaluation Engine authority.
+
 Boundary rules:
 
 - scans and classifies durable nonterminal attempts

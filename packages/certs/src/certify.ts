@@ -12,6 +12,7 @@ import { ControlPlane, ControlPlaneAttemptSpec } from "@sera/control-plane";
 import { RuntimeHost, RuntimeService, createDefaultRuntimeServices, createRuntimeConfig, loadOrCreateRuntimeIdentity, normalizeRuntimeServices, runRuntimeHostProof } from "@sera/runtime-host";
 import { RuntimeStateBlockedError, createRuntimeStateConfig, createRuntimeStateEnabledServices, openRuntimeState, runRuntimeStateProof } from "@sera/runtime-state";
 import { PersistentRuntimeRecoveryCoordinator, RUNTIME_RECOVERY_SERVICE_ID, createPersistentRuntimeServices, runPersistentRuntimeRecoveryProof } from "@sera/runtime-recovery";
+import { createIsolatedExecutionRuntimeServices, runIsolatedExecutionProof } from "@sera/execution-engine";
 
 export interface CertCheck {
   id: string;
@@ -22,7 +23,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1" | "isolated-execution-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -47,10 +48,12 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   checks.push(...runOperatorConsoleV1Checks());
   checks.push(...runRepositorySnapshotV1Checks());
   checks.push(...runRepositoryTruthV1Checks());
+  checks.push(...runBaseMvpManifestV1Checks(rootDir));
   checks.push(...runControlPlaneV1Checks());
   checks.push(...await runRuntimeHostV1Checks());
   checks.push(...await runRuntimeStateV1Checks());
   checks.push(...await runPersistentRuntimeV1Checks());
+  checks.push(...await runIsolatedExecutionV1Checks());
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -70,10 +73,13 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   const runtimeHostV1ChecksPass = checks.filter((c) => c.id.startsWith("runtime_host_")).every((c) => c.pass);
   const runtimeStateV1ChecksPass = checks.filter((c) => c.id.startsWith("runtime_state_")).every((c) => c.pass);
   const persistentRuntimeV1ChecksPass = checks.filter((c) => c.id.startsWith("persistent_runtime_")).every((c) => c.pass);
+  const isolatedExecutionV1ChecksPass = checks.filter((c) => c.id.startsWith("isolated_execution_")).every((c) => c.pass);
   void repositorySnapshotV1ChecksPass;
   void repositoryTruthV1ChecksPass;
   const pass = checks.every((c) => c.pass);
-  const level = pass && persistentRuntimeV1ChecksPass
+  const level = pass && isolatedExecutionV1ChecksPass
+    ? "isolated-execution-v1"
+    : pass && persistentRuntimeV1ChecksPass
     ? "persistent-runtime-v1"
     : pass && runtimeStateV1ChecksPass
     ? "runtime-state-v1"
@@ -1081,6 +1087,65 @@ function runRepositoryTruthV1Checks(): CertCheck[] {
   ];
 }
 
+function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
+  const checks: CertCheck[] = [];
+  const manifestPath = path.join(rootDir, "architecture", "base-mvp-manifest.json");
+  const roadmapPath = path.join(rootDir, "docs", "architecture", "SERA_EVOLUTION_ROADMAP_V1.md");
+  const expected = {
+    schemaVersion: "sera.base-mvp-manifest.v1",
+    totalMilestones: 16,
+    completedMilestones: 6,
+    remainingMilestones: 10,
+    currentMilestone: 7,
+    baseMvpCompletionMilestone: 16,
+    currentCertification: "isolated-execution-v1",
+    architectureBranch: "architecture/local-autonomous-runtime-v1"
+  };
+  let manifest: any;
+  let parseError = "";
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  } catch (error) {
+    parseError = error instanceof Error ? error.message : String(error);
+  }
+  const roadmap = fs.existsSync(roadmapPath) ? fs.readFileSync(roadmapPath, "utf8") : "";
+  const has = (text: string) => roadmap.includes(text);
+
+  checks.push({ id: "base_mvp_manifest_exists", name: "Base MVP manifest exists", pass: fs.existsSync(manifestPath), detail: manifestPath });
+  checks.push({ id: "base_mvp_manifest_parses", name: "Base MVP manifest parses as JSON", pass: Boolean(manifest) && !parseError, detail: parseError || "parsed" });
+  checks.push({ id: "base_mvp_manifest_schema", name: "Base MVP manifest schema version is canonical", pass: manifest?.schemaVersion === expected.schemaVersion, detail: String(manifest?.schemaVersion ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_total_milestones", name: "Base MVP total milestone count is 16", pass: manifest?.totalMilestones === expected.totalMilestones, detail: String(manifest?.totalMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_completed_milestones", name: "Base MVP completed milestone count is 6", pass: manifest?.completedMilestones === expected.completedMilestones, detail: String(manifest?.completedMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_remaining_milestones", name: "Base MVP remaining milestone count is 10", pass: manifest?.remainingMilestones === expected.remainingMilestones, detail: String(manifest?.remainingMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_milestone", name: "Base MVP current milestone is 7", pass: manifest?.currentMilestone === expected.currentMilestone, detail: String(manifest?.currentMilestone ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_completion_milestone", name: "Base MVP completion milestone is 16", pass: manifest?.baseMvpCompletionMilestone === expected.baseMvpCompletionMilestone, detail: String(manifest?.baseMvpCompletionMilestone ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_certification", name: "Base MVP manifest current certification matches Milestone 6", pass: manifest?.currentCertification === expected.currentCertification, detail: String(manifest?.currentCertification ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_architecture_branch", name: "Base MVP manifest records architecture branch", pass: manifest?.architectureBranch === expected.architectureBranch, detail: String(manifest?.architectureBranch ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_arithmetic_total", name: "Base MVP completed plus remaining equals total", pass: manifest?.completedMilestones + manifest?.remainingMilestones === manifest?.totalMilestones, detail: JSON.stringify({ completed: manifest?.completedMilestones, remaining: manifest?.remainingMilestones, total: manifest?.totalMilestones }) });
+  checks.push({ id: "base_mvp_manifest_arithmetic_current", name: "Base MVP current milestone follows completed milestones", pass: manifest?.currentMilestone === manifest?.completedMilestones + 1, detail: JSON.stringify({ completed: manifest?.completedMilestones, current: manifest?.currentMilestone }) });
+  checks.push({ id: "base_mvp_manifest_arithmetic_completion", name: "Base MVP completion milestone equals total milestones", pass: manifest?.baseMvpCompletionMilestone === manifest?.totalMilestones, detail: JSON.stringify({ completion: manifest?.baseMvpCompletionMilestone, total: manifest?.totalMilestones }) });
+  checks.push({ id: "base_mvp_roadmap_milestone_6_complete", name: "Roadmap identifies Milestone 6 as complete", pass: has("Milestone 6 - Isolated Execution Engine: COMPLETE"), detail: "Milestone 6 - Isolated Execution Engine: COMPLETE" });
+  checks.push({ id: "base_mvp_roadmap_milestone_7_next", name: "Roadmap identifies Milestone 7 as next", pass: has("Milestone 7 - Evaluation Engine: NEXT"), detail: "Milestone 7 - Evaluation Engine: NEXT" });
+  checks.push({
+    id: "base_mvp_roadmap_manifest_consistent",
+    name: "Roadmap and Base MVP manifest do not contradict each other",
+    pass:
+      has("totalMilestones: 16") &&
+      has("completedMilestones: 6") &&
+      has("remainingMilestones: 10") &&
+      has("currentMilestone: 7") &&
+      has("baseMvpCompletionMilestone: 16") &&
+      manifest?.totalMilestones === expected.totalMilestones &&
+      manifest?.completedMilestones === expected.completedMilestones &&
+      manifest?.remainingMilestones === expected.remainingMilestones &&
+      manifest?.currentMilestone === expected.currentMilestone &&
+      manifest?.baseMvpCompletionMilestone === expected.baseMvpCompletionMilestone,
+    detail: "architecture/base-mvp-manifest.json <-> docs/architecture/SERA_EVOLUTION_ROADMAP_V1.md"
+  });
+
+  return checks;
+}
+
 function runControlPlaneV1Checks(): CertCheck[] {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-control-plane-cert-"));
   fs.mkdirSync(path.join(root, "packages", "alpha", "src"), { recursive: true });
@@ -1317,9 +1382,9 @@ async function runRuntimeStateV1Checks(): Promise<CertCheck[]> {
   const config = createRuntimeStateConfig({ projectRoot: root, installationId: "installation_cert", runtimeInstanceId: "runtime_cert" });
   const store = openRuntimeState(config);
   const inspection = store.inspect();
-  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 2 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
+  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 3 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
   const secondInspection = store.inspect();
-  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 2, detail: JSON.stringify(secondInspection.counts) });
+  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 3, detail: JSON.stringify(secondInspection.counts) });
   const command = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   const duplicate = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   checks.push({ id: "runtime_state_command_idempotency", name: "Runtime State command idempotency returns original", pass: command.commandId === duplicate.commandId && duplicate.status === "DUPLICATE", detail: `${command.commandId} ${duplicate.status}` });
@@ -1497,6 +1562,47 @@ async function runPersistentRuntimeV1Checks(): Promise<CertCheck[]> {
   checks.push({ id: "persistent_runtime_interruption_fixture_completes", name: "Persistent Runtime fixture completes after interruption", pass: proof.ok && proof.safeResume && proof.unsafeReviewRequired && proof.linkedRetry, detail: JSON.stringify(proof) });
   store.close();
 
+  return checks;
+}
+
+async function runIsolatedExecutionV1Checks(): Promise<CertCheck[]> {
+  const proofRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-isolated-execution-cert-"));
+  const proof = await runIsolatedExecutionProof({ projectRoot: proofRoot });
+  const checks: CertCheck[] = [];
+  const add = (id: string, name: string, pass: boolean, detail: string) => checks.push({ id, name, pass, detail });
+  add("isolated_execution_requires_authorization", "Execution requires Control Plane authorization", proof.authorizationEnforced, "missing authorization blocked");
+  add("isolated_execution_request_integrity_enforced", "Execution request integrity is enforced", proof.requestIntegrityEnforced, "request hash mismatch blocked");
+  add("isolated_execution_arbitrary_executable_blocked", "Arbitrary executable paths are not accepted", proof.authorizationEnforced && proof.shellDisabled, "registry-only executable IDs");
+  add("isolated_execution_shell_disabled", "Execution launches without a shell", proof.shellDisabled, "shell=false");
+  add("isolated_execution_workspace_outside_repository", "Execution workspace is outside repository", proof.workspaceOutsideRepository, proof.evidenceRoot);
+  add("isolated_execution_path_escape_blocked", "Workspace path escape is blocked", proof.pathEscapeBlocked, "relative traversal blocked");
+  add("isolated_execution_input_hashes_recorded", "Input hashes are recorded", proof.ok, "input manifest and SQLite rows written");
+  add("isolated_execution_environment_minimized", "Child environment is minimized", proof.ok, "offline-minimal profile");
+  add("isolated_execution_secrets_excluded", "Secrets are excluded from child environment", proof.ok, "minimal allowlist excludes secret variables");
+  add("isolated_execution_offline_policy_enforced", "Offline policy is enforced", proof.networkUse === false, "networkUse=false");
+  add("isolated_execution_stdout_captured", "stdout is captured", proof.stdoutCaptured, "stdout.txt present");
+  add("isolated_execution_stderr_captured", "stderr is captured", proof.stderrCaptured, "stderr.txt present");
+  add("isolated_execution_output_limits_enforced", "Output limits are enforced", proof.outputLimitEnforced, "limit event observed");
+  add("isolated_execution_timeout_enforced", "Timeout terminates execution", proof.timeoutEnforced, "timeout fixture");
+  add("isolated_execution_cancellation_safe", "Cancellation terminates execution", proof.cancellationSafe, "cancellation fixture");
+  add("isolated_execution_exit_status_recorded", "Exit status is recorded", proof.ok, "process result written");
+  add("isolated_execution_no_attempt_success_manufactured", "Execution does not manufacture attempt success", proof.ok, "Control Plane remains terminal authority");
+  add("isolated_execution_outputs_harvested", "Declared outputs are harvested", proof.outputsHarvested, "output manifest written");
+  add("isolated_execution_source_not_mutated", "Source repository is not mutated", proof.sourceNotMutated, "source hash stable");
+  add("isolated_execution_cleanup_complete", "Workspace cleanup completes", proof.cleanupComplete, "temporary workspaces cleaned");
+  add("isolated_execution_events_durable", "Execution events are durable", proof.eventsDurable, "SQLite execution_events populated");
+  add("isolated_execution_runtime_service_healthy", "Runtime service reports healthy", proof.runtimeServiceHealthy, "Runtime Host service health");
+  add("isolated_execution_restart_classification_safe", "Restart classification is conservative", proof.restartClassificationSafe, "no stale running execution remains");
+  add("isolated_execution_evidence_complete", "Execution evidence is complete", proof.evidenceComplete, proof.evidenceRoot);
+  add("isolated_execution_non_git_operation", "Execution proof works outside Git", proof.nonGit, proof.proofRoot);
+  add("isolated_execution_offline_operation", "Execution proof is offline", proof.networkUse === false, "networkUse=false");
+  add("isolated_execution_no_model_required", "Execution proof requires no model", proof.modelUse === false, "modelUse=false");
+  const hostRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-isolated-execution-host-cert-"));
+  const host = new RuntimeHost({ config: createRuntimeConfig({ projectRoot: hostRoot }), services: createIsolatedExecutionRuntimeServices(hostRoot) });
+  const started = await host.start();
+  const health = await host.health();
+  await host.shutdown();
+  add("isolated_execution_runtime_host_registration", "Runtime Host registers isolated-execution service", started.ok && health.services.some((service) => service.serviceId === "isolated-execution"), JSON.stringify(health.services.map((service) => ({ id: service.serviceId, status: service.status }))));
   return checks;
 }
 
