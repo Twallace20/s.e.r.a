@@ -294,6 +294,7 @@ Current repository candidates:
 | `packages/workers` | confirmed |
 | `packages/self-improvement` | provisional |
 | `packages/research` | provisional |
+| `packages/capability-engine` | confirmed; Capability Engine and Recursive Learning v1 |
 | `apps/operator-console/src/*runner*.ts` | review-required; should migrate out of UI |
 | `scripts/run-approved-*` | review-required or legacy |
 
@@ -304,6 +305,7 @@ Migration targets:
 - repository intelligence capability
 - multimodal intake
 - learning engine hooks
+- capability-engine-recursive-learning-v1
 
 Valid components:
 
@@ -338,6 +340,8 @@ Evidence expectations:
 The permanent engine name is `Capability Engine`.
 
 Do not rename it to "Capability and Intelligence Engine". The Intelligence Pipeline is a cross-system standard, not a reason to turn the Capability Engine into a monolith.
+
+Milestone 10 implements the Capability Engine as a Capability-layer subsystem, not a Runtime replacement. It depends on Runtime for state, execution, evaluation, recovery, model boundaries, knowledge boundaries, and Control Plane authority.
 
 ## Studio
 

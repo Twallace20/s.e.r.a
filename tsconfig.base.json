@@ -92,6 +92,9 @@
       ],
       "@sera/knowledge-runtime": [
         "packages/knowledge-runtime/src/index.ts"
+      ],
+      "@sera/capability-engine": [
+        "packages/capability-engine/src/index.ts"
       ]
     }
   }

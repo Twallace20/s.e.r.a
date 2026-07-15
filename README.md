@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `knowledge-intake-runtime-v1`.
+Current runtime certification: `capability-engine-recursive-learning-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -30,6 +30,7 @@ Certified runtime ladder completed so far:
 - `evaluation-engine-v1`
 - `local-model-runtime-v1`
 - `knowledge-intake-runtime-v1`
+- `capability-engine-recursive-learning-v1`
 
 Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
@@ -85,6 +86,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - deterministic evaluation of immutable execution evidence with assertion records, aggregate outcomes, Control Plane gate evidence, and `.sera/evaluations/` reports
 - provider-independent Local Model Runtime with explicit authorization, deterministic fixture proof, disabled real-local provider metadata, SQLite invocation evidence, timeout/cancellation, redaction, and candidate-intelligence-only output
 - Knowledge and Universal Intake Runtime with explicit authorization, content-addressed preservation, deterministic extraction, opaque media/archive preservation, provenance, candidate status, and bounded lexical retrieval
+- Capability Engine and Recursive Learning with authorized learning sessions, immutable candidate bundles, isolated execution, deterministic evaluation, exact certification, Control Plane promotion, active-version records, rollback evidence, and repeatable proof
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
@@ -114,6 +116,8 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - no semantic or model-based grading in Evaluation Engine v1
 - no real model download, install, or invocation in Local Model Runtime v1
 - no model-driven tool execution or source mutation
+- no automatic capability promotion or activation
+- no arbitrary code loading, unrestricted shell, Desktop Operator, Studio, distributed capability, or Hive Mode in Capability Engine v1
 
 ## Setup
 
@@ -129,7 +133,7 @@ npm run verify
 Expected current certification result:
 
 ```text
-S.E.R.A. certify: PASS level=isolated-execution-v1
+S.E.R.A. certify: PASS level=capability-engine-recursive-learning-v1
 ```
 
 ## Starter secure-base run
@@ -230,6 +234,18 @@ npm run sera -- execution prove
 
 The engine uses approved executable adapters only, launches with `shell: false`, materializes approved inputs, captures bounded stdout/stderr, records durable execution rows, harvests declared outputs, cleans temporary workspaces, and writes `.sera/executions/<execution-id>/` evidence. Isolated Execution Engine v1 is a governed process and workspace boundary for approved local workloads. It is not a complete hostile-code security boundary, container sandbox, virtual machine, kernel sandbox, or network namespace. Process success means only `SUCCEEDED_PROCESS`; Unified Control Plane keeps terminal attempt authority.
 
+Capability Engine and Recursive Learning turns evaluated evidence into governed capability versions:
+
+```bash
+npm run sera -- capability catalog
+npm run sera -- capability policy
+npm run sera -- capability prove
+npm run sera -- learning status
+npm run sera -- learning prove
+```
+
+The engine treats model and knowledge outputs as candidate input only. It assembles immutable candidate bundles, runs isolated execution and deterministic evaluation, certifies exact digests, promotes only through explicit Control Plane authority, records active versions atomically, and preserves rollback evidence. It does not load arbitrary code, run unrestricted shell commands, mutate core source, call real models, use the public network, or start Desktop Operator, Studio, distributed capability, or Hive Mode work.
+
 ## Developer Worker v2 and Self-Improvement Loop v1
 
 Inspect mode fingerprints a file without changing it:
@@ -283,6 +299,7 @@ Nothing gets called working unless it has:
 - `@sera/model-provider` — optional model adapter records, deterministic mock provider, and redacted model events
 - `@sera/model-runtime` — Runtime-owned local model invocation boundary with fixture proof, provider registry, authorization, SQLite records, and candidate-intelligence-only outputs
 - `@sera/knowledge-runtime` — Runtime-owned local knowledge and universal intake boundary with authorization, content hashes, deterministic extraction, opaque preservation, provenance, SQLite records, and lexical retrieval
+- `@sera/capability-engine` — Capability-layer recursive learning and capability version lifecycle with candidate bundles, evaluation, certification, promotion, activation, rollback, and SQLite evidence
 - `@sera/autonomy` — bounded autonomous dev loop orchestration with validation-gated apply
 - `@sera/operator-console` — local status, health, report, history, and summary evidence
 - `@sera/repository-snapshot` — deterministic repository fact inventory

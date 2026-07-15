@@ -33,6 +33,7 @@ Every governed Capability and Application follows this lifecycle:
 - Learning and capability updates can occur only after evaluation and promotion.
 - Unified Control Plane owns authorization and terminal decisions.
 - Models may propose outputs, but they cannot authorize, execute, or promote them.
+- Capability Engine turns post-evaluation learning into candidate capability versions only through explicit certification and promotion gates.
 
 ## Layer Relationship
 

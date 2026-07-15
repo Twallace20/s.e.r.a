@@ -70,7 +70,8 @@ describe("Knowledge and Universal Intake Runtime v1", () => {
     ["migration v2 checksum is unchanged", () => migrationChecksum(DEFAULT_RUNTIME_STATE_MIGRATIONS[1]) === "fc54c2f77819094cbddaecf918cf6f339af5297f9e5e0f559e9953e9f8152fe4"],
     ["migration v3 checksum is unchanged", () => migrationChecksum(DEFAULT_RUNTIME_STATE_MIGRATIONS[2]) === "957a450915bad1c6318f968318a876a7caedc0c75f745d33ab88381924476626"],
     ["migration v4 checksum is unchanged", () => migrationChecksum(DEFAULT_RUNTIME_STATE_MIGRATIONS[3]) === "98fb2c9c8172459fcaf6616d3f1671eb0d6bbaa81787be4142a62a91304aca12"],
-    ["migration v5 checksum is unchanged", () => migrationChecksum(DEFAULT_RUNTIME_STATE_MIGRATIONS[4]) === "4f09803bf70f07bee9ce28c366ca2ec7ee24bdaeca081b4eae6b14133ed2308f"]
+    ["migration v5 checksum is unchanged", () => migrationChecksum(DEFAULT_RUNTIME_STATE_MIGRATIONS[4]) === "4f09803bf70f07bee9ce28c366ca2ec7ee24bdaeca081b4eae6b14133ed2308f"],
+    ["migration v6 checksum is unchanged", () => migrationChecksum(DEFAULT_RUNTIME_STATE_MIGRATIONS[5]) === "19486b7703e11d09bea70d96fa2c3408d0a58a13c9d4e3a2c2dd237455b0790e"]
   ];
 
   it.each(proofCases)("%s", (_name, check) => {

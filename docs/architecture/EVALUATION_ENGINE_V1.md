@@ -36,6 +36,8 @@ The `evaluation-engine` Runtime Service depends on operational state, Unified Co
 
 Local Model Runtime outputs may be evaluated only as declared evidence. Evaluation Engine v1 does not invoke models, grade with models, promote model text to operational truth, or let model output transition attempts.
 
+Capability Engine consumes Evaluation Engine results as evidence for candidate certification. Evaluation Engine still does not certify, promote, activate, roll back, or choose capability versions.
+
 ## Milestone Boundary
 
-Milestone 7 completes deterministic evaluation. Milestone 8 is Local Model Runtime and is intentionally not implemented here.
+Milestone 7 completes deterministic evaluation. Milestone 8 is Local Model Runtime, Milestone 9 is Knowledge and Universal Intake, and Milestone 10 is Capability Engine and Recursive Learning.

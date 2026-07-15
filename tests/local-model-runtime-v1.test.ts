@@ -587,13 +587,13 @@ describe("Local Model Runtime v1", () => {
     expect(() => normalizeRequest(request("attempt_mode", "invocation_mode", { invocationMode: "unsupported-mode" as any }))).toThrow(ModelRuntimeBlockedError);
   });
 
-  it("migration checksums are present and stable for migrations 1 through 5", () => {
+  it("migration checksums are present and stable for migrations 1 through 6", () => {
     const root = makeRoot("migrations");
     const store = openRuntimeState({ projectRoot: root });
     try {
       const migrations = store.recoveryAll("SELECT version, checksum FROM schema_migrations ORDER BY version") as Array<{ version: number; checksum: string }>;
-      expect(migrations.slice(0, 5).map((migration) => migration.version)).toEqual([1, 2, 3, 4, 5]);
-      expect(migrations.map((migration) => migration.version)).toContain(6);
+      expect(migrations.slice(0, 6).map((migration) => migration.version)).toEqual([1, 2, 3, 4, 5, 6]);
+      expect(migrations.map((migration) => migration.version)).toContain(7);
       expect(migrations.every((migration) => /^[a-f0-9]{64}$/.test(migration.checksum))).toBe(true);
       expect(store.recoveryAll("SELECT version, checksum FROM schema_migrations ORDER BY version")).toEqual(migrations);
     } finally {

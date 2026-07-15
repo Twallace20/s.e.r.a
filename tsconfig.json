@@ -40,6 +40,9 @@
                            "path":  "packages/knowledge-runtime"
                        },
                        {
+                           "path":  "packages/capability-engine"
+                       },
+                       {
                            "path":  "packages/safety"
                        },
                        {

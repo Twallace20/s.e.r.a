@@ -16,6 +16,7 @@ import { createIsolatedExecutionRuntimeServices, runIsolatedExecutionProof } fro
 import { createEvaluationEngineRuntimeServices, runEvaluationEngineProof } from "@sera/evaluation-engine";
 import { createModelRuntimeServices, runLocalModelRuntimeProof } from "@sera/model-runtime";
 import { createKnowledgeRuntimeServices, runKnowledgeIntakeProof } from "@sera/knowledge-runtime";
+import { createCapabilityEngineRuntimeServices, runCapabilityEngineProof } from "@sera/capability-engine";
 
 export interface CertCheck {
   id: string;
@@ -26,7 +27,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1" | "isolated-execution-v1" | "evaluation-engine-v1" | "local-model-runtime-v1" | "knowledge-intake-runtime-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1" | "isolated-execution-v1" | "evaluation-engine-v1" | "local-model-runtime-v1" | "knowledge-intake-runtime-v1" | "capability-engine-recursive-learning-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -60,6 +61,7 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   checks.push(...await runEvaluationEngineV1Checks());
   checks.push(...await runLocalModelRuntimeV1Checks());
   checks.push(...await runKnowledgeIntakeRuntimeV1Checks());
+  checks.push(...await runCapabilityEngineRecursiveLearningV1Checks());
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -83,10 +85,13 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   const evaluationEngineV1ChecksPass = checks.filter((c) => c.id.startsWith("evaluation_engine_")).every((c) => c.pass);
   const localModelRuntimeV1ChecksPass = checks.filter((c) => c.id.startsWith("local_model_runtime_")).every((c) => c.pass);
   const knowledgeIntakeRuntimeV1ChecksPass = checks.filter((c) => c.id.startsWith("knowledge_intake_") || c.id.startsWith("knowledge_retrieval_")).every((c) => c.pass);
+  const capabilityEngineRecursiveLearningV1ChecksPass = checks.filter((c) => c.id.startsWith("capability_engine_")).every((c) => c.pass);
   void repositorySnapshotV1ChecksPass;
   void repositoryTruthV1ChecksPass;
   const pass = checks.every((c) => c.pass);
-  const level = pass && knowledgeIntakeRuntimeV1ChecksPass
+  const level = pass && capabilityEngineRecursiveLearningV1ChecksPass
+    ? "capability-engine-recursive-learning-v1"
+    : pass && knowledgeIntakeRuntimeV1ChecksPass
     ? "knowledge-intake-runtime-v1"
     : pass && localModelRuntimeV1ChecksPass
     ? "local-model-runtime-v1"
@@ -1109,11 +1114,11 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
   const expected = {
     schemaVersion: "sera.base-mvp-manifest.v1",
     totalMilestones: 16,
-    completedMilestones: 9,
-    remainingMilestones: 7,
-    currentMilestone: 10,
+    completedMilestones: 10,
+    remainingMilestones: 6,
+    currentMilestone: 11,
     baseMvpCompletionMilestone: 16,
-    currentCertification: "knowledge-intake-runtime-v1",
+    currentCertification: "capability-engine-recursive-learning-v1",
     architectureBranch: "architecture/local-autonomous-runtime-v1"
   };
   let manifest: any;
@@ -1130,11 +1135,11 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
   checks.push({ id: "base_mvp_manifest_parses", name: "Base MVP manifest parses as JSON", pass: Boolean(manifest) && !parseError, detail: parseError || "parsed" });
   checks.push({ id: "base_mvp_manifest_schema", name: "Base MVP manifest schema version is canonical", pass: manifest?.schemaVersion === expected.schemaVersion, detail: String(manifest?.schemaVersion ?? "missing") });
   checks.push({ id: "base_mvp_manifest_total_milestones", name: "Base MVP total milestone count is 16", pass: manifest?.totalMilestones === expected.totalMilestones, detail: String(manifest?.totalMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_completed_milestones", name: "Base MVP completed milestone count is 9", pass: manifest?.completedMilestones === expected.completedMilestones, detail: String(manifest?.completedMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_remaining_milestones", name: "Base MVP remaining milestone count is 7", pass: manifest?.remainingMilestones === expected.remainingMilestones, detail: String(manifest?.remainingMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_current_milestone", name: "Base MVP current milestone is 10", pass: manifest?.currentMilestone === expected.currentMilestone, detail: String(manifest?.currentMilestone ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_completed_milestones", name: "Base MVP completed milestone count is 10", pass: manifest?.completedMilestones === expected.completedMilestones, detail: String(manifest?.completedMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_remaining_milestones", name: "Base MVP remaining milestone count is 6", pass: manifest?.remainingMilestones === expected.remainingMilestones, detail: String(manifest?.remainingMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_milestone", name: "Base MVP current milestone is 11", pass: manifest?.currentMilestone === expected.currentMilestone, detail: String(manifest?.currentMilestone ?? "missing") });
   checks.push({ id: "base_mvp_manifest_completion_milestone", name: "Base MVP completion milestone is 16", pass: manifest?.baseMvpCompletionMilestone === expected.baseMvpCompletionMilestone, detail: String(manifest?.baseMvpCompletionMilestone ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_current_certification", name: "Base MVP manifest current certification matches Milestone 9", pass: manifest?.currentCertification === expected.currentCertification, detail: String(manifest?.currentCertification ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_certification", name: "Base MVP manifest current certification matches Milestone 10", pass: manifest?.currentCertification === expected.currentCertification, detail: String(manifest?.currentCertification ?? "missing") });
   checks.push({ id: "base_mvp_manifest_architecture_branch", name: "Base MVP manifest records architecture branch", pass: manifest?.architectureBranch === expected.architectureBranch, detail: String(manifest?.architectureBranch ?? "missing") });
   checks.push({ id: "base_mvp_manifest_arithmetic_total", name: "Base MVP completed plus remaining equals total", pass: manifest?.completedMilestones + manifest?.remainingMilestones === manifest?.totalMilestones, detail: JSON.stringify({ completed: manifest?.completedMilestones, remaining: manifest?.remainingMilestones, total: manifest?.totalMilestones }) });
   checks.push({ id: "base_mvp_manifest_arithmetic_current", name: "Base MVP current milestone follows completed milestones", pass: manifest?.currentMilestone === manifest?.completedMilestones + 1, detail: JSON.stringify({ completed: manifest?.completedMilestones, current: manifest?.currentMilestone }) });
@@ -1147,9 +1152,9 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
     name: "Roadmap and Base MVP manifest do not contradict each other",
     pass:
       has("totalMilestones: 16") &&
-      has("completedMilestones: 9") &&
-      has("remainingMilestones: 7") &&
-      has("currentMilestone: 10") &&
+      has("completedMilestones: 10") &&
+      has("remainingMilestones: 6") &&
+      has("currentMilestone: 11") &&
       has("baseMvpCompletionMilestone: 16") &&
       manifest?.totalMilestones === expected.totalMilestones &&
       manifest?.completedMilestones === expected.completedMilestones &&
@@ -1398,9 +1403,9 @@ async function runRuntimeStateV1Checks(): Promise<CertCheck[]> {
   const config = createRuntimeStateConfig({ projectRoot: root, installationId: "installation_cert", runtimeInstanceId: "runtime_cert" });
   const store = openRuntimeState(config);
   const inspection = store.inspect();
-  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 6 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
+  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 7 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
   const secondInspection = store.inspect();
-  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 6, detail: JSON.stringify(secondInspection.counts) });
+  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 7, detail: JSON.stringify(secondInspection.counts) });
   const command = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   const duplicate = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   checks.push({ id: "runtime_state_command_idempotency", name: "Runtime State command idempotency returns original", pass: command.commandId === duplicate.commandId && duplicate.status === "DUPLICATE", detail: `${command.commandId} ${duplicate.status}` });
@@ -1750,6 +1755,56 @@ async function runKnowledgeIntakeRuntimeV1Checks(): Promise<CertCheck[]> {
   add("knowledge_intake_non_git_operation", "Proof works outside Git", proof.nonGit, proof.proofRoot);
   add("knowledge_intake_offline_operation", "Proof is offline", proof.offline && proof.publicNetworkUse === false, "publicNetworkUse=false");
   add("knowledge_intake_no_model_required", "No real model is required", proof.noModelRequired && proof.modelUse === false, "modelUse=false");
+  return checks;
+}
+
+async function runCapabilityEngineRecursiveLearningV1Checks(): Promise<CertCheck[]> {
+  const proofRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-capability-engine-cert-"));
+  const proof = await runCapabilityEngineProof({ projectRoot: proofRoot });
+  const checks: CertCheck[] = [];
+  const add = (id: string, name: string, pass: boolean, detail: string) => checks.push({ id, name, pass, detail });
+  add("capability_engine_authorization_required", "Capability Engine requires authorization", proof.authorizationRequired, proof.proposalId);
+  add("capability_engine_proposal_integrity_enforced", "Proposal integrity is enforced", proof.idempotent && proof.conflictingIdempotencyBlocked, proof.proposalId);
+  add("capability_engine_manifest_integrity_enforced", "Manifest integrity is enforced", proof.manifestIntegrity, proof.candidateDigest);
+  add("capability_engine_dependency_cycles_blocked", "Dependency cycles are blocked", proof.dependencyCyclesBlocked, proof.capabilityId);
+  add("capability_engine_candidate_bundle_immutable", "Candidate bundle is immutable", proof.candidateBundleImmutable, proof.candidateDigest);
+  add("capability_engine_core_source_mutation_blocked", "Core source mutation is blocked", proof.sourceMutationBlocked, proof.proofRoot);
+  add("capability_engine_isolated_execution_required", "Isolated Execution Engine is required", proof.isolatedExecutionRequired, proof.experimentIds.join(","));
+  add("capability_engine_evaluation_required", "Evaluation Engine is required", proof.evaluationRequired, proof.evaluationIds.join(","));
+  add("capability_engine_required_failure_rejects", "Required evaluation failure rejects", proof.requiredFailureRejects, "required failures cannot certify");
+  add("capability_engine_baseline_comparison_deterministic", "Baseline comparison is deterministic", proof.baselineComparisonDeterministic, proof.candidateDigest);
+  add("capability_engine_reproducibility_required", "Reproducibility is required", proof.reproducibilityRequired, JSON.stringify(proof.experimentIds));
+  add("capability_engine_certification_distinct_from_promotion", "Certification is distinct from promotion", proof.certificationDistinctFromPromotion, proof.certifiedDigest);
+  add("capability_engine_promotion_authority_preserved", "Promotion authority is preserved", proof.promotionAuthorityPreserved, "control-plane");
+  add("capability_engine_exact_digest_promotion", "Promotion binds exact digest", proof.exactDigestPromotion, proof.activeDigest);
+  add("capability_engine_atomic_active_version", "Active version update is atomic", proof.atomicActiveVersion, proof.activeDigest);
+  add("capability_engine_rollback_ready", "Rollback readiness is required", proof.rollbackReady, proof.certifiedDigest);
+  add("capability_engine_rollback_authorized", "Rollback is authorized", proof.rollbackAuthorized, proof.rollbackActiveDigest);
+  add("capability_engine_regression_evidence_required", "Regression evidence is required", proof.regressionEvidenceRequired, "regression evidence");
+  add("capability_engine_learning_signal_evidence_required", "Learning signals require evidence", proof.learningSignalEvidenceRequired, "durable evidence");
+  add("capability_engine_model_output_candidate_only", "Model output remains candidate intelligence", proof.modelOutputCandidateOnly, "candidate-only");
+  add("capability_engine_knowledge_candidate_only", "Knowledge remains candidate provenance", proof.knowledgeCandidateOnly, "candidate knowledge");
+  add("capability_engine_iteration_budget_enforced", "Iteration budget is enforced", proof.iterationBudgetEnforced, "bounded");
+  add("capability_engine_recursion_depth_bounded", "Recursion depth is bounded", proof.recursionDepthBounded, "depth=1");
+  add("capability_engine_idempotent", "Equivalent operations are idempotent", proof.idempotent, proof.proposalId);
+  add("capability_engine_conflicting_idempotency_blocks", "Conflicting idempotency blocks", proof.conflictingIdempotencyBlocked, "conflict rejected");
+  add("capability_engine_terminal_immutable", "Terminal records are immutable", proof.terminalImmutable, proof.certifiedDigest);
+  add("capability_engine_recovery_conservative", "Recovery is conservative", proof.recoveryConservative, "no incomplete work assumed passed");
+  add("capability_engine_time_to_certified_capability_recorded", "Time-to-Certified-Capability is recorded", proof.timeToCertifiedCapabilityRecorded, proof.evidenceRoot);
+  add("capability_engine_control_plane_authority_preserved", "Control Plane authority is preserved", proof.controlPlaneAuthorityPreserved, "no self-promotion authority");
+  add("capability_engine_runtime_service_healthy", "Runtime Service reports healthy", proof.runtimeServiceHealthy, "runtime host");
+  add("capability_engine_evidence_complete", "Evidence is complete", proof.evidenceComplete, proof.evidenceRoot);
+  add("capability_engine_non_git_operation", "Proof works outside Git", proof.nonGit, proof.proofRoot);
+  add("capability_engine_offline_operation", "Proof is offline", proof.offline, "offline");
+  add("capability_engine_no_real_model_required", "No real model is required", proof.noRealModelRequired && proof.modelUse === false, "modelUse=false");
+  add("capability_engine_no_public_network", "No public network is used", proof.noPublicNetwork && proof.publicNetworkUse === false, "publicNetworkUse=false");
+  add("capability_engine_fixture_promotion_and_rollback_proven", "Fixture promotion and rollback are proven", proof.fixturePromotionAndRollbackProven, proof.rollbackActiveDigest);
+  const hostRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-capability-engine-host-cert-"));
+  const host = new RuntimeHost({ config: createRuntimeConfig({ projectRoot: hostRoot }), services: createCapabilityEngineRuntimeServices(hostRoot) });
+  const started = await host.start();
+  const health = await host.health();
+  await host.shutdown("Capability Engine certification check complete.");
+  add("capability_engine_runtime_host_registration", "Runtime Host registers capability-engine service", started.ok && health.services.some((service) => service.serviceId === "capability-engine"), JSON.stringify(health.services.map((service) => ({ id: service.serviceId, status: service.status }))));
   return checks;
 }
 
