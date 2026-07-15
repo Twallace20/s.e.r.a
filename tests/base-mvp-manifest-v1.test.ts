@@ -7,18 +7,18 @@ const manifestPath = path.join(root, "architecture", "base-mvp-manifest.json");
 const roadmapPath = path.join(root, "docs", "architecture", "SERA_EVOLUTION_ROADMAP_V1.md");
 
 describe("Base MVP manifest v1", () => {
-  it("exists, parses, and records canonical Milestone 6 closeout values", () => {
+  it("exists, parses, and records canonical Milestone 7 closeout values", () => {
     expect(fs.existsSync(manifestPath)).toBe(true);
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 
     expect(manifest).toEqual({
       schemaVersion: "sera.base-mvp-manifest.v1",
       totalMilestones: 16,
-      completedMilestones: 6,
-      remainingMilestones: 10,
-      currentMilestone: 7,
+      completedMilestones: 7,
+      remainingMilestones: 9,
+      currentMilestone: 8,
       baseMvpCompletionMilestone: 16,
-      currentCertification: "isolated-execution-v1",
+      currentCertification: "evaluation-engine-v1",
       architectureBranch: "architecture/local-autonomous-runtime-v1"
     });
   });
@@ -40,11 +40,11 @@ describe("Base MVP manifest v1", () => {
     expect(roadmap).toContain("remainingMilestones: 10");
     expect(roadmap).toContain("currentMilestone: 7");
     expect(roadmap).toContain("baseMvpCompletionMilestone: 16");
-    expect(roadmap).toContain("Milestone 6 - Isolated Execution Engine: COMPLETE");
-    expect(roadmap).toContain("Milestone 7 - Evaluation Engine: NEXT");
+    expect(roadmap).toContain("Milestone 7 - Evaluation Engine: COMPLETE");
+    expect(roadmap).toContain("Milestone 8 - Local Model Runtime: NEXT");
 
-    expect(manifest.completedMilestones).toBe(6);
-    expect(manifest.currentMilestone).toBe(7);
-    expect(manifest.currentCertification).toBe("isolated-execution-v1");
+    expect(manifest.completedMilestones).toBe(7);
+    expect(manifest.currentMilestone).toBe(8);
+    expect(manifest.currentCertification).toBe("evaluation-engine-v1");
   });
 });

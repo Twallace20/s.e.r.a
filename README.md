@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `isolated-execution-v1`.
+Current runtime certification: `evaluation-engine-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -27,6 +27,7 @@ Certified runtime ladder completed so far:
 - `runtime-state-v1`
 - `persistent-runtime-v1`
 - `isolated-execution-v1`
+- `evaluation-engine-v1`
 
 Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
@@ -79,6 +80,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - local SQLite Operational State for command idempotency, attempt state, gates, evidence references, leases, backups, and deterministic exports
 - persistent runtime recovery for interrupted attempts using checkpoints, leases, recovery decisions, linked retries, and review-required blocking
 - isolated execution for authorized deterministic local workloads in temporary workspaces with shell disabled, bounded output capture, timeout, cancellation, cleanup, SQLite execution records, and `.sera/executions/` evidence
+- deterministic evaluation of immutable execution evidence with assertion records, aggregate outcomes, Control Plane gate evidence, and `.sera/evaluations/` reports
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
@@ -105,6 +107,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - no silent lesson-driven behavior changes
 - no browser or internet research worker yet
 - no GUI or multi-user permission system yet
+- no semantic or model-based grading in Evaluation Engine v1
 
 ## Setup
 

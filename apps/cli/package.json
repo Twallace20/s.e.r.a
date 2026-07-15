@@ -18,6 +18,7 @@
     "@sera/runtime-host": "0.1.0",
     "@sera/runtime-state": "0.1.0",
     "@sera/runtime-recovery": "0.1.0",
-    "@sera/execution-engine": "0.1.0"
+    "@sera/execution-engine": "0.1.0",
+    "@sera/evaluation-engine": "0.1.0"
   }
 }

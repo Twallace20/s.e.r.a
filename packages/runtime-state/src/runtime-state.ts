@@ -6,7 +6,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createControlPlaneRuntimeService, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
 
 export const RUNTIME_STATE_VERSION = "runtime-state-v1";
-export const RUNTIME_STATE_SCHEMA_VERSION = 3;
+export const RUNTIME_STATE_SCHEMA_VERSION = 4;
 export const RUNTIME_STATE_EXPORT_SCHEMA = "sera.runtime-state-export.v1";
 
 export type RuntimeStateStatus = "healthy" | "blocked";
@@ -117,7 +117,12 @@ const TABLES = [
   "execution_events",
   "execution_inputs",
   "execution_outputs",
-  "execution_authorizations"
+  "execution_authorizations",
+  "evaluation_specs",
+  "evaluations",
+  "evaluation_assertions",
+  "evaluation_events",
+  "evaluation_profiles"
 ] as const;
 
 const TERMINAL_STATES = new Set<AttemptState>(["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"]);
@@ -426,6 +431,98 @@ CREATE INDEX idx_executions_attempt ON executions(attempt_id, created_at);
 CREATE INDEX idx_executions_state ON executions(state, created_at);
 CREATE INDEX idx_execution_events_execution ON execution_events(execution_id, sequence);
 CREATE INDEX idx_execution_authorizations_attempt ON execution_authorizations(attempt_id, issued_at);
+`
+  },
+  {
+    version: 4,
+    name: "evaluation_engine_v1",
+    sql: `
+CREATE TABLE evaluation_specs (
+  specification_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  execution_id TEXT NOT NULL,
+  profile_id TEXT NOT NULL,
+  profile_version TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  specification_hash TEXT NOT NULL,
+  approval_reference TEXT,
+  created_at TEXT NOT NULL,
+  expires_at TEXT,
+  normalized_specification_json TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  request_hash TEXT NOT NULL,
+  evaluation_id TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE evaluations (
+  evaluation_id TEXT PRIMARY KEY,
+  specification_id TEXT NOT NULL UNIQUE,
+  attempt_id TEXT NOT NULL,
+  execution_id TEXT NOT NULL,
+  state TEXT NOT NULL,
+  aggregate_outcome TEXT,
+  required_pass_count INTEGER NOT NULL,
+  required_fail_count INTEGER NOT NULL,
+  blocked_count INTEGER NOT NULL,
+  warning_count INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  started_at TEXT,
+  completed_at TEXT,
+  optimistic_version INTEGER NOT NULL,
+  failure_or_block_reason TEXT,
+  evidence_root TEXT,
+  FOREIGN KEY(specification_id) REFERENCES evaluation_specs(specification_id)
+);
+
+CREATE TABLE evaluation_assertions (
+  evaluation_id TEXT NOT NULL,
+  assertion_id TEXT NOT NULL,
+  evaluator_id TEXT NOT NULL,
+  evaluator_version TEXT NOT NULL,
+  required INTEGER NOT NULL,
+  outcome TEXT NOT NULL,
+  expected_summary TEXT NOT NULL,
+  actual_summary TEXT NOT NULL,
+  message TEXT NOT NULL,
+  evidence_references_json TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  completed_at TEXT NOT NULL,
+  duration_ms INTEGER NOT NULL,
+  sequence INTEGER NOT NULL,
+  PRIMARY KEY(evaluation_id, assertion_id),
+  UNIQUE(evaluation_id, sequence),
+  FOREIGN KEY(evaluation_id) REFERENCES evaluations(evaluation_id)
+);
+
+CREATE TABLE evaluation_events (
+  event_id TEXT PRIMARY KEY,
+  evaluation_id TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  runtime_instance_id TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  message TEXT NOT NULL,
+  details_json TEXT NOT NULL,
+  UNIQUE(evaluation_id, sequence),
+  FOREIGN KEY(evaluation_id) REFERENCES evaluations(evaluation_id)
+);
+
+CREATE TABLE evaluation_profiles (
+  profile_id TEXT NOT NULL,
+  profile_version TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  registered_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  PRIMARY KEY(profile_id, profile_version)
+);
+
+CREATE INDEX idx_evaluation_specs_attempt ON evaluation_specs(attempt_id, created_at);
+CREATE INDEX idx_evaluations_attempt ON evaluations(attempt_id, created_at);
+CREATE INDEX idx_evaluations_state ON evaluations(state, created_at);
+CREATE INDEX idx_evaluation_assertions_eval ON evaluation_assertions(evaluation_id, sequence);
+CREATE INDEX idx_evaluation_events_eval ON evaluation_events(evaluation_id, sequence);
 `
   }
 ];
@@ -780,7 +877,12 @@ export class RuntimeStateStore {
       executionEvents: this.tableExists("execution_events") ? all(db, "SELECT event_id, execution_id, sequence, event_type, timestamp, runtime_instance_id, outcome, message, details_json FROM execution_events ORDER BY execution_id, sequence") : [],
       executionInputs: this.tableExists("execution_inputs") ? all(db, "SELECT execution_id, input_identity, source_type, source_reference, workspace_path, hash, size, metadata_json FROM execution_inputs ORDER BY execution_id, input_identity") : [],
       executionOutputs: this.tableExists("execution_outputs") ? all(db, "SELECT execution_id, declared_output_identity, workspace_path, hash, size, status, evidence_reference, metadata_json FROM execution_outputs ORDER BY execution_id, declared_output_identity") : [],
-      executionAuthorizations: this.tableExists("execution_authorizations") ? all(db, "SELECT authorization_id, execution_id, attempt_id, request_hash, executable_id, policy_version, issued_at, expires_at, required_gates_json, integrity_hash, metadata_json FROM execution_authorizations ORDER BY issued_at, authorization_id") : []
+      executionAuthorizations: this.tableExists("execution_authorizations") ? all(db, "SELECT authorization_id, execution_id, attempt_id, request_hash, executable_id, policy_version, issued_at, expires_at, required_gates_json, integrity_hash, metadata_json FROM execution_authorizations ORDER BY issued_at, authorization_id") : [],
+      evaluationSpecs: this.tableExists("evaluation_specs") ? all(db, "SELECT specification_id, attempt_id, execution_id, profile_id, profile_version, policy_version, specification_hash, approval_reference, created_at, expires_at, normalized_specification_json, idempotency_key, request_hash, evaluation_id FROM evaluation_specs ORDER BY created_at, specification_id") : [],
+      evaluations: this.tableExists("evaluations") ? all(db, "SELECT evaluation_id, specification_id, attempt_id, execution_id, state, aggregate_outcome, required_pass_count, required_fail_count, blocked_count, warning_count, created_at, started_at, completed_at, optimistic_version, failure_or_block_reason, evidence_root FROM evaluations ORDER BY created_at, evaluation_id") : [],
+      evaluationAssertions: this.tableExists("evaluation_assertions") ? all(db, "SELECT evaluation_id, assertion_id, evaluator_id, evaluator_version, required, outcome, expected_summary, actual_summary, message, evidence_references_json, started_at, completed_at, duration_ms, sequence FROM evaluation_assertions ORDER BY evaluation_id, sequence") : [],
+      evaluationEvents: this.tableExists("evaluation_events") ? all(db, "SELECT event_id, evaluation_id, sequence, event_type, timestamp, runtime_instance_id, outcome, message, details_json FROM evaluation_events ORDER BY evaluation_id, sequence") : [],
+      evaluationProfiles: this.tableExists("evaluation_profiles") ? all(db, "SELECT profile_id, profile_version, policy_version, integrity_hash, registered_at, metadata_json FROM evaluation_profiles ORDER BY profile_id, profile_version") : []
     }) as Record<string, unknown>;
   }
 

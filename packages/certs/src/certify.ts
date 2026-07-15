@@ -13,6 +13,7 @@ import { RuntimeHost, RuntimeService, createDefaultRuntimeServices, createRuntim
 import { RuntimeStateBlockedError, createRuntimeStateConfig, createRuntimeStateEnabledServices, openRuntimeState, runRuntimeStateProof } from "@sera/runtime-state";
 import { PersistentRuntimeRecoveryCoordinator, RUNTIME_RECOVERY_SERVICE_ID, createPersistentRuntimeServices, runPersistentRuntimeRecoveryProof } from "@sera/runtime-recovery";
 import { createIsolatedExecutionRuntimeServices, runIsolatedExecutionProof } from "@sera/execution-engine";
+import { createEvaluationEngineRuntimeServices, runEvaluationEngineProof } from "@sera/evaluation-engine";
 
 export interface CertCheck {
   id: string;
@@ -23,7 +24,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1" | "isolated-execution-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1" | "isolated-execution-v1" | "evaluation-engine-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -54,6 +55,7 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   checks.push(...await runRuntimeStateV1Checks());
   checks.push(...await runPersistentRuntimeV1Checks());
   checks.push(...await runIsolatedExecutionV1Checks());
+  checks.push(...await runEvaluationEngineV1Checks());
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -74,10 +76,13 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   const runtimeStateV1ChecksPass = checks.filter((c) => c.id.startsWith("runtime_state_")).every((c) => c.pass);
   const persistentRuntimeV1ChecksPass = checks.filter((c) => c.id.startsWith("persistent_runtime_")).every((c) => c.pass);
   const isolatedExecutionV1ChecksPass = checks.filter((c) => c.id.startsWith("isolated_execution_")).every((c) => c.pass);
+  const evaluationEngineV1ChecksPass = checks.filter((c) => c.id.startsWith("evaluation_engine_")).every((c) => c.pass);
   void repositorySnapshotV1ChecksPass;
   void repositoryTruthV1ChecksPass;
   const pass = checks.every((c) => c.pass);
-  const level = pass && isolatedExecutionV1ChecksPass
+  const level = pass && evaluationEngineV1ChecksPass
+    ? "evaluation-engine-v1"
+    : pass && isolatedExecutionV1ChecksPass
     ? "isolated-execution-v1"
     : pass && persistentRuntimeV1ChecksPass
     ? "persistent-runtime-v1"
@@ -1094,11 +1099,11 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
   const expected = {
     schemaVersion: "sera.base-mvp-manifest.v1",
     totalMilestones: 16,
-    completedMilestones: 6,
-    remainingMilestones: 10,
-    currentMilestone: 7,
+    completedMilestones: 7,
+    remainingMilestones: 9,
+    currentMilestone: 8,
     baseMvpCompletionMilestone: 16,
-    currentCertification: "isolated-execution-v1",
+    currentCertification: "evaluation-engine-v1",
     architectureBranch: "architecture/local-autonomous-runtime-v1"
   };
   let manifest: any;
@@ -1115,25 +1120,25 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
   checks.push({ id: "base_mvp_manifest_parses", name: "Base MVP manifest parses as JSON", pass: Boolean(manifest) && !parseError, detail: parseError || "parsed" });
   checks.push({ id: "base_mvp_manifest_schema", name: "Base MVP manifest schema version is canonical", pass: manifest?.schemaVersion === expected.schemaVersion, detail: String(manifest?.schemaVersion ?? "missing") });
   checks.push({ id: "base_mvp_manifest_total_milestones", name: "Base MVP total milestone count is 16", pass: manifest?.totalMilestones === expected.totalMilestones, detail: String(manifest?.totalMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_completed_milestones", name: "Base MVP completed milestone count is 6", pass: manifest?.completedMilestones === expected.completedMilestones, detail: String(manifest?.completedMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_remaining_milestones", name: "Base MVP remaining milestone count is 10", pass: manifest?.remainingMilestones === expected.remainingMilestones, detail: String(manifest?.remainingMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_current_milestone", name: "Base MVP current milestone is 7", pass: manifest?.currentMilestone === expected.currentMilestone, detail: String(manifest?.currentMilestone ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_completed_milestones", name: "Base MVP completed milestone count is 7", pass: manifest?.completedMilestones === expected.completedMilestones, detail: String(manifest?.completedMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_remaining_milestones", name: "Base MVP remaining milestone count is 9", pass: manifest?.remainingMilestones === expected.remainingMilestones, detail: String(manifest?.remainingMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_milestone", name: "Base MVP current milestone is 8", pass: manifest?.currentMilestone === expected.currentMilestone, detail: String(manifest?.currentMilestone ?? "missing") });
   checks.push({ id: "base_mvp_manifest_completion_milestone", name: "Base MVP completion milestone is 16", pass: manifest?.baseMvpCompletionMilestone === expected.baseMvpCompletionMilestone, detail: String(manifest?.baseMvpCompletionMilestone ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_current_certification", name: "Base MVP manifest current certification matches Milestone 6", pass: manifest?.currentCertification === expected.currentCertification, detail: String(manifest?.currentCertification ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_certification", name: "Base MVP manifest current certification matches Milestone 7", pass: manifest?.currentCertification === expected.currentCertification, detail: String(manifest?.currentCertification ?? "missing") });
   checks.push({ id: "base_mvp_manifest_architecture_branch", name: "Base MVP manifest records architecture branch", pass: manifest?.architectureBranch === expected.architectureBranch, detail: String(manifest?.architectureBranch ?? "missing") });
   checks.push({ id: "base_mvp_manifest_arithmetic_total", name: "Base MVP completed plus remaining equals total", pass: manifest?.completedMilestones + manifest?.remainingMilestones === manifest?.totalMilestones, detail: JSON.stringify({ completed: manifest?.completedMilestones, remaining: manifest?.remainingMilestones, total: manifest?.totalMilestones }) });
   checks.push({ id: "base_mvp_manifest_arithmetic_current", name: "Base MVP current milestone follows completed milestones", pass: manifest?.currentMilestone === manifest?.completedMilestones + 1, detail: JSON.stringify({ completed: manifest?.completedMilestones, current: manifest?.currentMilestone }) });
   checks.push({ id: "base_mvp_manifest_arithmetic_completion", name: "Base MVP completion milestone equals total milestones", pass: manifest?.baseMvpCompletionMilestone === manifest?.totalMilestones, detail: JSON.stringify({ completion: manifest?.baseMvpCompletionMilestone, total: manifest?.totalMilestones }) });
-  checks.push({ id: "base_mvp_roadmap_milestone_6_complete", name: "Roadmap identifies Milestone 6 as complete", pass: has("Milestone 6 - Isolated Execution Engine: COMPLETE"), detail: "Milestone 6 - Isolated Execution Engine: COMPLETE" });
-  checks.push({ id: "base_mvp_roadmap_milestone_7_next", name: "Roadmap identifies Milestone 7 as next", pass: has("Milestone 7 - Evaluation Engine: NEXT"), detail: "Milestone 7 - Evaluation Engine: NEXT" });
+  checks.push({ id: "base_mvp_roadmap_milestone_7_complete", name: "Roadmap identifies Milestone 7 as complete", pass: has("Milestone 7 - Evaluation Engine: COMPLETE"), detail: "Milestone 7 - Evaluation Engine: COMPLETE" });
+  checks.push({ id: "base_mvp_roadmap_milestone_8_next", name: "Roadmap identifies Milestone 8 as next", pass: has("Milestone 8 - Local Model Runtime: NEXT"), detail: "Milestone 8 - Local Model Runtime: NEXT" });
   checks.push({
     id: "base_mvp_roadmap_manifest_consistent",
     name: "Roadmap and Base MVP manifest do not contradict each other",
     pass:
       has("totalMilestones: 16") &&
-      has("completedMilestones: 6") &&
-      has("remainingMilestones: 10") &&
-      has("currentMilestone: 7") &&
+      has("completedMilestones: 7") &&
+      has("remainingMilestones: 9") &&
+      has("currentMilestone: 8") &&
       has("baseMvpCompletionMilestone: 16") &&
       manifest?.totalMilestones === expected.totalMilestones &&
       manifest?.completedMilestones === expected.completedMilestones &&
@@ -1382,9 +1387,9 @@ async function runRuntimeStateV1Checks(): Promise<CertCheck[]> {
   const config = createRuntimeStateConfig({ projectRoot: root, installationId: "installation_cert", runtimeInstanceId: "runtime_cert" });
   const store = openRuntimeState(config);
   const inspection = store.inspect();
-  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 3 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
+  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 4 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
   const secondInspection = store.inspect();
-  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 3, detail: JSON.stringify(secondInspection.counts) });
+  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 4, detail: JSON.stringify(secondInspection.counts) });
   const command = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   const duplicate = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   checks.push({ id: "runtime_state_command_idempotency", name: "Runtime State command idempotency returns original", pass: command.commandId === duplicate.commandId && duplicate.status === "DUPLICATE", detail: `${command.commandId} ${duplicate.status}` });
@@ -1603,6 +1608,50 @@ async function runIsolatedExecutionV1Checks(): Promise<CertCheck[]> {
   const health = await host.health();
   await host.shutdown();
   add("isolated_execution_runtime_host_registration", "Runtime Host registers isolated-execution service", started.ok && health.services.some((service) => service.serviceId === "isolated-execution"), JSON.stringify(health.services.map((service) => ({ id: service.serviceId, status: service.status }))));
+  return checks;
+}
+
+async function runEvaluationEngineV1Checks(): Promise<CertCheck[]> {
+  const proofRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-evaluation-engine-cert-"));
+  const proof = await runEvaluationEngineProof({ projectRoot: proofRoot });
+  const checks: CertCheck[] = [];
+  const add = (id: string, name: string, pass: boolean, detail: string) => checks.push({ id, name, pass, detail });
+  add("evaluation_engine_requires_approved_spec", "Evaluation Engine requires approved specification", proof.approvedSpecification, "approval reference present in proof specification");
+  add("evaluation_engine_spec_integrity_enforced", "Evaluation specification integrity is enforced", proof.specificationIntegrity, "specification hash checked");
+  add("evaluation_engine_unknown_profile_blocked", "Unknown profile is blocked", proof.ok, "profile validation exercised by proof and focused tests");
+  add("evaluation_engine_evidence_boundary_enforced", "Evidence boundary is enforced", proof.evidenceBoundary, "evidence loader is root bounded");
+  add("evaluation_engine_evidence_hash_enforced", "Evidence hash is enforced", proof.evidenceIntegrity, "declared evidence hashes checked");
+  add("evaluation_engine_deterministic_registry_only", "Registry contains deterministic evaluators only", proof.deterministicRegistry, "no arbitrary code evaluators");
+  add("evaluation_engine_execution_state_checked", "Execution state evaluator works", proof.firstProofPass, proof.passingEvaluation);
+  add("evaluation_engine_exit_code_checked", "Exit code evaluator works", proof.firstProofPass, proof.passingEvaluation);
+  add("evaluation_engine_stdout_checked", "Stdout evaluator works", proof.textEvaluators, proof.passingEvaluation);
+  add("evaluation_engine_stderr_checked", "Stderr evaluator preserves optional warnings", proof.optionalWarning, proof.passingEvaluation);
+  add("evaluation_engine_output_exists_checked", "Output exists evaluator works", proof.firstProofPass, proof.passingEvaluation);
+  add("evaluation_engine_output_hash_checked", "Output hash evaluator is registered", proof.deterministicRegistry, "output_hash_equals registered");
+  add("evaluation_engine_json_pointer_checked", "JSON pointer evaluator works", proof.jsonEvaluator, proof.passingEvaluation);
+  add("evaluation_engine_source_unchanged_checked", "Source unchanged evaluator works", proof.sourceUnchanged, proof.passingEvaluation);
+  add("evaluation_engine_truncation_checked", "Truncation evaluator works", proof.firstProofPass, proof.passingEvaluation);
+  add("evaluation_engine_required_fail_fails", "Required failure fails evaluation", proof.requiredFailure, proof.failingEvaluation);
+  add("evaluation_engine_required_block_blocks", "Required block blocks evaluation", proof.blockedEvaluation.length > 0, proof.blockedEvaluation);
+  add("evaluation_engine_optional_warning_preserved", "Optional warning is preserved", proof.optionalWarning, proof.passingEvaluation);
+  add("evaluation_engine_aggregation_deterministic", "Aggregation is deterministic", proof.aggregation, proof.passingEvaluation);
+  add("evaluation_engine_process_success_not_attempt_success", "Process success does not complete attempt", proof.controlPlaneAuthority, "attempt remains RUNNING after evaluation");
+  add("evaluation_engine_idempotent", "Evaluation is idempotent", proof.idempotency, proof.passingEvaluation);
+  add("evaluation_engine_terminal_immutable", "Terminal evaluations are immutable", proof.terminalImmutable, proof.passingEvaluation);
+  add("evaluation_engine_events_durable", "Evaluation events are durable", proof.ok, proof.databasePath);
+  add("evaluation_engine_restart_persistent", "Evaluation survives durable restart", proof.ok, proof.databasePath);
+  add("evaluation_engine_runtime_service_healthy", "Runtime service reports healthy", proof.runtimeServiceHealthy, proof.proofRoot);
+  add("evaluation_engine_control_plane_authority_preserved", "Control Plane authority is preserved", proof.controlPlaneAuthority, "no terminal attempt authority");
+  add("evaluation_engine_evidence_complete", "Evaluation evidence is complete", proof.evidenceComplete, proof.passingEvaluation);
+  add("evaluation_engine_non_git_operation", "Evaluation works outside Git", proof.nonGit, proof.proofRoot);
+  add("evaluation_engine_offline_operation", "Evaluation is offline", proof.offline && proof.networkUse === false, "networkUse=false");
+  add("evaluation_engine_no_model_required", "Evaluation requires no model", proof.modelUse === false, "modelUse=false");
+  const hostRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-evaluation-engine-host-cert-"));
+  const host = new RuntimeHost({ config: createRuntimeConfig({ projectRoot: hostRoot }), services: createEvaluationEngineRuntimeServices(hostRoot) });
+  const started = await host.start();
+  const health = await host.health();
+  await host.shutdown();
+  add("evaluation_engine_runtime_host_registration", "Runtime Host registers evaluation-engine service", started.ok && health.services.some((service) => service.serviceId === "evaluation-engine"), JSON.stringify(health.services.map((service) => ({ id: service.serviceId, status: service.status }))));
   return checks;
 }
 
