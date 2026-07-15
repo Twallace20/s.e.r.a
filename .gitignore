@@ -12,6 +12,7 @@ coverage/
 .sera/runtime-host/
 .sera/recovery/
 .sera/state/
+.sera/executions/
 .sera-local/
 *.log
 .DS_Store

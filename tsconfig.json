@@ -28,6 +28,9 @@
                            "path":  "packages/runtime-recovery"
                        },
                        {
+                           "path":  "packages/execution-engine"
+                       },
+                       {
                            "path":  "packages/safety"
                        },
                        {

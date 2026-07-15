@@ -169,6 +169,7 @@ const DEFAULT_EXCLUSIONS = [
   ".sera/runtime-host",
   ".sera/recovery",
   ".sera/state",
+  ".sera/executions",
   ".sera-runs",
   ".sera-cert",
   ".sera-local",

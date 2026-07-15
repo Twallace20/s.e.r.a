@@ -142,8 +142,12 @@ npm run sera -- recovery pending
 npm run sera -- recovery decisions
 ```
 
+## SQLite CLI Concurrency Limitation
+
+v1 live CLI inspection and integrity commands are validated sequentially. Concurrent commands that initialize, inspect, or record state may contend for the SQLite writer lock. WAL mode does not eliminate all SQLite writer contention. The observed parallel lock did not occur during required sequential validation. v1 does not claim lock-free concurrent CLI operation. Commands that operate against live state should currently be executed sequentially. A later reliability milestone should explicitly test and improve concurrent inspection behavior.
+
 ## Boundaries
 
-Persistent Runtime Recovery v1 does not implement Milestone 6 isolated execution, arbitrary subprocess workloads, containers, virtual machines, HTTP servers, network listeners, distributed recovery, Hive Mode, remote workers, Desktop Operator, cloud persistence, model invocation, or exactly-once arbitrary side effects.
+Persistent Runtime Recovery v1 does not launch arbitrary subprocess workloads, containers, virtual machines, HTTP servers, network listeners, distributed recovery, Hive Mode, remote workers, Desktop Operator, cloud persistence, model invocation, or exactly-once arbitrary side effects. Milestone 6 Isolated Execution Engine records execution state and recovery treats interrupted `RUNNING` execution records conservatively; it does not resume arbitrary operating-system processes from memory.
 
-Milestone 5 is complete after this certification. Milestone 6, Isolated Execution Engine, is next.
+Milestone 5 is complete after this certification. Milestone 6 Isolated Execution Engine now builds on these recovery records and Milestone 7 Evaluation Engine is next.

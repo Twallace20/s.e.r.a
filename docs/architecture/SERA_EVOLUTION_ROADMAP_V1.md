@@ -64,12 +64,13 @@ The Base MVP milestone manifest is frozen:
 
 ```text
 totalMilestones: 16
-completedMilestones: 4
-completedMilestones: 5
-remainingMilestones: 11
-currentMilestone: 6
+completedMilestones: 6
+remainingMilestones: 10
+currentMilestone: 7
 baseMvpCompletionMilestone: 16
 ```
+
+The canonical machine-readable Base MVP milestone record is `architecture/base-mvp-manifest.json`. The roadmap is the human-readable narrative view and must remain consistent with that manifest.
 
 Milestone 4 is complete only when the Unified Control Plane implementation and its three required support changes are retained, validated, and included in final closeout:
 
@@ -88,7 +89,8 @@ Milestone 5A - Local Runtime Host v1: COMPLETE
 Milestone 5B - SQLite Operational State v1: COMPLETE
 Milestone 5C - Persistent Runtime Recovery v1: COMPLETE
 Milestone 5 overall: COMPLETE
-Milestone 6 - Isolated Execution Engine: NEXT
+Milestone 6 - Isolated Execution Engine: COMPLETE
+Milestone 7 - Evaluation Engine: NEXT
 ```
 
 ## Consolidation milestones
@@ -100,7 +102,7 @@ The locked implementation order is:
 3. Repository Truth — `repository-truth-v1` — implemented and locally proven as the deterministic classification pass over Snapshot evidence
 4. Unified Control Plane — `local-control-plane-v1` — implemented and under validation as the permanent Runtime attempt, gate, evidence, terminal-decision, verification, and closeout authority; final completion requires the three support changes named in Base MVP Scope Lock
 5. Runtime Host and SQLite Operational State — `local-runtime-host-v1` completes Milestone 5A; `runtime-state-v1` completes Milestone 5B; `persistent-runtime-v1` completes Milestone 5C and Milestone 5
-6. Isolated Execution — `isolated-execution-v1` — NEXT
+6. Isolated Execution — `isolated-execution-v1` — implemented and certified as the governed process/workspace boundary for approved local workloads
 7. Evaluation Engine — `evaluation-engine-v1`
 8. Ollama Model Runtime — `offline-model-runtime-v1`
 9. Knowledge and Multimodal Intake — `multimodal-evidence-runtime-v1`

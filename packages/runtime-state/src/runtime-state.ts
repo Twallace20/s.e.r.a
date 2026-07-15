@@ -6,7 +6,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createControlPlaneRuntimeService, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
 
 export const RUNTIME_STATE_VERSION = "runtime-state-v1";
-export const RUNTIME_STATE_SCHEMA_VERSION = 2;
+export const RUNTIME_STATE_SCHEMA_VERSION = 3;
 export const RUNTIME_STATE_EXPORT_SCHEMA = "sera.runtime-state-export.v1";
 
 export type RuntimeStateStatus = "healthy" | "blocked";
@@ -112,7 +112,12 @@ const TABLES = [
   "recovery_sessions",
   "recovery_decisions",
   "recovery_events",
-  "attempt_lineage"
+  "attempt_lineage",
+  "executions",
+  "execution_events",
+  "execution_inputs",
+  "execution_outputs",
+  "execution_authorizations"
 ] as const;
 
 const TERMINAL_STATES = new Set<AttemptState>(["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"]);
@@ -334,6 +339,93 @@ CREATE INDEX idx_recovery_decisions_session ON recovery_decisions(recovery_sessi
 CREATE INDEX idx_recovery_decisions_attempt ON recovery_decisions(attempt_id, created_at);
 CREATE INDEX idx_recovery_events_session ON recovery_events(recovery_session_id, timestamp, event_id);
 CREATE INDEX idx_attempt_lineage_prior ON attempt_lineage(prior_attempt_id, current_attempt_id);
+`
+  },
+  {
+    version: 3,
+    name: "isolated_execution_engine_v1",
+    sql: `
+CREATE TABLE executions (
+  execution_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  authorization_id TEXT NOT NULL,
+  executable_id TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  workspace_identity TEXT NOT NULL,
+  state TEXT NOT NULL,
+  process_exit_code INTEGER,
+  created_at TEXT NOT NULL,
+  started_at TEXT,
+  completed_at TEXT,
+  timeout_ms INTEGER NOT NULL,
+  cancellation_reason TEXT,
+  output_summary_json TEXT NOT NULL,
+  optimistic_version INTEGER NOT NULL,
+  evidence_root TEXT,
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE TABLE execution_events (
+  event_id TEXT PRIMARY KEY,
+  execution_id TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  runtime_instance_id TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  message TEXT NOT NULL,
+  details_json TEXT NOT NULL,
+  UNIQUE(execution_id, sequence),
+  FOREIGN KEY(execution_id) REFERENCES executions(execution_id)
+);
+
+CREATE TABLE execution_inputs (
+  execution_id TEXT NOT NULL,
+  input_identity TEXT NOT NULL,
+  source_type TEXT NOT NULL,
+  source_reference TEXT NOT NULL,
+  workspace_path TEXT NOT NULL,
+  hash TEXT NOT NULL,
+  size INTEGER NOT NULL,
+  metadata_json TEXT NOT NULL,
+  PRIMARY KEY(execution_id, input_identity),
+  FOREIGN KEY(execution_id) REFERENCES executions(execution_id)
+);
+
+CREATE TABLE execution_outputs (
+  execution_id TEXT NOT NULL,
+  declared_output_identity TEXT NOT NULL,
+  workspace_path TEXT NOT NULL,
+  hash TEXT,
+  size INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  evidence_reference TEXT,
+  metadata_json TEXT NOT NULL,
+  PRIMARY KEY(execution_id, declared_output_identity),
+  FOREIGN KEY(execution_id) REFERENCES executions(execution_id)
+);
+
+CREATE TABLE execution_authorizations (
+  authorization_id TEXT PRIMARY KEY,
+  execution_id TEXT NOT NULL,
+  attempt_id TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  executable_id TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  issued_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  required_gates_json TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(execution_id) REFERENCES executions(execution_id),
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE INDEX idx_executions_attempt ON executions(attempt_id, created_at);
+CREATE INDEX idx_executions_state ON executions(state, created_at);
+CREATE INDEX idx_execution_events_execution ON execution_events(execution_id, sequence);
+CREATE INDEX idx_execution_authorizations_attempt ON execution_authorizations(attempt_id, issued_at);
 `
   }
 ];
@@ -683,7 +775,12 @@ export class RuntimeStateStore {
       recoverySessions: this.tableExists("recovery_sessions") ? all(db, "SELECT recovery_session_id, installation_id, recovery_runtime_instance_id, started_at, completed_at, status, scan_count, recoverable_count, blocked_count, resumed_count, new_attempt_count, error_summary FROM recovery_sessions ORDER BY started_at, recovery_session_id") : [],
       recoveryDecisions: this.tableExists("recovery_decisions") ? all(db, "SELECT recovery_decision_id, recovery_session_id, attempt_id, classification, decision, reason, policy_version, control_plane_authorization_ref, checkpoint_id, created_at, decided_by, operator_review_required, fencing_token FROM recovery_decisions ORDER BY recovery_session_id, created_at, recovery_decision_id") : [],
       recoveryEvents: this.tableExists("recovery_events") ? all(db, "SELECT event_id, recovery_session_id, attempt_id, event_type, timestamp, runtime_instance_id, outcome, message, details_json FROM recovery_events ORDER BY recovery_session_id, timestamp, event_id") : [],
-      attemptLineage: this.tableExists("attempt_lineage") ? all(db, "SELECT lineage_id, current_attempt_id, prior_attempt_id, relationship, created_at, reason FROM attempt_lineage ORDER BY prior_attempt_id, current_attempt_id") : []
+      attemptLineage: this.tableExists("attempt_lineage") ? all(db, "SELECT lineage_id, current_attempt_id, prior_attempt_id, relationship, created_at, reason FROM attempt_lineage ORDER BY prior_attempt_id, current_attempt_id") : [],
+      executions: this.tableExists("executions") ? all(db, "SELECT execution_id, attempt_id, authorization_id, executable_id, request_hash, policy_version, workspace_identity, state, process_exit_code, created_at, started_at, completed_at, timeout_ms, cancellation_reason, output_summary_json, optimistic_version, evidence_root FROM executions ORDER BY created_at, execution_id") : [],
+      executionEvents: this.tableExists("execution_events") ? all(db, "SELECT event_id, execution_id, sequence, event_type, timestamp, runtime_instance_id, outcome, message, details_json FROM execution_events ORDER BY execution_id, sequence") : [],
+      executionInputs: this.tableExists("execution_inputs") ? all(db, "SELECT execution_id, input_identity, source_type, source_reference, workspace_path, hash, size, metadata_json FROM execution_inputs ORDER BY execution_id, input_identity") : [],
+      executionOutputs: this.tableExists("execution_outputs") ? all(db, "SELECT execution_id, declared_output_identity, workspace_path, hash, size, status, evidence_reference, metadata_json FROM execution_outputs ORDER BY execution_id, declared_output_identity") : [],
+      executionAuthorizations: this.tableExists("execution_authorizations") ? all(db, "SELECT authorization_id, execution_id, attempt_id, request_hash, executable_id, policy_version, issued_at, expires_at, required_gates_json, integrity_hash, metadata_json FROM execution_authorizations ORDER BY issued_at, authorization_id") : []
     }) as Record<string, unknown>;
   }
 

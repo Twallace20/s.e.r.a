@@ -5,6 +5,7 @@ import { SeraKernel } from "@sera/kernel";
 import { RuntimeHost, createRuntimeConfig, loadOrCreateRuntimeIdentity, runRuntimeHostProof } from "@sera/runtime-host";
 import { createRuntimeStateConfig, openRuntimeState, runRuntimeStateProof } from "@sera/runtime-state";
 import { PersistentRuntimeRecoveryCoordinator, createPersistentRuntimeServices, runPersistentRuntimeRecoveryProof } from "@sera/runtime-recovery";
+import { IsolatedExecutionEngine, createIsolatedExecutionRuntimeServices, runIsolatedExecutionProof } from "@sera/execution-engine";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -91,6 +92,10 @@ Usage:
   sera recovery prove
   sera recovery pending
   sera recovery decisions
+  sera execution policy
+  sera execution list
+  sera execution inspect <execution-id>
+  sera execution prove
   sera snapshot
   sera truth
 
@@ -137,6 +142,8 @@ NPM examples:
   npm run sera -- runtime prove
   npm run sera -- state prove
   npm run sera -- recovery prove
+  npm run sera -- execution policy
+  npm run sera -- execution prove
 
 Secure base behavior:
   - runs locally
@@ -164,6 +171,7 @@ Secure base behavior:
   - Runtime Host starts local Runtime Services, reports health, preserves installation identity, and shuts down cleanly
   - SQLite Operational State stores durable local command, attempt, gate, evidence, lease, migration, backup, and export records
   - Persistent Runtime Recovery scans interrupted attempts, resumes only certified-safe checkpoints, and blocks uncertain work for review
+  - Isolated Execution Engine runs only authorized local workloads in bounded temporary workspaces without shell execution
   - does not require an LLM provider
 `);
 }
@@ -1035,7 +1043,7 @@ async function main(): Promise<void> {
       process.exit(0);
     }
     if (runtimeMode === "health" || runtimeMode === "prove") {
-      const proof = await runRuntimeHostProof(config, createPersistentRuntimeServices(config.projectRoot));
+      const proof = await runRuntimeHostProof(config, createIsolatedExecutionRuntimeServices(config.projectRoot));
       console.log(JSON.stringify({
         ok: proof.ok,
         status: proof.status,
@@ -1050,7 +1058,7 @@ async function main(): Promise<void> {
       process.exit(proof.ok ? 0 : 1);
     }
     if (runtimeMode === "start") {
-      const host = new RuntimeHost({ config, services: createPersistentRuntimeServices(config.projectRoot) });
+      const host = new RuntimeHost({ config, services: createIsolatedExecutionRuntimeServices(config.projectRoot) });
       const started = await host.start();
       console.log(JSON.stringify({
         ok: started.ok,
@@ -1160,6 +1168,35 @@ async function main(): Promise<void> {
       store.close();
     }
     throw new Error("Recovery command must be 'inspect', 'scan', 'prove', 'pending', or 'decisions'.");
+  }
+
+  if (cmd === "execution") {
+    const [executionMode, executionId] = rest;
+    if (executionMode === "prove") {
+      const result = await runIsolatedExecutionProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
+    const store = openRuntimeState(config);
+    try {
+      const engine = new IsolatedExecutionEngine(store, { projectRoot: process.cwd() });
+      if (executionMode === "policy") {
+        console.log(JSON.stringify({ ok: true, status: "INSPECTED", ...engine.policy() }, null, 2));
+        process.exit(0);
+      }
+      if (executionMode === "list") {
+        console.log(JSON.stringify({ ok: true, status: "INSPECTED", executions: engine.listExecutions(), modelUse: false, networkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (executionMode === "inspect") {
+        console.log(JSON.stringify(engine.inspectExecution(requireArg(executionId, "execution id")), null, 2));
+        process.exit(0);
+      }
+    } finally {
+      store.close();
+    }
+    throw new Error("Execution command must be 'policy', 'list', 'inspect', or 'prove'.");
   }
 
   if (cmd === "repository") {
