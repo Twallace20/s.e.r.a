@@ -86,6 +86,9 @@
       ],
       "@sera/evaluation-engine": [
         "packages/evaluation-engine/src/index.ts"
+      ],
+      "@sera/model-runtime": [
+        "packages/model-runtime/src/index.ts"
       ]
     }
   }

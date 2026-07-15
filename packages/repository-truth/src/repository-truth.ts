@@ -157,6 +157,7 @@ const RUNTIME_PACKAGE_NAME_HINTS = [
   "runtime-host",
   "runtime-state",
   "runtime-recovery",
+  "model-runtime",
   "control-plane",
   "execution-engine",
   "evaluation-engine",

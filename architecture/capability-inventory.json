@@ -4,6 +4,16 @@
   "milestone": "repository-truth-v1",
   "architectureStandards": [
     {
+      "id": "local-model-runtime-v1",
+      "name": "Local Model Runtime v1",
+      "kind": "runtime-capability",
+      "status": "complete",
+      "executableCapability": true,
+      "runtimeService": true,
+      "document": "docs/architecture/LOCAL_MODEL_RUNTIME_V1.md",
+      "records": "Provider-independent local model invocation boundary with deterministic fixture provider, disabled real-local adapter metadata, explicit authorization, candidate-intelligence-only output, SQLite invocation records, and offline proof."
+    },
+    {
       "id": "evaluation-engine-v1",
       "name": "Evaluation Engine v1",
       "kind": "runtime-capability",
@@ -327,15 +337,35 @@
     },
     {
       "id": "model-runtime",
-      "targetLayer": "Provider",
-      "currentMaturity": "starter",
-      "status": "proposed",
+      "targetLayer": "Runtime",
+      "currentMaturity": "implemented",
+      "status": "certification-pending",
       "dependencies": [
         "sera-os-kernel",
-        "packages/model-provider"
+        "local-runtime-host",
+        "runtime-control-plane",
+        "runtime-state-store",
+        "persistent-runtime-recovery",
+        "packages/model-runtime",
+        "packages/model-provider",
+        "apps/cli",
+        "packages/certs"
       ],
-      "certificationTarget": "offline-model-runtime-v1",
-      "notes": "Replaceable local model provider runtime. Ollama is a first real local target, but Kernel must remain model-independent."
+      "certificationTarget": "local-model-runtime-v1",
+      "evidence": [
+        "packages/model-runtime/src/model-runtime.ts",
+        "tests/local-model-runtime-v1.test.ts",
+        "docs/architecture/LOCAL_MODEL_RUNTIME_V1.md"
+      ],
+      "limitations": [
+        "does not download, install, or invoke real models",
+        "does not add cloud providers or credentials",
+        "does not permit model-driven tool execution or source mutation",
+        "model output remains candidate intelligence only",
+        "the legacy packages/model-provider surface is compatibility evidence, not Runtime authority"
+      ],
+      "nextGate": "Knowledge and Multimodal Intake v1",
+      "notes": "Provider-independent local model Runtime boundary. It registers deterministic fixture and disabled real-local providers, enforces explicit authorization and offline/local policy, records model invocations in SQLite schema v5, writes redacted evidence, and integrates with Runtime Host health."
     },
     {
       "id": "multimodal-intake",

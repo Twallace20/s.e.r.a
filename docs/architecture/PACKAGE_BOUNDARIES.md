@@ -104,6 +104,14 @@ Boundary rules:
 
 Persistent Runtime Recovery for interrupted attempts, checkpoint classification, safe same-attempt resume, linked retry, review-required blocking, and recovery evidence.
 
+Boundary rules:
+
+- scans and classifies durable nonterminal attempts
+- resumes only certified restart-safe checkpoints with Control Plane authorization references
+- blocks unknown side effects for review
+- does not implement isolated execution or arbitrary workload execution
+- does not claim exactly-once execution for arbitrary side effects
+
 ## `@sera/execution-engine` / `packages/execution-engine`
 
 Governed local execution chamber for explicitly authorized workloads. It validates Control Plane-scoped authorization, creates temporary workspaces outside the repository by default, materializes approved inputs, launches approved executable adapters with `shell: false`, captures bounded stdout/stderr, enforces timeout and cancellation, harvests declared outputs, cleans up, records SQLite execution rows, and writes `.sera/executions/` evidence. It does not expose arbitrary shell commands, arbitrary executable paths, containers, virtual machines, network listeners, distributed execution, or Evaluation Engine authority.
@@ -114,11 +122,23 @@ Deterministic evaluation layer for immutable execution evidence. It validates ap
 
 Boundary rules:
 
-- scans and classifies durable nonterminal attempts
-- resumes only certified restart-safe checkpoints with Control Plane authorization references
-- blocks unknown side effects for review
-- does not implement isolated execution or arbitrary workload execution
-- does not claim exactly-once execution for arbitrary side effects
+- evaluates evidence only
+- does not rerun workloads
+- does not invoke models
+- does not transition Control Plane attempts
+- does not replace certification authority
+
+## `@sera/model-runtime` / `packages/model-runtime`
+
+Provider-independent Local Model Runtime boundary. It validates provider descriptors, model catalog entries, invocation authorization, request hashes, policy limits, idempotency, timeout/cancellation, redaction, and candidate-intelligence-only response handling. It records model providers, catalog entries, authorizations, invocations, events, and artifacts in SQLite Operational State migration v5 and writes `.sera/model-runtime/` evidence.
+
+Boundary rules:
+
+- deterministic fixture provider is the certified default
+- disabled real-local providers degrade honestly
+- public endpoints, cloud providers, downloads, installs, and credentials are not allowed in v1
+- model output cannot execute tools, mutate source, approve gates, or become operational truth
+- `packages/model-provider` remains provider-adapter compatibility evidence, not Runtime authority
 
 ## `@sera/certs` / `packages/certs`
 
@@ -194,7 +214,7 @@ Optional model-provider adapter records, mock provider invocation, redacted requ
 
 Boundary rules:
 
-- deterministic mock provider is the only certified provider through Phase 12
+- deterministic mock provider remains compatibility evidence only
 - unknown and external providers are blocked by default
 - model output cannot bypass tools, validation, review, or safety gates
 - does not mutate runtime state outside `.sera-models/`

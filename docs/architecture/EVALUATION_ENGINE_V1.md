@@ -34,6 +34,8 @@ Runtime State migration v4 adds evaluation specs, evaluations, assertions, event
 
 The `evaluation-engine` Runtime Service depends on operational state, Unified Control Plane, Persistent Runtime Recovery, and Isolated Execution. It validates the registry on startup, refuses new work during shutdown, and reports health through Runtime Host.
 
+Local Model Runtime outputs may be evaluated only as declared evidence. Evaluation Engine v1 does not invoke models, grade with models, promote model text to operational truth, or let model output transition attempts.
+
 ## Milestone Boundary
 
 Milestone 7 completes deterministic evaluation. Milestone 8 is Local Model Runtime and is intentionally not implemented here.
