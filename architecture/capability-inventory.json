@@ -4,6 +4,16 @@
   "milestone": "repository-truth-v1",
   "architectureStandards": [
     {
+      "id": "evaluation-engine-v1",
+      "name": "Evaluation Engine v1",
+      "kind": "runtime-capability",
+      "status": "complete",
+      "executableCapability": true,
+      "runtimeService": true,
+      "document": "docs/architecture/EVALUATION_ENGINE_V1.md",
+      "records": "Deterministic evaluation of immutable execution evidence with assertion outcomes, aggregation, SQLite persistence, and Control Plane gate evidence."
+    },
+    {
       "id": "intelligence-pipeline-v1",
       "name": "Intelligence Pipeline v1",
       "kind": "architectural-standard",

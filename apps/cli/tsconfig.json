@@ -35,6 +35,9 @@
     },
     {
       "path": "../../packages/execution-engine"
+    },
+    {
+      "path": "../../packages/evaluation-engine"
     }
   ]
 }

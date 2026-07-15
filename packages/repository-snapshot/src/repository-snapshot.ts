@@ -170,6 +170,7 @@ const DEFAULT_EXCLUSIONS = [
   ".sera/recovery",
   ".sera/state",
   ".sera/executions",
+  ".sera/evaluations",
   ".sera-runs",
   ".sera-cert",
   ".sera-local",

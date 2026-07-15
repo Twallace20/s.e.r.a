@@ -13,6 +13,7 @@ coverage/
 .sera/recovery/
 .sera/state/
 .sera/executions/
+.sera/evaluations/
 .sera-local/
 *.log
 .DS_Store

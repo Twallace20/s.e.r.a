@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"],
+  "references": [
+    { "path": "../runtime-state" },
+    { "path": "../runtime-host" },
+    { "path": "../runtime-recovery" },
+    { "path": "../execution-engine" }
+  ]
+}

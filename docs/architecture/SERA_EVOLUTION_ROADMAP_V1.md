@@ -26,6 +26,18 @@ S.E.R.A. is not defined as one assistant, coding agent, website builder, game st
 ### Era I — Foundation
 One durable local operating system: contracts, control plane, state store, safety, execution, evidence, evaluation, knowledge, models, learning, capabilities, and operator runtime.
 
+Milestone 7 — Evaluation Engine is COMPLETE. S.E.R.A. can evaluate immutable isolated-execution evidence with deterministic registered evaluators, assertion records, aggregate outcomes, and Control Plane gate evidence without model use.
+
+Milestone 8 — Local Model Runtime is NEXT.
+
+Milestone 7 - Evaluation Engine: COMPLETE
+Milestone 8 - Local Model Runtime: NEXT
+
+completedMilestones: 7
+remainingMilestones: 9
+currentMilestone: 8
+baseMvpCompletionMilestone: 16
+
 ### Era II — Cognition
 Every task follows:
 

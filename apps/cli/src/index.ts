@@ -6,6 +6,7 @@ import { RuntimeHost, createRuntimeConfig, loadOrCreateRuntimeIdentity, runRunti
 import { createRuntimeStateConfig, openRuntimeState, runRuntimeStateProof } from "@sera/runtime-state";
 import { PersistentRuntimeRecoveryCoordinator, createPersistentRuntimeServices, runPersistentRuntimeRecoveryProof } from "@sera/runtime-recovery";
 import { IsolatedExecutionEngine, createIsolatedExecutionRuntimeServices, runIsolatedExecutionProof } from "@sera/execution-engine";
+import { EvaluationEngine, runEvaluationEngineProof } from "@sera/evaluation-engine";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -96,6 +97,10 @@ Usage:
   sera execution list
   sera execution inspect <execution-id>
   sera execution prove
+  sera evaluation profiles
+  sera evaluation list
+  sera evaluation inspect <evaluation-id>
+  sera evaluation prove
   sera snapshot
   sera truth
 
@@ -144,6 +149,8 @@ NPM examples:
   npm run sera -- recovery prove
   npm run sera -- execution policy
   npm run sera -- execution prove
+  npm run sera -- evaluation profiles
+  npm run sera -- evaluation prove
 
 Secure base behavior:
   - runs locally
@@ -172,6 +179,7 @@ Secure base behavior:
   - SQLite Operational State stores durable local command, attempt, gate, evidence, lease, migration, backup, and export records
   - Persistent Runtime Recovery scans interrupted attempts, resumes only certified-safe checkpoints, and blocks uncertain work for review
   - Isolated Execution Engine runs only authorized local workloads in bounded temporary workspaces without shell execution
+  - Evaluation Engine evaluates immutable execution evidence with deterministic registered evaluators and preserves Control Plane terminal authority
   - does not require an LLM provider
 `);
 }
@@ -1197,6 +1205,35 @@ async function main(): Promise<void> {
       store.close();
     }
     throw new Error("Execution command must be 'policy', 'list', 'inspect', or 'prove'.");
+  }
+
+  if (cmd === "evaluation") {
+    const [evaluationMode, evaluationId] = rest;
+    if (evaluationMode === "prove") {
+      const result = await runEvaluationEngineProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
+    const store = openRuntimeState(config);
+    try {
+      const engine = new EvaluationEngine(store, { projectRoot: process.cwd() });
+      if (evaluationMode === "profiles") {
+        console.log(JSON.stringify({ ok: true, status: "INSPECTED", ...engine.profiles() }, null, 2));
+        process.exit(0);
+      }
+      if (evaluationMode === "list") {
+        console.log(JSON.stringify({ ok: true, status: "INSPECTED", evaluations: engine.listEvaluations(), modelUse: false, networkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (evaluationMode === "inspect") {
+        console.log(JSON.stringify(engine.inspectEvaluation(requireArg(evaluationId, "evaluation id")), null, 2));
+        process.exit(0);
+      }
+    } finally {
+      store.close();
+    }
+    throw new Error("Evaluation command must be 'profiles', 'list', 'inspect', or 'prove'.");
   }
 
   if (cmd === "repository") {

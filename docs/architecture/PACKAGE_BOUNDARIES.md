@@ -108,6 +108,10 @@ Persistent Runtime Recovery for interrupted attempts, checkpoint classification,
 
 Governed local execution chamber for explicitly authorized workloads. It validates Control Plane-scoped authorization, creates temporary workspaces outside the repository by default, materializes approved inputs, launches approved executable adapters with `shell: false`, captures bounded stdout/stderr, enforces timeout and cancellation, harvests declared outputs, cleans up, records SQLite execution rows, and writes `.sera/executions/` evidence. It does not expose arbitrary shell commands, arbitrary executable paths, containers, virtual machines, network listeners, distributed execution, or Evaluation Engine authority.
 
+## `@sera/evaluation-engine` / `packages/evaluation-engine`
+
+Deterministic evaluation layer for immutable execution evidence. It validates approved evaluation specifications, loads only declared execution evidence, verifies boundaries and hashes, runs registered v1 evaluators, records assertion outcomes, aggregates required and optional results, writes `.sera/evaluations/` evidence, and reports named gate evidence to the Unified Control Plane. It does not run arbitrary JavaScript, shell commands, dynamic validators, internet checks, model grading, process reruns, or terminal attempt transitions.
+
 Boundary rules:
 
 - scans and classifies durable nonterminal attempts
