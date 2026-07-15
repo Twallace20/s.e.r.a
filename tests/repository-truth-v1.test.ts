@@ -128,6 +128,30 @@ describe("Repository Truth v1", () => {
     expect(fs.existsSync(path.join(root, "scripts", "run-phase-overlay-zip-builder-v1.mjs"))).toBe(true);
   });
 
+  it("classifies certified runtime packages, reconciles evaluation-engine, and preserves honest conflicts", () => {
+    const root = createTruthFixture({ conflictingInventory: true });
+    runRepositoryTruth({ repositoryRoot: root, clock });
+    const components = read(root, "components.json").components;
+    const classifications = read(root, "classifications.json");
+    const findings = read(root, "findings.json").findings;
+
+    const layerFor = (componentId: string) => components.find((component: any) => component.id === componentId)?.architecturalClassification;
+    expect(layerFor("component:sera-evaluation-engine")).toBe("runtime");
+    expect(layerFor("component:sera-runtime-state")).toBe("runtime");
+    expect(layerFor("component:sera-runtime-recovery")).toBe("runtime");
+    expect(layerFor("component:sera-execution-engine")).toBe("runtime");
+    expect(layerFor("component:sera-mystery-box")).toBe("review-required");
+
+    const evaluationEntry = classifications.inventoryReconciliation.inventoryEntries.find((entry: any) => entry.inventoryId === "evaluation-engine");
+    expect(evaluationEntry.matchingImplementationCandidates).toContain("component:sera-evaluation-engine");
+    expect(classifications.inventoryReconciliation.dependencyConflicts.some((conflict: any) => conflict.inventoryId === "evaluation-engine")).toBe(false);
+    expect(findings.some((finding: any) => finding.id === "repository_truth_conflicting_arch_mapping" && finding.affectedComponents.includes("inventory:evaluation-engine"))).toBe(false);
+
+    expect(classifications.inventoryReconciliation.dependencyConflicts.some((conflict: any) => conflict.inventoryId === "repository-truth" && conflict.expectedLayer === "desktop" && conflict.observedLayer === "runtime")).toBe(true);
+    expect(findings.some((finding: any) => finding.id === "repository_truth_conflicting_arch_mapping" && finding.affectedComponents.includes("inventory:repository-truth"))).toBe(true);
+    expect(classifications.legacyAuthorityAnalysis.riskCount).toBe(0);
+  });
+
   it("does not report legacy authority risk when legacy has no active declared authority", () => {
     const root = createTruthFixture({ legacyAuthority: false });
     runRepositoryTruth({ repositoryRoot: root, clock });
@@ -179,6 +203,11 @@ function createTruthFixture(options: { legacyAuthority?: boolean; conflictingInv
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-repository-truth-test-"));
   fs.mkdirSync(path.join(root, "packages", "runtime-alpha", "src"), { recursive: true });
   fs.mkdirSync(path.join(root, "packages", "capability-beta", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "packages", "runtime-state", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "packages", "runtime-recovery", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "packages", "execution-engine", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "packages", "evaluation-engine", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "packages", "mystery-box", "src"), { recursive: true });
   fs.mkdirSync(path.join(root, "packages", "legacy-adapter"), { recursive: true });
   fs.mkdirSync(path.join(root, "apps", "desktop-shell", "src"), { recursive: true });
   fs.mkdirSync(path.join(root, "scripts"), { recursive: true });
@@ -216,6 +245,31 @@ function createTruthFixture(options: { legacyAuthority?: boolean; conflictingInv
     dependencies: { "@sera/repository-truth": "0.1.0" }
   }, null, 2), "utf8");
   fs.writeFileSync(path.join(root, "packages", "capability-beta", "src", "index.ts"), "export const beta = 1;\n", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "runtime-state", "package.json"), JSON.stringify({
+    name: "@sera/runtime-state",
+    private: true
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "runtime-state", "src", "index.ts"), "export const runtimeState = 1;\n", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "runtime-recovery", "package.json"), JSON.stringify({
+    name: "@sera/runtime-recovery",
+    private: true
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "runtime-recovery", "src", "index.ts"), "export const runtimeRecovery = 1;\n", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "execution-engine", "package.json"), JSON.stringify({
+    name: "@sera/execution-engine",
+    private: true
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "execution-engine", "src", "index.ts"), "export const executionEngine = 1;\n", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "evaluation-engine", "package.json"), JSON.stringify({
+    name: "@sera/evaluation-engine",
+    private: true
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "evaluation-engine", "src", "index.ts"), "export const evaluationEngine = 1;\n", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "mystery-box", "package.json"), JSON.stringify({
+    name: "@sera/mystery-box",
+    private: true
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "mystery-box", "src", "index.ts"), "export const mysteryBox = 1;\n", "utf8");
   fs.writeFileSync(path.join(root, "packages", "legacy-adapter", "package.json"), JSON.stringify({
     name: "@sera/legacy-adapter",
     private: true
@@ -234,6 +288,7 @@ function createTruthFixture(options: { legacyAuthority?: boolean; conflictingInv
     schemaVersion: "sera.capability-inventory.v1",
     targetSubsystems: [
       { id: "repository-truth", targetLayer: options.conflictingInventory ? "Desktop" : "Runtime", currentMaturity: "starter", status: "proposed", dependencies: ["repository-snapshot"] },
+      { id: "evaluation-engine", targetLayer: "Runtime", currentMaturity: "implemented", status: "certification-pending", dependencies: ["packages/evaluation-engine"] },
       { id: "website-studio", targetLayer: "Studio", currentMaturity: "not-implemented", status: "proposed", dependencies: [] },
       ...(options.unsupportedClaim ? [{ id: "unsupported-certified-claim", targetLayer: "Runtime", currentMaturity: "certified-alpha", status: "proposed", dependencies: [] }] : [])
     ]
