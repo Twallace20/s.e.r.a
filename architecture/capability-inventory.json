@@ -4,6 +4,16 @@
   "milestone": "repository-truth-v1",
   "architectureStandards": [
     {
+      "id": "knowledge-intake-runtime-v1",
+      "name": "Knowledge and Universal Intake Runtime v1",
+      "kind": "runtime-capability",
+      "status": "complete",
+      "executableCapability": true,
+      "runtimeService": true,
+      "document": "docs/architecture/KNOWLEDGE_UNIVERSAL_INTAKE_RUNTIME_V1.md",
+      "records": "Authorized local intake boundary with content-addressed preservation, deterministic extraction, opaque media/archive preservation, SQLite knowledge records, provenance, candidate status, offline proofs, and bounded lexical retrieval."
+    },
+    {
       "id": "local-model-runtime-v1",
       "name": "Local Model Runtime v1",
       "kind": "runtime-capability",
@@ -369,16 +379,35 @@
     },
     {
       "id": "multimodal-intake",
-      "targetLayer": "Capability",
-      "currentMaturity": "not-implemented",
-      "status": "proposed",
+      "targetLayer": "Runtime",
+      "currentMaturity": "implemented",
+      "status": "certification-pending",
       "dependencies": [
+        "local-runtime-host",
         "runtime-control-plane",
+        "runtime-state-store",
+        "persistent-runtime-recovery",
         "repository-truth",
-        "model-runtime"
+        "model-runtime",
+        "packages/knowledge-runtime",
+        "apps/cli",
+        "packages/certs"
       ],
-      "certificationTarget": "multimodal-evidence-runtime-v1",
-      "notes": "Normalizes text, documents, code, images, audio, video, links, and future sensor inputs into evidence records. Provider use must be explicit."
+      "certificationTarget": "knowledge-intake-runtime-v1",
+      "evidence": [
+        "packages/knowledge-runtime/src/knowledge-runtime.ts",
+        "tests/knowledge-intake-runtime-v1.test.ts",
+        "docs/architecture/KNOWLEDGE_UNIVERSAL_INTAKE_RUNTIME_V1.md"
+      ],
+      "limitations": [
+        "does not use OCR or transcription providers",
+        "does not fetch public URLs",
+        "does not extract archives",
+        "does not execute imported content",
+        "does not promote candidate knowledge to truth"
+      ],
+      "nextGate": "Capability Genome and Learning Engine v1",
+      "notes": "Normalizes authorized local text, files, directories, predownloaded snapshots, URL references without fetching, generated fixtures, opaque media, and archives into candidate knowledge records with deterministic evidence and lexical retrieval."
     },
     {
       "id": "desktop-operator",

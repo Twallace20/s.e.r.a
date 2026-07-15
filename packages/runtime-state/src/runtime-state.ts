@@ -6,7 +6,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createControlPlaneRuntimeService, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
 
 export const RUNTIME_STATE_VERSION = "runtime-state-v1";
-export const RUNTIME_STATE_SCHEMA_VERSION = 5;
+export const RUNTIME_STATE_SCHEMA_VERSION = 6;
 export const RUNTIME_STATE_EXPORT_SCHEMA = "sera.runtime-state-export.v1";
 
 export type RuntimeStateStatus = "healthy" | "blocked";
@@ -128,7 +128,18 @@ const TABLES = [
   "model_authorizations",
   "model_invocations",
   "model_events",
-  "model_artifacts"
+  "model_artifacts",
+  "intake_authorizations",
+  "intake_requests",
+  "intake_assets",
+  "intake_extractions",
+  "intake_events",
+  "knowledge_documents",
+  "knowledge_chunks",
+  "knowledge_provenance",
+  "knowledge_versions",
+  "knowledge_queries",
+  "knowledge_query_results"
 ] as const;
 
 const TERMINAL_STATES = new Set<AttemptState>(["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"]);
@@ -645,6 +656,217 @@ CREATE INDEX idx_model_invocations_state ON model_invocations(state, created_at)
 CREATE INDEX idx_model_events_invocation ON model_events(invocation_id, sequence);
 CREATE INDEX idx_model_catalog_provider ON model_catalog(provider_id, model_id);
 `
+  },
+  {
+    version: 6,
+    name: "knowledge_intake_runtime_v1",
+    sql: `
+CREATE TABLE intake_authorizations (
+  authorization_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  source_type TEXT NOT NULL,
+  source_reference_hash TEXT NOT NULL,
+  allowed_roots_json TEXT NOT NULL,
+  permitted_media_types_json TEXT NOT NULL,
+  limits_json TEXT NOT NULL,
+  extraction_policy TEXT NOT NULL,
+  retention_policy TEXT NOT NULL,
+  trust_policy TEXT NOT NULL,
+  network_policy TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  issued_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE TABLE intake_requests (
+  intake_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  authorization_id TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  request_hash TEXT NOT NULL,
+  source_type TEXT NOT NULL,
+  source_reference TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  declared_media_type TEXT NOT NULL,
+  detected_media_type TEXT NOT NULL,
+  expected_hash TEXT,
+  retention_policy TEXT NOT NULL,
+  extraction_profile TEXT NOT NULL,
+  trust_declaration TEXT NOT NULL,
+  state TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  completed_at TEXT,
+  failure_or_block_reason TEXT,
+  evidence_root TEXT NOT NULL,
+  optimistic_version INTEGER NOT NULL,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE TABLE intake_assets (
+  asset_id TEXT PRIMARY KEY,
+  intake_id TEXT NOT NULL,
+  source_type TEXT NOT NULL,
+  original_reference TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  byte_size INTEGER NOT NULL,
+  media_type TEXT NOT NULL,
+  declared_media_type TEXT NOT NULL,
+  detected_media_type TEXT NOT NULL,
+  preservation_path TEXT NOT NULL,
+  immutable INTEGER NOT NULL,
+  extension_mismatch INTEGER NOT NULL,
+  preserved_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(intake_id) REFERENCES intake_requests(intake_id)
+);
+
+CREATE TABLE intake_extractions (
+  extraction_id TEXT PRIMARY KEY,
+  intake_id TEXT NOT NULL,
+  asset_id TEXT NOT NULL,
+  document_id TEXT,
+  extraction_profile TEXT NOT NULL,
+  extractor_version TEXT NOT NULL,
+  status TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  completed_at TEXT,
+  extracted_text_hash TEXT,
+  extracted_byte_count INTEGER NOT NULL,
+  failure_or_block_reason TEXT,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(intake_id) REFERENCES intake_requests(intake_id),
+  FOREIGN KEY(asset_id) REFERENCES intake_assets(asset_id)
+);
+
+CREATE TABLE intake_events (
+  event_id TEXT PRIMARY KEY,
+  intake_id TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  runtime_instance_id TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  message TEXT NOT NULL,
+  details_json TEXT NOT NULL,
+  UNIQUE(intake_id, sequence),
+  FOREIGN KEY(intake_id) REFERENCES intake_requests(intake_id)
+);
+
+CREATE TABLE knowledge_documents (
+  document_id TEXT PRIMARY KEY,
+  source_asset_id TEXT NOT NULL,
+  intake_id TEXT NOT NULL,
+  content_version TEXT NOT NULL,
+  title TEXT NOT NULL,
+  media_type TEXT NOT NULL,
+  language TEXT,
+  extraction_status TEXT NOT NULL,
+  trust_state TEXT NOT NULL,
+  provenance_status TEXT NOT NULL,
+  candidate_status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  superseded_at TEXT,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(source_asset_id) REFERENCES intake_assets(asset_id),
+  FOREIGN KEY(intake_id) REFERENCES intake_requests(intake_id)
+);
+
+CREATE TABLE knowledge_chunks (
+  chunk_id TEXT PRIMARY KEY,
+  document_id TEXT NOT NULL,
+  intake_id TEXT NOT NULL,
+  source_asset_id TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  chunk_text TEXT NOT NULL,
+  chunk_hash TEXT NOT NULL,
+  byte_start INTEGER NOT NULL,
+  byte_end INTEGER NOT NULL,
+  line_start INTEGER,
+  line_end INTEGER,
+  token_estimate INTEGER NOT NULL,
+  metadata_json TEXT NOT NULL,
+  UNIQUE(document_id, sequence),
+  FOREIGN KEY(document_id) REFERENCES knowledge_documents(document_id),
+  FOREIGN KEY(intake_id) REFERENCES intake_requests(intake_id),
+  FOREIGN KEY(source_asset_id) REFERENCES intake_assets(asset_id)
+);
+
+CREATE TABLE knowledge_provenance (
+  provenance_id TEXT PRIMARY KEY,
+  document_id TEXT NOT NULL,
+  chunk_id TEXT,
+  intake_id TEXT NOT NULL,
+  asset_id TEXT NOT NULL,
+  source_reference TEXT NOT NULL,
+  extraction_id TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  extraction_profile TEXT NOT NULL,
+  runtime_instance_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  derived_from_json TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(document_id) REFERENCES knowledge_documents(document_id),
+  FOREIGN KEY(chunk_id) REFERENCES knowledge_chunks(chunk_id),
+  FOREIGN KEY(intake_id) REFERENCES intake_requests(intake_id),
+  FOREIGN KEY(asset_id) REFERENCES intake_assets(asset_id)
+);
+
+CREATE TABLE knowledge_versions (
+  version_id TEXT PRIMARY KEY,
+  document_id TEXT NOT NULL,
+  source_asset_id TEXT NOT NULL,
+  intake_id TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  version_sequence INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  superseded_at TEXT,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(document_id) REFERENCES knowledge_documents(document_id),
+  FOREIGN KEY(source_asset_id) REFERENCES intake_assets(asset_id),
+  FOREIGN KEY(intake_id) REFERENCES intake_requests(intake_id)
+);
+
+CREATE TABLE knowledge_queries (
+  query_id TEXT PRIMARY KEY,
+  query_text TEXT NOT NULL,
+  normalized_query TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  result_limit INTEGER NOT NULL,
+  scanned_candidate_count INTEGER NOT NULL,
+  metadata_json TEXT NOT NULL
+);
+
+CREATE TABLE knowledge_query_results (
+  query_id TEXT NOT NULL,
+  rank INTEGER NOT NULL,
+  document_id TEXT NOT NULL,
+  chunk_id TEXT NOT NULL,
+  score REAL NOT NULL,
+  explanation TEXT NOT NULL,
+  provenance_json TEXT NOT NULL,
+  trust_state TEXT NOT NULL,
+  candidate_status TEXT NOT NULL,
+  PRIMARY KEY(query_id, rank),
+  FOREIGN KEY(query_id) REFERENCES knowledge_queries(query_id),
+  FOREIGN KEY(document_id) REFERENCES knowledge_documents(document_id),
+  FOREIGN KEY(chunk_id) REFERENCES knowledge_chunks(chunk_id)
+);
+
+CREATE INDEX idx_intake_requests_state ON intake_requests(state, created_at);
+CREATE INDEX idx_intake_assets_hash ON intake_assets(content_hash);
+CREATE INDEX idx_intake_assets_source ON intake_assets(original_reference, preserved_at);
+CREATE INDEX idx_knowledge_documents_trust ON knowledge_documents(trust_state, candidate_status);
+CREATE INDEX idx_knowledge_documents_source_version ON knowledge_documents(source_asset_id, content_version);
+CREATE INDEX idx_knowledge_chunks_order ON knowledge_chunks(document_id, sequence);
+CREATE INDEX idx_knowledge_chunks_text ON knowledge_chunks(chunk_text);
+CREATE INDEX idx_knowledge_queries_normalized ON knowledge_queries(normalized_query, created_at);
+`
   }
 ];
 
@@ -1009,7 +1231,18 @@ export class RuntimeStateStore {
       modelAuthorizations: this.tableExists("model_authorizations") ? all(db, "SELECT authorization_id, attempt_id, provider_id, model_id, request_hash, invocation_profile, limits_json, allowed_capabilities_json, offline_policy, local_only_required, tool_use_policy, policy_version, issued_at, expires_at, integrity_hash, metadata_json FROM model_authorizations ORDER BY issued_at, authorization_id") : [],
       modelInvocations: this.tableExists("model_invocations") ? all(db, "SELECT invocation_id, attempt_id, authorization_id, provider_id, model_id, idempotency_key, request_hash, state, response_hash, input_byte_count, output_byte_count, created_at, started_at, completed_at, timeout_ms, failure_or_block_reason, optimistic_version, evidence_root FROM model_invocations ORDER BY created_at, invocation_id") : [],
       modelEvents: this.tableExists("model_events") ? all(db, "SELECT event_id, invocation_id, sequence, event_type, timestamp, runtime_instance_id, outcome, message, details_json FROM model_events ORDER BY invocation_id, sequence") : [],
-      modelArtifacts: this.tableExists("model_artifacts") ? all(db, "SELECT invocation_id, artifact_type, evidence_location, integrity_hash, size, redaction_state, metadata_json FROM model_artifacts ORDER BY invocation_id, artifact_type") : []
+      modelArtifacts: this.tableExists("model_artifacts") ? all(db, "SELECT invocation_id, artifact_type, evidence_location, integrity_hash, size, redaction_state, metadata_json FROM model_artifacts ORDER BY invocation_id, artifact_type") : [],
+      intakeAuthorizations: this.tableExists("intake_authorizations") ? all(db, "SELECT authorization_id, attempt_id, source_type, source_reference_hash, allowed_roots_json, permitted_media_types_json, limits_json, extraction_policy, retention_policy, trust_policy, network_policy, policy_version, issued_at, expires_at, integrity_hash, metadata_json FROM intake_authorizations ORDER BY issued_at, authorization_id") : [],
+      intakeRequests: this.tableExists("intake_requests") ? all(db, "SELECT intake_id, attempt_id, authorization_id, idempotency_key, request_hash, source_type, source_reference, display_name, declared_media_type, detected_media_type, expected_hash, retention_policy, extraction_profile, trust_declaration, state, created_at, updated_at, completed_at, failure_or_block_reason, evidence_root, optimistic_version, metadata_json FROM intake_requests ORDER BY created_at, intake_id") : [],
+      intakeAssets: this.tableExists("intake_assets") ? all(db, "SELECT asset_id, intake_id, source_type, original_reference, display_name, content_hash, byte_size, media_type, declared_media_type, detected_media_type, preservation_path, immutable, extension_mismatch, preserved_at, metadata_json FROM intake_assets ORDER BY preserved_at, asset_id") : [],
+      intakeExtractions: this.tableExists("intake_extractions") ? all(db, "SELECT extraction_id, intake_id, asset_id, document_id, extraction_profile, extractor_version, status, started_at, completed_at, extracted_text_hash, extracted_byte_count, failure_or_block_reason, metadata_json FROM intake_extractions ORDER BY started_at, extraction_id") : [],
+      intakeEvents: this.tableExists("intake_events") ? all(db, "SELECT event_id, intake_id, sequence, event_type, timestamp, runtime_instance_id, outcome, message, details_json FROM intake_events ORDER BY intake_id, sequence") : [],
+      knowledgeDocuments: this.tableExists("knowledge_documents") ? all(db, "SELECT document_id, source_asset_id, intake_id, content_version, title, media_type, language, extraction_status, trust_state, provenance_status, candidate_status, created_at, superseded_at, metadata_json FROM knowledge_documents ORDER BY created_at, document_id") : [],
+      knowledgeChunks: this.tableExists("knowledge_chunks") ? all(db, "SELECT chunk_id, document_id, intake_id, source_asset_id, sequence, chunk_text, chunk_hash, byte_start, byte_end, line_start, line_end, token_estimate, metadata_json FROM knowledge_chunks ORDER BY document_id, sequence") : [],
+      knowledgeProvenance: this.tableExists("knowledge_provenance") ? all(db, "SELECT provenance_id, document_id, chunk_id, intake_id, asset_id, source_reference, extraction_id, content_hash, extraction_profile, runtime_instance_id, created_at, derived_from_json, metadata_json FROM knowledge_provenance ORDER BY document_id, chunk_id, provenance_id") : [],
+      knowledgeVersions: this.tableExists("knowledge_versions") ? all(db, "SELECT version_id, document_id, source_asset_id, intake_id, content_hash, version_sequence, created_at, superseded_at, metadata_json FROM knowledge_versions ORDER BY document_id, version_sequence") : [],
+      knowledgeQueries: this.tableExists("knowledge_queries") ? all(db, "SELECT query_id, query_text, normalized_query, created_at, result_limit, scanned_candidate_count, metadata_json FROM knowledge_queries ORDER BY created_at, query_id") : [],
+      knowledgeQueryResults: this.tableExists("knowledge_query_results") ? all(db, "SELECT query_id, rank, document_id, chunk_id, score, explanation, provenance_json, trust_state, candidate_status FROM knowledge_query_results ORDER BY query_id, rank") : []
     }) as Record<string, unknown>;
   }
 

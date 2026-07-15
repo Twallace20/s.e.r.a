@@ -8,6 +8,7 @@ import { PersistentRuntimeRecoveryCoordinator, createPersistentRuntimeServices, 
 import { IsolatedExecutionEngine, createIsolatedExecutionRuntimeServices, runIsolatedExecutionProof } from "@sera/execution-engine";
 import { EvaluationEngine, runEvaluationEngineProof } from "@sera/evaluation-engine";
 import { LocalModelRuntime, runLocalModelRuntimeProof } from "@sera/model-runtime";
+import { KnowledgeRuntime, createIntakeAuthorization, normalizeIntakeRequest, runKnowledgeIntakeProof, runKnowledgeRetrievalProof } from "@sera/knowledge-runtime";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -102,6 +103,17 @@ Usage:
   sera evaluation list
   sera evaluation inspect <evaluation-id>
   sera evaluation prove
+  sera intake types
+  sera intake add --file <path>
+  sera intake add --directory <path>
+  sera intake add --text <bounded-text>
+  sera intake inspect <intake-id>
+  sera intake list
+  sera intake prove
+  sera knowledge search <query>
+  sera knowledge inspect <document-id>
+  sera knowledge sources
+  sera knowledge prove
   sera model providers
   sera model models
   sera model policy
@@ -157,6 +169,9 @@ NPM examples:
   npm run sera -- execution prove
   npm run sera -- evaluation profiles
   npm run sera -- evaluation prove
+  npm run sera -- intake types
+  npm run sera -- intake prove
+  npm run sera -- knowledge prove
   npm run sera -- model providers
   npm run sera -- model prove
 
@@ -189,6 +204,7 @@ Secure base behavior:
   - Isolated Execution Engine runs only authorized local workloads in bounded temporary workspaces without shell execution
   - Evaluation Engine evaluates immutable execution evidence with deterministic registered evaluators and preserves Control Plane terminal authority
   - Local Model Runtime governs registered local providers and returns untrusted candidate intelligence without tool execution authority
+  - Knowledge and Universal Intake Runtime preserves provenance-linked local information as candidate knowledge with deterministic lexical retrieval
   - does not require an LLM provider
 `);
 }
@@ -219,6 +235,18 @@ function readJsonSpec(relativePath: string): unknown {
 function optionValue(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : undefined;
+}
+
+function createCliAttempt(store: ReturnType<typeof openRuntimeState>, capability: string): string {
+  const command = store.acceptCommand({
+    idempotencyKey: `cli:${capability}:${Date.now()}:${Math.random()}`,
+    commandType: capability,
+    payload: { cli: true },
+    capability
+  });
+  const attemptId = command.attemptId!;
+  store.transitionAttempt({ attemptId, fromState: "PENDING", toState: "RUNNING", actor: "control-plane", reason: "CLI authorized runtime operation." });
+  return attemptId;
 }
 
 async function main(): Promise<void> {
@@ -698,7 +726,7 @@ async function main(): Promise<void> {
     throw new Error("Tasks command must be 'create', 'list', 'inspect', 'start', 'complete', 'block', 'cancel', 'events', or 'summary'.");
   }
 
-  if (cmd === "knowledge") {
+  if (cmd === "knowledge" && !["prove", "search", "inspect", "sources"].includes(rest[0] ?? "")) {
     const [knowledgeMode, first, second, third] = rest;
 
     if (knowledgeMode === "ingest-file") {
@@ -1243,6 +1271,89 @@ async function main(): Promise<void> {
       store.close();
     }
     throw new Error("Evaluation command must be 'profiles', 'list', 'inspect', or 'prove'.");
+  }
+
+  if (cmd === "intake") {
+    const [intakeMode, ...intakeRest] = rest;
+    if (intakeMode === "prove") {
+      const result = await runKnowledgeIntakeProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
+    const store = openRuntimeState(config);
+    try {
+      const runtime = new KnowledgeRuntime(store, { projectRoot: process.cwd() });
+      if (intakeMode === "types") {
+        console.log(JSON.stringify(runtime.types(), null, 2));
+        process.exit(0);
+      }
+      if (intakeMode === "list") {
+        console.log(JSON.stringify(runtime.listIntakes(), null, 2));
+        process.exit(0);
+      }
+      if (intakeMode === "inspect") {
+        console.log(JSON.stringify(runtime.inspectIntake(requireArg(intakeRest[0], "intake id")), null, 2));
+        process.exit(0);
+      }
+      if (intakeMode === "add") {
+        const attemptId = createCliAttempt(store, "knowledge-intake-runtime");
+        const filePath = optionValue(intakeRest, "--file");
+        const directoryPath = optionValue(intakeRest, "--directory");
+        const text = optionValue(intakeRest, "--text");
+        const selected = [filePath, directoryPath, text].filter((value) => value !== undefined);
+        if (selected.length !== 1) throw new Error("Intake add requires exactly one of --file, --directory, or --text.");
+        const intakeId = `intake_cli_${Date.now()}`;
+        const sourceType = filePath ? "local-file" : directoryPath ? "local-directory" : "inline-text";
+        const sourceReference = filePath ?? directoryPath ?? text!;
+        const request = normalizeIntakeRequest({
+          intakeId,
+          attemptId,
+          authorizationId: `auth_${intakeId}`,
+          sourceType,
+          sourceReference,
+          allowedRoots: filePath || directoryPath ? [path.dirname(path.resolve(filePath ?? directoryPath!))] : []
+        });
+        const authorization = createIntakeAuthorization(request);
+        const result = await runtime.intake(request, authorization, `cli:${request.requestHash}`);
+        console.log(JSON.stringify(result, null, 2));
+        process.exit(result.ok ? 0 : 1);
+      }
+    } finally {
+      store.close();
+    }
+    throw new Error("Intake command must be 'types', 'add', 'inspect', 'list', or 'prove'.");
+  }
+
+  if (cmd === "knowledge" && (rest[0] === "prove" || rest[0] === "search" || rest[0] === "inspect" || rest[0] === "sources")) {
+    const [knowledgeMode, ...knowledgeRest] = rest;
+    if (knowledgeMode === "prove") {
+      const result = await runKnowledgeRetrievalProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
+    const store = openRuntimeState(config);
+    try {
+      const runtime = new KnowledgeRuntime(store, { projectRoot: process.cwd() });
+      if (knowledgeMode === "search") {
+        const limit = Number(optionValue(knowledgeRest, "--limit") ?? 10);
+        const query = knowledgeRest.filter((part, index) => part !== "--limit" && knowledgeRest[index - 1] !== "--limit").join(" ").trim();
+        console.log(JSON.stringify(runtime.search(requireArg(query, "knowledge search query"), limit), null, 2));
+        process.exit(0);
+      }
+      if (knowledgeMode === "inspect") {
+        console.log(JSON.stringify(runtime.inspectDocument(requireArg(knowledgeRest[0], "document id")), null, 2));
+        process.exit(0);
+      }
+      if (knowledgeMode === "sources") {
+        console.log(JSON.stringify(runtime.sources(), null, 2));
+        process.exit(0);
+      }
+    } finally {
+      store.close();
+    }
+    throw new Error("Knowledge command must be 'search', 'inspect', 'sources', or 'prove'.");
   }
 
   if (cmd === "model") {

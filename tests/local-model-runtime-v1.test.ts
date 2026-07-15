@@ -592,7 +592,8 @@ describe("Local Model Runtime v1", () => {
     const store = openRuntimeState({ projectRoot: root });
     try {
       const migrations = store.recoveryAll("SELECT version, checksum FROM schema_migrations ORDER BY version") as Array<{ version: number; checksum: string }>;
-      expect(migrations.map((migration) => migration.version)).toEqual([1, 2, 3, 4, 5]);
+      expect(migrations.slice(0, 5).map((migration) => migration.version)).toEqual([1, 2, 3, 4, 5]);
+      expect(migrations.map((migration) => migration.version)).toContain(6);
       expect(migrations.every((migration) => /^[a-f0-9]{64}$/.test(migration.checksum))).toBe(true);
       expect(store.recoveryAll("SELECT version, checksum FROM schema_migrations ORDER BY version")).toEqual(migrations);
     } finally {

@@ -68,6 +68,10 @@ S.E.R.A. can create queued tasks, list and inspect them, enforce strict lifecycl
 
 S.E.R.A. can ingest local files, chunk them into `.sera-knowledge/`, perform deterministic lexical search, inspect indexed documents, ignore runtime folders during directory ingestion, and summarize knowledge records. Retrieval is read-only and does not require an LLM.
 
+## Runtime Level — `knowledge-intake-runtime-v1`
+
+S.E.R.A. can accept explicitly authorized local intake, preserve source bytes with content hashes, extract bounded deterministic text formats, preserve opaque media and archives without extraction, persist candidate knowledge and provenance in SQLite Operational State, and perform deterministic lexical retrieval without public internet or real model invocation.
+
 ## Level 10 — `model-provider-v1`
 
 S.E.R.A. can list model providers, invoke the local mock provider, redact prompt records, block unknown/external providers, and summarize provider events without requiring an LLM for core runtime.

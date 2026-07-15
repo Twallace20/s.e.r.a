@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `local-model-runtime-v1`.
+Current runtime certification: `knowledge-intake-runtime-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -29,6 +29,7 @@ Certified runtime ladder completed so far:
 - `isolated-execution-v1`
 - `evaluation-engine-v1`
 - `local-model-runtime-v1`
+- `knowledge-intake-runtime-v1`
 
 Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
@@ -83,6 +84,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - isolated execution for authorized deterministic local workloads in temporary workspaces with shell disabled, bounded output capture, timeout, cancellation, cleanup, SQLite execution records, and `.sera/executions/` evidence
 - deterministic evaluation of immutable execution evidence with assertion records, aggregate outcomes, Control Plane gate evidence, and `.sera/evaluations/` reports
 - provider-independent Local Model Runtime with explicit authorization, deterministic fixture proof, disabled real-local provider metadata, SQLite invocation evidence, timeout/cancellation, redaction, and candidate-intelligence-only output
+- Knowledge and Universal Intake Runtime with explicit authorization, content-addressed preservation, deterministic extraction, opaque media/archive preservation, provenance, candidate status, and bounded lexical retrieval
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
@@ -280,6 +282,7 @@ Nothing gets called working unless it has:
 - `@sera/knowledge` — local document and chunk ingestion plus lexical retrieval
 - `@sera/model-provider` — optional model adapter records, deterministic mock provider, and redacted model events
 - `@sera/model-runtime` — Runtime-owned local model invocation boundary with fixture proof, provider registry, authorization, SQLite records, and candidate-intelligence-only outputs
+- `@sera/knowledge-runtime` — Runtime-owned local knowledge and universal intake boundary with authorization, content hashes, deterministic extraction, opaque preservation, provenance, SQLite records, and lexical retrieval
 - `@sera/autonomy` — bounded autonomous dev loop orchestration with validation-gated apply
 - `@sera/operator-console` — local status, health, report, history, and summary evidence
 - `@sera/repository-snapshot` — deterministic repository fact inventory

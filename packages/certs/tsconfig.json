@@ -40,6 +40,9 @@
       "path": "../model-runtime"
     },
     {
+      "path": "../knowledge-runtime"
+    },
+    {
       "path": "../shared"
     },
     {
