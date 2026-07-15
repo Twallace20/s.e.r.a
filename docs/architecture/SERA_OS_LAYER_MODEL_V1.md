@@ -126,6 +126,7 @@ Current repository candidates:
 | `packages/runtime-recovery` | confirmed; Persistent Runtime Recovery v1 |
 | `packages/execution-engine` | confirmed; Isolated Execution Engine v1 |
 | `packages/evaluation-engine` | confirmed; Evaluation Engine v1 |
+| `packages/model-runtime` | confirmed; Local Model Runtime v1 |
 | `.sera-*` runtime directories | legacy/runtime-data; not source authority |
 
 Migration targets:
@@ -136,6 +137,7 @@ Migration targets:
 - `repository-truth`
 - `runtime-state-store`
 - `evaluation-engine`
+- `model-runtime`
 - `learning-engine`
 
 Valid components:
@@ -144,6 +146,7 @@ Valid components:
 - SQLite state store via `@sera/runtime-state`
 - persistent recovery coordinator via `@sera/runtime-recovery`
 - isolated execution chamber via `@sera/execution-engine`
+- local model invocation boundary via `@sera/model-runtime`
 - attempt ledger
 - evaluation runner
 - learning promotion record
@@ -182,7 +185,9 @@ Milestone 6 introduces Isolated Execution Engine for explicitly authorized local
 
 Milestone 7 introduces Evaluation Engine for deterministic checks over immutable execution evidence, bounded assertion profiles, aggregation, SQLite evaluation records, Control Plane gate evidence, and repeatable model-free proof.
 
-These Runtime milestones do not implement Hive Mode, networking, distributed discovery, remote workers, cloud execution, arbitrary subprocess workloads, hostile-code sandboxing, containers, virtual machines, or Desktop authority.
+Milestone 8 introduces Local Model Runtime for explicitly authorized provider-independent local model requests, deterministic fixture proof, disabled real-local provider metadata, request/response normalization, redaction, SQLite invocation evidence, Runtime Host health, timeout/cancellation, and candidate-intelligence-only output.
+
+These Runtime milestones do not implement Hive Mode, networking beyond declared local loopback compatibility metadata, distributed discovery, remote workers, cloud execution, arbitrary subprocess workloads, hostile-code sandboxing, containers, virtual machines, Desktop authority, Knowledge Runtime, or model-driven source mutation.
 
 ## Provider
 
@@ -214,13 +219,13 @@ Current repository candidates:
 | Candidate | Mapping |
 | --- | --- |
 | `packages/model-provider` | confirmed starter |
+| `packages/model-runtime` | not Provider; Runtime-owned boundary that may call provider adapters |
 | `scripts/chatgpt-bridge-*` | legacy provider reference only |
 | `scripts/sera-chatgpt-*` | legacy provider reference only |
 | GitHub workflows | provisional infrastructure provider, not runtime |
 
 Migration targets:
 
-- `model-runtime`
 - local model provider adapters
 - future browser, Git, hardware, and app adapters
 

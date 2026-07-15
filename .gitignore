@@ -14,6 +14,7 @@ coverage/
 .sera/state/
 .sera/executions/
 .sera/evaluations/
+.sera/model-runtime/
 .sera-local/
 *.log
 .DS_Store

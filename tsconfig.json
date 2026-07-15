@@ -34,6 +34,9 @@
                            "path":  "packages/evaluation-engine"
                        },
                        {
+                           "path":  "packages/model-runtime"
+                       },
+                       {
                            "path":  "packages/safety"
                        },
                        {

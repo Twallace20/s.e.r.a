@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `evaluation-engine-v1`.
+Current runtime certification: `local-model-runtime-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -28,6 +28,7 @@ Certified runtime ladder completed so far:
 - `persistent-runtime-v1`
 - `isolated-execution-v1`
 - `evaluation-engine-v1`
+- `local-model-runtime-v1`
 
 Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
@@ -81,6 +82,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - persistent runtime recovery for interrupted attempts using checkpoints, leases, recovery decisions, linked retries, and review-required blocking
 - isolated execution for authorized deterministic local workloads in temporary workspaces with shell disabled, bounded output capture, timeout, cancellation, cleanup, SQLite execution records, and `.sera/executions/` evidence
 - deterministic evaluation of immutable execution evidence with assertion records, aggregate outcomes, Control Plane gate evidence, and `.sera/evaluations/` reports
+- provider-independent Local Model Runtime with explicit authorization, deterministic fixture proof, disabled real-local provider metadata, SQLite invocation evidence, timeout/cancellation, redaction, and candidate-intelligence-only output
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
@@ -108,6 +110,8 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - no browser or internet research worker yet
 - no GUI or multi-user permission system yet
 - no semantic or model-based grading in Evaluation Engine v1
+- no real model download, install, or invocation in Local Model Runtime v1
+- no model-driven tool execution or source mutation
 
 ## Setup
 
@@ -275,6 +279,7 @@ Nothing gets called working unless it has:
 - `@sera/planner` — local task queue, task lifecycle events, and task memory integration
 - `@sera/knowledge` — local document and chunk ingestion plus lexical retrieval
 - `@sera/model-provider` — optional model adapter records, deterministic mock provider, and redacted model events
+- `@sera/model-runtime` — Runtime-owned local model invocation boundary with fixture proof, provider registry, authorization, SQLite records, and candidate-intelligence-only outputs
 - `@sera/autonomy` — bounded autonomous dev loop orchestration with validation-gated apply
 - `@sera/operator-console` — local status, health, report, history, and summary evidence
 - `@sera/repository-snapshot` — deterministic repository fact inventory
@@ -284,6 +289,7 @@ Nothing gets called working unless it has:
 - `@sera/runtime-state` — local SQLite Operational State for attempts, gates, evidence references, command idempotency, leases, backups, and exports
 - `@sera/runtime-recovery` — persistent local recovery coordinator for checkpointed interrupted attempts, linked retries, review-required decisions, and recovery evidence
 - `@sera/execution-engine` — governed local execution chamber for authorized workloads, bounded workspaces, direct process launch, output capture, cleanup, and execution evidence
+- `@sera/evaluation-engine` — deterministic evaluation of immutable execution evidence with assertion records and aggregate outcomes
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1

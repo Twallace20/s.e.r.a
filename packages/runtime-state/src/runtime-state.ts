@@ -6,7 +6,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createControlPlaneRuntimeService, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
 
 export const RUNTIME_STATE_VERSION = "runtime-state-v1";
-export const RUNTIME_STATE_SCHEMA_VERSION = 4;
+export const RUNTIME_STATE_SCHEMA_VERSION = 5;
 export const RUNTIME_STATE_EXPORT_SCHEMA = "sera.runtime-state-export.v1";
 
 export type RuntimeStateStatus = "healthy" | "blocked";
@@ -122,7 +122,13 @@ const TABLES = [
   "evaluations",
   "evaluation_assertions",
   "evaluation_events",
-  "evaluation_profiles"
+  "evaluation_profiles",
+  "model_providers",
+  "model_catalog",
+  "model_authorizations",
+  "model_invocations",
+  "model_events",
+  "model_artifacts"
 ] as const;
 
 const TERMINAL_STATES = new Set<AttemptState>(["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"]);
@@ -524,6 +530,121 @@ CREATE INDEX idx_evaluations_state ON evaluations(state, created_at);
 CREATE INDEX idx_evaluation_assertions_eval ON evaluation_assertions(evaluation_id, sequence);
 CREATE INDEX idx_evaluation_events_eval ON evaluation_events(evaluation_id, sequence);
 `
+  },
+  {
+    version: 5,
+    name: "local_model_runtime_v1",
+    sql: `
+CREATE TABLE model_providers (
+  provider_id TEXT PRIMARY KEY,
+  provider_version TEXT NOT NULL,
+  provider_type TEXT NOT NULL,
+  enabled INTEGER NOT NULL,
+  local_only INTEGER NOT NULL,
+  offline_compatible INTEGER NOT NULL,
+  network_capability TEXT NOT NULL,
+  configuration_hash TEXT NOT NULL,
+  provider_fingerprint TEXT NOT NULL,
+  health_state TEXT NOT NULL,
+  last_health_timestamp TEXT NOT NULL,
+  metadata_json TEXT NOT NULL
+);
+
+CREATE TABLE model_catalog (
+  provider_id TEXT NOT NULL,
+  model_id TEXT NOT NULL,
+  model_version TEXT,
+  model_fingerprint TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  model_family TEXT NOT NULL,
+  capabilities_json TEXT NOT NULL,
+  availability TEXT NOT NULL,
+  context_limit INTEGER,
+  output_limit INTEGER,
+  tool_use_support INTEGER NOT NULL,
+  structured_output_support INTEGER NOT NULL,
+  embedding_support INTEGER NOT NULL,
+  local_storage_reference TEXT,
+  metadata_sources_json TEXT NOT NULL,
+  observed_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  PRIMARY KEY(provider_id, model_id),
+  FOREIGN KEY(provider_id) REFERENCES model_providers(provider_id)
+);
+
+CREATE TABLE model_authorizations (
+  authorization_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  provider_id TEXT NOT NULL,
+  model_id TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  invocation_profile TEXT NOT NULL,
+  limits_json TEXT NOT NULL,
+  allowed_capabilities_json TEXT NOT NULL,
+  offline_policy TEXT NOT NULL,
+  local_only_required INTEGER NOT NULL,
+  tool_use_policy TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  issued_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE TABLE model_invocations (
+  invocation_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  authorization_id TEXT NOT NULL,
+  provider_id TEXT NOT NULL,
+  model_id TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  request_hash TEXT NOT NULL,
+  state TEXT NOT NULL,
+  response_hash TEXT,
+  input_byte_count INTEGER NOT NULL,
+  output_byte_count INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  started_at TEXT,
+  completed_at TEXT,
+  timeout_ms INTEGER NOT NULL,
+  failure_or_block_reason TEXT,
+  optimistic_version INTEGER NOT NULL,
+  evidence_root TEXT,
+  FOREIGN KEY(attempt_id) REFERENCES attempts(attempt_id)
+);
+
+CREATE TABLE model_events (
+  event_id TEXT PRIMARY KEY,
+  invocation_id TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  runtime_instance_id TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  message TEXT NOT NULL,
+  details_json TEXT NOT NULL,
+  UNIQUE(invocation_id, sequence),
+  FOREIGN KEY(invocation_id) REFERENCES model_invocations(invocation_id)
+);
+
+CREATE TABLE model_artifacts (
+  invocation_id TEXT NOT NULL,
+  artifact_type TEXT NOT NULL,
+  evidence_location TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  size INTEGER NOT NULL,
+  redaction_state TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  PRIMARY KEY(invocation_id, artifact_type),
+  FOREIGN KEY(invocation_id) REFERENCES model_invocations(invocation_id)
+);
+
+CREATE INDEX idx_model_invocations_attempt ON model_invocations(attempt_id, created_at);
+CREATE INDEX idx_model_invocations_state ON model_invocations(state, created_at);
+CREATE INDEX idx_model_events_invocation ON model_events(invocation_id, sequence);
+CREATE INDEX idx_model_catalog_provider ON model_catalog(provider_id, model_id);
+`
   }
 ];
 
@@ -882,7 +1003,13 @@ export class RuntimeStateStore {
       evaluations: this.tableExists("evaluations") ? all(db, "SELECT evaluation_id, specification_id, attempt_id, execution_id, state, aggregate_outcome, required_pass_count, required_fail_count, blocked_count, warning_count, created_at, started_at, completed_at, optimistic_version, failure_or_block_reason, evidence_root FROM evaluations ORDER BY created_at, evaluation_id") : [],
       evaluationAssertions: this.tableExists("evaluation_assertions") ? all(db, "SELECT evaluation_id, assertion_id, evaluator_id, evaluator_version, required, outcome, expected_summary, actual_summary, message, evidence_references_json, started_at, completed_at, duration_ms, sequence FROM evaluation_assertions ORDER BY evaluation_id, sequence") : [],
       evaluationEvents: this.tableExists("evaluation_events") ? all(db, "SELECT event_id, evaluation_id, sequence, event_type, timestamp, runtime_instance_id, outcome, message, details_json FROM evaluation_events ORDER BY evaluation_id, sequence") : [],
-      evaluationProfiles: this.tableExists("evaluation_profiles") ? all(db, "SELECT profile_id, profile_version, policy_version, integrity_hash, registered_at, metadata_json FROM evaluation_profiles ORDER BY profile_id, profile_version") : []
+      evaluationProfiles: this.tableExists("evaluation_profiles") ? all(db, "SELECT profile_id, profile_version, policy_version, integrity_hash, registered_at, metadata_json FROM evaluation_profiles ORDER BY profile_id, profile_version") : [],
+      modelProviders: this.tableExists("model_providers") ? all(db, "SELECT provider_id, provider_version, provider_type, enabled, local_only, offline_compatible, network_capability, configuration_hash, provider_fingerprint, health_state, last_health_timestamp, metadata_json FROM model_providers ORDER BY provider_id") : [],
+      modelCatalog: this.tableExists("model_catalog") ? all(db, "SELECT provider_id, model_id, model_version, model_fingerprint, display_name, model_family, capabilities_json, availability, context_limit, output_limit, tool_use_support, structured_output_support, embedding_support, local_storage_reference, metadata_sources_json, observed_at, metadata_json FROM model_catalog ORDER BY provider_id, model_id") : [],
+      modelAuthorizations: this.tableExists("model_authorizations") ? all(db, "SELECT authorization_id, attempt_id, provider_id, model_id, request_hash, invocation_profile, limits_json, allowed_capabilities_json, offline_policy, local_only_required, tool_use_policy, policy_version, issued_at, expires_at, integrity_hash, metadata_json FROM model_authorizations ORDER BY issued_at, authorization_id") : [],
+      modelInvocations: this.tableExists("model_invocations") ? all(db, "SELECT invocation_id, attempt_id, authorization_id, provider_id, model_id, idempotency_key, request_hash, state, response_hash, input_byte_count, output_byte_count, created_at, started_at, completed_at, timeout_ms, failure_or_block_reason, optimistic_version, evidence_root FROM model_invocations ORDER BY created_at, invocation_id") : [],
+      modelEvents: this.tableExists("model_events") ? all(db, "SELECT event_id, invocation_id, sequence, event_type, timestamp, runtime_instance_id, outcome, message, details_json FROM model_events ORDER BY invocation_id, sequence") : [],
+      modelArtifacts: this.tableExists("model_artifacts") ? all(db, "SELECT invocation_id, artifact_type, evidence_location, integrity_hash, size, redaction_state, metadata_json FROM model_artifacts ORDER BY invocation_id, artifact_type") : []
     }) as Record<string, unknown>;
   }
 

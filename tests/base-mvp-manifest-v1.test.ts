@@ -7,18 +7,18 @@ const manifestPath = path.join(root, "architecture", "base-mvp-manifest.json");
 const roadmapPath = path.join(root, "docs", "architecture", "SERA_EVOLUTION_ROADMAP_V1.md");
 
 describe("Base MVP manifest v1", () => {
-  it("exists, parses, and records canonical Milestone 7 closeout values", () => {
+  it("exists, parses, and records canonical Milestone 8 closeout values", () => {
     expect(fs.existsSync(manifestPath)).toBe(true);
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 
     expect(manifest).toEqual({
       schemaVersion: "sera.base-mvp-manifest.v1",
       totalMilestones: 16,
-      completedMilestones: 7,
-      remainingMilestones: 9,
-      currentMilestone: 8,
+      completedMilestones: 8,
+      remainingMilestones: 8,
+      currentMilestone: 9,
       baseMvpCompletionMilestone: 16,
-      currentCertification: "evaluation-engine-v1",
+      currentCertification: "local-model-runtime-v1",
       architectureBranch: "architecture/local-autonomous-runtime-v1"
     });
   });
@@ -36,15 +36,16 @@ describe("Base MVP manifest v1", () => {
     const roadmap = fs.readFileSync(roadmapPath, "utf8");
 
     expect(roadmap).toContain("totalMilestones: 16");
-    expect(roadmap).toContain("completedMilestones: 6");
-    expect(roadmap).toContain("remainingMilestones: 10");
-    expect(roadmap).toContain("currentMilestone: 7");
+    expect(roadmap).toContain("completedMilestones: 8");
+    expect(roadmap).toContain("remainingMilestones: 8");
+    expect(roadmap).toContain("currentMilestone: 9");
     expect(roadmap).toContain("baseMvpCompletionMilestone: 16");
     expect(roadmap).toContain("Milestone 7 - Evaluation Engine: COMPLETE");
-    expect(roadmap).toContain("Milestone 8 - Local Model Runtime: NEXT");
+    expect(roadmap).toContain("Milestone 8 - Local Model Runtime: COMPLETE");
+    expect(roadmap).toContain("Milestone 9 - Knowledge and Multimodal Intake: NEXT");
 
-    expect(manifest.completedMilestones).toBe(7);
-    expect(manifest.currentMilestone).toBe(8);
-    expect(manifest.currentCertification).toBe("evaluation-engine-v1");
+    expect(manifest.completedMilestones).toBe(8);
+    expect(manifest.currentMilestone).toBe(9);
+    expect(manifest.currentCertification).toBe("local-model-runtime-v1");
   });
 });

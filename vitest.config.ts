@@ -20,7 +20,8 @@ export default defineConfig({
       "@sera/runtime-state": r("./packages/runtime-state/src/index.ts"),
       "@sera/runtime-recovery": r("./packages/runtime-recovery/src/index.ts"),
       "@sera/execution-engine": r("./packages/execution-engine/src/index.ts"),
-      "@sera/evaluation-engine": r("./packages/evaluation-engine/src/index.ts")
+      "@sera/evaluation-engine": r("./packages/evaluation-engine/src/index.ts"),
+      "@sera/model-runtime": r("./packages/model-runtime/src/index.ts")
     }
   },
   test: {

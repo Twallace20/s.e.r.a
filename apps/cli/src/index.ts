@@ -7,6 +7,7 @@ import { createRuntimeStateConfig, openRuntimeState, runRuntimeStateProof } from
 import { PersistentRuntimeRecoveryCoordinator, createPersistentRuntimeServices, runPersistentRuntimeRecoveryProof } from "@sera/runtime-recovery";
 import { IsolatedExecutionEngine, createIsolatedExecutionRuntimeServices, runIsolatedExecutionProof } from "@sera/execution-engine";
 import { EvaluationEngine, runEvaluationEngineProof } from "@sera/evaluation-engine";
+import { LocalModelRuntime, runLocalModelRuntimeProof } from "@sera/model-runtime";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -101,6 +102,11 @@ Usage:
   sera evaluation list
   sera evaluation inspect <evaluation-id>
   sera evaluation prove
+  sera model providers
+  sera model models
+  sera model policy
+  sera model inspect <invocation-id>
+  sera model prove
   sera snapshot
   sera truth
 
@@ -151,6 +157,8 @@ NPM examples:
   npm run sera -- execution prove
   npm run sera -- evaluation profiles
   npm run sera -- evaluation prove
+  npm run sera -- model providers
+  npm run sera -- model prove
 
 Secure base behavior:
   - runs locally
@@ -180,6 +188,7 @@ Secure base behavior:
   - Persistent Runtime Recovery scans interrupted attempts, resumes only certified-safe checkpoints, and blocks uncertain work for review
   - Isolated Execution Engine runs only authorized local workloads in bounded temporary workspaces without shell execution
   - Evaluation Engine evaluates immutable execution evidence with deterministic registered evaluators and preserves Control Plane terminal authority
+  - Local Model Runtime governs registered local providers and returns untrusted candidate intelligence without tool execution authority
   - does not require an LLM provider
 `);
 }
@@ -1234,6 +1243,39 @@ async function main(): Promise<void> {
       store.close();
     }
     throw new Error("Evaluation command must be 'profiles', 'list', 'inspect', or 'prove'.");
+  }
+
+  if (cmd === "model") {
+    const [modelMode, invocationId] = rest;
+    if (modelMode === "prove") {
+      const result = await runLocalModelRuntimeProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
+    const store = openRuntimeState(config);
+    try {
+      const runtime = new LocalModelRuntime(store, { projectRoot: process.cwd() });
+      if (modelMode === "providers") {
+        console.log(JSON.stringify(runtime.providers(), null, 2));
+        process.exit(0);
+      }
+      if (modelMode === "models") {
+        console.log(JSON.stringify(runtime.models(), null, 2));
+        process.exit(0);
+      }
+      if (modelMode === "policy") {
+        console.log(JSON.stringify(runtime.policyReport(), null, 2));
+        process.exit(0);
+      }
+      if (modelMode === "inspect") {
+        console.log(JSON.stringify(runtime.inspectInvocation(requireArg(invocationId, "invocation id")), null, 2));
+        process.exit(0);
+      }
+    } finally {
+      store.close();
+    }
+    throw new Error("Model command must be 'providers', 'models', 'policy', 'inspect', or 'prove'.");
   }
 
   if (cmd === "repository") {

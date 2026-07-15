@@ -28,14 +28,17 @@ One durable local operating system: contracts, control plane, state store, safet
 
 Milestone 7 — Evaluation Engine is COMPLETE. S.E.R.A. can evaluate immutable isolated-execution evidence with deterministic registered evaluators, assertion records, aggregate outcomes, and Control Plane gate evidence without model use.
 
-Milestone 8 — Local Model Runtime is NEXT.
+Milestone 8 — Local Model Runtime is COMPLETE. S.E.R.A. can route explicitly authorized local model requests through a provider-independent Runtime boundary, prove deterministic fixture behavior without public network use, record SQLite invocation evidence, and keep model output as candidate intelligence only.
+
+Milestone 9 — Knowledge and Multimodal Intake is NEXT.
 
 Milestone 7 - Evaluation Engine: COMPLETE
-Milestone 8 - Local Model Runtime: NEXT
+Milestone 8 - Local Model Runtime: COMPLETE
+Milestone 9 - Knowledge and Multimodal Intake: NEXT
 
-completedMilestones: 7
-remainingMilestones: 9
-currentMilestone: 8
+completedMilestones: 8
+remainingMilestones: 8
+currentMilestone: 9
 baseMvpCompletionMilestone: 16
 
 ### Era II — Cognition
@@ -76,9 +79,9 @@ The Base MVP milestone manifest is frozen:
 
 ```text
 totalMilestones: 16
-completedMilestones: 6
-remainingMilestones: 10
-currentMilestone: 7
+completedMilestones: 8
+remainingMilestones: 8
+currentMilestone: 9
 baseMvpCompletionMilestone: 16
 ```
 
@@ -102,7 +105,9 @@ Milestone 5B - SQLite Operational State v1: COMPLETE
 Milestone 5C - Persistent Runtime Recovery v1: COMPLETE
 Milestone 5 overall: COMPLETE
 Milestone 6 - Isolated Execution Engine: COMPLETE
-Milestone 7 - Evaluation Engine: NEXT
+Milestone 7 - Evaluation Engine: COMPLETE
+Milestone 8 - Local Model Runtime: COMPLETE
+Milestone 9 - Knowledge and Multimodal Intake: NEXT
 ```
 
 ## Consolidation milestones
@@ -115,8 +120,8 @@ The locked implementation order is:
 4. Unified Control Plane — `local-control-plane-v1` — implemented and under validation as the permanent Runtime attempt, gate, evidence, terminal-decision, verification, and closeout authority; final completion requires the three support changes named in Base MVP Scope Lock
 5. Runtime Host and SQLite Operational State — `local-runtime-host-v1` completes Milestone 5A; `runtime-state-v1` completes Milestone 5B; `persistent-runtime-v1` completes Milestone 5C and Milestone 5
 6. Isolated Execution — `isolated-execution-v1` — implemented and certified as the governed process/workspace boundary for approved local workloads
-7. Evaluation Engine — `evaluation-engine-v1`
-8. Ollama Model Runtime — `offline-model-runtime-v1`
+7. Evaluation Engine — `evaluation-engine-v1` — implemented and certified as deterministic evaluation over immutable execution evidence
+8. Local Model Runtime — `local-model-runtime-v1` — implemented as a provider-independent Runtime boundary with deterministic fixture proof and disabled real-local adapters
 9. Knowledge and Multimodal Intake — `multimodal-evidence-runtime-v1`
 10. Capability Genome and Learning Engine — `capability-learning-v1`
 11. Desktop Operator — `desktop-operator-v1`
