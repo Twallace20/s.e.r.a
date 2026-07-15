@@ -127,6 +127,7 @@ Current repository candidates:
 | `packages/execution-engine` | confirmed; Isolated Execution Engine v1 |
 | `packages/evaluation-engine` | confirmed; Evaluation Engine v1 |
 | `packages/model-runtime` | confirmed; Local Model Runtime v1 |
+| `packages/knowledge-runtime` | confirmed; Knowledge and Universal Intake Runtime v1 |
 | `.sera-*` runtime directories | legacy/runtime-data; not source authority |
 
 Migration targets:
@@ -138,6 +139,7 @@ Migration targets:
 - `runtime-state-store`
 - `evaluation-engine`
 - `model-runtime`
+- `knowledge-intake-runtime`
 - `learning-engine`
 
 Valid components:
@@ -147,6 +149,7 @@ Valid components:
 - persistent recovery coordinator via `@sera/runtime-recovery`
 - isolated execution chamber via `@sera/execution-engine`
 - local model invocation boundary via `@sera/model-runtime`
+- local knowledge and universal intake boundary via `@sera/knowledge-runtime`
 - attempt ledger
 - evaluation runner
 - learning promotion record

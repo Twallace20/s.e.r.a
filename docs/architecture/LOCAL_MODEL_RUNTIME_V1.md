@@ -67,6 +67,10 @@ Successful invocations write redacted proof artifacts under `.sera/model-runtime
 
 Repository Snapshot excludes `.sera/model-runtime/` as generated Runtime evidence.
 
+## Relationship To Knowledge Intake
+
+Knowledge and Universal Intake Runtime v1 is a sibling Runtime boundary. Local Model Runtime may later enrich candidate knowledge only through separate Control Plane authorization. Model output must remain candidate, provenance-linked, and unable to replace original source evidence or become canonical truth automatically.
+
 ## CLI
 
 The CLI exposes:

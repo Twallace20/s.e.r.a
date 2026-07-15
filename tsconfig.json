@@ -37,6 +37,9 @@
                            "path":  "packages/model-runtime"
                        },
                        {
+                           "path":  "packages/knowledge-runtime"
+                       },
+                       {
                            "path":  "packages/safety"
                        },
                        {

@@ -140,6 +140,19 @@ Boundary rules:
 - model output cannot execute tools, mutate source, approve gates, or become operational truth
 - `packages/model-provider` remains provider-adapter compatibility evidence, not Runtime authority
 
+## `@sera/knowledge-runtime` / `packages/knowledge-runtime`
+
+Runtime-owned Knowledge and Universal Intake boundary. It validates explicit intake authorizations, preserves source bytes in content-addressed storage, records intake and knowledge state in SQLite Operational State migration v6, writes `.sera/intake/` and `.sera/knowledge/` evidence, extracts deterministic text from bounded text formats, preserves opaque media and archives without extraction, and exposes deterministic lexical retrieval over candidate knowledge.
+
+Boundary rules:
+
+- default operation is local and offline with no public fetch
+- imported content remains candidate knowledge, never canonical truth
+- URL references are recorded but not fetched in v1
+- archives, media, and unknown binary files are preserved as opaque assets
+- retrieval includes provenance and trust/candidate status
+- intake cannot execute imported content, render active HTML, invoke models, mutate source, approve gates, or replace Control Plane authority
+
 ## `@sera/certs` / `packages/certs`
 
 Certification runner and capability checks.

@@ -30,15 +30,15 @@ Milestone 7 — Evaluation Engine is COMPLETE. S.E.R.A. can evaluate immutable i
 
 Milestone 8 — Local Model Runtime is COMPLETE. S.E.R.A. can route explicitly authorized local model requests through a provider-independent Runtime boundary, prove deterministic fixture behavior without public network use, record SQLite invocation evidence, and keep model output as candidate intelligence only.
 
-Milestone 9 — Knowledge and Multimodal Intake is NEXT.
+Milestone 9 — Knowledge and Multimodal Intake is COMPLETE. S.E.R.A. can ingest authorized inline text, local files, local directories, predownloaded snapshots, URL references without fetching, and generated fixtures into durable candidate knowledge records with provenance, content hashes, deterministic extraction, opaque preservation, and bounded lexical retrieval.
 
 Milestone 7 - Evaluation Engine: COMPLETE
 Milestone 8 - Local Model Runtime: COMPLETE
-Milestone 9 - Knowledge and Multimodal Intake: NEXT
+Milestone 9 - Knowledge and Multimodal Intake: COMPLETE
 
-completedMilestones: 8
-remainingMilestones: 8
-currentMilestone: 9
+completedMilestones: 9
+remainingMilestones: 7
+currentMilestone: 10
 baseMvpCompletionMilestone: 16
 
 ### Era II — Cognition
@@ -79,9 +79,9 @@ The Base MVP milestone manifest is frozen:
 
 ```text
 totalMilestones: 16
-completedMilestones: 8
-remainingMilestones: 8
-currentMilestone: 9
+completedMilestones: 9
+remainingMilestones: 7
+currentMilestone: 10
 baseMvpCompletionMilestone: 16
 ```
 
@@ -107,7 +107,7 @@ Milestone 5 overall: COMPLETE
 Milestone 6 - Isolated Execution Engine: COMPLETE
 Milestone 7 - Evaluation Engine: COMPLETE
 Milestone 8 - Local Model Runtime: COMPLETE
-Milestone 9 - Knowledge and Multimodal Intake: NEXT
+Milestone 9 - Knowledge and Multimodal Intake: COMPLETE
 ```
 
 ## Consolidation milestones
@@ -122,7 +122,7 @@ The locked implementation order is:
 6. Isolated Execution — `isolated-execution-v1` — implemented and certified as the governed process/workspace boundary for approved local workloads
 7. Evaluation Engine — `evaluation-engine-v1` — implemented and certified as deterministic evaluation over immutable execution evidence
 8. Local Model Runtime — `local-model-runtime-v1` — implemented as a provider-independent Runtime boundary with deterministic fixture proof and disabled real-local adapters
-9. Knowledge and Multimodal Intake — `multimodal-evidence-runtime-v1`
+9. Knowledge and Multimodal Intake — `knowledge-intake-runtime-v1` — implemented as a Runtime-owned intake and candidate knowledge boundary with deterministic extraction, opaque preservation, provenance, and lexical retrieval
 10. Capability Genome and Learning Engine — `capability-learning-v1`
 11. Desktop Operator — `desktop-operator-v1`
 12. Website Studio MVP — `website-studio-provisional-v1`

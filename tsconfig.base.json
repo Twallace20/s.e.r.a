@@ -89,6 +89,9 @@
       ],
       "@sera/model-runtime": [
         "packages/model-runtime/src/index.ts"
+      ],
+      "@sera/knowledge-runtime": [
+        "packages/knowledge-runtime/src/index.ts"
       ]
     }
   }
