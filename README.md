@@ -52,6 +52,8 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 
 Evidence-Driven Recurrence Prevention and Governed Innovation is now locked as a Base MVP architecture invariant. The contract is machine-readable in `architecture/recurrence-prevention-innovation-plan-v1.json` and documented in `docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md`. This is a plan and acceptance lock only; the full recurrence-prevention Runtime is still pending.
 
+The post-Base MVP roadmap for S.E.R.A. Personal and Professional V1 is locked as planning-only in `architecture/post-base-mvp-roadmap-v1.json` and `docs/architecture/SERA_PERSONAL_PROFESSIONAL_V1_ROADMAP.md`. It preserves Base MVP completion at Milestone 16 and plans Milestones 17 through 24 without implementing Milestone 13, web access, iOS, update, backup, enterprise, Hive Mode, robotics, or post-Base Runtime behavior.
+
 ## What works now
 
 - TypeScript + Node local runtime
@@ -145,7 +147,7 @@ npm run verify
 Expected current certification result:
 
 ```text
-S.E.R.A. certify: PASS level=desktop-operator-v1
+S.E.R.A. certify: PASS level=first-certified-studio-v1
 ```
 
 ## Starter secure-base run

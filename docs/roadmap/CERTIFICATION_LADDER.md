@@ -12,6 +12,8 @@ Milestone 12 is the current runtime certification. It proves Studio Runtime regi
 
 The Evidence-Driven Recurrence Prevention and Governed Innovation plan is an architecture lock, not a new runtime certification level. It preserves `desktop-operator-v1` as the current certification while reserving later Base MVP acceptance gates for lesson retrieval, recurrence prevention, scoped generalization, operator overrides, and governed innovation.
 
+The S.E.R.A. Personal and Professional V1 roadmap is a post-Base MVP planning lock, not a new runtime certification level. It preserves Base MVP completion at Milestone 16, plans Milestones 17 through 24, and keeps `first-certified-studio-v1` as the current runtime certification until later implementation and cert runner checks prove otherwise.
+
 ## Level 1 — `secure-base`
 
 S.E.R.A. can:
@@ -89,6 +91,24 @@ Desktop Operator also reserves governed empty-state UI surfaces for later recurr
 S.E.R.A. can run Evidence Studio v1 as the first certified Studio. The Studio produces a bounded professional brief from explicit operator intent and authorized local sources, records a document plan, claim ledger, source map, provenance, deterministic evaluation, operator review, revision history, immutable final package, and candidate learning signals.
 
 This level does not certify public web research, PDF output, universal document generation, active lesson certification, prevention activation, innovation promotion, distributed Studios, Hive Mode, or the full Milestone 13 integrated offline loop.
+
+## Planning Lock — `post-base-mvp-roadmap-v1`
+
+This is a roadmap lock for S.E.R.A. Personal and Professional V1, not a certified Runtime, Capability, Studio, Provider, or Desktop level.
+
+It plans:
+
+- Milestone 17 through Milestone 24 after Base MVP completion
+- real-world pilot and defect burn-down
+- nontechnical UX, reliability, updates, and recovery
+- real local intelligence and multimodal Runtime
+- multiple professional Studio workflows
+- professional services and Fiverr-style operations under owner approval
+- governed web, browser, and external tool Runtime
+- secure mobile gateway and iOS companion supervision
+- S.E.R.A. Personal and Professional V1 release readiness
+
+It does not certify Milestone 13 behavior, real model providers, multimodal extraction providers, browser automation, public web research, iOS Runtime execution, update installation, backup/restore, enterprise multi-user behavior, Hive Mode, robotics, unrestricted account access, autonomous payments, autonomous contracts, or any post-Base Runtime behavior.
 
 ## Level 10 — `model-provider-v1`
 

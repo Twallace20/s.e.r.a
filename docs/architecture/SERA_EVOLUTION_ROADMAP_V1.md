@@ -41,6 +41,8 @@ Milestone 12 — First Certified Studio is COMPLETE. S.E.R.A. has Studio Runtime
 
 Cross-cutting plan lock — Evidence-Driven Recurrence Prevention and Governed Innovation is ACTIVE as an architecture and Base MVP acceptance invariant, with Runtime implementation pending. The locked plan lives in `docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md` and `architecture/recurrence-prevention-innovation-plan-v1.json`.
 
+Post-Base MVP roadmap lock — S.E.R.A. Personal and Professional V1 is PLANNING-LOCKED and not implemented. The locked plan lives in `docs/architecture/SERA_PERSONAL_PROFESSIONAL_V1_ROADMAP.md` and `architecture/post-base-mvp-roadmap-v1.json`. It preserves Base MVP completion at Milestone 16, plans Milestones 17 through 24, and does not add Milestone 13 behavior, web access, browser automation, iOS Runtime execution, update, backup, enterprise, Hive Mode, robotics, or post-Base Runtime behavior.
+
 Milestone 7 - Evaluation Engine: COMPLETE
 Milestone 8 - Local Model Runtime: COMPLETE
 Milestone 9 - Knowledge and Multimodal Intake: COMPLETE
@@ -102,6 +104,8 @@ baseMvpCompletionMilestone: 16
 ```
 
 The canonical machine-readable Base MVP milestone record is `architecture/base-mvp-manifest.json`. The roadmap is the human-readable narrative view and must remain consistent with that manifest.
+
+Post-Base planning begins only after the Base MVP. Milestone 24 is the planned S.E.R.A. Personal and Professional V1 release target, not the permanent end of S.E.R.A. At Milestone 16, S.E.R.A. is considered base-MVP complete when the portable local loop can prove controlled mistake handling, evidence preservation, correction, certification, restart, materially equivalent prevention, and visible operator explanation. At Milestone 24, S.E.R.A. Personal and Professional V1 is planned to be complete when it is a locally controlled, nontechnical, desktop-and-mobile-supervised intelligence operating system with certified local model use, real material intake, multiple professional workflows, governed web use, evaluation, evidence, correction learning, recurring-failure prevention, capability improvement, and professional delivery packaging. After Milestone 24, we choose what S.E.R.A. learns next.
 
 Milestone 4 is complete only when the Unified Control Plane implementation and its three required support changes are retained, validated, and included in final closeout:
 

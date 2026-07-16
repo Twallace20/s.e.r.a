@@ -117,6 +117,17 @@
       "records": "Cross-cutting Base MVP acceptance invariant for evidence-linked learning signals, recurrence prevention, scoped lesson retrieval, governed overrides, lesson supersession, and distinct governed innovation. Runtime behavior remains pending."
     },
     {
+      "id": "post-base-mvp-roadmap-v1",
+      "name": "S.E.R.A. Personal and Professional V1 Roadmap",
+      "kind": "governance-standard",
+      "status": "planning-locked-not-implemented",
+      "executableCapability": false,
+      "runtimeService": false,
+      "document": "docs/architecture/SERA_PERSONAL_PROFESSIONAL_V1_ROADMAP.md",
+      "plan": "architecture/post-base-mvp-roadmap-v1.json",
+      "records": "Post-Base MVP planning lock for Milestones 17 through 24. It preserves Base MVP completion at Milestone 16 and does not implement Milestone 13, web, browser, iOS Runtime, update, backup, enterprise, Hive Mode, robotics, or post-Base Runtime behavior."
+    },
+    {
       "id": "time-to-certified-capability-v1",
       "name": "Time-to-Certified-Capability v1",
       "kind": "metric-standard",
