@@ -1,10 +1,10 @@
 # Evidence-Driven Recurrence Prevention and Innovation v1
 
-Status: architecture locked, Runtime implementation pending.
+Status: architecture locked, integrated preflight certified, full recurrence-prevention proof pending.
 
 This document locks a cross-cutting Base MVP invariant: S.E.R.A. must be designed so that a materially evidenced and certified failure is not unknowingly repeated under materially equivalent conditions.
 
-This is not the lesson Runtime implementation. It does not add SQLite tables, automatic lesson activation, automatic innovation promotion, Studio behavior, or any post-Milestone-11 runtime subsystem.
+This is not the active lesson Runtime implementation. Milestone 13 adds bounded integrated-loop preflight records, but it does not certify lessons, activate prevention rules, automatically promote innovation, or complete the Milestone 14 recurrence-prevention proof.
 
 ## Invariant
 
@@ -61,7 +61,7 @@ Milestone 11 reserves Desktop Operator surfaces for known failure patterns, appl
 
 Milestone 12 must produce evidence-linked operator corrections, failed-output signals, evaluation failures, improvement opportunities, and innovation opportunities. Interaction history must not automatically become reusable rules.
 
-Milestone 13 must run a learning preflight before capability or approach selection.
+Milestone 13 runs a learning preflight before capability or approach selection and records bounded preflight evidence for applicable, uncertain, out-of-scope, certified-alternative, and override cases.
 
 Milestone 14 is canonically named: Milestone 14 - Learning Generalization, Recurrence Prevention, and Innovation Proof.
 

@@ -56,3 +56,5 @@ These surfaces are UI contract reservations only. Desktop Operator v1 may render
 Desktop Operator v1 does not activate lessons, create prevention rules, promote innovation, infer lesson applicability, or replace Control Plane authority.
 
 Milestone 12 adds Studio surfaces to the Desktop Operator visual contract. These surfaces route state-changing actions through Operator Gateway and Studio Runtime; browser code still does not directly finalize Studio sessions or write Studio state.
+
+Milestone 13 adds Integrated Offline Loop surfaces for loop composition, sessions, timeline, authorization, learning preflight, applicable and non-applicable records, prevention warnings, certified alternatives, governed overrides, source intake, knowledge retrieval, Studio and capability selection, model candidates, evaluation summary, review revisions, finalization, closeout, and evidence packages. These surfaces remain visual/operator surfaces only; browser code does not run the loop, mutate SQLite directly, certify lessons, activate prevention rules, invoke real models, or promote innovation.

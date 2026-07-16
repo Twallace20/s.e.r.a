@@ -194,7 +194,7 @@ describe("First Certified Studio v1", () => {
     ["Studio event ordering is monotonic.", () => packageFile(firstStudioProof, "lifecycle-events.jsonl").includes('"sequence"')],
     ["Studio events are append-only.", () => packageFile(firstStudioProof, "lifecycle-events.jsonl").trim().split("\n").length >= 5],
     ["terminal Studio session is immutable.", () => packageFile(firstStudioProof, "lifecycle-events.jsonl").includes("stage_completed")],
-    ["idempotency survives restart.", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("studio_idempotency") ?? false],
+    ["idempotency survives restart.", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[8]?.sql.includes("studio_idempotency") ?? false],
     ["incomplete artifact is not finalized after restart.", () => firstStudioProof.checks.finalPackageCreated],
     ["incomplete evaluation is not assumed passed.", () => firstStudioProof.checks.unsupportedClaimDetected],
     ["modified artifact does not retain approval after restart.", () => firstStudioProof.checks.operatorReviewExact],
@@ -225,12 +225,12 @@ describe("First Certified Studio v1", () => {
     expect(check()).toBe(true);
   });
 
-  it("opens Runtime State schema v9 and exposes Studio tables", () => {
+  it("opens Runtime State schema v10 and exposes Studio tables", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-studio-state-test-"));
     const store = openRuntimeState({ projectRoot: root });
     try {
       const inspection = store.inspect();
-      expect(inspection.schemaVersion).toBe(9);
+      expect(inspection.schemaVersion).toBe(10);
       expect(inspection.counts.studio_definitions).toBe(0);
       expect(inspection.counts.studio_sessions).toBe(0);
     } finally {

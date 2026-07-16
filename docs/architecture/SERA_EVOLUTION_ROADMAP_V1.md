@@ -39,7 +39,11 @@ Milestone 11 — Desktop Operator is COMPLETE. S.E.R.A. has a local graphical op
 
 Milestone 12 — First Certified Studio is COMPLETE. S.E.R.A. has Studio Runtime, Evidence Studio v1, the certified `source-grounded-professional-brief-v1` profile, source-grounded claim/source evidence, deterministic evaluation, operator review, revision history, immutable final package output, candidate-only learning signals, and Desktop Operator Studio surfaces.
 
-Cross-cutting plan lock — Evidence-Driven Recurrence Prevention and Governed Innovation is ACTIVE as an architecture and Base MVP acceptance invariant, with Runtime implementation pending. The locked plan lives in `docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md` and `architecture/recurrence-prevention-innovation-plan-v1.json`.
+Milestone 13 — Integrated Offline Loop is COMPLETE. S.E.R.A. can compose the certified offline path through intake, retrieval, model-candidate generation, capability selection, Studio selection, evaluation, operator review, and final package closeout, and it requires a bounded learning preflight before selecting a capability or Studio.
+
+Cross-cutting plan lock — Evidence-Driven Recurrence Prevention and Governed Innovation is ACTIVE as an architecture and Base MVP acceptance invariant. Milestone 13 certifies the integrated preflight hook and evidence path; Milestone 14 remains the proof point for active lesson certification, prevention-rule activation, governed innovation proof, supersession, and recurrence-prevention behavior.
+
+Post-Base MVP roadmap lock — S.E.R.A. Personal and Professional V1 is PLANNING-LOCKED and not implemented. The locked plan lives in `docs/architecture/SERA_PERSONAL_PROFESSIONAL_V1_ROADMAP.md` and `architecture/post-base-mvp-roadmap-v1.json`. It preserves Base MVP completion at Milestone 16, plans Milestones 17 through 24, and does not add additional Milestone 13 behavior, web access, browser automation, iOS Runtime execution, update, backup, enterprise, Hive Mode, robotics, or post-Base Runtime behavior.
 
 Milestone 7 - Evaluation Engine: COMPLETE
 Milestone 8 - Local Model Runtime: COMPLETE
@@ -47,14 +51,14 @@ Milestone 9 - Knowledge and Multimodal Intake: COMPLETE
 Milestone 10 - Capability Engine and Recursive Learning: COMPLETE
 Milestone 11 - Desktop Operator: COMPLETE
 Milestone 12 - First Certified Studio: COMPLETE
-Milestone 13 - Integrated Offline Loop: PENDING
+Milestone 13 - Integrated Offline Loop: COMPLETE
 Milestone 14 - Learning Generalization, Recurrence Prevention, and Innovation Proof: PENDING
 Milestone 15 - Clean-Machine Offline Restart Proof: PENDING
 Milestone 16 - Portable Base MVP Acceptance: PENDING
 
-completedMilestones: 12
-remainingMilestones: 4
-currentMilestone: 13
+completedMilestones: 13
+remainingMilestones: 3
+currentMilestone: 14
 baseMvpCompletionMilestone: 16
 
 ### Era II — Cognition
@@ -95,13 +99,15 @@ The Base MVP milestone manifest is frozen:
 
 ```text
 totalMilestones: 16
-completedMilestones: 12
-remainingMilestones: 4
-currentMilestone: 13
+completedMilestones: 13
+remainingMilestones: 3
+currentMilestone: 14
 baseMvpCompletionMilestone: 16
 ```
 
 The canonical machine-readable Base MVP milestone record is `architecture/base-mvp-manifest.json`. The roadmap is the human-readable narrative view and must remain consistent with that manifest.
+
+Post-Base planning begins only after the Base MVP. Milestone 24 is the planned S.E.R.A. Personal and Professional V1 release target, not the permanent end of S.E.R.A. At Milestone 16, S.E.R.A. is considered base-MVP complete when the portable local loop can prove controlled mistake handling, evidence preservation, correction, certification, restart, materially equivalent prevention, and visible operator explanation. At Milestone 24, S.E.R.A. Personal and Professional V1 is planned to be complete when it is a locally controlled, nontechnical, desktop-and-mobile-supervised intelligence operating system with certified local model use, real material intake, multiple professional workflows, governed web use, evaluation, evidence, correction learning, recurring-failure prevention, capability improvement, and professional delivery packaging. After Milestone 24, we choose what S.E.R.A. learns next.
 
 Milestone 4 is complete only when the Unified Control Plane implementation and its three required support changes are retained, validated, and included in final closeout:
 
@@ -144,7 +150,7 @@ The locked implementation order is:
 10. Capability Engine and Recursive Learning — `capability-engine-recursive-learning-v1` — implemented as the governed Capability-layer lifecycle for candidate bundles, evaluation, exact certification, explicit promotion, active versions, rollback, and recursive learning evidence
 11. Desktop Operator — `desktop-operator-v1` — implemented as the local Desktop-layer graphical surface and Runtime-layer Operator Gateway for loopback sessions, approvals, notifications, safe evidence viewing, and operator audit state
 12. First Certified Studio — `website-studio-provisional-v1` — must produce evidence-linked operator corrections, failed-output signals, evaluation failures, improvement opportunities, and innovation opportunities without automatically promoting interaction history into reusable rules
-13. Integrated Offline Loop — `integrated-offline-loop-v1` — must perform a learning preflight before capability or approach selection by retrieving applicable certified lessons, known failure patterns, prevention rules, certified alternatives, and active overrides
+13. Integrated Offline Loop — `integrated-offline-loop-v1` — implemented and certified as the offline composition loop with required learning preflight before capability or approach selection
 14. Learning Generalization, Recurrence Prevention, and Innovation Proof — `learning-generalization-recurrence-prevention-innovation-proof-v1` — must prove controlled failure, durable evidence, reproduction, scoped root cause, repair, regression proof, reproducibility, lesson certification, prevention activation, equivalent-context retrieval, known-failure avoidance, related-context generalization, out-of-scope non-application, improvement comparison, governed innovation, supersession, governed override, and proof that model output does not automatically become a lesson
 15. Clean-Machine Offline Restart Proof — `clean-machine-offline-restart-proof-v1` — must preserve and retrieve failure records, certified lessons, prevention rules, scopes, superseded lessons, overrides, and innovation proposals after restart with no public internet
 16. Portable Base MVP Acceptance — `portable-base-mvp-acceptance-v1` — must prove controlled mistake, evidence preservation, correction, certification, shutdown, restart, materially equivalent request, certified-lesson retrieval, prevention of the known mistake, and visible explanation/evidence in Desktop Operator

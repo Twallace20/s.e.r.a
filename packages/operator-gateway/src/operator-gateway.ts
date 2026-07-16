@@ -115,7 +115,9 @@ export class OperatorGateway {
       requests: this.all("SELECT request_id FROM operator_requests").length
       ,
       studios: this.all("SELECT studio_id FROM studio_definitions").length,
-      studioSessions: this.all("SELECT session_id FROM studio_sessions").length
+      studioSessions: this.all("SELECT session_id FROM studio_sessions").length,
+      integratedLoopSessions: this.all("SELECT loop_session_id FROM integrated_loop_sessions").length,
+      integratedLoopPreflights: this.all("SELECT preflight_id FROM learning_preflight_runs").length
     };
     return {
       ok: integrity.ok && localOnly.ok,

@@ -1,0 +1,356 @@
+{
+  "schemaVersion": "sera.post-base-mvp-roadmap.v1",
+  "roadmapId": "sera-personal-professional-v1-roadmap",
+  "title": "S.E.R.A. Personal and Professional V1 Roadmap",
+  "status": "planning-locked-not-implemented",
+  "baseMvpCompletionMilestone": 16,
+  "personalProfessionalV1CompletionMilestone": 24,
+  "milestoneRange": {
+    "start": 17,
+    "end": 24,
+    "status": "planned-only"
+  },
+  "architecturalInvariants": [
+    "The 16-milestone Base MVP remains unchanged.",
+    "Milestone 16 completes the Portable Offline Base MVP.",
+    "Milestone 24 completes S.E.R.A. Personal and Professional V1 within declared supported scope.",
+    "Post-Base milestones are planned-only until implemented and certified by their own evidence.",
+    "No planned milestone may silently add Runtime authority, web authority, mobile authority, or business authority.",
+    "Human approval is required before external communication, delivery, payment, contracts, or high-risk actions."
+  ],
+  "milestones": [
+    {
+      "number": 17,
+      "name": "Real-World Pilot and Defect Burn-Down",
+      "status": "planned",
+      "requires": [
+        "real operator projects",
+        "actual local models",
+        "real documents and knowledge libraries",
+        "long Studio sessions",
+        "interruption and recovery",
+        "operator corrections",
+        "failure and improvement evidence",
+        "recurrence signals",
+        "defect prioritization",
+        "release-blocking defect resolution"
+      ],
+      "guarantee": "S.E.R.A. is exercised against real local work and the release-blocking defects are made visible and prioritized.",
+      "nonGuarantees": [
+        "does not certify Personal and Professional V1 release",
+        "does not permit unattended client delivery"
+      ]
+    },
+    {
+      "number": 18,
+      "name": "Nontechnical UX, Reliability, Updates, and Recovery",
+      "status": "planned",
+      "requires": [
+        "guided installation",
+        "first-run setup",
+        "hardware readiness",
+        "model readiness",
+        "local-service startup",
+        "plain-language health",
+        "application updates",
+        "release rollback",
+        "backup",
+        "restore",
+        "storage management",
+        "diagnostics",
+        "crash recovery",
+        "accessibility",
+        "no terminal requirement for ordinary use"
+      ],
+      "guarantee": "A nontechnical operator can install, start, understand, maintain, update, roll back, back up, and restore S.E.R.A. through ordinary product surfaces.",
+      "nonGuarantees": [
+        "does not certify enterprise deployment",
+        "does not remove advanced developer/operator diagnostics"
+      ]
+    },
+    {
+      "number": 19,
+      "name": "Real Local Intelligence and Multimodal Runtime",
+      "status": "planned",
+      "requires": [
+        "real local general model",
+        "reasoning model",
+        "coding model",
+        "vision-capable model",
+        "retrieval or embedding model where justified",
+        "PDF extraction",
+        "OCR",
+        "image analysis",
+        "audio transcription",
+        "selected video processing",
+        "model routing",
+        "hardware-aware resource policy",
+        "media provenance"
+      ],
+      "guarantee": "S.E.R.A. can use certified local intelligence and bounded multimodal processors with provenance and hardware-aware limits.",
+      "nonGuarantees": [
+        "does not guarantee every model output is correct",
+        "does not certify unrestricted media understanding"
+      ]
+    },
+    {
+      "number": 20,
+      "name": "Multi-Studio Professional Capability Portfolio",
+      "status": "planned",
+      "requires": [
+        "Evidence and Research Studio",
+        "Website Studio",
+        "Business Documentation Studio",
+        "Data and Reporting Studio",
+        "one additional selected professional Studio",
+        "exact Studio versions",
+        "declared capabilities",
+        "operator workflows",
+        "evaluation",
+        "revision",
+        "evidence",
+        "delivery packaging",
+        "learning signals",
+        "limitations",
+        "rollback readiness"
+      ],
+      "guarantee": "S.E.R.A. has multiple certified professional Studios with exact versions, evidence, review, delivery packaging, limitations, and rollback readiness.",
+      "nonGuarantees": [
+        "does not certify every professional domain",
+        "does not certify universal document or website generation"
+      ]
+    },
+    {
+      "number": 21,
+      "name": "Professional Services and Fiverr Operations",
+      "status": "planned",
+      "requires": [
+        "client intake",
+        "requirements clarification",
+        "scope definition",
+        "deliverable definition",
+        "estimate assistance",
+        "project workspaces",
+        "revision limits",
+        "quality gates",
+        "delivery checklists",
+        "professional export packages",
+        "portfolio evidence",
+        "reusable service templates",
+        "client-data separation",
+        "human approval before external communication or delivery"
+      ],
+      "guarantee": "S.E.R.A. can help produce professional service packages and Fiverr-style delivery evidence under human approval.",
+      "nonGuarantees": [
+        "does not define unattended Fiverr-account automation",
+        "does not authorize client communication or delivery without human approval",
+        "does not authorize payments or contracts"
+      ]
+    },
+    {
+      "number": 22,
+      "name": "Governed Web, Browser, and External Tool Runtime",
+      "status": "planned",
+      "requires": [
+        "per-task network authorization",
+        "browser isolation",
+        "domain approval",
+        "download verification",
+        "upload approval",
+        "form-action review",
+        "source capture",
+        "website preview and testing",
+        "governed publishing",
+        "API connector contracts",
+        "credential isolation",
+        "public-network evidence",
+        "cancellation",
+        "revocation",
+        "no silent browsing"
+      ],
+      "guarantee": "S.E.R.A. can use the public web, browser surfaces, and external tools only through governed, evidenced, revocable authorization.",
+      "nonGuarantees": [
+        "does not permit silent browsing",
+        "does not permit unrestricted account access",
+        "does not permit unreviewed uploads or form submissions"
+      ]
+    },
+    {
+      "number": 23,
+      "name": "Secure Mobile Gateway and iOS Companion",
+      "status": "planned",
+      "requires": [
+        "secure device pairing",
+        "local-network operation",
+        "optional encrypted remote operation",
+        "revocable device credentials",
+        "request submission",
+        "file upload",
+        "image upload",
+        "audio and camera intake",
+        "approvals",
+        "progress",
+        "notifications",
+        "evidence review",
+        "deliverable review",
+        "revision requests",
+        "cached offline client state",
+        "audit",
+        "lost-device revocation"
+      ],
+      "boundary": "The complete Runtime remains on the desktop or privately controlled host; the iOS companion supervises and submits work.",
+      "guarantee": "S.E.R.A. can be securely supervised from iPhone through paired, revocable mobile credentials.",
+      "nonGuarantees": [
+        "does not promise the complete S.E.R.A. Runtime running entirely on iPhone",
+        "does not permit unrecoverable lost-device authority"
+      ]
+    },
+    {
+      "number": 24,
+      "name": "S.E.R.A. Personal and Professional V1 Release",
+      "status": "planned",
+      "requires": [
+        "nontechnical installation without Git or Codex",
+        "normal Desktop Operator launch",
+        "actual local-model operation",
+        "core offline operation",
+        "governed optional web access",
+        "multiple certified professional Studios",
+        "professional delivery packages",
+        "recurrence-prevention demonstration",
+        "persistence across restart",
+        "backup and restore",
+        "update and rollback",
+        "secure iOS pairing",
+        "iPhone request and supervision",
+        "approval protection for high-risk actions",
+        "no terminal requirement for ordinary use",
+        "one real Fiverr-style project from intake to delivery package",
+        "visible supported-capability and limitation matrix",
+        "defined soak test",
+        "clean installation and uninstall",
+        "distributable versioned Personal and Professional V1 release"
+      ],
+      "guarantee": "S.E.R.A. Personal and Professional V1 is a locally controlled, nontechnical, desktop-and-mobile-supervised intelligence operating system capable of ingesting real materials, using certified local models, performing multiple certified professional workflows, using the public web only under governance, evaluating work, preserving evidence, learning from corrections, preventing certified recurring failures, improving capabilities, and producing professional delivery packages.",
+      "nonGuarantees": [
+        "universal expertise",
+        "zero mistakes",
+        "every professional domain",
+        "unattended business authority",
+        "unrestricted client communication",
+        "unrestricted account access",
+        "autonomous payments or contracts",
+        "complete Runtime operation entirely on iPhone",
+        "enterprise multi-user deployment",
+        "distributed Hive Mode",
+        "robotics",
+        "unrestricted high-risk professional advice",
+        "permanent completion of all future S.E.R.A. development"
+      ]
+    }
+  ],
+  "milestoneGuarantees": {
+    "24": "S.E.R.A. Personal and Professional V1 is a locally controlled, nontechnical, desktop-and-mobile-supervised intelligence operating system capable of ingesting real materials, using certified local models, performing multiple certified professional workflows, using the public web only under governance, evaluating work, preserving evidence, learning from corrections, preventing certified recurring failures, improving capabilities, and producing professional delivery packages."
+  },
+  "milestoneNonGuarantees": [
+    "universal expertise",
+    "zero mistakes",
+    "every professional domain",
+    "unattended business authority",
+    "unrestricted client communication",
+    "unrestricted account access",
+    "autonomous payments or contracts",
+    "complete Runtime operation entirely on iPhone",
+    "enterprise multi-user deployment",
+    "distributed Hive Mode",
+    "robotics",
+    "unrestricted high-risk professional advice",
+    "permanent completion of all future S.E.R.A. development"
+  ],
+  "completionDefinitions": {
+    "baseMvp": {
+      "milestone": 16,
+      "definition": "Portable Offline Base MVP completion."
+    },
+    "personalProfessionalV1": {
+      "milestone": 24,
+      "definition": "S.E.R.A. Personal and Professional V1 completion within declared supported scope."
+    },
+    "afterMilestone24": {
+      "definition": "After Milestone 24, future work is capability, device, domain, enterprise, robotics, distributed-system, and autonomy expansion rather than completion of missing foundational product promises.",
+      "continuationStatement": "After Milestone 24, we choose what S.E.R.A. learns next."
+    }
+  },
+  "supportedClientTargets": [
+    "nontechnical local operator",
+    "solo professional services operator",
+    "desktop-first owner",
+    "iPhone-supervised owner"
+  ],
+  "professionalStudioTargets": [
+    "Evidence and Research Studio",
+    "Website Studio",
+    "Business Documentation Studio",
+    "Data and Reporting Studio",
+    "selected additional professional Studio"
+  ],
+  "mobileBoundary": {
+    "supported": [
+      "secure iOS companion",
+      "request submission",
+      "approvals",
+      "evidence review",
+      "deliverable review",
+      "revision requests",
+      "notifications"
+    ],
+    "notSupported": [
+      "complete Runtime operation entirely on iPhone"
+    ]
+  },
+  "webGovernanceBoundary": {
+    "supported": [
+      "per-task network authorization",
+      "browser isolation",
+      "domain approval",
+      "download verification",
+      "upload approval",
+      "form-action review",
+      "public-network evidence"
+    ],
+    "notSupported": [
+      "silent browsing",
+      "unrestricted account access",
+      "unreviewed uploads",
+      "unreviewed form submission"
+    ]
+  },
+  "recurrencePreventionBoundary": {
+    "supportedByMilestone24": [
+      "recurrence-prevention demonstration",
+      "certified recurring-failure prevention within declared scope",
+      "learning from corrections with evidence"
+    ],
+    "notClaimed": [
+      "zero mistakes",
+      "universal prevention across every domain"
+    ]
+  },
+  "futureExpansionCategories": [
+    "capability expansion",
+    "device expansion",
+    "domain expansion",
+    "enterprise expansion",
+    "robotics expansion",
+    "distributed-system expansion",
+    "autonomy expansion"
+  ],
+  "integrityRequirements": [
+    "Base MVP manifest must remain unchanged.",
+    "Milestones 17 through 24 are planned-only until separately implemented and certified.",
+    "No SQLite migration is added by this roadmap lock.",
+    "No additional Milestone 13 behavior is implemented by this post-Base roadmap lock.",
+    "No post-Base Runtime behavior is implemented by this roadmap lock.",
+    "All future implementation must preserve explicit limits and non-guarantees."
+  ]
+}

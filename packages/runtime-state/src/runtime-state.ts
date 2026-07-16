@@ -6,7 +6,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createControlPlaneRuntimeService, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
 
 export const RUNTIME_STATE_VERSION = "runtime-state-v1";
-export const RUNTIME_STATE_SCHEMA_VERSION = 9;
+export const RUNTIME_STATE_SCHEMA_VERSION = 10;
 export const RUNTIME_STATE_EXPORT_SCHEMA = "sera.runtime-state-export.v1";
 
 export type RuntimeStateStatus = "healthy" | "blocked";
@@ -173,7 +173,15 @@ const TABLES = [
   "studio_reviews",
   "studio_learning_signals",
   "studio_events",
-  "studio_idempotency"
+  "studio_idempotency",
+  "integrated_loop_sessions",
+  "integrated_loop_stage_transitions",
+  "learning_preflight_runs",
+  "learning_preflight_matches",
+  "integrated_loop_bindings",
+  "integrated_loop_artifacts",
+  "integrated_loop_events",
+  "integrated_loop_idempotency"
 ] as const;
 
 const TERMINAL_STATES = new Set<AttemptState>(["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"]);
@@ -1395,6 +1403,133 @@ CREATE INDEX idx_studio_claims_session ON studio_claims(session_id, artifact_ver
 CREATE INDEX idx_studio_reviews_session ON studio_reviews(session_id, timestamp);
 CREATE INDEX idx_studio_learning_signals_session ON studio_learning_signals(session_id, signal_type);
 CREATE INDEX idx_studio_events_aggregate ON studio_events(aggregate_id, sequence);
+`
+  },
+  {
+    version: 10,
+    name: "integrated_offline_loop_v1",
+    sql: `
+CREATE TABLE integrated_loop_sessions (
+  loop_session_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  operator_request_id TEXT NOT NULL,
+  authorization_id TEXT NOT NULL,
+  studio_id TEXT NOT NULL,
+  studio_version_digest TEXT NOT NULL,
+  workflow_profile TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  source_set_hash TEXT NOT NULL,
+  context_hash TEXT NOT NULL,
+  state TEXT NOT NULL,
+  risk_class TEXT NOT NULL,
+  revision_budget INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  completed_at TEXT,
+  outcome TEXT,
+  reason TEXT,
+  optimistic_version INTEGER NOT NULL
+);
+
+CREATE TABLE integrated_loop_stage_transitions (
+  transition_id TEXT PRIMARY KEY,
+  loop_session_id TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  prior_state TEXT,
+  next_state TEXT NOT NULL,
+  owning_service TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  evidence_reference TEXT NOT NULL,
+  UNIQUE(loop_session_id, sequence),
+  FOREIGN KEY(loop_session_id) REFERENCES integrated_loop_sessions(loop_session_id)
+);
+
+CREATE TABLE learning_preflight_runs (
+  preflight_id TEXT PRIMARY KEY,
+  loop_session_id TEXT NOT NULL,
+  context_hash TEXT NOT NULL,
+  source_versions_json TEXT NOT NULL,
+  decision TEXT NOT NULL,
+  selected_alternative_json TEXT,
+  override_reference_json TEXT,
+  warning_or_block_reason TEXT,
+  timestamp TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  immutable INTEGER NOT NULL,
+  FOREIGN KEY(loop_session_id) REFERENCES integrated_loop_sessions(loop_session_id)
+);
+
+CREATE TABLE learning_preflight_matches (
+  preflight_id TEXT NOT NULL,
+  ordering INTEGER NOT NULL,
+  record_type TEXT NOT NULL,
+  record_id TEXT NOT NULL,
+  record_version TEXT NOT NULL,
+  match_class TEXT NOT NULL,
+  applicability TEXT NOT NULL,
+  non_applicability TEXT,
+  active_status TEXT NOT NULL,
+  certification_reference TEXT,
+  evidence_reference TEXT NOT NULL,
+  PRIMARY KEY(preflight_id, ordering),
+  FOREIGN KEY(preflight_id) REFERENCES learning_preflight_runs(preflight_id)
+);
+
+CREATE TABLE integrated_loop_bindings (
+  loop_session_id TEXT NOT NULL,
+  binding_type TEXT NOT NULL,
+  service_id TEXT NOT NULL,
+  aggregate_id TEXT NOT NULL,
+  exact_version_or_digest TEXT NOT NULL,
+  evidence_reference TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  PRIMARY KEY(loop_session_id, binding_type, service_id, aggregate_id),
+  FOREIGN KEY(loop_session_id) REFERENCES integrated_loop_sessions(loop_session_id)
+);
+
+CREATE TABLE integrated_loop_artifacts (
+  loop_session_id TEXT NOT NULL,
+  artifact_type TEXT NOT NULL,
+  owned_by_service TEXT NOT NULL,
+  content_addressed_path_or_reference TEXT NOT NULL,
+  hash TEXT NOT NULL,
+  status TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  PRIMARY KEY(loop_session_id, artifact_type),
+  FOREIGN KEY(loop_session_id) REFERENCES integrated_loop_sessions(loop_session_id)
+);
+
+CREATE TABLE integrated_loop_events (
+  event_id TEXT PRIMARY KEY,
+  loop_session_id TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  owning_service TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  runtime_instance_id TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  safe_message TEXT NOT NULL,
+  structured_details_json TEXT NOT NULL,
+  UNIQUE(loop_session_id, sequence),
+  FOREIGN KEY(loop_session_id) REFERENCES integrated_loop_sessions(loop_session_id)
+);
+
+CREATE TABLE integrated_loop_idempotency (
+  operation_type TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL,
+  normalized_request_hash TEXT NOT NULL,
+  resulting_aggregate TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  conflict_status TEXT NOT NULL,
+  PRIMARY KEY(operation_type, idempotency_key)
+);
+
+CREATE INDEX idx_integrated_loop_sessions_state ON integrated_loop_sessions(state, updated_at);
+CREATE INDEX idx_integrated_loop_stage_session ON integrated_loop_stage_transitions(loop_session_id, sequence);
+CREATE INDEX idx_learning_preflight_loop ON learning_preflight_runs(loop_session_id, timestamp);
+CREATE INDEX idx_integrated_loop_events_session ON integrated_loop_events(loop_session_id, sequence);
 `
   }
 ];

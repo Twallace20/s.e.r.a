@@ -160,6 +160,7 @@ const RUNTIME_PACKAGE_NAME_HINTS = [
   "studio-runtime",
   "model-runtime",
   "knowledge-runtime",
+  "integrated-loop-runtime",
   "control-plane",
   "execution-engine",
   "evaluation-engine",

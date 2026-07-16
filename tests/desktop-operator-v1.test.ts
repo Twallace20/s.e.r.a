@@ -125,7 +125,7 @@ describe("Desktop Operator v1", () => {
   });
 
   const runtimeSchemaCases = [
-    ["runtime migration version includes v9", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.version === 9],
+    ["runtime migration version includes v10", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.version === 10],
     ["runtime migration v8 name is desktop operator", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.name === "desktop_operator_v1"],
     ["migration v8 creates operator sessions", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_sessions")],
     ["migration v8 creates operator requests", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_requests")],
@@ -154,12 +154,12 @@ describe("Desktop Operator v1", () => {
     expect(check()).toBe(true);
   });
 
-  it("opens Runtime State schema v9 and exposes operator table counts", () => {
+  it("opens Runtime State schema v10 and exposes operator table counts", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-desktop-state-test-"));
     const store = openRuntimeState({ projectRoot: root });
     try {
       const inspection = store.inspect();
-      expect(inspection.schemaVersion).toBe(9);
+      expect(inspection.schemaVersion).toBe(10);
       expect(inspection.counts.operator_sessions).toBe(0);
       expect(inspection.counts.operator_approvals).toBe(0);
       expect(inspection.counts.operator_notifications).toBe(0);
@@ -211,7 +211,7 @@ describe("Desktop Operator v1", () => {
 
   it.each(sourceCaseFiles.map((file) => [`${file} references desktop operator`, file] as const))("%s", (_name, file) => {
     const text = fs.readFileSync(path.join(process.cwd(), file), "utf8").toLowerCase();
-    expect(text.includes("desktop") || text.includes("operator") || text.includes("first-certified-studio")).toBe(true);
+    expect(text.includes("desktop") || text.includes("operator") || text.includes("first-certified-studio") || text.includes("integrated-offline-loop")).toBe(true);
   });
 
   const boundaryPhrases = [

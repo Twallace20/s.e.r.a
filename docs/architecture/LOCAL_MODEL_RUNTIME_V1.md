@@ -105,3 +105,7 @@ Local Model Runtime v1 does not:
 # Milestone 12 Studio Relationship
 
 Evidence Studio v1 may use deterministic fixture candidate generation during certification. Real local model use is optional and not required for Milestone 12. Model output remains candidate intelligence and cannot authorize sessions, certify claims, create source proof, execute tools, or complete Studio sessions.
+
+# Milestone 13 Integrated Loop Relationship
+
+Integrated Offline Loop v1 may include deterministic model-candidate evidence through the Local Model Runtime fixture boundary. Model output remains candidate intelligence and cannot select capabilities by itself, certify lessons, activate prevention rules, execute tools, mutate source, or complete the integrated loop.

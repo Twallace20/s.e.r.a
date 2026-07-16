@@ -24,6 +24,7 @@
     "@sera/knowledge-runtime": "0.1.0",
     "@sera/capability-engine": "0.1.0",
     "@sera/studio-runtime": "0.1.0",
-    "@sera/evidence-studio": "0.1.0"
+    "@sera/evidence-studio": "0.1.0",
+    "@sera/integrated-loop-runtime": "0.1.0"
   }
 }

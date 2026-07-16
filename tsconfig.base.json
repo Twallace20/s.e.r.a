@@ -99,6 +99,9 @@
       "@sera/studio-runtime": [
         "packages/studio-runtime/src/index.ts"
       ],
+      "@sera/integrated-loop-runtime": [
+        "packages/integrated-loop-runtime/src/index.ts"
+      ],
       "@sera/evidence-studio": [
         "packages/evidence-studio/src/index.ts"
       ],

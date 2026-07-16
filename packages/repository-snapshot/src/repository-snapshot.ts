@@ -181,6 +181,7 @@ const DEFAULT_EXCLUSIONS = [
   ".sera/operator-gateway",
   ".sera/studios",
   ".sera/studio-runtime",
+  ".sera/integrated-loop",
   ".sera-runs",
   ".sera-cert",
   ".sera-local",

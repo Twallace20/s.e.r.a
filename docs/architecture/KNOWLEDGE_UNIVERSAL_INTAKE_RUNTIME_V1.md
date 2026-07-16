@@ -87,3 +87,7 @@ Focused tests cover authorization, source boundaries, symlink and junction safet
 # Milestone 12 Studio Relationship
 
 Evidence Studio v1 consumes authorized local source material through the Knowledge and Universal Intake boundary. Candidate knowledge and extracted chunks remain provenance-linked input, not canonical truth, and opaque media is not semantically understood unless a certified processor exists.
+
+# Milestone 13 Integrated Loop Relationship
+
+Integrated Offline Loop v1 may request authorized source intake and deterministic retrieval as part of its offline composition path. Knowledge records remain candidate evidence with provenance and trust state; the integrated loop cannot promote imported content to truth, fetch public URLs, or certify lessons from retrieved content.

@@ -2,7 +2,7 @@
   "schemaVersion": "sera.recurrence-prevention-innovation-plan.v1",
   "invariantId": "evidence-driven-recurrence-prevention-and-innovation-v1",
   "invariantTitle": "Evidence-Driven Recurrence Prevention and Governed Innovation",
-  "status": "architecture-locked-runtime-pending",
+  "status": "architecture-locked-integrated-preflight-certified",
   "effectiveMilestone": 11,
   "architecturalPrinciples": [
     "A materially evidenced and certified failure must not be unknowingly repeated under materially equivalent conditions.",
@@ -140,7 +140,7 @@
     },
     "12": {
       "name": "First Certified Studio",
-      "status": "future-acceptance-locked",
+      "status": "certified-candidate-learning-signals",
       "gates": [
         "Studio produces evidence-linked operator corrections",
         "Studio produces evidence-linked failed-output signals",
@@ -152,14 +152,17 @@
     },
     "13": {
       "name": "Integrated Offline Loop",
-      "status": "future-acceptance-locked",
+      "status": "certified-integrated-preflight",
       "gates": [
         "Integrated loop performs a learning preflight before capability or approach selection",
         "Preflight retrieves applicable certified lessons",
         "Preflight retrieves known failure patterns",
         "Preflight retrieves prevention rules",
         "Preflight retrieves certified alternatives",
-        "Preflight retrieves active overrides"
+        "Preflight retrieves active overrides",
+        "Preflight writes bounded evidence without certifying lessons",
+        "Preflight distinguishes applicable, uncertain, out-of-scope, certified-alternative, and override paths",
+        "Capability and Studio selection are blocked until preflight completes"
       ]
     },
     "14": {
