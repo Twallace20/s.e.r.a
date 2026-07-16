@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `first-certified-studio-v1`.
+Current runtime certification: `integrated-offline-loop-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -33,10 +33,11 @@ Certified runtime ladder completed so far:
 - `capability-engine-recursive-learning-v1`
 - `desktop-operator-v1`
 - `first-certified-studio-v1`
+- `integrated-offline-loop-v1`
 
 Milestone 12 adds the first certified Studio: Evidence Studio v1. It composes Studio Runtime, authorized local sources, deterministic evaluation, operator review, immutable final packages, and candidate-only learning signals into the `source-grounded-professional-brief-v1` workflow.
 
-Milestone 13 is next: Integrated Offline Loop. It is not implemented by Milestone 12.
+Milestone 13 adds Integrated Offline Loop v1. It composes the offline intake, knowledge, model-candidate, capability, Studio, evaluation, operator-review, and package-finalization path behind a required learning preflight. It does not certify lessons, activate prevention rules, promote innovation, invoke real models, or use public internet.
 
 Phase 14 is an operational CI certification-gate phase. It adds local hygiene commands and a GitHub Actions workflow, but it does not add runtime authority or change the certified runtime level.
 
@@ -52,7 +53,7 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 
 Evidence-Driven Recurrence Prevention and Governed Innovation is now locked as a Base MVP architecture invariant. The contract is machine-readable in `architecture/recurrence-prevention-innovation-plan-v1.json` and documented in `docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md`. This is a plan and acceptance lock only; the full recurrence-prevention Runtime is still pending.
 
-The post-Base MVP roadmap for S.E.R.A. Personal and Professional V1 is locked as planning-only in `architecture/post-base-mvp-roadmap-v1.json` and `docs/architecture/SERA_PERSONAL_PROFESSIONAL_V1_ROADMAP.md`. It preserves Base MVP completion at Milestone 16 and plans Milestones 17 through 24 without implementing Milestone 13, web access, iOS, update, backup, enterprise, Hive Mode, robotics, or post-Base Runtime behavior.
+The post-Base MVP roadmap for S.E.R.A. Personal and Professional V1 is locked as planning-only in `architecture/post-base-mvp-roadmap-v1.json` and `docs/architecture/SERA_PERSONAL_PROFESSIONAL_V1_ROADMAP.md`. It preserves Base MVP completion at Milestone 16 and plans Milestones 17 through 24 without implementing additional Milestone 13 behavior, web access, iOS, update, backup, enterprise, Hive Mode, robotics, or post-Base Runtime behavior.
 
 ## What works now
 
@@ -97,6 +98,7 @@ The post-Base MVP roadmap for S.E.R.A. Personal and Professional V1 is locked as
 - Capability Engine and Recursive Learning with authorized learning sessions, immutable candidate bundles, isolated execution, deterministic evaluation, exact certification, Control Plane promotion, active-version records, rollback evidence, and repeatable proof
 - Desktop Operator with local graphical assets, loopback-only Operator Gateway, hashed local-owner sessions, approval review, safe evidence viewing, notifications, and repeatable proof
 - Studio Runtime and Evidence Studio v1 with certified professional-brief generation from authorized local sources, claim/source ledgers, deterministic evaluation, operator review, immutable final package evidence, and candidate-only learning signals
+- Integrated Offline Loop v1 with required learning preflight, bounded known-record classification, certified-alternative selection, governed-override evidence, capability and Studio selection after preflight, final package evidence, and repeatable offline proof
 - Desktop Operator visual contract reservations for governed recurrence-prevention and innovation empty states
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
@@ -129,7 +131,7 @@ The post-Base MVP roadmap for S.E.R.A. Personal and Professional V1 is locked as
 - no model-driven tool execution or source mutation
 - no automatic capability promotion or activation
 - no certified recurrence-prevention Runtime yet
-- no automatic recurrence-prevention behavior yet
+- no Milestone 14 lesson certification or automatic recurrence-prevention activation yet
 - no automatic innovation activation or promotion
 - no arbitrary code loading, unrestricted shell, Studio, distributed capability, or Hive Mode in Capability Engine v1 or Desktop Operator v1
 
@@ -147,7 +149,7 @@ npm run verify
 Expected current certification result:
 
 ```text
-S.E.R.A. certify: PASS level=first-certified-studio-v1
+S.E.R.A. certify: PASS level=integrated-offline-loop-v1
 ```
 
 ## Starter secure-base run
@@ -260,6 +262,17 @@ npm run sera -- learning prove
 
 The engine treats model and knowledge outputs as candidate input only. It assembles immutable candidate bundles, runs isolated execution and deterministic evaluation, certifies exact digests, promotes only through explicit Control Plane authority, records active versions atomically, and preserves rollback evidence. It does not load arbitrary code, run unrestricted shell commands, mutate core source, call real models, use the public network, or start Desktop Operator, Studio, distributed capability, or Hive Mode work.
 
+Integrated Offline Loop composes the certified offline path and requires preflight before selecting capabilities or Studios:
+
+```bash
+npm run sera -- loop status
+npm run sera -- loop policy
+npm run sera -- loop sessions
+npm run sera -- loop prove
+```
+
+The proof writes `.sera/integrated-loop/` evidence, remains offline and model-free, and does not certify lessons, activate prevention rules, or promote innovation.
+
 ## Recurrence Prevention and Governed Innovation Plan
 
 S.E.R.A.'s Base MVP now includes a locked acceptance invariant: a materially evidenced and certified failure must not be unknowingly repeated under materially equivalent conditions.
@@ -334,6 +347,9 @@ Nothing gets called working unless it has:
 - `@sera/runtime-recovery` — persistent local recovery coordinator for checkpointed interrupted attempts, linked retries, review-required decisions, and recovery evidence
 - `@sera/execution-engine` — governed local execution chamber for authorized workloads, bounded workspaces, direct process launch, output capture, cleanup, and execution evidence
 - `@sera/evaluation-engine` — deterministic evaluation of immutable execution evidence with assertion records and aggregate outcomes
+- `@sera/studio-runtime` — Runtime-owned Studio registry, sessions, evidence, review state, candidate learning signals, and immutable final package coordination
+- `@sera/evidence-studio` — first certified Studio definition for source-grounded professional briefs
+- `@sera/integrated-loop-runtime` — Runtime-owned integrated offline loop with required learning preflight, service binding, staged composition, package finalization, and repeatable proof
 - `apps/cli` — local command-line interface
 
 ## Phase 5: Task Memory + Failure Journal v1

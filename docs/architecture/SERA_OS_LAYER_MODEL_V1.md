@@ -130,8 +130,9 @@ Current repository candidates:
 | `packages/evaluation-engine` | confirmed; Evaluation Engine v1 |
 | `packages/model-runtime` | confirmed; Local Model Runtime v1 |
 | `packages/knowledge-runtime` | confirmed; Knowledge and Universal Intake Runtime v1 |
+| `packages/integrated-loop-runtime` | confirmed; Integrated Offline Loop v1 composition, preflight, and package evidence |
 | `.sera-*` runtime directories | legacy/runtime-data; not source authority |
-| recurrence-prevention Runtime | planned; architecture locked, implementation pending |
+| recurrence-prevention Runtime | partially certified preflight hook; Milestone 14 active behavior pending |
 
 Migration targets:
 
@@ -195,7 +196,9 @@ Milestone 7 introduces Evaluation Engine for deterministic checks over immutable
 
 Milestone 8 introduces Local Model Runtime for explicitly authorized provider-independent local model requests, deterministic fixture proof, disabled real-local provider metadata, request/response normalization, redaction, SQLite invocation evidence, Runtime Host health, timeout/cancellation, and candidate-intelligence-only output.
 
-These Runtime milestones do not implement Hive Mode, networking beyond declared local loopback compatibility metadata, distributed discovery, remote workers, cloud execution, arbitrary subprocess workloads, hostile-code sandboxing, containers, virtual machines, Desktop authority, Knowledge Runtime, or model-driven source mutation.
+Milestone 13 introduces Integrated Offline Loop for required learning preflight, certified offline service composition, capability and Studio selection after preflight, operator review, finalization, closeout, and package evidence.
+
+These Runtime milestones do not implement Hive Mode, networking beyond declared local loopback compatibility metadata, distributed discovery, remote workers, cloud execution, arbitrary subprocess workloads, hostile-code sandboxing, containers, virtual machines, Desktop authority, active lesson certification, prevention-rule activation, innovation promotion, or model-driven source mutation.
 
 ## Provider
 

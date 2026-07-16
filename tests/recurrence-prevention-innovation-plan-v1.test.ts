@@ -26,17 +26,17 @@ describe("Evidence-driven recurrence prevention and innovation plan v1", () => {
 
   it("invariant is active as an architecture lock", () => {
     const plan = readJson<{ status: string; effectiveMilestone: number }>(planPath);
-    expect(plan.status).toBe("architecture-locked-runtime-pending");
+    expect(plan.status).toBe("architecture-locked-integrated-preflight-certified");
     expect(plan.effectiveMilestone).toBe(11);
   });
 
   it("milestone total remains 16", () => {
     const manifest = readJson<{ totalMilestones: number; completedMilestones: number; remainingMilestones: number; currentMilestone: number; currentCertification: string }>(manifestPath);
     expect(manifest.totalMilestones).toBe(16);
-    expect(manifest.completedMilestones).toBe(12);
-    expect(manifest.remainingMilestones).toBe(4);
-    expect(manifest.currentMilestone).toBe(13);
-    expect(manifest.currentCertification).toBe("first-certified-studio-v1");
+    expect(manifest.completedMilestones).toBe(13);
+    expect(manifest.remainingMilestones).toBe(3);
+    expect(manifest.currentMilestone).toBe(14);
+    expect(manifest.currentCertification).toBe("integrated-offline-loop-v1");
   });
 
   it("Milestone 14 canonical name is exact", () => {
@@ -150,15 +150,16 @@ describe("Evidence-driven recurrence prevention and innovation plan v1", () => {
     expect(plan.postBaseMvpContinuationPolicy.requires.join("\n")).toContain("Control Plane remains promotion and override authority");
   });
 
-  it("no milestone count expansion occurred and no migration was added", () => {
+  it("no milestone count expansion occurred and only Milestone 13 migration was added", () => {
     const manifest = readJson<{ totalMilestones: number }>(manifestPath);
     expect(manifest.totalMilestones).toBe(16);
-    expect(DEFAULT_RUNTIME_STATE_MIGRATIONS).toHaveLength(9);
+    expect(DEFAULT_RUNTIME_STATE_MIGRATIONS).toHaveLength(10);
     expect(DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.name).toBe("desktop_operator_v1");
-    expect(DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.name).toBe("first_certified_studio_v1");
+    expect(DEFAULT_RUNTIME_STATE_MIGRATIONS[8]?.name).toBe("first_certified_studio_v1");
+    expect(DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.name).toBe("integrated_offline_loop_v1");
   });
 
-  it("documentation and inventory mark the behavior as planned, not implemented", () => {
+  it("documentation and inventory mark Milestone 13 preflight as implemented without Milestone 14 activation", () => {
     const combined = [
       fs.readFileSync(planPath, "utf8"),
       fs.readFileSync(planDocPath, "utf8"),
@@ -167,9 +168,9 @@ describe("Evidence-driven recurrence prevention and innovation plan v1", () => {
       fs.readFileSync(inventoryPath, "utf8")
     ].join("\n");
 
-    expect(combined).toContain("Runtime implementation pending");
+    expect(combined).toContain("Integrated Offline Loop");
     expect(combined).toContain("ui-contract-reserved-runtime-pending");
-    expect(combined).toContain("not-implemented");
+    expect(combined).toContain("future-acceptance-locked");
     expect(combined).not.toContain("\"id\": \"recurrence-prevention\",\n      \"targetLayer\": \"Runtime\",\n      \"currentMaturity\": \"implemented\"");
   });
 });

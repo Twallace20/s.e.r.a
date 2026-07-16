@@ -349,7 +349,7 @@
     "Base MVP manifest must remain unchanged.",
     "Milestones 17 through 24 are planned-only until separately implemented and certified.",
     "No SQLite migration is added by this roadmap lock.",
-    "No Milestone 13 behavior is implemented by this roadmap lock.",
+    "No additional Milestone 13 behavior is implemented by this post-Base roadmap lock.",
     "No post-Base Runtime behavior is implemented by this roadmap lock.",
     "All future implementation must preserve explicit limits and non-guarantees."
   ]

@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"],
+  "references": [
+    { "path": "../capability-engine" },
+    { "path": "../evaluation-engine" },
+    { "path": "../execution-engine" },
+    { "path": "../knowledge-runtime" },
+    { "path": "../model-runtime" },
+    { "path": "../operator-gateway" },
+    { "path": "../runtime-host" },
+    { "path": "../runtime-recovery" },
+    { "path": "../runtime-state" },
+    { "path": "../studio-runtime" }
+  ]
+}

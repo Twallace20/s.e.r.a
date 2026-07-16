@@ -179,6 +179,18 @@ Boundary rules:
 - does not certify reusable lessons, activate prevention rules, or promote innovations
 - writes bounded Studio evidence only
 
+## `@sera/integrated-loop-runtime` / `packages/integrated-loop-runtime`
+
+Runtime-owned integrated offline loop for Milestone 13. It binds certified Runtime, Capability, Studio, Desktop, and evidence services into a staged offline loop with required learning preflight before capability or Studio selection.
+
+Boundary rules:
+
+- owns integrated loop session, preflight, service-binding, stage, artifact, and package evidence records
+- depends on Runtime State migration v10 and existing certified Runtime services
+- does not certify lessons, activate prevention rules, promote innovation, invoke real models, fetch public URLs, install packages, or perform Git actions
+- does not replace Studio Runtime, Capability Engine, Evaluation Engine, Knowledge Runtime, Model Runtime, Operator Gateway, or Unified Control Plane authority
+- writes bounded generated evidence under `.sera/integrated-loop/`
+
 ## `@sera/evidence-studio` / `packages/evidence-studio`
 
 User-facing Studio definition for the certified `source-grounded-professional-brief-v1` workflow.

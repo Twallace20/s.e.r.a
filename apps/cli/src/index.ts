@@ -13,6 +13,7 @@ import { CapabilityEngine, runCapabilityEngineProof, runRecursiveLearningProof }
 import { OperatorGateway, runDesktopOperatorProof, runOperatorGatewayProof } from "@sera/operator-gateway";
 import { StudioRuntime, createEvidenceStudioDefinition, runStudioRuntimeProof } from "@sera/studio-runtime";
 import { getEvidenceStudioStatus, runEvidenceStudioProof } from "@sera/evidence-studio";
+import { IntegratedLoopRuntime, runIntegratedLoopProof } from "@sera/integrated-loop-runtime";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -145,6 +146,10 @@ Usage:
   sera studio prove
   sera evidence-studio status
   sera evidence-studio prove
+  sera loop status
+  sera loop policy
+  sera loop sessions
+  sera loop prove
   sera snapshot
   sera truth
 
@@ -1522,6 +1527,35 @@ async function main(): Promise<void> {
       process.exit(result.ok ? 0 : 1);
     }
     throw new Error("Evidence Studio command must be 'status' or 'prove'.");
+  }
+
+  if (cmd === "loop") {
+    const [loopMode] = rest;
+    if (loopMode === "prove") {
+      const result = await runIntegratedLoopProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
+    const store = openRuntimeState(config);
+    try {
+      const runtime = new IntegratedLoopRuntime(store, { projectRoot: process.cwd() });
+      if (loopMode === "status") {
+        console.log(JSON.stringify(runtime.status(), null, 2));
+        process.exit(0);
+      }
+      if (loopMode === "policy") {
+        console.log(JSON.stringify(runtime.policy(), null, 2));
+        process.exit(0);
+      }
+      if (loopMode === "sessions") {
+        console.log(JSON.stringify({ ok: true, sessions: runtime.sessions(), modelUse: false, publicNetworkUse: false }, null, 2));
+        process.exit(0);
+      }
+    } finally {
+      store.close();
+    }
+    throw new Error("Loop command must be 'status', 'policy', 'sessions', or 'prove'.");
   }
 
   if (cmd === "desktop") {

@@ -1,6 +1,7 @@
 node_modules/
 dist/
 apps/desktop-operator/dist/
+packages/integrated-loop-runtime/dist/
 packages/operator-gateway/dist/
 packages/studio-runtime/dist/
 packages/evidence-studio/dist/
@@ -28,6 +29,7 @@ coverage/
 .sera/operator-gateway/
 .sera/studios/
 .sera/studio-runtime/
+.sera/integrated-loop/
 .sera-local/
 *.log
 .DS_Store

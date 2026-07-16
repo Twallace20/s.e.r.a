@@ -143,22 +143,22 @@ describe("Post-Base MVP roadmap v1", () => {
     expect(nonGuarantees).toContain("robotics");
   });
 
-  it("keeps the existing Base MVP manifest unchanged", () => {
+  it("tracks the current Base MVP manifest without changing total milestones", () => {
     expect(readManifest()).toEqual({
       schemaVersion: "sera.base-mvp-manifest.v1",
       totalMilestones: 16,
-      completedMilestones: 12,
-      remainingMilestones: 4,
-      currentMilestone: 13,
+      completedMilestones: 13,
+      remainingMilestones: 3,
+      currentMilestone: 14,
       baseMvpCompletionMilestone: 16,
-      currentCertification: "first-certified-studio-v1",
+      currentCertification: "integrated-offline-loop-v1",
       architectureBranch: "architecture/local-autonomous-runtime-v1"
     });
   });
 
-  it("states that Milestone 13 and post-Base Runtime behavior are not implemented by this lock", () => {
+  it("states that additional Milestone 13 and post-Base Runtime behavior are not implemented by this lock", () => {
     const requirements = readRoadmap().integrityRequirements;
-    expect(requirements).toContain("No Milestone 13 behavior is implemented by this roadmap lock.");
+    expect(requirements).toContain("No additional Milestone 13 behavior is implemented by this post-Base roadmap lock.");
     expect(requirements).toContain("No post-Base Runtime behavior is implemented by this roadmap lock.");
     expect(requirements).toContain("No SQLite migration is added by this roadmap lock.");
   });

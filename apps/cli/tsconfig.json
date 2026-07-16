@@ -52,6 +52,9 @@
       "path": "../../packages/studio-runtime"
     },
     {
+      "path": "../../packages/integrated-loop-runtime"
+    },
+    {
       "path": "../../packages/evidence-studio"
     },
     {

@@ -35,6 +35,17 @@
       "records": "Studio registry, exact version digests, sessions, stage transitions, artifact lineage, review state, immutable package evidence, candidate learning-signal routing, and repeatable offline proofs."
     },
     {
+      "id": "integrated-offline-loop-v1",
+      "name": "Integrated Offline Loop v1",
+      "kind": "runtime-service",
+      "status": "complete",
+      "executableCapability": true,
+      "runtimeService": true,
+      "targetLayer": "runtime",
+      "document": "docs/architecture/INTEGRATED_OFFLINE_LOOP_V1.md",
+      "records": "Required learning preflight before capability or Studio selection, bounded known-record classification, certified-alternative selection, governed-override evidence, offline service composition, final package evidence, and repeatable model-free proof."
+    },
+    {
       "id": "evidence-studio-v1",
       "name": "Evidence Studio v1",
       "kind": "certified-studio",
@@ -114,7 +125,7 @@
       "runtimeService": false,
       "document": "docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md",
       "plan": "architecture/recurrence-prevention-innovation-plan-v1.json",
-      "records": "Cross-cutting Base MVP acceptance invariant for evidence-linked learning signals, recurrence prevention, scoped lesson retrieval, governed overrides, lesson supersession, and distinct governed innovation. Runtime behavior remains pending."
+      "records": "Cross-cutting Base MVP acceptance invariant for evidence-linked learning signals, recurrence prevention, scoped lesson retrieval, governed overrides, lesson supersession, and distinct governed innovation. Milestone 13 preflight evidence is certified; Milestone 14 active lesson/prevention/innovation proof remains pending."
     },
     {
       "id": "post-base-mvp-roadmap-v1",
@@ -125,7 +136,7 @@
       "runtimeService": false,
       "document": "docs/architecture/SERA_PERSONAL_PROFESSIONAL_V1_ROADMAP.md",
       "plan": "architecture/post-base-mvp-roadmap-v1.json",
-      "records": "Post-Base MVP planning lock for Milestones 17 through 24. It preserves Base MVP completion at Milestone 16 and does not implement Milestone 13, web, browser, iOS Runtime, update, backup, enterprise, Hive Mode, robotics, or post-Base Runtime behavior."
+      "records": "Post-Base MVP planning lock for Milestones 17 through 24. It preserves Base MVP completion at Milestone 16 and does not implement additional Milestone 13 behavior, web, browser, iOS Runtime, update, backup, enterprise, Hive Mode, robotics, or post-Base Runtime behavior."
     },
     {
       "id": "time-to-certified-capability-v1",
@@ -576,19 +587,27 @@
     {
       "id": "lesson-retrieval-preflight",
       "targetLayer": "Runtime",
-      "currentMaturity": "planned",
-      "status": "not-implemented",
+      "currentMaturity": "implemented",
+      "status": "certified",
       "dependencies": [
         "recurrence-prevention",
         "capability-engine",
-        "multimodal-intake"
+        "multimodal-intake",
+        "integrated-loop-runtime"
       ],
       "certificationTarget": "integrated-offline-loop-v1",
-      "limitations": [
-        "not implemented in Milestone 11",
-        "does not yet select capabilities or approaches"
+      "evidence": [
+        "packages/integrated-loop-runtime/src/integrated-loop-runtime.ts",
+        "tests/integrated-offline-loop-v1.test.ts",
+        "docs/architecture/INTEGRATED_OFFLINE_LOOP_V1.md"
       ],
-      "notes": "Planned preflight before materially similar work to retrieve applicable lessons, known failures, prevention rules, certified alternatives, and active overrides."
+      "limitations": [
+        "does not certify lessons",
+        "does not activate prevention rules",
+        "does not promote innovation",
+        "does not complete Milestone 14 recurrence-prevention proof"
+      ],
+      "notes": "Milestone 13 integrated preflight before materially similar work retrieves and classifies applicable lessons, known failures, prevention rules, certified alternatives, and active overrides before capability or Studio selection."
     },
     {
       "id": "improvement-comparison",

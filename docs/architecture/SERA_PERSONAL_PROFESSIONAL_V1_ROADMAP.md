@@ -1,6 +1,6 @@
 # S.E.R.A. Personal and Professional V1 Roadmap
 
-This roadmap locks the planned path after the 16-milestone Base MVP. It is planning-only. It does not implement Milestone 13, Milestones 17 through 24, iOS, browser automation, external providers, new SQLite tables, update systems, backup systems, enterprise operation, Hive Mode, robotics, or product functionality.
+This roadmap locks the planned path after the 16-milestone Base MVP. It is planning-only. It does not implement additional Milestone 13 behavior, Milestones 17 through 24, iOS, browser automation, external providers, new SQLite tables beyond the Base MVP line, update systems, backup systems, enterprise operation, Hive Mode, robotics, or product functionality.
 
 The machine-readable source of this lock is `architecture/post-base-mvp-roadmap-v1.json`.
 

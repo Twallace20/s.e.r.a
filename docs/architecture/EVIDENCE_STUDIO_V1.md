@@ -12,4 +12,4 @@ Material factual claims are classified as source-supported, operator-provided, d
 
 Operator review is mandatory. Approval binds the exact artifact hash. Revisions create new artifact versions and preserve prior versions.
 
-Limitations: this Studio does not certify every document type, external factual truth, legal/medical/financial authority, public URL fetching, browser automation, PDF output, automatic client delivery, active lesson certification, prevention-rule activation, innovation promotion, distributed Studios, Hive Mode, or the complete Milestone 13 integrated offline loop.
+Limitations: this Studio does not certify every document type, external factual truth, legal/medical/financial authority, public URL fetching, browser automation, PDF output, automatic client delivery, active lesson certification, prevention-rule activation, innovation promotion, distributed Studios, or Hive Mode. Integrated Offline Loop v1 may compose this Studio only through Runtime authorization and preflight evidence.

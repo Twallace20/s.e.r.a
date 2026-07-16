@@ -89,3 +89,7 @@ V1 does not implement arbitrary code loading, unrestricted shell, cloud provider
 # Milestone 12 Studio Relationship
 
 Evidence Studio v1 may reference exact certified fixture capability versions for document planning, source-grounded drafting, claim mapping, revision, and package assembly. Capability Engine retains certification, promotion, activation, rollback, and learning authority; Studio Runtime cannot manufacture capability certification.
+
+# Milestone 13 Integrated Loop Relationship
+
+Integrated Offline Loop v1 may select an exact certified capability only after learning preflight completes. Capability Engine retains certification, promotion, activation, rollback, and version authority; the integrated loop records selection and package evidence, but it cannot certify lessons, activate prevention rules, or promote innovation.

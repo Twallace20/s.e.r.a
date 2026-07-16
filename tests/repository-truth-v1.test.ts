@@ -140,7 +140,13 @@ describe("Repository Truth v1", () => {
     expect(layerFor("component:sera-runtime-state")).toBe("runtime");
     expect(layerFor("component:sera-runtime-recovery")).toBe("runtime");
     expect(layerFor("component:sera-execution-engine")).toBe("runtime");
+    expect(layerFor("component:sera-integrated-loop-runtime")).toBe("runtime");
+    expect(layerFor("component:sera-studio-runtime")).toBe("runtime");
+    expect(layerFor("component:sera-evidence-studio")).toBe("studio");
     expect(layerFor("component:sera-mystery-box")).toBe("review-required");
+
+    const integratedLoop = components.find((component: any) => component.id === "component:sera-integrated-loop-runtime");
+    expect(integratedLoop?.declaredRelationships).not.toContain("dependency:@sera/control-plane");
 
     const evaluationEntry = classifications.inventoryReconciliation.inventoryEntries.find((entry: any) => entry.inventoryId === "evaluation-engine");
     expect(evaluationEntry.matchingImplementationCandidates).toContain("component:sera-evaluation-engine");
@@ -207,6 +213,9 @@ function createTruthFixture(options: { legacyAuthority?: boolean; conflictingInv
   fs.mkdirSync(path.join(root, "packages", "runtime-recovery", "src"), { recursive: true });
   fs.mkdirSync(path.join(root, "packages", "execution-engine", "src"), { recursive: true });
   fs.mkdirSync(path.join(root, "packages", "evaluation-engine", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "packages", "integrated-loop-runtime", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "packages", "studio-runtime", "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "packages", "evidence-studio", "src"), { recursive: true });
   fs.mkdirSync(path.join(root, "packages", "mystery-box", "src"), { recursive: true });
   fs.mkdirSync(path.join(root, "packages", "legacy-adapter"), { recursive: true });
   fs.mkdirSync(path.join(root, "apps", "desktop-shell", "src"), { recursive: true });
@@ -265,6 +274,24 @@ function createTruthFixture(options: { legacyAuthority?: boolean; conflictingInv
     private: true
   }, null, 2), "utf8");
   fs.writeFileSync(path.join(root, "packages", "evaluation-engine", "src", "index.ts"), "export const evaluationEngine = 1;\n", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "integrated-loop-runtime", "package.json"), JSON.stringify({
+    name: "@sera/integrated-loop-runtime",
+    private: true,
+    dependencies: { "@sera/runtime-state": "0.1.0", "@sera/studio-runtime": "0.1.0" }
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "integrated-loop-runtime", "src", "index.ts"), "export const integratedLoopRuntime = 1;\n", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "studio-runtime", "package.json"), JSON.stringify({
+    name: "@sera/studio-runtime",
+    private: true,
+    dependencies: { "@sera/runtime-state": "0.1.0" }
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "studio-runtime", "src", "index.ts"), "export const studioRuntime = 1;\n", "utf8");
+  fs.writeFileSync(path.join(root, "packages", "evidence-studio", "package.json"), JSON.stringify({
+    name: "@sera/evidence-studio",
+    private: true,
+    dependencies: { "@sera/studio-runtime": "0.1.0" }
+  }, null, 2), "utf8");
+  fs.writeFileSync(path.join(root, "packages", "evidence-studio", "src", "index.ts"), "export const evidenceStudio = 1;\n", "utf8");
   fs.writeFileSync(path.join(root, "packages", "mystery-box", "package.json"), JSON.stringify({
     name: "@sera/mystery-box",
     private: true
