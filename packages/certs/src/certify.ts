@@ -17,6 +17,7 @@ import { createEvaluationEngineRuntimeServices, runEvaluationEngineProof } from 
 import { createModelRuntimeServices, runLocalModelRuntimeProof } from "@sera/model-runtime";
 import { createKnowledgeRuntimeServices, runKnowledgeIntakeProof } from "@sera/knowledge-runtime";
 import { createCapabilityEngineRuntimeServices, runCapabilityEngineProof } from "@sera/capability-engine";
+import { createOperatorGatewayRuntimeServices, runDesktopOperatorProof, runOperatorGatewayProof } from "@sera/operator-gateway";
 
 export interface CertCheck {
   id: string;
@@ -27,7 +28,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1" | "isolated-execution-v1" | "evaluation-engine-v1" | "local-model-runtime-v1" | "knowledge-intake-runtime-v1" | "capability-engine-recursive-learning-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1" | "isolated-execution-v1" | "evaluation-engine-v1" | "local-model-runtime-v1" | "knowledge-intake-runtime-v1" | "capability-engine-recursive-learning-v1" | "desktop-operator-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -62,6 +63,7 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   checks.push(...await runLocalModelRuntimeV1Checks());
   checks.push(...await runKnowledgeIntakeRuntimeV1Checks());
   checks.push(...await runCapabilityEngineRecursiveLearningV1Checks());
+  checks.push(...await runDesktopOperatorV1Checks(rootDir));
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -86,10 +88,13 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   const localModelRuntimeV1ChecksPass = checks.filter((c) => c.id.startsWith("local_model_runtime_")).every((c) => c.pass);
   const knowledgeIntakeRuntimeV1ChecksPass = checks.filter((c) => c.id.startsWith("knowledge_intake_") || c.id.startsWith("knowledge_retrieval_")).every((c) => c.pass);
   const capabilityEngineRecursiveLearningV1ChecksPass = checks.filter((c) => c.id.startsWith("capability_engine_")).every((c) => c.pass);
+  const desktopOperatorV1ChecksPass = checks.filter((c) => c.id.startsWith("desktop_operator_") || c.id.startsWith("operator_gateway_")).every((c) => c.pass);
   void repositorySnapshotV1ChecksPass;
   void repositoryTruthV1ChecksPass;
   const pass = checks.every((c) => c.pass);
-  const level = pass && capabilityEngineRecursiveLearningV1ChecksPass
+  const level = pass && desktopOperatorV1ChecksPass
+    ? "desktop-operator-v1"
+    : pass && capabilityEngineRecursiveLearningV1ChecksPass
     ? "capability-engine-recursive-learning-v1"
     : pass && knowledgeIntakeRuntimeV1ChecksPass
     ? "knowledge-intake-runtime-v1"
@@ -1114,11 +1119,11 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
   const expected = {
     schemaVersion: "sera.base-mvp-manifest.v1",
     totalMilestones: 16,
-    completedMilestones: 10,
-    remainingMilestones: 6,
-    currentMilestone: 11,
+    completedMilestones: 11,
+    remainingMilestones: 5,
+    currentMilestone: 12,
     baseMvpCompletionMilestone: 16,
-    currentCertification: "capability-engine-recursive-learning-v1",
+    currentCertification: "desktop-operator-v1",
     architectureBranch: "architecture/local-autonomous-runtime-v1"
   };
   let manifest: any;
@@ -1135,11 +1140,11 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
   checks.push({ id: "base_mvp_manifest_parses", name: "Base MVP manifest parses as JSON", pass: Boolean(manifest) && !parseError, detail: parseError || "parsed" });
   checks.push({ id: "base_mvp_manifest_schema", name: "Base MVP manifest schema version is canonical", pass: manifest?.schemaVersion === expected.schemaVersion, detail: String(manifest?.schemaVersion ?? "missing") });
   checks.push({ id: "base_mvp_manifest_total_milestones", name: "Base MVP total milestone count is 16", pass: manifest?.totalMilestones === expected.totalMilestones, detail: String(manifest?.totalMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_completed_milestones", name: "Base MVP completed milestone count is 10", pass: manifest?.completedMilestones === expected.completedMilestones, detail: String(manifest?.completedMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_remaining_milestones", name: "Base MVP remaining milestone count is 6", pass: manifest?.remainingMilestones === expected.remainingMilestones, detail: String(manifest?.remainingMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_current_milestone", name: "Base MVP current milestone is 11", pass: manifest?.currentMilestone === expected.currentMilestone, detail: String(manifest?.currentMilestone ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_completed_milestones", name: "Base MVP completed milestone count is 11", pass: manifest?.completedMilestones === expected.completedMilestones, detail: String(manifest?.completedMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_remaining_milestones", name: "Base MVP remaining milestone count is 5", pass: manifest?.remainingMilestones === expected.remainingMilestones, detail: String(manifest?.remainingMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_milestone", name: "Base MVP current milestone is 12", pass: manifest?.currentMilestone === expected.currentMilestone, detail: String(manifest?.currentMilestone ?? "missing") });
   checks.push({ id: "base_mvp_manifest_completion_milestone", name: "Base MVP completion milestone is 16", pass: manifest?.baseMvpCompletionMilestone === expected.baseMvpCompletionMilestone, detail: String(manifest?.baseMvpCompletionMilestone ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_current_certification", name: "Base MVP manifest current certification matches Milestone 10", pass: manifest?.currentCertification === expected.currentCertification, detail: String(manifest?.currentCertification ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_certification", name: "Base MVP manifest current certification matches Milestone 11", pass: manifest?.currentCertification === expected.currentCertification, detail: String(manifest?.currentCertification ?? "missing") });
   checks.push({ id: "base_mvp_manifest_architecture_branch", name: "Base MVP manifest records architecture branch", pass: manifest?.architectureBranch === expected.architectureBranch, detail: String(manifest?.architectureBranch ?? "missing") });
   checks.push({ id: "base_mvp_manifest_arithmetic_total", name: "Base MVP completed plus remaining equals total", pass: manifest?.completedMilestones + manifest?.remainingMilestones === manifest?.totalMilestones, detail: JSON.stringify({ completed: manifest?.completedMilestones, remaining: manifest?.remainingMilestones, total: manifest?.totalMilestones }) });
   checks.push({ id: "base_mvp_manifest_arithmetic_current", name: "Base MVP current milestone follows completed milestones", pass: manifest?.currentMilestone === manifest?.completedMilestones + 1, detail: JSON.stringify({ completed: manifest?.completedMilestones, current: manifest?.currentMilestone }) });
@@ -1147,14 +1152,15 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
   checks.push({ id: "base_mvp_roadmap_milestone_7_complete", name: "Roadmap identifies Milestone 7 as complete", pass: has("Milestone 7 - Evaluation Engine: COMPLETE"), detail: "Milestone 7 - Evaluation Engine: COMPLETE" });
   checks.push({ id: "base_mvp_roadmap_milestone_8_complete", name: "Roadmap identifies Milestone 8 as complete", pass: has("Milestone 8 - Local Model Runtime: COMPLETE"), detail: "Milestone 8 - Local Model Runtime: COMPLETE" });
   checks.push({ id: "base_mvp_roadmap_milestone_9_complete", name: "Roadmap identifies Milestone 9 as complete", pass: has("Milestone 9 - Knowledge and Multimodal Intake: COMPLETE"), detail: "Milestone 9 - Knowledge and Multimodal Intake: COMPLETE" });
+  checks.push({ id: "base_mvp_roadmap_milestone_11_complete", name: "Roadmap identifies Milestone 11 as complete", pass: has("Milestone 11 - Desktop Operator: COMPLETE"), detail: "Milestone 11 - Desktop Operator: COMPLETE" });
   checks.push({
     id: "base_mvp_roadmap_manifest_consistent",
     name: "Roadmap and Base MVP manifest do not contradict each other",
     pass:
       has("totalMilestones: 16") &&
-      has("completedMilestones: 10") &&
-      has("remainingMilestones: 6") &&
-      has("currentMilestone: 11") &&
+      has("completedMilestones: 11") &&
+      has("remainingMilestones: 5") &&
+      has("currentMilestone: 12") &&
       has("baseMvpCompletionMilestone: 16") &&
       manifest?.totalMilestones === expected.totalMilestones &&
       manifest?.completedMilestones === expected.completedMilestones &&
@@ -1403,9 +1409,9 @@ async function runRuntimeStateV1Checks(): Promise<CertCheck[]> {
   const config = createRuntimeStateConfig({ projectRoot: root, installationId: "installation_cert", runtimeInstanceId: "runtime_cert" });
   const store = openRuntimeState(config);
   const inspection = store.inspect();
-  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 7 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
+  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 8 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
   const secondInspection = store.inspect();
-  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 7, detail: JSON.stringify(secondInspection.counts) });
+  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 8, detail: JSON.stringify(secondInspection.counts) });
   const command = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   const duplicate = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   checks.push({ id: "runtime_state_command_idempotency", name: "Runtime State command idempotency returns original", pass: command.commandId === duplicate.commandId && duplicate.status === "DUPLICATE", detail: `${command.commandId} ${duplicate.status}` });
@@ -1805,6 +1811,45 @@ async function runCapabilityEngineRecursiveLearningV1Checks(): Promise<CertCheck
   const health = await host.health();
   await host.shutdown("Capability Engine certification check complete.");
   add("capability_engine_runtime_host_registration", "Runtime Host registers capability-engine service", started.ok && health.services.some((service) => service.serviceId === "capability-engine"), JSON.stringify(health.services.map((service) => ({ id: service.serviceId, status: service.status }))));
+  return checks;
+}
+
+async function runDesktopOperatorV1Checks(rootDir: string): Promise<CertCheck[]> {
+  const desktopProof = await runDesktopOperatorProof();
+  const gatewayProof = await runOperatorGatewayProof();
+  const checks: CertCheck[] = [];
+  const add = (id: string, name: string, pass: boolean, detail: string) => checks.push({ id, name, pass, detail });
+
+  add("desktop_operator_graphical_surface_present", "Desktop Operator exposes graphical shell views", desktopProof.checks.graphicalSurfacePresent, desktopProof.proofRoot);
+  add("desktop_operator_assets_local_only", "Desktop Operator assets are local only", desktopProof.checks.assetsLocalOnly, "no remote references");
+  add("desktop_operator_asset_integrity", "Desktop Operator asset integrity is verified", desktopProof.checks.assetIntegrity, desktopProof.proofRoot);
+  add("desktop_operator_loopback_only", "Desktop Operator Gateway is loopback only", desktopProof.checks.loopbackOnly, `port=${desktopProof.port}`);
+  add("desktop_operator_no_model_use", "Desktop Operator proof uses no model", desktopProof.modelUse === false && desktopProof.checks.noModelUse, "modelUse=false");
+  add("desktop_operator_no_public_network", "Desktop Operator proof uses no public network", desktopProof.networkUse === false && desktopProof.checks.noPublicNetworkUse, "networkUse=false");
+  add("desktop_operator_repeatable_proof", "Desktop Operator proof is repeatable and isolated", desktopProof.ok && gatewayProof.ok && desktopProof.databasePath !== gatewayProof.databasePath, `${desktopProof.databasePath} != ${gatewayProof.databasePath}`);
+  add("desktop_operator_evidence_viewer_safe", "Evidence viewer blocks traversal and active HTML", desktopProof.checks.evidenceTraversalBlocked && desktopProof.checks.activeHtmlNotRendered && desktopProof.checks.evidenceRedacted, desktopProof.evidenceRoot);
+
+  add("operator_gateway_authenticated_session", "Operator Gateway creates authenticated local-owner sessions", gatewayProof.checks.authenticatedSession, gatewayProof.sessionId);
+  add("operator_gateway_csrf_required", "Operator Gateway requires CSRF for state changes", gatewayProof.checks.csrfRequired, "x-sera-csrf");
+  add("operator_gateway_request_queue", "Operator Gateway queues requests idempotently", gatewayProof.checks.requestQueued, gatewayProof.firstRequestId);
+  add("operator_gateway_approval_queue", "Operator Gateway records approval queue", gatewayProof.checks.approvalCreated, gatewayProof.approvalId);
+  add("operator_gateway_second_confirmation", "Operator Gateway blocks high-risk approval without second confirmation", gatewayProof.checks.approvalSecondConfirmationBlocked, gatewayProof.approvalId);
+  add("operator_gateway_decision_recorded", "Operator Gateway records approval decision without executing work", gatewayProof.checks.approvalDecisionRecorded, gatewayProof.approvalId);
+  add("operator_gateway_notifications_recorded", "Operator Gateway records notifications", gatewayProof.checks.notificationsRecorded, gatewayProof.databasePath);
+  add("operator_gateway_session_revocation", "Operator Gateway revokes sessions", gatewayProof.checks.sessionRevoked, gatewayProof.sessionId);
+  add("operator_gateway_sqlite_state_created", "Operator Gateway persists through Runtime State schema v8", gatewayProof.checks.databaseCreated, gatewayProof.databasePath);
+
+  const hostRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-desktop-operator-host-cert-"));
+  fs.writeFileSync(path.join(hostRoot, "package.json"), JSON.stringify({ name: "desktop-operator-host-cert", private: true }), "utf8");
+  const host = new RuntimeHost({ config: createRuntimeConfig({ projectRoot: hostRoot }), services: [...createRuntimeStateEnabledServices(hostRoot), ...createOperatorGatewayRuntimeServices(hostRoot)] });
+  const started = await host.start();
+  const health = await host.health();
+  await host.shutdown("Desktop Operator certification check complete.");
+  add("operator_gateway_runtime_host_registration", "Runtime Host registers operator-gateway service", started.ok && health.services.some((service) => service.serviceId === "operator-gateway"), JSON.stringify(health.services.map((service) => ({ id: service.serviceId, status: service.status }))));
+
+  const manifestPath = path.join(rootDir, "architecture", "base-mvp-manifest.json");
+  const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : {};
+  add("desktop_operator_manifest_aligned", "Base MVP manifest records Desktop Operator certification", manifest.currentCertification === "desktop-operator-v1" && manifest.completedMilestones === 11 && manifest.currentMilestone === 12, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone }));
   return checks;
 }
 

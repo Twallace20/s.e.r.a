@@ -10,6 +10,7 @@ import { EvaluationEngine, runEvaluationEngineProof } from "@sera/evaluation-eng
 import { LocalModelRuntime, runLocalModelRuntimeProof } from "@sera/model-runtime";
 import { KnowledgeRuntime, createIntakeAuthorization, normalizeIntakeRequest, runKnowledgeIntakeProof, runKnowledgeRetrievalProof } from "@sera/knowledge-runtime";
 import { CapabilityEngine, runCapabilityEngineProof, runRecursiveLearningProof } from "@sera/capability-engine";
+import { OperatorGateway, runDesktopOperatorProof, runOperatorGatewayProof } from "@sera/operator-gateway";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -126,6 +127,12 @@ Usage:
   sera capability policy
   sera capability inspect <capability-id>
   sera capability prove
+  sera desktop status
+  sera desktop prove
+  sera operator sessions
+  sera operator approvals
+  sera operator notifications
+  sera operator prove
   sera learning status
   sera learning inspect <session-id>
   sera learning prove
@@ -1460,6 +1467,52 @@ async function main(): Promise<void> {
       store.close();
     }
     throw new Error("Learning command must be 'status', 'inspect', or 'prove'.");
+  }
+
+  if (cmd === "desktop") {
+    const [desktopMode] = rest;
+    if (desktopMode === "prove") {
+      const result = await runDesktopOperatorProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (desktopMode === "status") {
+      const gateway = new OperatorGateway({ projectRoot: process.cwd() });
+      try {
+        console.log(JSON.stringify(gateway.status(), null, 2));
+      } finally {
+        gateway.close();
+      }
+      process.exit(0);
+    }
+    throw new Error("Desktop command must be 'status' or 'prove'.");
+  }
+
+  if (cmd === "operator") {
+    const [operatorMode] = rest;
+    if (operatorMode === "prove") {
+      const result = await runOperatorGatewayProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const gateway = new OperatorGateway({ projectRoot: process.cwd() });
+    try {
+      if (operatorMode === "sessions") {
+        console.log(JSON.stringify({ ok: true, sessions: gateway.sessions(), modelUse: false, networkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (operatorMode === "approvals") {
+        console.log(JSON.stringify({ ok: true, approvals: gateway.approvals(), modelUse: false, networkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (operatorMode === "notifications") {
+        console.log(JSON.stringify({ ok: true, notifications: gateway.notifications(), modelUse: false, networkUse: false }, null, 2));
+        process.exit(0);
+      }
+    } finally {
+      gateway.close();
+    }
+    throw new Error("Operator command must be 'sessions', 'approvals', 'notifications', or 'prove'.");
   }
 
   if (cmd === "repository") {

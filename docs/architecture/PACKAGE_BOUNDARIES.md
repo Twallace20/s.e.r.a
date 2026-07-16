@@ -167,6 +167,27 @@ Boundary rules:
 - rollback requires explicit authorization and regression evidence
 - no arbitrary code loading, unrestricted shell, source mutation, cloud provider, public network, Git action, Desktop Operator, Studio, distributed capability, or Hive Mode authority is introduced
 
+## `@sera/operator-gateway` / `packages/operator-gateway`
+
+Runtime-layer gateway for the local Desktop Operator. It owns loopback-only HTTP serving, local-owner session validation, CSRF-gated state-changing operations, approval review, request composition, notifications, event polling, safe evidence viewing, and operator audit records in Runtime State migration v8.
+
+Boundary rules:
+
+- binds only to loopback
+- stores session token hashes, not raw durable tokens
+- does not invoke models, execute shell commands, fetch public URLs, auto-approve, auto-promote, auto-rollback, or bypass Control Plane authority
+- active HTML evidence is treated as blocked content, not rendered UI
+
+## `@sera/desktop-operator` / `apps/desktop-operator`
+
+Desktop-layer local graphical surface for operator supervision. It exports static local assets and a visual contract consumed by the Operator Gateway.
+
+Boundary rules:
+
+- assets must be local and integrity checked
+- no remote scripts, fonts, analytics, telemetry, or CDN references
+- no direct SQLite mutation and no privileged runtime authority from browser code
+
 ## `@sera/certs` / `packages/certs`
 
 Certification runner and capability checks.

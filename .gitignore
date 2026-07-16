@@ -1,5 +1,7 @@
 node_modules/
 dist/
+apps/desktop-operator/dist/
+packages/operator-gateway/dist/
 coverage/
 .env
 .env.*
@@ -19,6 +21,9 @@ coverage/
 .sera/knowledge/
 .sera/capability-engine/
 .sera/capabilities/
+.sera/operator/
+.sera/desktop/
+.sera/operator-gateway/
 .sera-local/
 *.log
 .DS_Store
@@ -36,6 +41,9 @@ Thumbs.db
 packages/*/src/*.js
 packages/*/src/*.js.map
 packages/*/src/*.d.ts
+apps/*/src/*.js
+apps/*/src/*.js.map
+apps/*/src/*.d.ts
 
 .sera-autonomy/
 

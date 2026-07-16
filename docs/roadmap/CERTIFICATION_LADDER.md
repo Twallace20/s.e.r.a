@@ -5,10 +5,12 @@ S.E.R.A. only advances when the cert runner proves the current runtime level. Do
 ## Current runtime certification
 
 ```text
-capability-engine-recursive-learning-v1
+desktop-operator-v1
 ```
 
-Milestone 10 is the current runtime certification. It proves governed recursive learning and capability version lifecycle: authorized learning sessions, immutable candidate bundles, isolated execution, deterministic evaluation, baseline comparison, reproducibility, exact certification, Control Plane promotion, active-version records, rollback, complete evidence, offline operation, and no real model requirement.
+Milestone 11 is the current runtime certification. It proves a local graphical Desktop Operator, loopback-only Operator Gateway, hashed local-owner sessions, CSRF-gated state changes, approval review, safe evidence viewing, notifications, Runtime State v8 persistence, repeatable proofs, offline operation, and no model requirement.
+
+The Evidence-Driven Recurrence Prevention and Governed Innovation plan is an architecture lock, not a new runtime certification level. It preserves `desktop-operator-v1` as the current certification while reserving later Base MVP acceptance gates for lesson retrieval, recurrence prevention, scoped generalization, operator overrides, and governed innovation.
 
 ## Level 1 — `secure-base`
 
@@ -75,6 +77,12 @@ S.E.R.A. can accept explicitly authorized local intake, preserve source bytes wi
 ## Runtime/Capability Level — `capability-engine-recursive-learning-v1`
 
 S.E.R.A. can turn evidence-backed learning into a governed capability candidate, prove it through isolated execution and deterministic evaluation, certify an exact immutable digest, promote it only with Control Plane authority, activate the certified version atomically, and roll it back with regression evidence. Model and knowledge outputs remain candidate intelligence only.
+
+## Desktop/Runtime Level — `desktop-operator-v1`
+
+S.E.R.A. can expose a private local graphical operator surface through `@sera/desktop-operator` and a loopback-only `@sera/operator-gateway`. The gateway records sessions, requests, approvals, notifications, events, audit records, and safe evidence views in Runtime State while preserving Control Plane authority and blocking public network, model invocation, automatic approval, automatic promotion, and direct SQLite mutation from the UI.
+
+Desktop Operator also reserves governed empty-state UI surfaces for later recurrence-prevention and innovation evidence. This reservation does not implement lesson Runtime behavior or change the certified level.
 
 ## Level 10 — `model-provider-v1`
 

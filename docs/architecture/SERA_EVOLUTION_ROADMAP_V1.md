@@ -20,6 +20,7 @@ S.E.R.A. is not defined as one assistant, coding agent, website builder, game st
 8. Text, documents, code, images, audio, video, links, repositories, and future sensor inputs normalize into evidence records.
 9. Core capabilities must be usable through a downloadable local desktop application.
 10. Robotics, fabrication, AR/XR, and physical embodiment follow the software MVP.
+11. A materially evidenced and certified failure must not be unknowingly repeated under materially equivalent conditions.
 
 ## Evolution eras
 
@@ -34,14 +35,24 @@ Milestone 9 — Knowledge and Multimodal Intake is COMPLETE. S.E.R.A. can ingest
 
 Milestone 10 — Capability Engine and Recursive Learning is COMPLETE. S.E.R.A. can run bounded learning sessions, assemble immutable candidate capability bundles, evaluate and compare candidates, certify exact digests, promote through Control Plane authority, activate versions atomically, and roll back with regression evidence.
 
+Milestone 11 — Desktop Operator is COMPLETE. S.E.R.A. has a local graphical operator surface, loopback-only Operator Gateway, hashed local-owner sessions, approval review, notifications, safe evidence viewing, Runtime State v8 records, and repeatable offline proofs without model or public network use.
+
+Cross-cutting plan lock — Evidence-Driven Recurrence Prevention and Governed Innovation is ACTIVE as an architecture and Base MVP acceptance invariant, with Runtime implementation pending. The locked plan lives in `docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md` and `architecture/recurrence-prevention-innovation-plan-v1.json`.
+
 Milestone 7 - Evaluation Engine: COMPLETE
 Milestone 8 - Local Model Runtime: COMPLETE
 Milestone 9 - Knowledge and Multimodal Intake: COMPLETE
 Milestone 10 - Capability Engine and Recursive Learning: COMPLETE
+Milestone 11 - Desktop Operator: COMPLETE
+Milestone 12 - First Certified Studio: PENDING
+Milestone 13 - Integrated Offline Loop: PENDING
+Milestone 14 - Learning Generalization, Recurrence Prevention, and Innovation Proof: PENDING
+Milestone 15 - Clean-Machine Offline Restart Proof: PENDING
+Milestone 16 - Portable Base MVP Acceptance: PENDING
 
-completedMilestones: 10
-remainingMilestones: 6
-currentMilestone: 11
+completedMilestones: 11
+remainingMilestones: 5
+currentMilestone: 12
 baseMvpCompletionMilestone: 16
 
 ### Era II — Cognition
@@ -82,9 +93,9 @@ The Base MVP milestone manifest is frozen:
 
 ```text
 totalMilestones: 16
-completedMilestones: 10
-remainingMilestones: 6
-currentMilestone: 11
+completedMilestones: 11
+remainingMilestones: 5
+currentMilestone: 12
 baseMvpCompletionMilestone: 16
 ```
 
@@ -112,6 +123,7 @@ Milestone 7 - Evaluation Engine: COMPLETE
 Milestone 8 - Local Model Runtime: COMPLETE
 Milestone 9 - Knowledge and Multimodal Intake: COMPLETE
 Milestone 10 - Capability Engine and Recursive Learning: COMPLETE
+Milestone 11 - Desktop Operator: COMPLETE
 ```
 
 ## Consolidation milestones
@@ -128,9 +140,12 @@ The locked implementation order is:
 8. Local Model Runtime — `local-model-runtime-v1` — implemented as a provider-independent Runtime boundary with deterministic fixture proof and disabled real-local adapters
 9. Knowledge and Multimodal Intake — `knowledge-intake-runtime-v1` — implemented as a Runtime-owned intake and candidate knowledge boundary with deterministic extraction, opaque preservation, provenance, and lexical retrieval
 10. Capability Engine and Recursive Learning — `capability-engine-recursive-learning-v1` — implemented as the governed Capability-layer lifecycle for candidate bundles, evaluation, exact certification, explicit promotion, active versions, rollback, and recursive learning evidence
-11. Desktop Operator — `desktop-operator-v1`
-12. Website Studio MVP — `website-studio-provisional-v1`
-13. Portable Offline Release — `portable-offline-release-v1`
+11. Desktop Operator — `desktop-operator-v1` — implemented as the local Desktop-layer graphical surface and Runtime-layer Operator Gateway for loopback sessions, approvals, notifications, safe evidence viewing, and operator audit state
+12. First Certified Studio — `website-studio-provisional-v1` — must produce evidence-linked operator corrections, failed-output signals, evaluation failures, improvement opportunities, and innovation opportunities without automatically promoting interaction history into reusable rules
+13. Integrated Offline Loop — `integrated-offline-loop-v1` — must perform a learning preflight before capability or approach selection by retrieving applicable certified lessons, known failure patterns, prevention rules, certified alternatives, and active overrides
+14. Learning Generalization, Recurrence Prevention, and Innovation Proof — `learning-generalization-recurrence-prevention-innovation-proof-v1` — must prove controlled failure, durable evidence, reproduction, scoped root cause, repair, regression proof, reproducibility, lesson certification, prevention activation, equivalent-context retrieval, known-failure avoidance, related-context generalization, out-of-scope non-application, improvement comparison, governed innovation, supersession, governed override, and proof that model output does not automatically become a lesson
+15. Clean-Machine Offline Restart Proof — `clean-machine-offline-restart-proof-v1` — must preserve and retrieve failure records, certified lessons, prevention rules, scopes, superseded lessons, overrides, and innovation proposals after restart with no public internet
+16. Portable Base MVP Acceptance — `portable-base-mvp-acceptance-v1` — must prove controlled mistake, evidence preservation, correction, certification, shutdown, restart, materially equivalent request, certified-lesson retrieval, prevention of the known mistake, and visible explanation/evidence in Desktop Operator
 
 Repository Snapshot precedes Repository Truth so S.E.R.A. can inventory source, generated artifacts, runtime directories, legacy evidence, and provider-adapter surfaces with deterministic scanners before making classification claims. Repository Truth then classifies that snapshot against the SERA OS Constitution and Layer Model. No later subsystem is complete merely because Repository Truth exists; the locked implementation order above remains intact.
 

@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `capability-engine-recursive-learning-v1`.
+Current runtime certification: `desktop-operator-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -31,6 +31,7 @@ Certified runtime ladder completed so far:
 - `local-model-runtime-v1`
 - `knowledge-intake-runtime-v1`
 - `capability-engine-recursive-learning-v1`
+- `desktop-operator-v1`
 
 Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
 
@@ -45,6 +46,8 @@ Phase 17 adds a lesson review workbench: a review-only JSON and Markdown packet 
 S.E.R.A. follows a Free Core Covenant: core operation must remain local-first and fully operational without paid subscriptions, paid APIs, paid SaaS tools, hosted databases, hosted model providers, or cloud-only dependencies through Phase 45. Paid services can exist only as optional adapters after the free/local path is certified.
 
 Phase 19 adds recursive learning cycles: local, report-only synthesis records that turn memory, failures, lesson candidates, review decisions, approved inactive lessons, active regression rules, and free-core guardrails into governed next-action recommendations without automatically approving, activating, executing, or mutating anything.
+
+Evidence-Driven Recurrence Prevention and Governed Innovation is now locked as a Base MVP architecture invariant. The contract is machine-readable in `architecture/recurrence-prevention-innovation-plan-v1.json` and documented in `docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md`. This is a plan and acceptance lock only; the full recurrence-prevention Runtime is still pending.
 
 ## What works now
 
@@ -87,6 +90,8 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - provider-independent Local Model Runtime with explicit authorization, deterministic fixture proof, disabled real-local provider metadata, SQLite invocation evidence, timeout/cancellation, redaction, and candidate-intelligence-only output
 - Knowledge and Universal Intake Runtime with explicit authorization, content-addressed preservation, deterministic extraction, opaque media/archive preservation, provenance, candidate status, and bounded lexical retrieval
 - Capability Engine and Recursive Learning with authorized learning sessions, immutable candidate bundles, isolated execution, deterministic evaluation, exact certification, Control Plane promotion, active-version records, rollback evidence, and repeatable proof
+- Desktop Operator with local graphical assets, loopback-only Operator Gateway, hashed local-owner sessions, approval review, safe evidence viewing, notifications, and repeatable proof
+- Desktop Operator visual contract reservations for governed recurrence-prevention and innovation empty states
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
 - repeatable live autonomous-dev happy path over an ignored local target with task, memory, autonomy, and operator evidence
@@ -117,7 +122,10 @@ Phase 19 adds recursive learning cycles: local, report-only synthesis records th
 - no real model download, install, or invocation in Local Model Runtime v1
 - no model-driven tool execution or source mutation
 - no automatic capability promotion or activation
-- no arbitrary code loading, unrestricted shell, Desktop Operator, Studio, distributed capability, or Hive Mode in Capability Engine v1
+- no certified recurrence-prevention Runtime yet
+- no automatic recurrence-prevention behavior yet
+- no automatic innovation activation or promotion
+- no arbitrary code loading, unrestricted shell, Studio, distributed capability, or Hive Mode in Capability Engine v1 or Desktop Operator v1
 
 ## Setup
 
@@ -133,7 +141,7 @@ npm run verify
 Expected current certification result:
 
 ```text
-S.E.R.A. certify: PASS level=capability-engine-recursive-learning-v1
+S.E.R.A. certify: PASS level=desktop-operator-v1
 ```
 
 ## Starter secure-base run
@@ -246,6 +254,14 @@ npm run sera -- learning prove
 
 The engine treats model and knowledge outputs as candidate input only. It assembles immutable candidate bundles, runs isolated execution and deterministic evaluation, certifies exact digests, promotes only through explicit Control Plane authority, records active versions atomically, and preserves rollback evidence. It does not load arbitrary code, run unrestricted shell commands, mutate core source, call real models, use the public network, or start Desktop Operator, Studio, distributed capability, or Hive Mode work.
 
+## Recurrence Prevention and Governed Innovation Plan
+
+S.E.R.A.'s Base MVP now includes a locked acceptance invariant: a materially evidenced and certified failure must not be unknowingly repeated under materially equivalent conditions.
+
+The locked plan requires later milestones to distinguish acquisition, repair, improvement, adaptation, recurrence prevention, and innovation lanes. It also requires scoped applicability, non-applicability boundaries, lesson supersession, governed operator overrides, and Control Plane promotion authority.
+
+Milestone 11 only reserves Desktop Operator surfaces for this future evidence. It does not implement automatic lesson activation, recurrence-prevention preflight, or innovation promotion.
+
 ## Developer Worker v2 and Self-Improvement Loop v1
 
 Inspect mode fingerprints a file without changing it:
@@ -300,6 +316,8 @@ Nothing gets called working unless it has:
 - `@sera/model-runtime` — Runtime-owned local model invocation boundary with fixture proof, provider registry, authorization, SQLite records, and candidate-intelligence-only outputs
 - `@sera/knowledge-runtime` — Runtime-owned local knowledge and universal intake boundary with authorization, content hashes, deterministic extraction, opaque preservation, provenance, SQLite records, and lexical retrieval
 - `@sera/capability-engine` — Capability-layer recursive learning and capability version lifecycle with candidate bundles, evaluation, certification, promotion, activation, rollback, and SQLite evidence
+- `@sera/operator-gateway` — loopback-only Runtime gateway for local Desktop Operator sessions, approvals, notifications, safe evidence viewing, and operator audit records
+- `@sera/desktop-operator` — local Desktop-layer graphical asset bundle and visual contract for operator supervision
 - `@sera/autonomy` — bounded autonomous dev loop orchestration with validation-gated apply
 - `@sera/operator-console` — local status, health, report, history, and summary evidence
 - `@sera/repository-snapshot` — deterministic repository fact inventory

@@ -6,7 +6,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createControlPlaneRuntimeService, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
 
 export const RUNTIME_STATE_VERSION = "runtime-state-v1";
-export const RUNTIME_STATE_SCHEMA_VERSION = 7;
+export const RUNTIME_STATE_SCHEMA_VERSION = 8;
 export const RUNTIME_STATE_EXPORT_SCHEMA = "sera.runtime-state-export.v1";
 
 export type RuntimeStateStatus = "healthy" | "blocked";
@@ -154,7 +154,15 @@ const TABLES = [
   "capability_rollbacks",
   "learning_sessions",
   "learning_iterations",
-  "capability_events"
+  "capability_events",
+  "operator_sessions",
+  "operator_requests",
+  "operator_approvals",
+  "operator_approval_decisions",
+  "operator_audit_events",
+  "operator_notifications",
+  "operator_events",
+  "operator_preferences"
 ] as const;
 
 const TERMINAL_STATES = new Set<AttemptState>(["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"]);
@@ -1103,6 +1111,110 @@ CREATE INDEX idx_capability_proposals_session ON capability_proposals(session_id
 CREATE INDEX idx_learning_sessions_state ON learning_sessions(state, started_at);
 CREATE INDEX idx_capability_events_order ON capability_events(session_id, sequence);
 CREATE INDEX idx_capability_active_scope ON capability_active_versions(activation_scope, capability_id);
+`
+  },
+  {
+    version: 8,
+    name: "desktop_operator_v1",
+    sql: `
+CREATE TABLE operator_sessions (
+  session_id TEXT PRIMARY KEY,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  request_hash TEXT NOT NULL,
+  token_hash TEXT NOT NULL,
+  csrf_hash TEXT NOT NULL,
+  operator_identity TEXT NOT NULL,
+  state TEXT NOT NULL,
+  issued_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  last_activity_at TEXT NOT NULL,
+  idle_timeout_ms INTEGER NOT NULL,
+  revoked_at TEXT,
+  integrity_hash TEXT NOT NULL,
+  response_json TEXT NOT NULL
+);
+
+CREATE TABLE operator_requests (
+  request_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  category TEXT NOT NULL,
+  normalized_text TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  status TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  created_at TEXT NOT NULL,
+  completed_at TEXT,
+  response_json TEXT NOT NULL,
+  governed_reference TEXT NOT NULL,
+  FOREIGN KEY(session_id) REFERENCES operator_sessions(session_id)
+);
+
+CREATE TABLE operator_approvals (
+  approval_id TEXT PRIMARY KEY,
+  request_id TEXT NOT NULL,
+  status TEXT NOT NULL,
+  risk_class TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  request_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  decided_at TEXT,
+  decision_idempotency_key TEXT,
+  response_json TEXT NOT NULL,
+  FOREIGN KEY(request_id) REFERENCES operator_requests(request_id)
+);
+
+CREATE TABLE operator_approval_decisions (
+  idempotency_key TEXT PRIMARY KEY,
+  approval_id TEXT NOT NULL,
+  decision TEXT NOT NULL,
+  decided_at TEXT NOT NULL,
+  response_json TEXT NOT NULL,
+  FOREIGN KEY(approval_id) REFERENCES operator_approvals(approval_id)
+);
+
+CREATE TABLE operator_audit_events (
+  event_id TEXT PRIMARY KEY,
+  sequence INTEGER NOT NULL UNIQUE,
+  event_type TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  message TEXT NOT NULL,
+  details_json TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE operator_notifications (
+  notification_id TEXT PRIMARY KEY,
+  notification_type TEXT NOT NULL,
+  severity TEXT NOT NULL,
+  message TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  read_at TEXT
+);
+
+CREATE TABLE operator_events (
+  event_id TEXT PRIMARY KEY,
+  sequence INTEGER NOT NULL UNIQUE,
+  event_type TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  payload_json TEXT NOT NULL
+);
+
+CREATE TABLE operator_preferences (
+  preference_key TEXT PRIMARY KEY,
+  preference_value_json TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  mutable_security_policy INTEGER NOT NULL
+);
+
+CREATE INDEX idx_operator_sessions_state ON operator_sessions(state, expires_at);
+CREATE INDEX idx_operator_requests_status ON operator_requests(status, created_at);
+CREATE INDEX idx_operator_approvals_status ON operator_approvals(status, created_at);
+CREATE INDEX idx_operator_audit_events_sequence ON operator_audit_events(sequence);
+CREATE INDEX idx_operator_notifications_status ON operator_notifications(status, created_at);
+CREATE INDEX idx_operator_events_sequence ON operator_events(sequence);
 `
   }
 ];

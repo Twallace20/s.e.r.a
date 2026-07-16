@@ -43,6 +43,12 @@
                            "path":  "packages/capability-engine"
                        },
                        {
+                           "path":  "apps/desktop-operator"
+                       },
+                       {
+                           "path":  "packages/operator-gateway"
+                       },
+                       {
                            "path":  "packages/safety"
                        },
                        {

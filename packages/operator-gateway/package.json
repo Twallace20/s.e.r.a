@@ -1,0 +1,15 @@
+{
+  "name": "@sera/operator-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@sera/desktop-operator": "0.1.0",
+    "@sera/runtime-host": "0.1.0",
+    "@sera/runtime-state": "0.1.0"
+  }
+}

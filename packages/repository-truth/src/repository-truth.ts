@@ -814,6 +814,8 @@ function collection(id: string, name: string, kind: ComponentKind, componentPath
 
 function classifyLayer(relativePath: string, name?: string): ArchitectureLayer {
   if (relativePath === ".") return "kernel";
+  if (name?.includes("operator-gateway")) return "runtime";
+  if (name?.includes("desktop-operator")) return "desktop";
   if (relativePath.startsWith("apps/operator") || name?.includes("operator-console")) return "desktop";
   if (relativePath.startsWith("apps/")) return "desktop";
   if (name?.includes("model-provider")) return "provider";

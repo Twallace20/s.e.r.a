@@ -84,6 +84,17 @@
       "records": "Learning improves existing capabilities; innovation creates materially new candidates under stronger governance."
     },
     {
+      "id": "evidence-driven-recurrence-prevention-innovation-v1",
+      "name": "Evidence-Driven Recurrence Prevention and Governed Innovation v1",
+      "kind": "governance-standard",
+      "status": "architecture-locked-runtime-pending",
+      "executableCapability": false,
+      "runtimeService": false,
+      "document": "docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md",
+      "plan": "architecture/recurrence-prevention-innovation-plan-v1.json",
+      "records": "Cross-cutting Base MVP acceptance invariant for evidence-linked learning signals, recurrence prevention, scoped lesson retrieval, governed overrides, lesson supersession, and distinct governed innovation. Runtime behavior remains pending."
+    },
+    {
       "id": "time-to-certified-capability-v1",
       "name": "Time-to-Certified-Capability v1",
       "kind": "metric-standard",
@@ -436,17 +447,150 @@
       "notes": "Normalizes authorized local text, files, directories, predownloaded snapshots, URL references without fetching, generated fixtures, opaque media, and archives into candidate knowledge records with deterministic evidence and lexical retrieval."
     },
     {
-      "id": "desktop-operator",
-      "targetLayer": "Desktop",
-      "currentMaturity": "starter",
-      "status": "proposed",
+      "id": "operator-gateway",
+      "targetLayer": "Runtime",
+      "currentMaturity": "implemented",
+      "status": "certified",
       "dependencies": [
-        "runtime-control-plane",
-        "apps/cli",
-        "apps/operator-console"
+        "runtime-state",
+        "runtime-host",
+        "control-plane"
       ],
       "certificationTarget": "desktop-operator-v1",
-      "notes": "Downloadable local operator surface. Current operator console is provisional because UI and capability logic are mixed."
+      "evidence": [
+        "packages/operator-gateway/src/operator-gateway.ts",
+        "tests/desktop-operator-v1.test.ts",
+        "docs/architecture/DESKTOP_OPERATOR_V1.md"
+      ],
+      "notes": "Loopback-only gateway for Desktop Operator sessions, approvals, notifications, events, safe evidence viewing, and operator audit records."
+    },
+    {
+      "id": "desktop-operator",
+      "targetLayer": "Desktop",
+      "currentMaturity": "implemented",
+      "status": "certified",
+      "dependencies": [
+        "operator-gateway",
+        "runtime-control-plane",
+        "apps/cli"
+      ],
+      "certificationTarget": "desktop-operator-v1",
+      "evidence": [
+        "apps/desktop-operator/src/index.ts",
+        "tests/desktop-operator-v1.test.ts",
+        "docs/architecture/DESKTOP_OPERATOR_V1.md"
+      ],
+      "notes": "Local graphical operator surface with integrity-checked local assets and no remote references."
+    },
+    {
+      "id": "failure-evidence-recording",
+      "targetLayer": "Runtime",
+      "currentMaturity": "planned",
+      "status": "not-implemented",
+      "dependencies": [
+        "runtime-state-store",
+        "evaluation-engine",
+        "operator-gateway"
+      ],
+      "certificationTarget": "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      "evidence": [
+        "architecture/recurrence-prevention-innovation-plan-v1.json",
+        "docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md"
+      ],
+      "limitations": [
+        "not implemented in Milestone 11",
+        "no SQLite migration added",
+        "no runtime lesson table exists",
+        "no automatic lesson activation"
+      ],
+      "notes": "Planned evidence-linked failure, correction, regression, override, and improvement signal recording boundary."
+    },
+    {
+      "id": "lesson-candidate-management",
+      "targetLayer": "Runtime",
+      "currentMaturity": "planned",
+      "status": "not-implemented",
+      "dependencies": [
+        "failure-evidence-recording",
+        "runtime-control-plane"
+      ],
+      "certificationTarget": "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      "limitations": [
+        "candidate management is not the same as active lesson behavior",
+        "one observation is not automatically a certified lesson",
+        "model output is candidate intelligence only"
+      ],
+      "notes": "Planned lifecycle for candidate, rejected, certified inactive, active, superseded, and rolled-back lessons with exact evidence references."
+    },
+    {
+      "id": "recurrence-prevention",
+      "targetLayer": "Runtime",
+      "currentMaturity": "planned",
+      "status": "not-implemented",
+      "dependencies": [
+        "lesson-candidate-management",
+        "runtime-control-plane",
+        "operator-gateway"
+      ],
+      "certificationTarget": "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      "limitations": [
+        "not implemented in Milestone 11",
+        "no automatic prevention behavior is active",
+        "out-of-scope contexts must not be incorrectly blocked"
+      ],
+      "notes": "Planned retrieval and prevention behavior for materially equivalent known failure paths."
+    },
+    {
+      "id": "lesson-retrieval-preflight",
+      "targetLayer": "Runtime",
+      "currentMaturity": "planned",
+      "status": "not-implemented",
+      "dependencies": [
+        "recurrence-prevention",
+        "capability-engine",
+        "multimodal-intake"
+      ],
+      "certificationTarget": "integrated-offline-loop-v1",
+      "limitations": [
+        "not implemented in Milestone 11",
+        "does not yet select capabilities or approaches"
+      ],
+      "notes": "Planned preflight before materially similar work to retrieve applicable lessons, known failures, prevention rules, certified alternatives, and active overrides."
+    },
+    {
+      "id": "improvement-comparison",
+      "targetLayer": "Capability",
+      "currentMaturity": "planned",
+      "status": "not-implemented",
+      "dependencies": [
+        "capability-engine",
+        "evaluation-engine",
+        "runtime-control-plane"
+      ],
+      "certificationTarget": "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      "limitations": [
+        "existing Capability Engine comparison foundations do not certify reusable lessons by themselves"
+      ],
+      "notes": "Planned measurable baseline comparison for lesson and improvement certification."
+    },
+    {
+      "id": "governed-innovation",
+      "targetLayer": "Capability",
+      "currentMaturity": "planned",
+      "status": "not-implemented",
+      "dependencies": [
+        "improvement-comparison",
+        "isolated-execution-engine",
+        "evaluation-engine",
+        "runtime-control-plane"
+      ],
+      "certificationTarget": "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      "limitations": [
+        "innovation cannot activate itself",
+        "no automatic innovation promotion exists",
+        "no later-milestone behavior is implemented by this plan lock"
+      ],
+      "notes": "Planned distinct lane for materially different approaches requiring authorization, isolated experimentation, baseline comparison, reproducibility, certification, explicit promotion, and rollback readiness."
     },
     {
       "id": "website-studio",

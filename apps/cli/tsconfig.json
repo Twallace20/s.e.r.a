@@ -47,6 +47,9 @@
     },
     {
       "path": "../../packages/capability-engine"
+    },
+    {
+      "path": "../../packages/operator-gateway"
     }
   ]
 }

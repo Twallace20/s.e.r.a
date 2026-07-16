@@ -96,6 +96,7 @@ Responsibilities:
 - isolated execution coordination
 - evaluation orchestration
 - learning records and promotion gates
+- evidence-linked recurrence-prevention records and preflight hooks once implemented
 
 Allowed dependencies:
 
@@ -129,6 +130,7 @@ Current repository candidates:
 | `packages/model-runtime` | confirmed; Local Model Runtime v1 |
 | `packages/knowledge-runtime` | confirmed; Knowledge and Universal Intake Runtime v1 |
 | `.sera-*` runtime directories | legacy/runtime-data; not source authority |
+| recurrence-prevention Runtime | planned; architecture locked, implementation pending |
 
 Migration targets:
 
@@ -154,6 +156,8 @@ Valid components:
 - evaluation runner
 - learning promotion record
 - evidence index
+- certified lesson retrieval preflight
+- known failure and prevention-rule records
 
 Invalid placement:
 
@@ -343,6 +347,10 @@ Do not rename it to "Capability and Intelligence Engine". The Intelligence Pipel
 
 Milestone 10 implements the Capability Engine as a Capability-layer subsystem, not a Runtime replacement. It depends on Runtime for state, execution, evaluation, recovery, model boundaries, knowledge boundaries, and Control Plane authority.
 
+Milestone 11 implements Desktop Operator as a Desktop-layer surface backed by a Runtime-layer Operator Gateway. The graphical app presents local operator views; the gateway owns session checks, approvals, notifications, audit records, and safe evidence access.
+
+Milestone 11 also reserves Desktop visual contract surfaces for known failure patterns, applicable lessons, prevention warnings, certified alternatives, operator overrides, superseded lessons, improvement proposals, innovation proposals, supporting evidence, and applicability explanations. These are reserved empty-state surfaces; the recurrence-prevention Runtime is not implemented in Milestone 11.
+
 ## Studio
 
 Purpose: compose certified capabilities into domain production workflows.
@@ -454,7 +462,9 @@ Current repository candidates:
 | Candidate | Mapping |
 | --- | --- |
 | `apps/cli` | confirmed |
+| `apps/desktop-operator` | confirmed Desktop-layer local graphical surface |
 | `apps/operator-console` | provisional; contains UI and non-UI logic |
+| `packages/operator-gateway` | confirmed Runtime-layer local gateway, not Desktop state |
 | `packages/operator-console` | provisional; likely split between Runtime and Desktop |
 | root `SERA_*.ps1` launchers | legacy |
 
@@ -463,6 +473,7 @@ Migration targets:
 - `desktop-operator`
 - local approval and evidence UI
 - downloadable local application shell
+- governed recurrence-prevention and innovation review surfaces
 
 Valid components:
 
