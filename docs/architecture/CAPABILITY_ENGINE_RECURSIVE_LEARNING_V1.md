@@ -86,3 +86,6 @@ npm run sera -- learning prove
 ## Limitations
 
 V1 does not implement arbitrary code loading, unrestricted shell, cloud providers, public internet research, real model execution, Studio, distributed capability execution, Hive Mode, automatic source mutation, Git branch automation, automatic promotion, automatic lesson activation, recurrence-prevention preflight, or governed innovation promotion.
+# Milestone 12 Studio Relationship
+
+Evidence Studio v1 may reference exact certified fixture capability versions for document planning, source-grounded drafting, claim mapping, revision, and package assembly. Capability Engine retains certification, promotion, activation, rollback, and learning authority; Studio Runtime cannot manufacture capability certification.

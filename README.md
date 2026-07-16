@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `desktop-operator-v1`.
+Current runtime certification: `first-certified-studio-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -32,8 +32,11 @@ Certified runtime ladder completed so far:
 - `knowledge-intake-runtime-v1`
 - `capability-engine-recursive-learning-v1`
 - `desktop-operator-v1`
+- `first-certified-studio-v1`
 
-Phase 13 is a documentation and repo-truth alignment phase. It does not add runtime authority, mutate safety policy, enable external models, or change the certified runtime level.
+Milestone 12 adds the first certified Studio: Evidence Studio v1. It composes Studio Runtime, authorized local sources, deterministic evaluation, operator review, immutable final packages, and candidate-only learning signals into the `source-grounded-professional-brief-v1` workflow.
+
+Milestone 13 is next: Integrated Offline Loop. It is not implemented by Milestone 12.
 
 Phase 14 is an operational CI certification-gate phase. It adds local hygiene commands and a GitHub Actions workflow, but it does not add runtime authority or change the certified runtime level.
 
@@ -91,6 +94,7 @@ Evidence-Driven Recurrence Prevention and Governed Innovation is now locked as a
 - Knowledge and Universal Intake Runtime with explicit authorization, content-addressed preservation, deterministic extraction, opaque media/archive preservation, provenance, candidate status, and bounded lexical retrieval
 - Capability Engine and Recursive Learning with authorized learning sessions, immutable candidate bundles, isolated execution, deterministic evaluation, exact certification, Control Plane promotion, active-version records, rollback evidence, and repeatable proof
 - Desktop Operator with local graphical assets, loopback-only Operator Gateway, hashed local-owner sessions, approval review, safe evidence viewing, notifications, and repeatable proof
+- Studio Runtime and Evidence Studio v1 with certified professional-brief generation from authorized local sources, claim/source ledgers, deterministic evaluation, operator review, immutable final package evidence, and candidate-only learning signals
 - Desktop Operator visual contract reservations for governed recurrence-prevention and innovation empty states
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script

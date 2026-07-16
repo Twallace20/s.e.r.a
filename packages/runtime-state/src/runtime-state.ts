@@ -6,7 +6,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createControlPlaneRuntimeService, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
 
 export const RUNTIME_STATE_VERSION = "runtime-state-v1";
-export const RUNTIME_STATE_SCHEMA_VERSION = 8;
+export const RUNTIME_STATE_SCHEMA_VERSION = 9;
 export const RUNTIME_STATE_EXPORT_SCHEMA = "sera.runtime-state-export.v1";
 
 export type RuntimeStateStatus = "healthy" | "blocked";
@@ -162,7 +162,18 @@ const TABLES = [
   "operator_audit_events",
   "operator_notifications",
   "operator_events",
-  "operator_preferences"
+  "operator_preferences",
+  "studio_definitions",
+  "studio_versions",
+  "studio_sessions",
+  "studio_stage_transitions",
+  "studio_artifacts",
+  "studio_claims",
+  "studio_claim_sources",
+  "studio_reviews",
+  "studio_learning_signals",
+  "studio_events",
+  "studio_idempotency"
 ] as const;
 
 const TERMINAL_STATES = new Set<AttemptState>(["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"]);
@@ -1215,6 +1226,175 @@ CREATE INDEX idx_operator_approvals_status ON operator_approvals(status, created
 CREATE INDEX idx_operator_audit_events_sequence ON operator_audit_events(sequence);
 CREATE INDEX idx_operator_notifications_status ON operator_notifications(status, created_at);
 CREATE INDEX idx_operator_events_sequence ON operator_events(sequence);
+`
+  },
+  {
+    version: 9,
+    name: "first_certified_studio_v1",
+    sql: `
+CREATE TABLE studio_definitions (
+  studio_id TEXT PRIMARY KEY,
+  display_name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL
+);
+
+CREATE TABLE studio_versions (
+  studio_id TEXT NOT NULL,
+  version TEXT NOT NULL,
+  immutable_digest TEXT NOT NULL,
+  status TEXT NOT NULL,
+  manifest_hash TEXT NOT NULL,
+  certification_level TEXT NOT NULL,
+  workflow_profiles_json TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  certified_at TEXT,
+  superseded_at TEXT,
+  optimistic_version INTEGER NOT NULL,
+  manifest_json TEXT NOT NULL,
+  PRIMARY KEY(studio_id, version),
+  UNIQUE(studio_id, immutable_digest),
+  FOREIGN KEY(studio_id) REFERENCES studio_definitions(studio_id)
+);
+
+CREATE TABLE studio_sessions (
+  session_id TEXT PRIMARY KEY,
+  studio_id TEXT NOT NULL,
+  studio_version_digest TEXT NOT NULL,
+  workflow_profile TEXT NOT NULL,
+  attempt_id TEXT NOT NULL,
+  authorization_id TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  source_set_hash TEXT NOT NULL,
+  state TEXT NOT NULL,
+  risk_class TEXT NOT NULL,
+  revision_budget INTEGER NOT NULL,
+  current_revision INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  completed_at TEXT,
+  outcome TEXT,
+  reason TEXT,
+  optimistic_version INTEGER NOT NULL,
+  FOREIGN KEY(studio_id) REFERENCES studio_definitions(studio_id)
+);
+
+CREATE TABLE studio_stage_transitions (
+  transition_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  prior_state TEXT,
+  next_state TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  actor TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  evidence_reference TEXT NOT NULL,
+  UNIQUE(session_id, sequence),
+  FOREIGN KEY(session_id) REFERENCES studio_sessions(session_id)
+);
+
+CREATE TABLE studio_artifacts (
+  artifact_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  artifact_version INTEGER NOT NULL,
+  artifact_type TEXT NOT NULL,
+  content_addressed_path TEXT NOT NULL,
+  hash TEXT NOT NULL,
+  byte_size INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  metadata_json TEXT NOT NULL,
+  FOREIGN KEY(session_id) REFERENCES studio_sessions(session_id)
+);
+
+CREATE TABLE studio_claims (
+  claim_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  artifact_version INTEGER NOT NULL,
+  normalized_claim TEXT NOT NULL,
+  classification TEXT NOT NULL,
+  trust_status TEXT NOT NULL,
+  candidate_status TEXT NOT NULL,
+  conflict_status TEXT NOT NULL,
+  evaluation_status TEXT NOT NULL,
+  operator_disposition TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  PRIMARY KEY(claim_id, artifact_version),
+  FOREIGN KEY(session_id) REFERENCES studio_sessions(session_id)
+);
+
+CREATE TABLE studio_claim_sources (
+  claim_id TEXT NOT NULL,
+  source_asset_id TEXT NOT NULL,
+  knowledge_document_id TEXT,
+  chunk_id TEXT,
+  support_type TEXT NOT NULL,
+  ordering INTEGER NOT NULL,
+  metadata_json TEXT NOT NULL
+);
+
+CREATE TABLE studio_reviews (
+  review_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  artifact_version INTEGER NOT NULL,
+  operator_identity TEXT NOT NULL,
+  decision TEXT NOT NULL,
+  correction_json TEXT NOT NULL,
+  reviewed_artifact_hash TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  FOREIGN KEY(session_id) REFERENCES studio_sessions(session_id)
+);
+
+CREATE TABLE studio_learning_signals (
+  signal_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  artifact_version INTEGER NOT NULL,
+  signal_type TEXT NOT NULL,
+  evidence_references_json TEXT NOT NULL,
+  applicability_context TEXT NOT NULL,
+  non_applicability_context TEXT,
+  candidate_status TEXT NOT NULL,
+  trust_status TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  capability_signal_reference TEXT,
+  FOREIGN KEY(session_id) REFERENCES studio_sessions(session_id)
+);
+
+CREATE TABLE studio_events (
+  event_id TEXT PRIMARY KEY,
+  aggregate_type TEXT NOT NULL,
+  aggregate_id TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  runtime_instance_id TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  safe_message TEXT NOT NULL,
+  structured_details_json TEXT NOT NULL,
+  UNIQUE(aggregate_id, sequence)
+);
+
+CREATE TABLE studio_idempotency (
+  operation_type TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL,
+  normalized_request_hash TEXT NOT NULL,
+  resulting_aggregate TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  conflict_status TEXT NOT NULL,
+  PRIMARY KEY(operation_type, idempotency_key)
+);
+
+CREATE INDEX idx_studio_versions_status ON studio_versions(status, certified_at);
+CREATE INDEX idx_studio_sessions_state ON studio_sessions(state, updated_at);
+CREATE INDEX idx_studio_stage_session ON studio_stage_transitions(session_id, sequence);
+CREATE INDEX idx_studio_artifacts_session ON studio_artifacts(session_id, artifact_version);
+CREATE INDEX idx_studio_claims_session ON studio_claims(session_id, artifact_version);
+CREATE INDEX idx_studio_reviews_session ON studio_reviews(session_id, timestamp);
+CREATE INDEX idx_studio_learning_signals_session ON studio_learning_signals(session_id, signal_type);
+CREATE INDEX idx_studio_events_aggregate ON studio_events(aggregate_id, sequence);
 `
   }
 ];

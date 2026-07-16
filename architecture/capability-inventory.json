@@ -24,6 +24,28 @@
       "records": "Governed recursive learning and capability version lifecycle with authorized sessions, immutable candidate bundles, isolated execution, deterministic evaluation, baseline comparison, exact certification, Control Plane promotion, active versions, regression evidence, rollback, and repeatable offline proof."
     },
     {
+      "id": "studio-runtime-v1",
+      "name": "Studio Runtime v1",
+      "kind": "runtime-service",
+      "status": "complete",
+      "executableCapability": true,
+      "runtimeService": true,
+      "targetLayer": "runtime",
+      "document": "docs/architecture/STUDIO_RUNTIME_V1.md",
+      "records": "Studio registry, exact version digests, sessions, stage transitions, artifact lineage, review state, immutable package evidence, candidate learning-signal routing, and repeatable offline proofs."
+    },
+    {
+      "id": "evidence-studio-v1",
+      "name": "Evidence Studio v1",
+      "kind": "certified-studio",
+      "status": "complete",
+      "executableCapability": true,
+      "runtimeService": false,
+      "targetLayer": "studio",
+      "document": "docs/architecture/EVIDENCE_STUDIO_V1.md",
+      "records": "First certified Studio definition for source-grounded professional briefs with claim ledger, source map, deterministic evaluation, operator review, final package, and candidate-only learning signals."
+    },
+    {
       "id": "local-model-runtime-v1",
       "name": "Local Model Runtime v1",
       "kind": "runtime-capability",

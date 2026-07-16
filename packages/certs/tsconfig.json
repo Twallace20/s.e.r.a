@@ -46,6 +46,12 @@
       "path": "../capability-engine"
     },
     {
+      "path": "../studio-runtime"
+    },
+    {
+      "path": "../evidence-studio"
+    },
+    {
       "path": "../operator-gateway"
     },
     {

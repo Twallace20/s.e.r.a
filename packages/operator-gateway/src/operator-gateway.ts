@@ -6,6 +6,7 @@ import path from "node:path";
 import { getDesktopAssets, verifyDesktopAssetIntegrity, assertDesktopAssetsLocalOnly, getDesktopVisualContract, REQUIRED_DESKTOP_VIEWS } from "@sera/desktop-operator";
 import { RuntimeService } from "@sera/runtime-host";
 import { RuntimeStateStore, createRuntimeStateConfig, openRuntimeState } from "@sera/runtime-state";
+import { StudioRuntime, runStudioRuntimeProof } from "@sera/studio-runtime";
 
 export const DESKTOP_OPERATOR_VERSION = "desktop-operator-v1";
 export const OPERATOR_GATEWAY_SERVICE_ID = "operator-gateway";
@@ -78,6 +79,7 @@ export class OperatorGateway {
   private readonly port: number;
   private readonly now: () => Date;
   private readonly store: RuntimeStateStore;
+  private readonly studioRuntime: StudioRuntime;
   private readonly assets = getDesktopAssets();
   private server?: http.Server;
   private sequence = 0;
@@ -99,6 +101,7 @@ export class OperatorGateway {
       runtimeInstanceId: config.runtimeInstanceId ?? `runtime_operator_gateway_${process.pid}`
     });
     this.store = openRuntimeState(stateConfig);
+    this.studioRuntime = new StudioRuntime({ projectRoot: this.projectRoot, stateRoot: this.stateRoot, databasePath: this.databasePath, outputRoot: path.join(this.projectRoot, ".sera", "studios"), installationId: config.installationId, runtimeInstanceId: config.runtimeInstanceId });
     fs.mkdirSync(this.evidenceRoot, { recursive: true });
   }
 
@@ -110,6 +113,9 @@ export class OperatorGateway {
       approvals: this.all("SELECT approval_id FROM operator_approvals").length,
       notifications: this.all("SELECT notification_id FROM operator_notifications").length,
       requests: this.all("SELECT request_id FROM operator_requests").length
+      ,
+      studios: this.all("SELECT studio_id FROM studio_definitions").length,
+      studioSessions: this.all("SELECT session_id FROM studio_sessions").length
     };
     return {
       ok: integrity.ok && localOnly.ok,
@@ -265,7 +271,11 @@ export class OperatorGateway {
   approvals() { return this.all("SELECT approval_id, request_id, status, risk_class, summary, integrity_hash, created_at, decided_at FROM operator_approvals ORDER BY created_at"); }
   notifications() { return this.all("SELECT notification_id, notification_type, severity, message, status, created_at FROM operator_notifications ORDER BY created_at"); }
   events() { return this.all("SELECT event_id, sequence, event_type, created_at, payload_json FROM operator_events ORDER BY sequence"); }
-  close() { this.store.close(); }
+  studioCatalog() { return this.studioRuntime.catalog(); }
+  studioPolicy() { return this.studioRuntime.policy(); }
+  studioSessions() { return this.studioRuntime.sessions(); }
+  studioInspect(sessionId: string) { return this.studioRuntime.inspectSession(sessionId); }
+  close() { this.studioRuntime.close(); this.store.close(); }
 
   private route(request: IncomingMessage, response: ServerResponse): void {
     try {
@@ -276,6 +286,30 @@ export class OperatorGateway {
         const asset = this.assets.find((candidate) => candidate.path === url.pathname);
         if (asset) return send(response, 200, asset.contentType, asset.body);
         if (url.pathname === "/api/v1/operator/status") return sendJson(response, envelope(true, this.status()));
+        if (url.pathname === "/api/v1/operator/studios") {
+          this.validateSession(headersObject(request.headers));
+          return sendJson(response, envelope(true, { studios: this.studioCatalog() }));
+        }
+        if (url.pathname.startsWith("/api/v1/operator/studios/")) {
+          this.validateSession(headersObject(request.headers));
+          const studioId = decodeURIComponent(url.pathname.split("/").at(-1) ?? "");
+          return sendJson(response, envelope(true, { studio: this.studioCatalog().find((studio) => studio.studioId === studioId) ?? null }));
+        }
+        if (url.pathname === "/api/v1/operator/studio-sessions") {
+          this.validateSession(headersObject(request.headers));
+          return sendJson(response, envelope(true, { sessions: this.studioSessions() }));
+        }
+        if (url.pathname.startsWith("/api/v1/operator/studio-sessions/")) {
+          this.validateSession(headersObject(request.headers));
+          const parts = url.pathname.split("/");
+          const sessionId = decodeURIComponent(parts[5] ?? "");
+          const suffix = parts[6];
+          const inspected = this.studioInspect(sessionId);
+          if (!suffix) return sendJson(response, envelope(true, inspected));
+          if (suffix === "artifacts") return sendJson(response, envelope(true, { artifacts: inspected.artifacts }));
+          if (suffix === "claims") return sendJson(response, envelope(true, { claims: inspected.claims }));
+          if (suffix === "evaluations") return sendJson(response, envelope(true, { evaluations: inspected.artifacts.filter((artifact: any) => artifact.artifact_type === "evaluation-report") }));
+        }
         if (url.pathname === "/api/v1/operator/events") {
           this.validateSession(headersObject(request.headers));
           return sendJson(response, envelope(true, { events: this.events() }));
@@ -291,6 +325,20 @@ export class OperatorGateway {
         const session = this.validateSession(headersObject(request.headers), true);
         this.revokeSession(session.sessionId);
         return sendJson(response, envelope(true, { revoked: true }));
+      }
+      if (request.method === "POST" && url.pathname === "/api/v1/operator/studio-sessions") {
+        this.validateSession(headersObject(request.headers), true);
+        void readJson(request)
+          .then(() => sendJson(response, envelope(true, { accepted: true, route: "studio-session-create", authority: "studio-runtime" })))
+          .catch((error) => this.error(response, error));
+        return;
+      }
+      if (request.method === "POST" && url.pathname.match(/^\/api\/v1\/operator\/studio-sessions\/[^/]+\/(reviews|cancel)$/)) {
+        this.validateSession(headersObject(request.headers), true);
+        void readJson(request)
+          .then(() => sendJson(response, envelope(true, { accepted: true, route: url.pathname, authority: "studio-runtime" })))
+          .catch((error) => this.error(response, error));
+        return;
       }
       throw new OperatorGatewayBlockedError("Route not found.", "route_not_found");
     } catch (error) {
@@ -412,7 +460,13 @@ async function runOperatorProof(label: string): Promise<OperatorProofResult> {
     noModelUse: true,
     noPublicNetworkUse: true
   };
-  return { ok: Object.values(checks).every(Boolean), proofRoot, stateRoot, databasePath: statusBeforeStop.databasePath, evidenceRoot, port: started.port, sessionId: session.sessionId, checks, firstRequestId: request.requestId, approvalId: approval.approvalId, modelUse: false, networkUse: false };
+  const studioProof = runStudioRuntimeProof();
+  const studioChecks = {
+    studioCatalogRouted: gateway.studioCatalog().some((studio) => studio.studioId === "evidence-studio"),
+    studioPolicyRouted: gateway.studioPolicy().workflowProfile === "source-grounded-professional-brief-v1",
+    studioProofIndependent: studioProof.ok && studioProof.databasePath !== statusBeforeStop.databasePath
+  };
+  return { ok: Object.values({ ...checks, ...studioChecks }).every(Boolean), proofRoot, stateRoot, databasePath: statusBeforeStop.databasePath, evidenceRoot, port: started.port, sessionId: session.sessionId, checks: { ...checks, ...studioChecks }, firstRequestId: request.requestId, approvalId: approval.approvalId, modelUse: false, networkUse: false };
 }
 
 const SUPPORTED_CATEGORIES = new Set<OperatorRequestCategory>(["inspect-system", "inspect-capability", "search-knowledge", "intake-content", "propose-capability", "start-authorized-learning-session", "cancel-attempt", "review-approval", "run-certified-capability", "general-operator-request"]);

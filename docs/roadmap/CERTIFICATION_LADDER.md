@@ -5,10 +5,10 @@ S.E.R.A. only advances when the cert runner proves the current runtime level. Do
 ## Current runtime certification
 
 ```text
-desktop-operator-v1
+first-certified-studio-v1
 ```
 
-Milestone 11 is the current runtime certification. It proves a local graphical Desktop Operator, loopback-only Operator Gateway, hashed local-owner sessions, CSRF-gated state changes, approval review, safe evidence viewing, notifications, Runtime State v8 persistence, repeatable proofs, offline operation, and no model requirement.
+Milestone 12 is the current runtime certification. It proves Studio Runtime registration, Evidence Studio v1, the `source-grounded-professional-brief-v1` profile, source-grounded claims, deterministic evaluation, operator review, immutable final packages, candidate-only learning signals, Desktop Operator Studio surfaces, offline operation, and no real model requirement.
 
 The Evidence-Driven Recurrence Prevention and Governed Innovation plan is an architecture lock, not a new runtime certification level. It preserves `desktop-operator-v1` as the current certification while reserving later Base MVP acceptance gates for lesson retrieval, recurrence prevention, scoped generalization, operator overrides, and governed innovation.
 
@@ -83,6 +83,12 @@ S.E.R.A. can turn evidence-backed learning into a governed capability candidate,
 S.E.R.A. can expose a private local graphical operator surface through `@sera/desktop-operator` and a loopback-only `@sera/operator-gateway`. The gateway records sessions, requests, approvals, notifications, events, audit records, and safe evidence views in Runtime State while preserving Control Plane authority and blocking public network, model invocation, automatic approval, automatic promotion, and direct SQLite mutation from the UI.
 
 Desktop Operator also reserves governed empty-state UI surfaces for later recurrence-prevention and innovation evidence. This reservation does not implement lesson Runtime behavior or change the certified level.
+
+## Studio/Runtime Level — `first-certified-studio-v1`
+
+S.E.R.A. can run Evidence Studio v1 as the first certified Studio. The Studio produces a bounded professional brief from explicit operator intent and authorized local sources, records a document plan, claim ledger, source map, provenance, deterministic evaluation, operator review, revision history, immutable final package, and candidate learning signals.
+
+This level does not certify public web research, PDF output, universal document generation, active lesson certification, prevention activation, innovation promotion, distributed Studios, Hive Mode, or the full Milestone 13 integrated offline loop.
 
 ## Level 10 — `model-provider-v1`
 

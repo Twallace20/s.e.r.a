@@ -118,6 +118,7 @@ Current repository candidates:
 | --- | --- |
 | `packages/workspace` | confirmed |
 | `packages/artifacts` | confirmed |
+| `packages/studio-runtime` | confirmed; Runtime service for Studio registry, sessions, evidence, review state, and package finalization |
 | `packages/memory` | provisional |
 | `packages/knowledge` | provisional |
 | `packages/planner` | provisional |
@@ -352,6 +353,17 @@ Milestone 11 implements Desktop Operator as a Desktop-layer surface backed by a 
 Milestone 11 also reserves Desktop visual contract surfaces for known failure patterns, applicable lessons, prevention warnings, certified alternatives, operator overrides, superseded lessons, improvement proposals, innovation proposals, supporting evidence, and applicability explanations. These are reserved empty-state surfaces; the recurrence-prevention Runtime is not implemented in Milestone 11.
 
 ## Studio
+
+Purpose: provide certified user-facing workflows composed from Runtime, Capability, Provider, and Desktop boundaries without becoming authority itself.
+
+Current repository candidates:
+
+| Candidate | Mapping |
+| --- | --- |
+| `packages/evidence-studio` | confirmed; first certified Studio definition |
+| `docs/architecture/EVIDENCE_STUDIO_V1.md` | confirmed Studio contract |
+
+Boundary: Studio definitions own workflow contracts, limitations, input/output shape, and operator-review expectations. Studio definitions do not directly mutate SQLite, invoke real models, execute tools, certify lessons, activate prevention, or finalize Control Plane attempts.
 
 Purpose: compose certified capabilities into domain production workflows.
 

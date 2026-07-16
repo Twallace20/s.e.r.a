@@ -1,16 +1,18 @@
 {
-  "name": "@sera/operator-gateway",
+  "name": "@sera/evidence-studio",
   "version": "0.1.0",
   "private": true,
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -b"
   },
   "dependencies": {
-    "@sera/desktop-operator": "0.1.0",
-    "@sera/runtime-host": "0.1.0",
-    "@sera/runtime-state": "0.1.0",
     "@sera/studio-runtime": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
   }
 }
