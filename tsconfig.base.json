@@ -95,6 +95,12 @@
       ],
       "@sera/capability-engine": [
         "packages/capability-engine/src/index.ts"
+      ],
+      "@sera/desktop-operator": [
+        "apps/desktop-operator/src/index.ts"
+      ],
+      "@sera/operator-gateway": [
+        "packages/operator-gateway/src/index.ts"
       ]
     }
   }

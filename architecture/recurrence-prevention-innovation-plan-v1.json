@@ -1,0 +1,249 @@
+{
+  "schemaVersion": "sera.recurrence-prevention-innovation-plan.v1",
+  "invariantId": "evidence-driven-recurrence-prevention-and-innovation-v1",
+  "invariantTitle": "Evidence-Driven Recurrence Prevention and Governed Innovation",
+  "status": "architecture-locked-runtime-pending",
+  "effectiveMilestone": 11,
+  "architecturalPrinciples": [
+    "A materially evidenced and certified failure must not be unknowingly repeated under materially equivalent conditions.",
+    "Every material failure, correction, operator override, regression, and improvement opportunity must be capable of producing an evidence-linked learning signal.",
+    "One observation is not automatically a certified lesson.",
+    "Model output is candidate intelligence only.",
+    "Control Plane retains promotion and override authority.",
+    "Planned behavior must not be represented as certified or active until implemented and proven."
+  ],
+  "learningLanes": [
+    {
+      "id": "acquisition",
+      "definition": "Collect bounded evidence without claiming it is true, reusable, or active."
+    },
+    {
+      "id": "repair",
+      "definition": "Correct a demonstrated failure while preserving source evidence for the original failure and correction."
+    },
+    {
+      "id": "improvement",
+      "definition": "Compare a candidate against a baseline and require measurable evidence before certification or promotion."
+    },
+    {
+      "id": "adaptation",
+      "definition": "Apply a certified pattern to a related context only inside declared applicability boundaries."
+    },
+    {
+      "id": "recurrence-prevention",
+      "definition": "Retrieve known failure paths, lessons, prevention rules, alternatives, and overrides before materially similar work."
+    },
+    {
+      "id": "innovation",
+      "definition": "Propose a materially different approach, capability, authority, dependency, source boundary, or risk class under stronger governance."
+    }
+  ],
+  "prohibitedShortcuts": [
+    "A model-generated statement cannot become an active lesson by itself.",
+    "One failure cannot become a certified lesson by itself.",
+    "A casual operator statement cannot become a reusable rule by itself.",
+    "Successful parsing cannot certify a lesson.",
+    "Capability completion cannot certify a lesson unless the lesson lifecycle is satisfied.",
+    "A candidate that appears better cannot activate without baseline comparison, certification, promotion authority, and rollback readiness.",
+    "Innovation cannot activate itself.",
+    "Known certified failure paths cannot be repeated blindly."
+  ],
+  "lessonLifecycle": {
+    "states": [
+      "candidate",
+      "under-review",
+      "rejected",
+      "certified-inactive",
+      "active",
+      "superseded",
+      "rolled-back"
+    ],
+    "requires": [
+      "durable evidence",
+      "exact source references",
+      "context boundaries",
+      "non-applicability boundaries",
+      "reproducibility where required",
+      "evaluation",
+      "certification",
+      "explicit activation authority",
+      "rollback or supersession support"
+    ],
+    "historyPolicy": "Lessons may be superseded but not silently erased; failed and rejected lessons remain inspectable."
+  },
+  "preventionLifecycle": {
+    "inputs": [
+      "certified lessons",
+      "known failure patterns",
+      "active prevention rules",
+      "certified alternatives",
+      "operator overrides",
+      "superseded lessons",
+      "proven improvement strategies"
+    ],
+    "behaviors": [
+      "block materially equivalent known failure paths",
+      "warn and require governed review for uncertain equivalence",
+      "select a certified alternative when authorized and applicable",
+      "avoid blocking out-of-scope contexts"
+    ],
+    "evidenceRequired": true
+  },
+  "innovationLifecycle": {
+    "distinctFromLearning": true,
+    "requires": [
+      "authorization",
+      "isolated experimentation",
+      "baseline comparison",
+      "reproducibility",
+      "certification",
+      "explicit promotion",
+      "rollback readiness"
+    ],
+    "activationPolicy": "Innovation cannot activate itself and cannot be promoted automatically."
+  },
+  "operatorOverridePolicy": {
+    "requiresGovernance": true,
+    "requires": [
+      "evidence",
+      "authority",
+      "reason",
+      "scope",
+      "audit record"
+    ],
+    "authority": "Control Plane",
+    "historyPolicy": "Overrides do not erase failures, lessons, prevention rules, or superseded history."
+  },
+  "contextMatchingPolicy": {
+    "exactOrMateriallyEquivalent": "prevention behavior required",
+    "relatedButDifferent": "scoped application with applicability and non-applicability explanation required",
+    "outOfScope": "must not be incorrectly blocked",
+    "knownCertifiedFailurePath": "must block, warn for governed review, or select a certified alternative"
+  },
+  "milestoneAcceptanceGates": {
+    "11": {
+      "name": "Desktop Operator",
+      "status": "ui-contract-reserved-runtime-pending",
+      "gates": [
+        "Desktop Operator visual contract reserves governed surfaces for known failure patterns",
+        "Desktop Operator visual contract reserves governed surfaces for applicable lessons",
+        "Desktop Operator visual contract reserves governed surfaces for prevention warnings",
+        "Desktop Operator visual contract reserves governed surfaces for certified alternatives",
+        "Desktop Operator visual contract reserves governed surfaces for operator overrides",
+        "Desktop Operator visual contract reserves governed surfaces for superseded lessons",
+        "Desktop Operator visual contract reserves governed surfaces for improvement proposals",
+        "Desktop Operator visual contract reserves governed surfaces for innovation proposals",
+        "Desktop Operator visual contract reserves governed surfaces for supporting evidence",
+        "Desktop Operator visual contract reserves governed surfaces for applicability and non-applicability explanations",
+        "Desktop Operator may render honest empty states until Runtime support exists"
+      ]
+    },
+    "12": {
+      "name": "First Certified Studio",
+      "status": "future-acceptance-locked",
+      "gates": [
+        "Studio produces evidence-linked operator corrections",
+        "Studio produces evidence-linked failed-output signals",
+        "Studio produces evidence-linked evaluation failures",
+        "Studio produces evidence-linked improvement opportunities",
+        "Studio produces evidence-linked innovation opportunities",
+        "Studio does not automatically promote interaction history into reusable rules"
+      ]
+    },
+    "13": {
+      "name": "Integrated Offline Loop",
+      "status": "future-acceptance-locked",
+      "gates": [
+        "Integrated loop performs a learning preflight before capability or approach selection",
+        "Preflight retrieves applicable certified lessons",
+        "Preflight retrieves known failure patterns",
+        "Preflight retrieves prevention rules",
+        "Preflight retrieves certified alternatives",
+        "Preflight retrieves active overrides"
+      ]
+    },
+    "14": {
+      "name": "Learning Generalization, Recurrence Prevention, and Innovation Proof",
+      "status": "future-acceptance-locked",
+      "acceptanceProof": [
+        "controlled failure",
+        "durable evidence",
+        "failure reproduction",
+        "scoped root-cause hypothesis",
+        "repair candidate",
+        "original-failure correction",
+        "regression proof",
+        "reproducibility",
+        "lesson certification",
+        "prevention-rule activation",
+        "equivalent-context retrieval",
+        "known-failure avoidance",
+        "related-context generalization",
+        "out-of-scope non-application",
+        "baseline improvement comparison",
+        "governed innovation proposal",
+        "innovation certification and promotion boundary",
+        "lesson supersession",
+        "governed operator override",
+        "proof that model output does not automatically become a lesson"
+      ]
+    },
+    "15": {
+      "name": "Clean-Machine Offline Restart Proof",
+      "status": "future-acceptance-locked",
+      "gates": [
+        "failure records persist after restart",
+        "certified lessons persist after restart",
+        "prevention rules persist after restart",
+        "lesson scopes persist after restart",
+        "superseded lessons persist after restart",
+        "overrides persist after restart",
+        "innovation proposals persist after restart",
+        "known-failure prevention works after restart with no public internet"
+      ]
+    },
+    "16": {
+      "name": "Portable Base MVP Acceptance",
+      "status": "future-acceptance-locked",
+      "portableAcceptanceScenario": [
+        "controlled mistake",
+        "evidence preservation",
+        "correction",
+        "certification",
+        "shutdown",
+        "restart",
+        "materially equivalent request",
+        "certified-lesson retrieval",
+        "prevention of the known mistake",
+        "visible explanation and evidence in Desktop Operator"
+      ]
+    }
+  },
+  "milestone14CanonicalName": "Milestone 14 - Learning Generalization, Recurrence Prevention, and Innovation Proof",
+  "milestone16PortableAcceptanceScenario": [
+    "controlled mistake",
+    "evidence preservation",
+    "correction",
+    "certification",
+    "shutdown",
+    "restart",
+    "materially equivalent request",
+    "certified-lesson retrieval",
+    "prevention of the known mistake",
+    "visible explanation and evidence in Desktop Operator"
+  ],
+  "postBaseMvpContinuationPolicy": {
+    "requires": [
+      "no silent loss of learning history",
+      "new capabilities must preserve recurrence-prevention preflight hooks",
+      "innovation remains governed and distinct from learning",
+      "Control Plane remains promotion and override authority"
+    ]
+  },
+  "integrity": {
+    "deterministicOrderingRequired": true,
+    "appendOnlyHistoryRequired": true,
+    "noSilentErasure": true,
+    "machineCheckable": true
+  }
+}

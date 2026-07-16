@@ -399,7 +399,7 @@ describe("Persistent Runtime Recovery v1", () => {
 
   it("migration version includes recovery tables", () => {
     withRecovery("recovery-migration-tables", (store) => {
-      expect(store.inspect().schemaVersion).toBe(7);
+      expect(store.inspect().schemaVersion).toBe(8);
       expect(store.inspect().counts.recovery_sessions).toBe(0);
       expect(store.inspect().counts.recovery_checkpoints).toBe(0);
     });

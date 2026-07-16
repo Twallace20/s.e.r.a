@@ -30,6 +30,10 @@ The Capability Engine:
 
 Learning improves an existing capability contract within declared bounds. Innovation creates a materially new capability, authority, dependency, source boundary, or risk class. Innovation is blocked in v1 unless it is explicitly represented as a candidate proposal for future owner-governed work.
 
+The cross-cutting recurrence-prevention and innovation plan is locked in `docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md` and `architecture/recurrence-prevention-innovation-plan-v1.json`. Milestone 10 supplies candidate-bundle, comparison, certification, promotion, active-version, and rollback foundations; it does not yet implement the later lesson Runtime, recurrence-prevention preflight, automatic lesson retrieval, or innovation activation flow.
+
+Model output, knowledge records, capability results, and operator statements remain candidate inputs until durable evidence, scoped applicability, non-applicability boundaries, evaluation, certification, and explicit Control Plane authority exist.
+
 ## Candidate Bundle Boundary
 
 A candidate bundle is content-addressed under `.sera/capabilities/candidates/<capabilityId>/<digest>/`. It contains the manifest, policy, authorization, learning signals, execution evidence, evaluation evidence, comparison evidence, and final report. The digest is part of the certification and promotion contract.
@@ -81,4 +85,4 @@ npm run sera -- learning prove
 
 ## Limitations
 
-V1 does not implement arbitrary code loading, unrestricted shell, cloud providers, public internet research, real model execution, Desktop Operator, Studio, distributed capability execution, Hive Mode, automatic source mutation, Git branch automation, or automatic promotion. It also does not begin Milestone 11.
+V1 does not implement arbitrary code loading, unrestricted shell, cloud providers, public internet research, real model execution, Studio, distributed capability execution, Hive Mode, automatic source mutation, Git branch automation, automatic promotion, automatic lesson activation, recurrence-prevention preflight, or governed innovation promotion.
