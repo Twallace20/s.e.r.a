@@ -14,6 +14,7 @@ Desktop Operator v1 adds a private, local-first graphical control surface and a 
 - Active imported HTML evidence is never rendered.
 - Explicit blocked authorities include: does not run shell commands, no automatic promotion, no automatic rollback, and no active imported HTML rendering.
 - Reserves governed empty-state surfaces for recurrence prevention and innovation review without fabricating lesson data.
+- Exposes Evidence Studio panels for catalog, details, session progress, source set, document plan, candidate draft, claim ledger, source map, evaluation results, operator review, revision history, final deliverable, learning signals, limitations, and certification.
 
 ## Runtime Role
 
@@ -53,3 +54,5 @@ Milestone 11 reserves Desktop Operator visual contract surfaces for:
 These surfaces are UI contract reservations only. Desktop Operator v1 may render honest empty states until later Runtime milestones implement certified recurrence-prevention, lesson retrieval, override, supersession, and innovation records.
 
 Desktop Operator v1 does not activate lessons, create prevention rules, promote innovation, infer lesson applicability, or replace Control Plane authority.
+
+Milestone 12 adds Studio surfaces to the Desktop Operator visual contract. These surfaces route state-changing actions through Operator Gateway and Studio Runtime; browser code still does not directly finalize Studio sessions or write Studio state.

@@ -11,6 +11,8 @@ import { LocalModelRuntime, runLocalModelRuntimeProof } from "@sera/model-runtim
 import { KnowledgeRuntime, createIntakeAuthorization, normalizeIntakeRequest, runKnowledgeIntakeProof, runKnowledgeRetrievalProof } from "@sera/knowledge-runtime";
 import { CapabilityEngine, runCapabilityEngineProof, runRecursiveLearningProof } from "@sera/capability-engine";
 import { OperatorGateway, runDesktopOperatorProof, runOperatorGatewayProof } from "@sera/operator-gateway";
+import { StudioRuntime, createEvidenceStudioDefinition, runStudioRuntimeProof } from "@sera/studio-runtime";
+import { getEvidenceStudioStatus, runEvidenceStudioProof } from "@sera/evidence-studio";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -136,6 +138,13 @@ Usage:
   sera learning status
   sera learning inspect <session-id>
   sera learning prove
+  sera studio catalog
+  sera studio policy
+  sera studio sessions
+  sera studio inspect <session-id>
+  sera studio prove
+  sera evidence-studio status
+  sera evidence-studio prove
   sera snapshot
   sera truth
 
@@ -223,6 +232,7 @@ Secure base behavior:
   - Local Model Runtime governs registered local providers and returns untrusted candidate intelligence without tool execution authority
   - Knowledge and Universal Intake Runtime preserves provenance-linked local information as candidate knowledge with deterministic lexical retrieval
   - Capability Engine creates, evaluates, certifies, promotes and rolls back exact bounded capability versions under Control Plane authority
+  - Studio Runtime coordinates certified Studio definitions, source-grounded briefs, review-bound final packages, and candidate-only learning signals
   - does not require an LLM provider
 `);
 }
@@ -1467,6 +1477,51 @@ async function main(): Promise<void> {
       store.close();
     }
     throw new Error("Learning command must be 'status', 'inspect', or 'prove'.");
+  }
+
+  if (cmd === "studio") {
+    const [studioMode, sessionId] = rest;
+    if (studioMode === "prove") {
+      const result = runStudioRuntimeProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const runtime = new StudioRuntime({ projectRoot: process.cwd() });
+    try {
+      if (studioMode === "catalog") {
+        console.log(JSON.stringify({ ok: true, studios: runtime.catalog(), modelUse: false, publicNetworkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (studioMode === "policy") {
+        console.log(JSON.stringify(runtime.policy(), null, 2));
+        process.exit(0);
+      }
+      if (studioMode === "sessions") {
+        console.log(JSON.stringify({ ok: true, sessions: runtime.sessions(), modelUse: false, publicNetworkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (studioMode === "inspect") {
+        console.log(JSON.stringify({ ok: true, inspected: runtime.inspectSession(requireArg(sessionId, "Studio session id")), modelUse: false, publicNetworkUse: false }, null, 2));
+        process.exit(0);
+      }
+    } finally {
+      runtime.close();
+    }
+    throw new Error("Studio command must be 'catalog', 'policy', 'sessions', 'inspect', or 'prove'.");
+  }
+
+  if (cmd === "evidence-studio") {
+    const [mode] = rest;
+    if (mode === "status") {
+      console.log(JSON.stringify(getEvidenceStudioStatus(), null, 2));
+      process.exit(0);
+    }
+    if (mode === "prove") {
+      const result = runEvidenceStudioProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    throw new Error("Evidence Studio command must be 'status' or 'prove'.");
   }
 
   if (cmd === "desktop") {

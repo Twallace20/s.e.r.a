@@ -57,11 +57,11 @@ describe("SQLite Operational State v1", () => {
   it("creates the supported schema and reports SQLite settings", () => {
     withStore("state-init", (store) => {
       const inspect = store.inspect();
-      expect(inspect.schemaVersion).toBe(8);
+      expect(inspect.schemaVersion).toBe(9);
       expect(inspect.sqlite.foreignKeys).toBe(true);
       expect(inspect.sqlite.journalMode).toBe("wal");
       expect(inspect.sqlite.implementation).toBe("node:sqlite DatabaseSync");
-      expect(inspect.counts.schema_migrations).toBe(8);
+      expect(inspect.counts.schema_migrations).toBe(9);
     });
   });
 
@@ -73,7 +73,7 @@ describe("SQLite Operational State v1", () => {
     first.close();
     const second = new RuntimeStateStore(config, fixedClock());
     second.initialize();
-    expect(second.inspect().counts.schema_migrations).toBe(8);
+    expect(second.inspect().counts.schema_migrations).toBe(9);
     second.close();
   });
 
@@ -418,8 +418,8 @@ describe("SQLite Operational State v1", () => {
     try {
       const after = second.recoveryAll("SELECT version, name, checksum FROM schema_migrations ORDER BY version");
       expect(after).toEqual(before);
-      expect(after.map((row: any) => row.version)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
-      expect(after.slice(0, 7)).toEqual(before.slice(0, 7));
+      expect(after.map((row: any) => row.version)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+      expect(after.slice(0, 8)).toEqual(before.slice(0, 8));
     } finally {
       second.close();
     }

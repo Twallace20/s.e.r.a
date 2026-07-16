@@ -125,22 +125,22 @@ describe("Desktop Operator v1", () => {
   });
 
   const runtimeSchemaCases = [
-    ["runtime migration version is 8", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.version === 8],
-    ["runtime migration name is desktop operator", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.name === "desktop_operator_v1"],
-    ["migration v8 creates operator sessions", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("CREATE TABLE operator_sessions")],
-    ["migration v8 creates operator requests", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("CREATE TABLE operator_requests")],
-    ["migration v8 creates operator approvals", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("CREATE TABLE operator_approvals")],
-    ["migration v8 creates approval decisions", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("CREATE TABLE operator_approval_decisions")],
-    ["migration v8 creates audit events", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("CREATE TABLE operator_audit_events")],
-    ["migration v8 creates notifications", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("CREATE TABLE operator_notifications")],
-    ["migration v8 creates events", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("CREATE TABLE operator_events")],
-    ["migration v8 creates preferences", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("CREATE TABLE operator_preferences")],
-    ["migration v8 indexes sessions", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("idx_operator_sessions_state")],
-    ["migration v8 indexes requests", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("idx_operator_requests_status")],
-    ["migration v8 indexes approvals", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("idx_operator_approvals_status")],
-    ["migration v8 indexes audit", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("idx_operator_audit_events_sequence")],
-    ["migration v8 indexes notifications", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("idx_operator_notifications_status")],
-    ["migration v8 indexes events", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("idx_operator_events_sequence")],
+    ["runtime migration version includes v9", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.version === 9],
+    ["runtime migration v8 name is desktop operator", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.name === "desktop_operator_v1"],
+    ["migration v8 creates operator sessions", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_sessions")],
+    ["migration v8 creates operator requests", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_requests")],
+    ["migration v8 creates operator approvals", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_approvals")],
+    ["migration v8 creates approval decisions", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_approval_decisions")],
+    ["migration v8 creates audit events", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_audit_events")],
+    ["migration v8 creates notifications", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_notifications")],
+    ["migration v8 creates events", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_events")],
+    ["migration v8 creates preferences", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_preferences")],
+    ["migration v8 indexes sessions", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("idx_operator_sessions_state")],
+    ["migration v8 indexes requests", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("idx_operator_requests_status")],
+    ["migration v8 indexes approvals", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("idx_operator_approvals_status")],
+    ["migration v8 indexes audit", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("idx_operator_audit_events_sequence")],
+    ["migration v8 indexes notifications", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("idx_operator_notifications_status")],
+    ["migration v8 indexes events", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("idx_operator_events_sequence")],
     ["migration v1 checksum preserved", () => migrationChecksum(DEFAULT_RUNTIME_STATE_MIGRATIONS[0]) === "5c547ad9ce4defa6032f86dbc48be7098f6b4636a013b433c49f0d5363a52fe4"],
     ["migration v2 checksum preserved", () => migrationChecksum(DEFAULT_RUNTIME_STATE_MIGRATIONS[1]) === "783c70c40047b9c33f8cb09326ae02710eae185bfd20a70c54557de49ffc26fb"],
     ["migration v3 checksum preserved", () => migrationChecksum(DEFAULT_RUNTIME_STATE_MIGRATIONS[2]) === "6292e7585b8f9ac0f4ec1caaa578cc14c3baf110a747f9a0116f286f2b8f05a0"],
@@ -154,12 +154,12 @@ describe("Desktop Operator v1", () => {
     expect(check()).toBe(true);
   });
 
-  it("opens Runtime State schema v8 and exposes operator table counts", () => {
+  it("opens Runtime State schema v9 and exposes operator table counts", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-desktop-state-test-"));
     const store = openRuntimeState({ projectRoot: root });
     try {
       const inspection = store.inspect();
-      expect(inspection.schemaVersion).toBe(8);
+      expect(inspection.schemaVersion).toBe(9);
       expect(inspection.counts.operator_sessions).toBe(0);
       expect(inspection.counts.operator_approvals).toBe(0);
       expect(inspection.counts.operator_notifications).toBe(0);
@@ -211,7 +211,7 @@ describe("Desktop Operator v1", () => {
 
   it.each(sourceCaseFiles.map((file) => [`${file} references desktop operator`, file] as const))("%s", (_name, file) => {
     const text = fs.readFileSync(path.join(process.cwd(), file), "utf8").toLowerCase();
-    expect(text.includes("desktop") || text.includes("operator")).toBe(true);
+    expect(text.includes("desktop") || text.includes("operator") || text.includes("first-certified-studio")).toBe(true);
   });
 
   const boundaryPhrases = [

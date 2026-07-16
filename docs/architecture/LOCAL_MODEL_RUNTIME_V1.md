@@ -102,3 +102,6 @@ Local Model Runtime v1 does not:
 - implement distributed inference
 - implement Hive Mode
 - let model output execute tools or mutate source
+# Milestone 12 Studio Relationship
+
+Evidence Studio v1 may use deterministic fixture candidate generation during certification. Real local model use is optional and not required for Milestone 12. Model output remains candidate intelligence and cannot authorize sessions, certify claims, create source proof, execute tools, or complete Studio sessions.

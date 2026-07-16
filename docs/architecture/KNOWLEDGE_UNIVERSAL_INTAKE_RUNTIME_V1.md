@@ -84,3 +84,6 @@ Milestone 10 is Capability Engine and Recursive Learning. Capability Engine may 
 The certification target is `knowledge-intake-runtime-v1`.
 
 Focused tests cover authorization, source boundaries, symlink and junction safety where supported, limits, deduplication, versioning, text extraction, opaque preservation, deterministic chunking, provenance, trust semantics, retrieval determinism, idempotency, terminal immutability, recovery safety, Runtime Host health, CLI proofs, migration checksums, Repository Snapshot/Truth alignment, offline behavior, and model-free operation.
+# Milestone 12 Studio Relationship
+
+Evidence Studio v1 consumes authorized local source material through the Knowledge and Universal Intake boundary. Candidate knowledge and extracted chunks remain provenance-linked input, not canonical truth, and opaque media is not semantically understood unless a certified processor exists.

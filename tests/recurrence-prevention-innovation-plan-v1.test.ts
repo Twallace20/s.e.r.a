@@ -33,10 +33,10 @@ describe("Evidence-driven recurrence prevention and innovation plan v1", () => {
   it("milestone total remains 16", () => {
     const manifest = readJson<{ totalMilestones: number; completedMilestones: number; remainingMilestones: number; currentMilestone: number; currentCertification: string }>(manifestPath);
     expect(manifest.totalMilestones).toBe(16);
-    expect(manifest.completedMilestones).toBe(11);
-    expect(manifest.remainingMilestones).toBe(5);
-    expect(manifest.currentMilestone).toBe(12);
-    expect(manifest.currentCertification).toBe("desktop-operator-v1");
+    expect(manifest.completedMilestones).toBe(12);
+    expect(manifest.remainingMilestones).toBe(4);
+    expect(manifest.currentMilestone).toBe(13);
+    expect(manifest.currentCertification).toBe("first-certified-studio-v1");
   });
 
   it("Milestone 14 canonical name is exact", () => {
@@ -153,8 +153,9 @@ describe("Evidence-driven recurrence prevention and innovation plan v1", () => {
   it("no milestone count expansion occurred and no migration was added", () => {
     const manifest = readJson<{ totalMilestones: number }>(manifestPath);
     expect(manifest.totalMilestones).toBe(16);
-    expect(DEFAULT_RUNTIME_STATE_MIGRATIONS).toHaveLength(8);
-    expect(DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.name).toBe("desktop_operator_v1");
+    expect(DEFAULT_RUNTIME_STATE_MIGRATIONS).toHaveLength(9);
+    expect(DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.name).toBe("desktop_operator_v1");
+    expect(DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.name).toBe("first_certified_studio_v1");
   });
 
   it("documentation and inventory mark the behavior as planned, not implemented", () => {

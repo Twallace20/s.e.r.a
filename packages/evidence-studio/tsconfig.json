@@ -3,13 +3,10 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "composite": true
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*.ts"],
   "references": [
-    { "path": "../../apps/desktop-operator" },
-    { "path": "../runtime-host" },
-    { "path": "../runtime-state" },
     { "path": "../studio-runtime" }
   ]
 }

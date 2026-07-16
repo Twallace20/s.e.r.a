@@ -167,6 +167,28 @@ Boundary rules:
 - rollback requires explicit authorization and regression evidence
 - no arbitrary code loading, unrestricted shell, source mutation, cloud provider, public network, Git action, Desktop Operator, Studio, distributed capability, or Hive Mode authority is introduced
 
+## `@sera/studio-runtime` / `packages/studio-runtime`
+
+Runtime service for Studio registration, exact Studio version integrity, session lifecycle coordination, stage transitions, artifact lineage, claim/source ledgers, operator review state, immutable final package evidence, and candidate-only learning signal routing.
+
+Boundary rules:
+
+- owns Studio composition and evidence coordination
+- does not replace Unified Control Plane authorization or final attempt authority
+- does not own model provider, knowledge, evaluation, or capability certification authority
+- does not certify reusable lessons, activate prevention rules, or promote innovations
+- writes bounded Studio evidence only
+
+## `@sera/evidence-studio` / `packages/evidence-studio`
+
+User-facing Studio definition for the certified `source-grounded-professional-brief-v1` workflow.
+
+Boundary rules:
+
+- owns the Evidence Studio contract, profile, limitations, source policy, output structure, and review requirements
+- depends on Studio Runtime for session execution
+- does not directly mutate SQLite, execute tools, invoke real models, or finalize Control Plane attempts
+
 ## `@sera/operator-gateway` / `packages/operator-gateway`
 
 Runtime-layer gateway for the local Desktop Operator. It owns loopback-only HTTP serving, local-owner session validation, CSRF-gated state-changing operations, approval review, request composition, notifications, event polling, safe evidence viewing, and operator audit records in Runtime State migration v8.

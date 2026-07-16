@@ -157,6 +157,7 @@ const RUNTIME_PACKAGE_NAME_HINTS = [
   "runtime-host",
   "runtime-state",
   "runtime-recovery",
+  "studio-runtime",
   "model-runtime",
   "knowledge-runtime",
   "control-plane",
@@ -815,6 +816,8 @@ function collection(id: string, name: string, kind: ComponentKind, componentPath
 function classifyLayer(relativePath: string, name?: string): ArchitectureLayer {
   if (relativePath === ".") return "kernel";
   if (name?.includes("operator-gateway")) return "runtime";
+  if (name?.includes("studio-runtime")) return "runtime";
+  if (name?.includes("evidence-studio") || relativePath.includes("evidence-studio")) return "studio";
   if (name?.includes("desktop-operator")) return "desktop";
   if (relativePath.startsWith("apps/operator") || name?.includes("operator-console")) return "desktop";
   if (relativePath.startsWith("apps/")) return "desktop";

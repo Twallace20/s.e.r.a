@@ -37,6 +37,8 @@ Milestone 10 — Capability Engine and Recursive Learning is COMPLETE. S.E.R.A. 
 
 Milestone 11 — Desktop Operator is COMPLETE. S.E.R.A. has a local graphical operator surface, loopback-only Operator Gateway, hashed local-owner sessions, approval review, notifications, safe evidence viewing, Runtime State v8 records, and repeatable offline proofs without model or public network use.
 
+Milestone 12 — First Certified Studio is COMPLETE. S.E.R.A. has Studio Runtime, Evidence Studio v1, the certified `source-grounded-professional-brief-v1` profile, source-grounded claim/source evidence, deterministic evaluation, operator review, revision history, immutable final package output, candidate-only learning signals, and Desktop Operator Studio surfaces.
+
 Cross-cutting plan lock — Evidence-Driven Recurrence Prevention and Governed Innovation is ACTIVE as an architecture and Base MVP acceptance invariant, with Runtime implementation pending. The locked plan lives in `docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md` and `architecture/recurrence-prevention-innovation-plan-v1.json`.
 
 Milestone 7 - Evaluation Engine: COMPLETE
@@ -44,15 +46,15 @@ Milestone 8 - Local Model Runtime: COMPLETE
 Milestone 9 - Knowledge and Multimodal Intake: COMPLETE
 Milestone 10 - Capability Engine and Recursive Learning: COMPLETE
 Milestone 11 - Desktop Operator: COMPLETE
-Milestone 12 - First Certified Studio: PENDING
+Milestone 12 - First Certified Studio: COMPLETE
 Milestone 13 - Integrated Offline Loop: PENDING
 Milestone 14 - Learning Generalization, Recurrence Prevention, and Innovation Proof: PENDING
 Milestone 15 - Clean-Machine Offline Restart Proof: PENDING
 Milestone 16 - Portable Base MVP Acceptance: PENDING
 
-completedMilestones: 11
-remainingMilestones: 5
-currentMilestone: 12
+completedMilestones: 12
+remainingMilestones: 4
+currentMilestone: 13
 baseMvpCompletionMilestone: 16
 
 ### Era II — Cognition
@@ -93,9 +95,9 @@ The Base MVP milestone manifest is frozen:
 
 ```text
 totalMilestones: 16
-completedMilestones: 11
-remainingMilestones: 5
-currentMilestone: 12
+completedMilestones: 12
+remainingMilestones: 4
+currentMilestone: 13
 baseMvpCompletionMilestone: 16
 ```
 

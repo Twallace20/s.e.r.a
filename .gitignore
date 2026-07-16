@@ -2,6 +2,8 @@ node_modules/
 dist/
 apps/desktop-operator/dist/
 packages/operator-gateway/dist/
+packages/studio-runtime/dist/
+packages/evidence-studio/dist/
 coverage/
 .env
 .env.*
@@ -24,6 +26,8 @@ coverage/
 .sera/operator/
 .sera/desktop/
 .sera/operator-gateway/
+.sera/studios/
+.sera/studio-runtime/
 .sera-local/
 *.log
 .DS_Store

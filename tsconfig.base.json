@@ -96,6 +96,12 @@
       "@sera/capability-engine": [
         "packages/capability-engine/src/index.ts"
       ],
+      "@sera/studio-runtime": [
+        "packages/studio-runtime/src/index.ts"
+      ],
+      "@sera/evidence-studio": [
+        "packages/evidence-studio/src/index.ts"
+      ],
       "@sera/desktop-operator": [
         "apps/desktop-operator/src/index.ts"
       ],
