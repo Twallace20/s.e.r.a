@@ -15,6 +15,7 @@ import { StudioRuntime, createEvidenceStudioDefinition, runStudioRuntimeProof } 
 import { getEvidenceStudioStatus, runEvidenceStudioProof } from "@sera/evidence-studio";
 import { IntegratedLoopBlockedError, IntegratedLoopRuntime, runIntegratedLoopProof } from "@sera/integrated-loop-runtime";
 import { LearningGovernanceRuntime, runLearningGovernanceProof } from "@sera/learning-governance-runtime";
+import { RestartPersistenceProofError, inspectRestartPersistenceProof, restartPersistencePolicy, restartPersistenceStatus, runRestartPersistenceProof } from "@sera/restart-persistence-proof";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -161,6 +162,10 @@ Usage:
   sera learning-governance innovations
   sera learning-governance inspect <aggregate-id>
   sera learning-governance prove
+  sera restart-persistence status
+  sera restart-persistence policy
+  sera restart-persistence inspect <proof-id-or-proof-root>
+  sera restart-persistence prove
   sera snapshot
   sera truth
 
@@ -217,6 +222,7 @@ NPM examples:
   npm run sera -- model providers
   npm run sera -- model prove
   npm run sera -- loop inspect <session-id>
+  npm run sera -- restart-persistence prove
 
 Secure base behavior:
   - runs locally
@@ -1632,6 +1638,38 @@ async function main(): Promise<void> {
       store.close();
     }
     throw new Error("Learning Governance command must be 'status', 'policy', 'sessions', 'failures', 'lessons', 'prevention', 'innovations', 'inspect', or 'prove'.");
+  }
+
+  if (cmd === "restart-persistence") {
+    const [mode, proofIdOrRoot] = rest;
+    if (mode === "status") {
+      console.log(JSON.stringify(restartPersistenceStatus(), null, 2));
+      process.exit(0);
+    }
+    if (mode === "policy") {
+      console.log(JSON.stringify(restartPersistencePolicy(), null, 2));
+      process.exit(0);
+    }
+    if (mode === "prove") {
+      const result = await runRestartPersistenceProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (mode === "inspect") {
+      if (!proofIdOrRoot) throw new Error("Usage: sera restart-persistence inspect <proof-id-or-proof-root>");
+      try {
+        console.log(JSON.stringify(inspectRestartPersistenceProof(proofIdOrRoot), null, 2));
+        process.exit(0);
+      } catch (error) {
+        if (error instanceof RestartPersistenceProofError) {
+          const proofError = error as RestartPersistenceProofError;
+          console.error(JSON.stringify({ ok: false, errorCode: proofError.code, safeMessage: proofError.message, modelUse: false, publicNetworkUse: false }, null, 2));
+          process.exit(1);
+        }
+        throw error;
+      }
+    }
+    throw new Error("Restart Persistence command must be one of: status, policy, inspect, prove.");
   }
 
   if (cmd === "desktop") {

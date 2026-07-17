@@ -236,7 +236,7 @@ describe("Desktop Operator v1", () => {
 
   it.each(sourceCaseFiles.map((file) => [`${file} references desktop operator`, file] as const))("%s", (_name, file) => {
     const text = fs.readFileSync(path.join(process.cwd(), file), "utf8").toLowerCase();
-    expect(text.includes("desktop") || text.includes("operator") || text.includes("first-certified-studio") || text.includes("integrated-offline-loop") || text.includes("learning-generalization")).toBe(true);
+    expect(text.includes("desktop") || text.includes("operator") || text.includes("first-certified-studio") || text.includes("integrated-offline-loop") || text.includes("learning-generalization") || text.includes("restart-persistence") || text.includes("fresh-process")).toBe(true);
   });
 
   const boundaryPhrases = [

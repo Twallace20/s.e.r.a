@@ -1,5 +1,9 @@
 # System Architecture
 
+Current runtime certification is `fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1`.
+
+Milestone 15 adds `@sera/restart-persistence-proof` as certification/proof infrastructure only. It proves durable learning reconstruction across child-process writer termination, fresh-process recovery, relocated operational-state recovery, transfer byte/hash verification, and active process-level offline denial while preserving Runtime Host, Runtime State, Learning Governance, Integrated Loop, and Control Plane authority boundaries. It does not certify packaged separate clean-machine installation; Milestone 16 owns that proof.
+
 S.E.R.A. uses a layered, local-first architecture. The design goal is recursive capability growth without uncontrolled authority growth.
 
 ```txt

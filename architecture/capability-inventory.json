@@ -558,9 +558,41 @@
         "no automatic lesson activation",
         "no real model invocation",
         "no public network use",
-        "clean-machine restart remains Milestone 15"
+        "portable Base MVP acceptance remains Milestone 16"
       ],
       "notes": "Canonical Milestone 14 capability. Learning Governance Runtime owns durable lesson, prevention, override, improvement, and innovation evidence below Operator Gateway; Integrated Loop consumes its read-only durable preflight API."
+    },
+    {
+      "id": "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1",
+      "name": "Fresh-Process Offline Restart Relocated-Root Lesson Persistence Proof v1",
+      "kind": "certification-proof-infrastructure",
+      "targetLayer": "Runtime",
+      "currentMaturity": "implemented",
+      "status": "certified",
+      "executableCapability": true,
+      "runtimeService": false,
+      "dependencies": [
+        "runtime-state-store",
+        "runtime-host",
+        "runtime-recovery",
+        "learning-generalization-recurrence-prevention-innovation-proof-v1",
+        "integrated-offline-loop-v1"
+      ],
+      "certificationTarget": "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1",
+      "evidence": [
+        "packages/restart-persistence-proof/src/restart-persistence-proof.ts",
+        "tests/fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1.test.ts",
+        "docs/architecture/FRESH_PROCESS_OFFLINE_RESTART_RELOCATED_ROOT_LESSON_PERSISTENCE_PROOF_V1.md"
+      ],
+      "limitations": [
+        "proof infrastructure only",
+        "not an authority-owning Runtime service",
+        "not a provider, Studio, model runtime, Control Plane, installer, updater, or portable release package",
+        "no public network use",
+        "no real model invocation",
+        "portable Base MVP acceptance remains Milestone 16"
+      ],
+      "notes": "Milestone 15 proves durable certified learning survives child-process writer termination, fresh-process recovery, relocated operational-state recovery, transfer byte/hash verification, and active process-level offline denial on the supported development machine. It does not certify a packaged separate clean-machine installation."
     },
     {
       "id": "failure-evidence-recording",

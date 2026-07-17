@@ -105,6 +105,9 @@
       "@sera/learning-governance-runtime": [
         "packages/learning-governance-runtime/src/index.ts"
       ],
+      "@sera/restart-persistence-proof": [
+        "packages/restart-persistence-proof/src/index.ts"
+      ],
       "@sera/evidence-studio": [
         "packages/evidence-studio/src/index.ts"
       ],

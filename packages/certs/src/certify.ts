@@ -22,6 +22,7 @@ import { createStudioRuntimeServices, runStudioRuntimeProof } from "@sera/studio
 import { runEvidenceStudioProof } from "@sera/evidence-studio";
 import { INTEGRATED_LOOP_RUNTIME_VERSION, createIntegratedLoopRuntimeServices, runIntegratedLoopProof } from "@sera/integrated-loop-runtime";
 import { LEARNING_GOVERNANCE_RUNTIME_VERSION, createLearningGovernanceRuntimeServices, runLearningGovernanceProof } from "@sera/learning-governance-runtime";
+import { RESTART_PERSISTENCE_PROOF_VERSION, runRestartPersistenceProof } from "@sera/restart-persistence-proof";
 
 export interface CertCheck {
   id: string;
@@ -32,7 +33,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1" | "isolated-execution-v1" | "evaluation-engine-v1" | "local-model-runtime-v1" | "knowledge-intake-runtime-v1" | "capability-engine-recursive-learning-v1" | "desktop-operator-v1" | "first-certified-studio-v1" | "integrated-offline-loop-v1" | "learning-generalization-recurrence-prevention-innovation-proof-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1" | "isolated-execution-v1" | "evaluation-engine-v1" | "local-model-runtime-v1" | "knowledge-intake-runtime-v1" | "capability-engine-recursive-learning-v1" | "desktop-operator-v1" | "first-certified-studio-v1" | "integrated-offline-loop-v1" | "learning-generalization-recurrence-prevention-innovation-proof-v1" | "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -71,6 +72,7 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   checks.push(...await runFirstCertifiedStudioV1Checks(rootDir));
   checks.push(...await runIntegratedOfflineLoopV1Checks(rootDir));
   checks.push(...await runLearningGovernanceV1Checks(rootDir));
+  checks.push(...await runRestartPersistenceV1Checks(rootDir));
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -99,10 +101,13 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   const firstCertifiedStudioV1ChecksPass = checks.filter((c) => c.id.startsWith("first_studio_")).every((c) => c.pass);
   const integratedOfflineLoopV1ChecksPass = checks.filter((c) => c.id.startsWith("integrated_loop_")).every((c) => c.pass);
   const learningGovernanceV1ChecksPass = checks.filter((c) => c.id.startsWith("learning_")).every((c) => c.pass);
+  const restartPersistenceV1ChecksPass = checks.filter((c) => c.id.startsWith("restart_persistence_")).every((c) => c.pass);
   void repositorySnapshotV1ChecksPass;
   void repositoryTruthV1ChecksPass;
   const pass = checks.every((c) => c.pass);
-  const level = pass && learningGovernanceV1ChecksPass
+  const level = pass && restartPersistenceV1ChecksPass
+    ? "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1"
+    : pass && learningGovernanceV1ChecksPass
     ? "learning-generalization-recurrence-prevention-innovation-proof-v1"
     : pass && integratedOfflineLoopV1ChecksPass
     ? "integrated-offline-loop-v1"
@@ -1135,11 +1140,11 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
   const expected = {
     schemaVersion: "sera.base-mvp-manifest.v1",
     totalMilestones: 16,
-    completedMilestones: 14,
-    remainingMilestones: 2,
-    currentMilestone: 15,
+    completedMilestones: 15,
+    remainingMilestones: 1,
+    currentMilestone: 16,
     baseMvpCompletionMilestone: 16,
-    currentCertification: "learning-generalization-recurrence-prevention-innovation-proof-v1",
+    currentCertification: "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1",
     architectureBranch: "architecture/local-autonomous-runtime-v1"
   };
   let manifest: any;
@@ -1156,11 +1161,11 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
   checks.push({ id: "base_mvp_manifest_parses", name: "Base MVP manifest parses as JSON", pass: Boolean(manifest) && !parseError, detail: parseError || "parsed" });
   checks.push({ id: "base_mvp_manifest_schema", name: "Base MVP manifest schema version is canonical", pass: manifest?.schemaVersion === expected.schemaVersion, detail: String(manifest?.schemaVersion ?? "missing") });
   checks.push({ id: "base_mvp_manifest_total_milestones", name: "Base MVP total milestone count is 16", pass: manifest?.totalMilestones === expected.totalMilestones, detail: String(manifest?.totalMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_completed_milestones", name: "Base MVP completed milestone count is 14", pass: manifest?.completedMilestones === expected.completedMilestones, detail: String(manifest?.completedMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_remaining_milestones", name: "Base MVP remaining milestone count is 3", pass: manifest?.remainingMilestones === expected.remainingMilestones, detail: String(manifest?.remainingMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_current_milestone", name: "Base MVP current milestone is 15", pass: manifest?.currentMilestone === expected.currentMilestone, detail: String(manifest?.currentMilestone ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_completed_milestones", name: "Base MVP completed milestone count is 15", pass: manifest?.completedMilestones === expected.completedMilestones, detail: String(manifest?.completedMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_remaining_milestones", name: "Base MVP remaining milestone count is 1", pass: manifest?.remainingMilestones === expected.remainingMilestones, detail: String(manifest?.remainingMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_milestone", name: "Base MVP current milestone is 16", pass: manifest?.currentMilestone === expected.currentMilestone, detail: String(manifest?.currentMilestone ?? "missing") });
   checks.push({ id: "base_mvp_manifest_completion_milestone", name: "Base MVP completion milestone is 16", pass: manifest?.baseMvpCompletionMilestone === expected.baseMvpCompletionMilestone, detail: String(manifest?.baseMvpCompletionMilestone ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_current_certification", name: "Base MVP manifest current certification matches Milestone 14", pass: manifest?.currentCertification === expected.currentCertification, detail: String(manifest?.currentCertification ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_certification", name: "Base MVP manifest current certification matches Milestone 15", pass: manifest?.currentCertification === expected.currentCertification, detail: String(manifest?.currentCertification ?? "missing") });
   checks.push({ id: "base_mvp_manifest_architecture_branch", name: "Base MVP manifest records architecture branch", pass: manifest?.architectureBranch === expected.architectureBranch, detail: String(manifest?.architectureBranch ?? "missing") });
   checks.push({ id: "base_mvp_manifest_arithmetic_total", name: "Base MVP completed plus remaining equals total", pass: manifest?.completedMilestones + manifest?.remainingMilestones === manifest?.totalMilestones, detail: JSON.stringify({ completed: manifest?.completedMilestones, remaining: manifest?.remainingMilestones, total: manifest?.totalMilestones }) });
   checks.push({ id: "base_mvp_manifest_arithmetic_current", name: "Base MVP current milestone follows completed milestones", pass: manifest?.currentMilestone === manifest?.completedMilestones + 1, detail: JSON.stringify({ completed: manifest?.completedMilestones, current: manifest?.currentMilestone }) });
@@ -1176,9 +1181,9 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
     name: "Roadmap and Base MVP manifest do not contradict each other",
     pass:
       has("totalMilestones: 16") &&
-      has("completedMilestones: 14") &&
-      has("remainingMilestones: 2") &&
-      has("currentMilestone: 15") &&
+      has("completedMilestones: 15") &&
+      has("remainingMilestones: 1") &&
+      has("currentMilestone: 16") &&
       has("baseMvpCompletionMilestone: 16") &&
       manifest?.totalMilestones === expected.totalMilestones &&
       manifest?.completedMilestones === expected.completedMilestones &&
@@ -1867,7 +1872,7 @@ async function runDesktopOperatorV1Checks(rootDir: string): Promise<CertCheck[]>
 
   const manifestPath = path.join(rootDir, "architecture", "base-mvp-manifest.json");
   const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : {};
-  add("desktop_operator_manifest_aligned", "Base MVP manifest includes or supersedes Desktop Operator certification", ["desktop-operator-v1", "first-certified-studio-v1", "integrated-offline-loop-v1", "learning-generalization-recurrence-prevention-innovation-proof-v1"].includes(manifest.currentCertification) && manifest.completedMilestones >= 11 && manifest.currentMilestone >= 12, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone }));
+  add("desktop_operator_manifest_aligned", "Base MVP manifest includes or supersedes Desktop Operator certification", ["desktop-operator-v1", "first-certified-studio-v1", "integrated-offline-loop-v1", "learning-generalization-recurrence-prevention-innovation-proof-v1", "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1"].includes(manifest.currentCertification) && manifest.completedMilestones >= 11 && manifest.currentMilestone >= 12, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone }));
   return checks;
 }
 
@@ -1926,7 +1931,7 @@ async function runFirstCertifiedStudioV1Checks(rootDir: string): Promise<CertChe
 
   const manifestPath = path.join(rootDir, "architecture", "base-mvp-manifest.json");
   const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : {};
-  add("first_studio_manifest_aligned", "Base MVP manifest includes or supersedes First Certified Studio", ["first-certified-studio-v1", "integrated-offline-loop-v1", "learning-generalization-recurrence-prevention-innovation-proof-v1"].includes(manifest.currentCertification) && manifest.completedMilestones >= 12 && manifest.currentMilestone >= 13, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone }));
+  add("first_studio_manifest_aligned", "Base MVP manifest includes or supersedes First Certified Studio", ["first-certified-studio-v1", "integrated-offline-loop-v1", "learning-generalization-recurrence-prevention-innovation-proof-v1", "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1"].includes(manifest.currentCertification) && manifest.completedMilestones >= 12 && manifest.currentMilestone >= 13, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone }));
   return checks;
 }
 
@@ -1977,7 +1982,7 @@ async function runIntegratedOfflineLoopV1Checks(rootDir: string): Promise<CertCh
 
   const manifestPath = path.join(rootDir, "architecture", "base-mvp-manifest.json");
   const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : {};
-  add("integrated_loop_manifest_aligned", "Base MVP manifest includes or supersedes Integrated Offline Loop", ["integrated-offline-loop-v1", "learning-generalization-recurrence-prevention-innovation-proof-v1"].includes(manifest.currentCertification) && manifest.completedMilestones >= 13 && manifest.currentMilestone >= 14, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone, remainingMilestones: manifest.remainingMilestones }));
+  add("integrated_loop_manifest_aligned", "Base MVP manifest includes or supersedes Integrated Offline Loop", ["integrated-offline-loop-v1", "learning-generalization-recurrence-prevention-innovation-proof-v1", "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1"].includes(manifest.currentCertification) && manifest.completedMilestones >= 13 && manifest.currentMilestone >= 14, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone, remainingMilestones: manifest.remainingMilestones }));
 
   const hostRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-integrated-loop-cert-host-"));
   fs.writeFileSync(path.join(hostRoot, "package.json"), JSON.stringify({ name: "integrated-loop-cert-host", private: true }), "utf8");
@@ -2051,7 +2056,51 @@ async function runLearningGovernanceV1Checks(rootDir: string): Promise<CertCheck
 
   const manifestPath = path.join(rootDir, "architecture", "base-mvp-manifest.json");
   const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : {};
-  add("learning_base_mvp_manifest_aligned", "Base MVP manifest records Milestone 14", manifest.currentCertification === "learning-generalization-recurrence-prevention-innovation-proof-v1" && manifest.completedMilestones === 14 && manifest.currentMilestone === 15 && manifest.remainingMilestones === 2, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone, remainingMilestones: manifest.remainingMilestones }));
+  const manifestIncludesLearningCertification =
+    (manifest.currentCertification === "learning-generalization-recurrence-prevention-innovation-proof-v1" && manifest.completedMilestones === 14 && manifest.currentMilestone === 15 && manifest.remainingMilestones === 2) ||
+    (manifest.currentCertification === "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1" && manifest.completedMilestones >= 15 && manifest.currentMilestone >= 16 && manifest.remainingMilestones <= 1);
+  add("learning_base_mvp_manifest_aligned", "Base MVP manifest records or supersedes Milestone 14", manifestIncludesLearningCertification, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone, remainingMilestones: manifest.remainingMilestones }));
+  return checks;
+}
+
+async function runRestartPersistenceV1Checks(rootDir: string): Promise<CertCheck[]> {
+  const proof = await runRestartPersistenceProof();
+  const second = await runRestartPersistenceProof();
+  const checks: CertCheck[] = [];
+  const add = (id: string, name: string, pass: boolean, detail: string) => checks.push({ id, name, pass, detail });
+
+  add("restart_persistence_package_registered", "Restart Persistence proof package is registered", proof.ok, RESTART_PERSISTENCE_PROOF_VERSION);
+  add("restart_persistence_separate_processes", "Separate process PIDs are recorded", proof.checks.separateProcesses, JSON.stringify({ A: proof.processA.pid, B: proof.processB.pid, C: proof.processC.pid }));
+  add("restart_persistence_process_a_child", "Process A is a child process and exits before recovery", proof.checks.processAChildProcess && proof.checks.processAExitCodeVerified && proof.checks.processAExitedBeforeProcessBStarted, JSON.stringify(proof.processBoundary));
+  add("restart_persistence_process_b_reopens_sqlite", "Process B independently reopens SQLite", proof.checks.processBReopenedSqlite, proof.processB.databasePath);
+  add("restart_persistence_process_c_reopens_relocated_sqlite", "Process C independently reopens relocated SQLite", proof.checks.processCReopenedRelocatedSqlite, proof.processC.databasePath);
+  add("restart_persistence_fresh_runtime_identities", "Runtime identities change across restarts", proof.checks.freshRuntimeIdentities, JSON.stringify({ A: proof.processA.runtimeInstanceId, B: proof.processB.runtimeInstanceId, C: proof.processC.runtimeInstanceId }));
+  add("restart_persistence_stable_installation_identity", "Installation identity remains stable", proof.checks.stableInstallationIdentity, proof.processA.installationId);
+  add("restart_persistence_no_in_memory_state", "No in-memory state crosses process boundaries", proof.checks.noInMemoryStateCrossedBoundary, "closed handles and distinct process probes");
+  add("restart_persistence_durable_lesson", "Active certified lesson is recovered", proof.checks.durableLessonRetrieved, `${proof.lesson.lessonId}@${proof.lesson.version}:${proof.lesson.state}`);
+  add("restart_persistence_durable_prevention_rule", "Active prevention rule is recovered", proof.checks.durablePreventionRuleRetrieved, `${proof.preventionRule.ruleId}@${proof.preventionRule.version}:${proof.preventionRule.active}`);
+  add("restart_persistence_exact_prevention", "Exact known failure is prevented after restart", proof.checks.exactPrevention, proof.decisions.exact.afterRestart);
+  add("restart_persistence_equivalent_prevention", "Materially equivalent failure is prevented after restart", proof.checks.equivalentPrevention, proof.decisions.equivalent.afterRestart);
+  add("restart_persistence_related_scoped", "Related context remains scoped", proof.checks.relatedScoped, proof.decisions.related.afterRestart);
+  add("restart_persistence_out_of_scope_clear", "Out-of-scope context remains unblocked", proof.checks.outOfScopeClear, proof.decisions.outOfScope.afterRestart);
+  add("restart_persistence_preflight_before_selection", "Preflight occurs before selection and generation", proof.checks.preflightBeforeSelectionGenerationExecution, proof.selectedCertifiedAlternative);
+  add("restart_persistence_known_bad_path_avoided", "Known bad path is not executed", proof.checks.knownBadPathAvoided, "knownBadPathExecuted=false");
+  add("restart_persistence_second_restart_repeatable", "Second restart remains deterministic", proof.checks.secondRestartRepeatable, proof.secondRestartResult);
+  add("restart_persistence_relocated_root", "Relocated root works without Git and former operational state root is unavailable", proof.checks.relocatedRootOperation && proof.checks.noGitDependency && proof.transfer.formerOperationalStateRootUnavailable, proof.destinationDatabasePath);
+  add("restart_persistence_transfer_integrity", "State transfer integrity checks pass", proof.checks.transferBoundary && proof.checks.integrityValidation, proof.transfer.manifestDigest);
+  add("restart_persistence_recovery_conservative", "Recovery remains conservative", proof.checks.recoveryConservative, "inspect ok");
+  add("restart_persistence_duplicate_prevention", "Idempotency and duplicate semantic records are prevented", proof.checks.idempotencyAndDuplicatePrevention, JSON.stringify(proof.restartedCounts));
+  add("restart_persistence_terminal_immutable", "Terminal records remain immutable", proof.checks.terminalImmutability, "terminal mutation blocked");
+  add("restart_persistence_runtime_lease_fencing", "Runtime lease fencing remains enforced", proof.checks.runtimeLeaseFencing, "active owner protected");
+  add("restart_persistence_schema_posture", "Schema version and migration checksums remain valid", proof.checks.schemaPosture && proof.schemaVersion === 11, JSON.stringify(proof.migrationChecksumSummary.map((row: Record<string, unknown>) => row.version)));
+  add("restart_persistence_offline_model_free", "Proof actively denies public network and remains model-free", proof.checks.offlineOperation && proof.checks.activeOfflineDenial && proof.publicNetworkActivelyDenied && proof.checks.noRealModel && proof.modelUse === false && proof.publicNetworkUse === false, "modelUse=false publicNetworkUse=false activeDenial=true");
+  add("restart_persistence_no_source_mutation", "Repository source is not mutated by proof", proof.checks.noSourceMutation && proof.repositorySourceMutation === false, "repositorySourceMutation=false");
+  add("restart_persistence_repeatable_independent", "Proof is repeatable and isolated", proof.ok && second.ok && proof.proofRoot !== second.proofRoot && proof.databasePath !== second.databasePath, `${proof.databasePath} != ${second.databasePath}`);
+  add("restart_persistence_milestone16_boundary", "Milestone 16 boundary is preserved", proof.checks.milestone16Boundary, "not a downloadable installer");
+
+  const manifestPath = path.join(rootDir, "architecture", "base-mvp-manifest.json");
+  const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : {};
+  add("restart_persistence_base_mvp_manifest_aligned", "Base MVP manifest records Milestone 15 candidate", manifest.currentCertification === "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1" && manifest.completedMilestones === 15 && manifest.currentMilestone === 16 && manifest.remainingMilestones === 1, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone, remainingMilestones: manifest.remainingMilestones }));
   return checks;
 }
 

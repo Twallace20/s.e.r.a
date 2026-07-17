@@ -641,3 +641,18 @@ Forbidden direction:
 - `@sera/learning-governance-runtime -> @sera/integrated-loop-runtime`
 
 Operator Gateway may expose authenticated read routes and governed review-request routes. Integrated Loop Runtime may consume the read-only durable preflight API. Neither package may bypass Control Plane authorization.
+
+## Milestone 15 Restart Persistence Proof Boundary
+
+`@sera/restart-persistence-proof` is certification/proof infrastructure, not an authority-owning Runtime service.
+
+Boundary rules:
+
+- may orchestrate existing certified Runtime components inside isolated proof roots
+- may create proof evidence only through `sera restart-persistence prove`
+- may inspect existing proof evidence without mutation
+- must not certify or activate lessons by itself
+- must not own Runtime Host lifecycle outside the proof harness
+- must not own Learning Governance policy or recurrence-prevention decisions
+- must not become a Control Plane, provider, Studio, model runtime, installer, updater, or portable release package
+- must remain offline, model-free, Git-independent, and bounded to Milestone 15 proof evidence

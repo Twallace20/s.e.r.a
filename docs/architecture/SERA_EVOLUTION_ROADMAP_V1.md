@@ -43,6 +43,8 @@ Milestone 13 — Integrated Offline Loop is COMPLETE. S.E.R.A. can compose the c
 
 Cross-cutting plan lock — Evidence-Driven Recurrence Prevention and Governed Innovation is ACTIVE as an architecture and Base MVP acceptance invariant. Milestone 14 certifies active lesson certification, prevention-rule activation, governed innovation proof, supersession, governed override, and recurrence-prevention behavior.
 
+Milestone 15 — Fresh-Process Offline Restart Relocated-Root Lesson Persistence Proof is COMPLETE. S.E.R.A. can prove active certified lessons and prevention rules survive child-process writer termination, fresh-process recovery, relocated operational-state recovery, and active process-level offline denial without Git dependency, public network, or real model invocation. Milestone 16 owns the packaged separate clean-machine proof.
+
 Post-Base MVP roadmap lock — S.E.R.A. Personal and Professional V1 is PLANNING-LOCKED and not implemented. The locked plan lives in `docs/architecture/SERA_PERSONAL_PROFESSIONAL_V1_ROADMAP.md` and `architecture/post-base-mvp-roadmap-v1.json`. It preserves Base MVP completion at Milestone 16, plans Milestones 17 through 24, and does not add additional Milestone 13 behavior, web access, browser automation, iOS Runtime execution, update, backup, enterprise, Hive Mode, robotics, or post-Base Runtime behavior.
 
 Milestone 7 - Evaluation Engine: COMPLETE
@@ -53,12 +55,12 @@ Milestone 11 - Desktop Operator: COMPLETE
 Milestone 12 - First Certified Studio: COMPLETE
 Milestone 13 - Integrated Offline Loop: COMPLETE
 Milestone 14 - Learning Generalization, Recurrence Prevention, and Innovation Proof: COMPLETE
-Milestone 15 - Clean-Machine Offline Restart Proof: PENDING
+Milestone 15 - Fresh-Process Offline Restart Relocated-Root Proof: COMPLETE
 Milestone 16 - Portable Base MVP Acceptance: PENDING
 
-completedMilestones: 14
-remainingMilestones: 2
-currentMilestone: 15
+completedMilestones: 15
+remainingMilestones: 1
+currentMilestone: 16
 baseMvpCompletionMilestone: 16
 
 ### Era II — Cognition
@@ -99,9 +101,9 @@ The Base MVP milestone manifest is frozen:
 
 ```text
 totalMilestones: 16
-completedMilestones: 14
-remainingMilestones: 2
-currentMilestone: 15
+completedMilestones: 15
+remainingMilestones: 1
+currentMilestone: 16
 baseMvpCompletionMilestone: 16
 ```
 
@@ -152,7 +154,7 @@ The locked implementation order is:
 12. First Certified Studio — `website-studio-provisional-v1` — must produce evidence-linked operator corrections, failed-output signals, evaluation failures, improvement opportunities, and innovation opportunities without automatically promoting interaction history into reusable rules
 13. Integrated Offline Loop — `integrated-offline-loop-v1` — implemented and certified as the offline composition loop with required learning preflight before capability or approach selection
 14. Learning Generalization, Recurrence Prevention, and Innovation Proof — `learning-generalization-recurrence-prevention-innovation-proof-v1` — implemented and certified as the governed Learning Runtime proof for controlled failure, durable evidence, reproduction, scoped root cause, repair, regression proof, reproducibility, lesson certification, prevention activation, equivalent-context retrieval, known-failure avoidance, related-context generalization, out-of-scope non-application, improvement comparison, governed innovation, supersession, governed override, and proof that model output does not automatically become a lesson
-15. Clean-Machine Offline Restart Proof — `clean-machine-offline-restart-proof-v1` — must preserve and retrieve failure records, certified lessons, prevention rules, scopes, superseded lessons, overrides, and innovation proposals after restart with no public internet
+15. Fresh-Process Offline Restart Relocated-Root Proof — `fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1` — preserves and retrieves failure records, certified lessons, prevention rules, scopes, superseded lessons, overrides, and innovation proposals after fresh-process recovery and relocated-root recovery with active public-network denial
 16. Portable Base MVP Acceptance — `portable-base-mvp-acceptance-v1` — must prove controlled mistake, evidence preservation, correction, certification, shutdown, restart, materially equivalent request, certified-lesson retrieval, prevention of the known mistake, and visible explanation/evidence in Desktop Operator
 
 Repository Snapshot precedes Repository Truth so S.E.R.A. can inventory source, generated artifacts, runtime directories, legacy evidence, and provider-adapter surfaces with deterministic scanners before making classification claims. Repository Truth then classifies that snapshot against the SERA OS Constitution and Layer Model. No later subsystem is complete merely because Repository Truth exists; the locked implementation order above remains intact.

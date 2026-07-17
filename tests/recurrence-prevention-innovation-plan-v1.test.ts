@@ -33,10 +33,10 @@ describe("Evidence-driven recurrence prevention and innovation plan v1", () => {
   it("milestone total remains 16", () => {
     const manifest = readJson<{ totalMilestones: number; completedMilestones: number; remainingMilestones: number; currentMilestone: number; currentCertification: string }>(manifestPath);
     expect(manifest.totalMilestones).toBe(16);
-    expect(manifest.completedMilestones).toBe(14);
-    expect(manifest.remainingMilestones).toBe(2);
-    expect(manifest.currentMilestone).toBe(15);
-    expect(manifest.currentCertification).toBe("learning-generalization-recurrence-prevention-innovation-proof-v1");
+    expect(manifest.completedMilestones).toBe(15);
+    expect(manifest.remainingMilestones).toBe(1);
+    expect(manifest.currentMilestone).toBe(16);
+    expect(manifest.currentCertification).toBe("fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1");
   });
 
   it("Milestone 14 canonical name is exact", () => {
@@ -152,9 +152,11 @@ describe("Evidence-driven recurrence prevention and innovation plan v1", () => {
   });
 
   it("Milestone 15 restart persistence is required", () => {
-    const plan = readJson<{ milestoneAcceptanceGates: Record<string, { gates: string[] }> }>(planPath);
+    const plan = readJson<{ milestoneAcceptanceGates: Record<string, { status: string; gates: string[] }> }>(planPath);
+    expect(plan.milestoneAcceptanceGates["15"].status).toBe("certified-fresh-process-offline-restart-relocated-root-lesson-persistence-proof");
     expect(plan.milestoneAcceptanceGates["15"].gates.join("\n")).toContain("persist after restart");
     expect(plan.milestoneAcceptanceGates["15"].gates.join("\n")).toContain("no public internet");
+    expect(plan.milestoneAcceptanceGates["15"].gates.join("\n")).toContain("relocated root has no Git dependency");
   });
 
   it("Milestone 16 user-visible recurrence-prevention proof is required", () => {
@@ -180,7 +182,7 @@ describe("Evidence-driven recurrence prevention and innovation plan v1", () => {
     expect(DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.name).toBe("learning_governance_runtime_v1");
   });
 
-  it("documentation and inventory mark Milestone 14 learning governance as implemented without Milestone 15 activation", () => {
+  it("documentation and inventory mark Milestone 14 learning governance and Milestone 15 restart proof as implemented", () => {
     const combined = [
       fs.readFileSync(planPath, "utf8"),
       fs.readFileSync(planDocPath, "utf8"),
@@ -191,8 +193,9 @@ describe("Evidence-driven recurrence prevention and innovation plan v1", () => {
 
     expect(combined).toContain("Integrated Offline Loop");
     expect(combined).toContain("Learning Generalization, Recurrence Prevention, and Innovation Proof");
+    expect(combined).toContain("Fresh-Process Offline Restart Relocated-Root Lesson Persistence Proof");
     expect(combined).toContain("ui-contract-reserved-runtime-pending");
-    expect(combined).toContain("future-acceptance-locked");
+    expect(combined).toContain("certified-fresh-process-offline-restart-relocated-root-lesson-persistence-proof");
     const inventory = readJson<{ targetSubsystems: Array<{ id: string; targetLayer: string; currentMaturity: string; status: string }> }>(inventoryPath);
     expect(inventory.targetSubsystems.some((item) => item.id === "recurrence-prevention" && item.targetLayer === "Runtime" && item.currentMaturity === "implemented" && item.status === "certified")).toBe(true);
   });

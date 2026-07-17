@@ -7,18 +7,18 @@ const manifestPath = path.join(root, "architecture", "base-mvp-manifest.json");
 const roadmapPath = path.join(root, "docs", "architecture", "SERA_EVOLUTION_ROADMAP_V1.md");
 
 describe("Base MVP manifest v1", () => {
-  it("exists, parses, and records canonical Milestone 14 closeout values", () => {
+  it("exists, parses, and records canonical Milestone 15 candidate closeout values", () => {
     expect(fs.existsSync(manifestPath)).toBe(true);
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 
     expect(manifest).toEqual({
       schemaVersion: "sera.base-mvp-manifest.v1",
       totalMilestones: 16,
-      completedMilestones: 14,
-      remainingMilestones: 2,
-      currentMilestone: 15,
+      completedMilestones: 15,
+      remainingMilestones: 1,
+      currentMilestone: 16,
       baseMvpCompletionMilestone: 16,
-      currentCertification: "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      currentCertification: "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1",
       architectureBranch: "architecture/local-autonomous-runtime-v1"
     });
   });
@@ -36,9 +36,9 @@ describe("Base MVP manifest v1", () => {
     const roadmap = fs.readFileSync(roadmapPath, "utf8");
 
     expect(roadmap).toContain("totalMilestones: 16");
-    expect(roadmap).toContain("completedMilestones: 14");
-    expect(roadmap).toContain("remainingMilestones: 2");
-    expect(roadmap).toContain("currentMilestone: 15");
+    expect(roadmap).toContain("completedMilestones: 15");
+    expect(roadmap).toContain("remainingMilestones: 1");
+    expect(roadmap).toContain("currentMilestone: 16");
     expect(roadmap).toContain("baseMvpCompletionMilestone: 16");
     expect(roadmap).toContain("Milestone 7 - Evaluation Engine: COMPLETE");
     expect(roadmap).toContain("Milestone 8 - Local Model Runtime: COMPLETE");
@@ -48,9 +48,10 @@ describe("Base MVP manifest v1", () => {
     expect(roadmap).toContain("Milestone 12 - First Certified Studio: COMPLETE");
     expect(roadmap).toContain("Milestone 13 - Integrated Offline Loop: COMPLETE");
     expect(roadmap).toContain("Milestone 14 - Learning Generalization, Recurrence Prevention, and Innovation Proof: COMPLETE");
+    expect(roadmap).toContain("Milestone 15 - Fresh-Process Offline Restart Relocated-Root Proof: COMPLETE");
 
-    expect(manifest.completedMilestones).toBe(14);
-    expect(manifest.currentMilestone).toBe(15);
-    expect(manifest.currentCertification).toBe("learning-generalization-recurrence-prevention-innovation-proof-v1");
+    expect(manifest.completedMilestones).toBe(15);
+    expect(manifest.currentMilestone).toBe(16);
+    expect(manifest.currentCertification).toBe("fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1");
   });
 });
