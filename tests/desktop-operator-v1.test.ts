@@ -100,6 +100,7 @@ describe("Desktop Operator v1", () => {
     ["visual contract has approval queue", () => getDesktopVisualContract().hasApprovalQueue],
     ["visual contract has evidence viewer", () => getDesktopVisualContract().hasEvidenceViewer],
     ["visual contract has status region", () => getDesktopVisualContract().hasStatusRegion],
+    ["visual contract marks recurrence runtime implemented", () => getDesktopVisualContract().recurrencePreventionRuntimeImplemented === true],
     ["visual contract lists every view", () => getDesktopVisualContract().views.length === REQUIRED_DESKTOP_VIEWS.length],
     ["visual contract requires focus-visible", () => getDesktopVisualContract().accessibility.focusVisible],
     ["visual contract requires reduced motion", () => getDesktopVisualContract().accessibility.reducedMotion],
@@ -125,7 +126,7 @@ describe("Desktop Operator v1", () => {
   });
 
   const runtimeSchemaCases = [
-    ["runtime migration version includes v10", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.version === 10],
+    ["runtime migration version includes v11", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.version === 11],
     ["runtime migration v8 name is desktop operator", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.name === "desktop_operator_v1"],
     ["migration v8 creates operator sessions", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_sessions")],
     ["migration v8 creates operator requests", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[7]?.sql.includes("CREATE TABLE operator_requests")],
@@ -159,7 +160,7 @@ describe("Desktop Operator v1", () => {
     const store = openRuntimeState({ projectRoot: root });
     try {
       const inspection = store.inspect();
-      expect(inspection.schemaVersion).toBe(10);
+      expect(inspection.schemaVersion).toBe(11);
       expect(inspection.counts.operator_sessions).toBe(0);
       expect(inspection.counts.operator_approvals).toBe(0);
       expect(inspection.counts.operator_notifications).toBe(0);
@@ -194,6 +195,30 @@ describe("Desktop Operator v1", () => {
     }
   });
 
+  it("exposes authenticated learning-governance gateway read routes", () => {
+    const gateway = testGateway("learning-governance-routes");
+    try {
+      const session = gateway.createSession({ idempotencyKey: "learning-session" });
+      gateway.validateSession({ authorization: `Bearer ${session.token}` });
+      expect(gateway.learningGovernanceRoute("/api/v1/operator/learning-governance/status")).toMatchObject({ serviceId: "learning-governance-runtime" });
+      expect(gateway.learningGovernanceRoute("/api/v1/operator/learning-governance/sessions")).toHaveProperty("sessions");
+      expect(gateway.learningGovernanceRoute("/api/v1/operator/learning-governance/failures")).toHaveProperty("failures");
+      expect(gateway.learningGovernanceRoute("/api/v1/operator/learning-governance/lessons")).toHaveProperty("lessons");
+      expect(gateway.learningGovernanceRoute("/api/v1/operator/learning-governance/prevention-rules")).toHaveProperty("preventionRules");
+      expect(gateway.learningGovernanceRoute("/api/v1/operator/learning-governance/innovations")).toHaveProperty("innovations");
+    } finally {
+      gateway.close();
+    }
+  });
+
+  it("desktop learning-governance surfaces are read-only gateway surfaces", () => {
+    expect(REQUIRED_DESKTOP_VIEWS).toContain("learning-governance-sessions");
+    expect(REQUIRED_DESKTOP_VIEWS).toContain("learning-governance-innovations");
+    expect(DESKTOP_OPERATOR_HTML).toContain("Learning Governance data is read through the authenticated local Operator Gateway");
+    expect(DESKTOP_OPERATOR_HTML).not.toContain("sqlite");
+    expect(DESKTOP_OPERATOR_JS).not.toContain("openRuntimeState");
+  });
+
   const sourceCaseFiles = [
     "apps/cli/src/index.ts",
     "packages/certs/src/certify.ts",
@@ -211,7 +236,7 @@ describe("Desktop Operator v1", () => {
 
   it.each(sourceCaseFiles.map((file) => [`${file} references desktop operator`, file] as const))("%s", (_name, file) => {
     const text = fs.readFileSync(path.join(process.cwd(), file), "utf8").toLowerCase();
-    expect(text.includes("desktop") || text.includes("operator") || text.includes("first-certified-studio") || text.includes("integrated-offline-loop")).toBe(true);
+    expect(text.includes("desktop") || text.includes("operator") || text.includes("first-certified-studio") || text.includes("integrated-offline-loop") || text.includes("learning-generalization")).toBe(true);
   });
 
   const boundaryPhrases = [

@@ -132,7 +132,7 @@ Current repository candidates:
 | `packages/knowledge-runtime` | confirmed; Knowledge and Universal Intake Runtime v1 |
 | `packages/integrated-loop-runtime` | confirmed; Integrated Offline Loop v1 composition, preflight, and package evidence |
 | `.sera-*` runtime directories | legacy/runtime-data; not source authority |
-| recurrence-prevention Runtime | partially certified preflight hook; Milestone 14 active behavior pending |
+| recurrence-prevention Runtime | Milestone 14 bounded active lesson/prevention proof certified; Milestone 15 restart proof pending |
 
 Migration targets:
 

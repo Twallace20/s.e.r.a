@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@sera/desktop-operator": "0.1.0",
+    "@sera/learning-governance-runtime": "0.1.0",
     "@sera/runtime-host": "0.1.0",
     "@sera/runtime-state": "0.1.0",
     "@sera/studio-runtime": "0.1.0"

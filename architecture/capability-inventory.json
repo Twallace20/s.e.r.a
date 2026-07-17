@@ -120,12 +120,12 @@
       "id": "evidence-driven-recurrence-prevention-innovation-v1",
       "name": "Evidence-Driven Recurrence Prevention and Governed Innovation v1",
       "kind": "governance-standard",
-      "status": "architecture-locked-runtime-pending",
+      "status": "certified",
       "executableCapability": false,
       "runtimeService": false,
       "document": "docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md",
       "plan": "architecture/recurrence-prevention-innovation-plan-v1.json",
-      "records": "Cross-cutting Base MVP acceptance invariant for evidence-linked learning signals, recurrence prevention, scoped lesson retrieval, governed overrides, lesson supersession, and distinct governed innovation. Milestone 13 preflight evidence is certified; Milestone 14 active lesson/prevention/innovation proof remains pending."
+      "records": "Cross-cutting Base MVP acceptance invariant for evidence-linked learning signals, recurrence prevention, scoped lesson retrieval, governed overrides, lesson supersession, and distinct governed innovation. Milestone 14 bounded active lesson, prevention, override, supersession, improvement, and innovation proof is certified."
     },
     {
       "id": "post-base-mvp-roadmap-v1",
@@ -527,10 +527,46 @@
       "notes": "Local graphical operator surface with integrity-checked local assets and no remote references."
     },
     {
+      "id": "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      "name": "Learning Generalization, Recurrence Prevention, and Innovation Proof v1",
+      "kind": "runtime-service",
+      "targetLayer": "Runtime",
+      "currentMaturity": "implemented",
+      "status": "certified",
+      "executableCapability": true,
+      "runtimeService": true,
+      "dependencies": [
+        "runtime-state-store",
+        "runtime-host",
+        "runtime-recovery",
+        "execution-engine",
+        "evaluation-engine",
+        "capability-engine",
+        "unified-control-plane"
+      ],
+      "certificationTarget": "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      "evidence": [
+        "packages/learning-governance-runtime/src/learning-governance-runtime.ts",
+        "packages/operator-gateway/src/operator-gateway.ts",
+        "packages/integrated-loop-runtime/src/integrated-loop-runtime.ts",
+        "apps/desktop-operator/src/index.ts",
+        "tests/learning-generalization-recurrence-prevention-innovation-proof-v1.test.ts",
+        "docs/architecture/LEARNING_GENERALIZATION_RECURRENCE_PREVENTION_INNOVATION_PROOF_V1.md"
+      ],
+      "limitations": [
+        "bounded deterministic proof scope",
+        "no automatic lesson activation",
+        "no real model invocation",
+        "no public network use",
+        "clean-machine restart remains Milestone 15"
+      ],
+      "notes": "Canonical Milestone 14 capability. Learning Governance Runtime owns durable lesson, prevention, override, improvement, and innovation evidence below Operator Gateway; Integrated Loop consumes its read-only durable preflight API."
+    },
+    {
       "id": "failure-evidence-recording",
       "targetLayer": "Runtime",
-      "currentMaturity": "planned",
-      "status": "not-implemented",
+      "currentMaturity": "implemented",
+      "status": "certified",
       "dependencies": [
         "runtime-state-store",
         "evaluation-engine",
@@ -539,50 +575,63 @@
       "certificationTarget": "learning-generalization-recurrence-prevention-innovation-proof-v1",
       "evidence": [
         "architecture/recurrence-prevention-innovation-plan-v1.json",
-        "docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md"
+        "docs/architecture/EVIDENCE_DRIVEN_RECURRENCE_PREVENTION_AND_INNOVATION_V1.md",
+        "packages/learning-governance-runtime/src/learning-governance-runtime.ts",
+        "tests/learning-generalization-recurrence-prevention-innovation-proof-v1.test.ts",
+        "docs/architecture/LEARNING_GENERALIZATION_RECURRENCE_PREVENTION_INNOVATION_PROOF_V1.md"
       ],
       "limitations": [
-        "not implemented in Milestone 11",
-        "no SQLite migration added",
-        "no runtime lesson table exists",
-        "no automatic lesson activation"
+        "bounded deterministic proof scope",
+        "no automatic lesson activation",
+        "no real model invocation",
+        "no public network use"
       ],
-      "notes": "Planned evidence-linked failure, correction, regression, override, and improvement signal recording boundary."
+      "notes": "Milestone 14 certifies evidence-linked failure, correction, regression, override, and improvement signal recording in the Learning Governance Runtime."
     },
     {
       "id": "lesson-candidate-management",
       "targetLayer": "Runtime",
-      "currentMaturity": "planned",
-      "status": "not-implemented",
+      "currentMaturity": "implemented",
+      "status": "certified",
       "dependencies": [
         "failure-evidence-recording",
         "runtime-control-plane"
       ],
       "certificationTarget": "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      "evidence": [
+        "packages/learning-governance-runtime/src/learning-governance-runtime.ts",
+        "tests/learning-generalization-recurrence-prevention-innovation-proof-v1.test.ts",
+        "docs/architecture/LEARNING_GENERALIZATION_RECURRENCE_PREVENTION_INNOVATION_PROOF_V1.md"
+      ],
       "limitations": [
         "candidate management is not the same as active lesson behavior",
         "one observation is not automatically a certified lesson",
         "model output is candidate intelligence only"
       ],
-      "notes": "Planned lifecycle for candidate, rejected, certified inactive, active, superseded, and rolled-back lessons with exact evidence references."
+      "notes": "Milestone 14 implements the governed lifecycle for candidate, certified inactive, active, superseded, and rolled-back lessons with exact evidence references."
     },
     {
       "id": "recurrence-prevention",
       "targetLayer": "Runtime",
-      "currentMaturity": "planned",
-      "status": "not-implemented",
+      "currentMaturity": "implemented",
+      "status": "certified",
       "dependencies": [
         "lesson-candidate-management",
         "runtime-control-plane",
         "operator-gateway"
       ],
       "certificationTarget": "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      "evidence": [
+        "packages/learning-governance-runtime/src/learning-governance-runtime.ts",
+        "tests/learning-generalization-recurrence-prevention-innovation-proof-v1.test.ts",
+        "docs/architecture/LEARNING_GENERALIZATION_RECURRENCE_PREVENTION_INNOVATION_PROOF_V1.md"
+      ],
       "limitations": [
-        "not implemented in Milestone 11",
-        "no automatic prevention behavior is active",
+        "bounded deterministic proof scope",
+        "prevention behavior requires certified active lesson scope",
         "out-of-scope contexts must not be incorrectly blocked"
       ],
-      "notes": "Planned retrieval and prevention behavior for materially equivalent known failure paths."
+      "notes": "Milestone 14 certifies active prevention-rule retrieval and known-failure behavior for exact, related, governed override, and out-of-scope contexts."
     },
     {
       "id": "lesson-retrieval-preflight",
@@ -612,24 +661,29 @@
     {
       "id": "improvement-comparison",
       "targetLayer": "Capability",
-      "currentMaturity": "planned",
-      "status": "not-implemented",
+      "currentMaturity": "implemented",
+      "status": "certified",
       "dependencies": [
         "capability-engine",
         "evaluation-engine",
         "runtime-control-plane"
       ],
       "certificationTarget": "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      "evidence": [
+        "packages/learning-governance-runtime/src/learning-governance-runtime.ts",
+        "tests/learning-generalization-recurrence-prevention-innovation-proof-v1.test.ts",
+        "docs/architecture/LEARNING_GENERALIZATION_RECURRENCE_PREVENTION_INNOVATION_PROOF_V1.md"
+      ],
       "limitations": [
         "existing Capability Engine comparison foundations do not certify reusable lessons by themselves"
       ],
-      "notes": "Planned measurable baseline comparison for lesson and improvement certification."
+      "notes": "Milestone 14 records measurable baseline comparison evidence for improvement certification."
     },
     {
       "id": "governed-innovation",
       "targetLayer": "Capability",
-      "currentMaturity": "planned",
-      "status": "not-implemented",
+      "currentMaturity": "implemented",
+      "status": "certified",
       "dependencies": [
         "improvement-comparison",
         "isolated-execution-engine",
@@ -637,12 +691,17 @@
         "runtime-control-plane"
       ],
       "certificationTarget": "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      "evidence": [
+        "packages/learning-governance-runtime/src/learning-governance-runtime.ts",
+        "tests/learning-generalization-recurrence-prevention-innovation-proof-v1.test.ts",
+        "docs/architecture/LEARNING_GENERALIZATION_RECURRENCE_PREVENTION_INNOVATION_PROOF_V1.md"
+      ],
       "limitations": [
         "innovation cannot activate itself",
         "no automatic innovation promotion exists",
-        "no later-milestone behavior is implemented by this plan lock"
+        "no later-milestone restart or portability behavior is implemented"
       ],
-      "notes": "Planned distinct lane for materially different approaches requiring authorization, isolated experimentation, baseline comparison, reproducibility, certification, explicit promotion, and rollback readiness."
+      "notes": "Milestone 14 certifies the distinct governed innovation lane with isolated experimentation, baseline comparison, certification-inactive state, explicit promotion boundary, and rollback readiness."
     },
     {
       "id": "website-studio",

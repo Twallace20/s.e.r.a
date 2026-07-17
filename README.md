@@ -130,8 +130,9 @@ The post-Base MVP roadmap for S.E.R.A. Personal and Professional V1 is locked as
 - no real model download, install, or invocation in Local Model Runtime v1
 - no model-driven tool execution or source mutation
 - no automatic capability promotion or activation
-- no certified recurrence-prevention Runtime yet
-- no Milestone 14 lesson certification or automatic recurrence-prevention activation yet
+- no clean-machine restart proof yet
+- no portable Base MVP acceptance proof yet
+- no ungoverned automatic lesson certification or recurrence-prevention activation
 - no automatic innovation activation or promotion
 - no arbitrary code loading, unrestricted shell, Studio, distributed capability, or Hive Mode in Capability Engine v1 or Desktop Operator v1
 
@@ -149,7 +150,7 @@ npm run verify
 Expected current certification result:
 
 ```text
-S.E.R.A. certify: PASS level=integrated-offline-loop-v1
+S.E.R.A. certify: PASS level=learning-generalization-recurrence-prevention-innovation-proof-v1
 ```
 
 ## Starter secure-base run
@@ -268,6 +269,7 @@ Integrated Offline Loop composes the certified offline path and requires preflig
 npm run sera -- loop status
 npm run sera -- loop policy
 npm run sera -- loop sessions
+npm run sera -- loop inspect <session-id>
 npm run sera -- loop prove
 ```
 

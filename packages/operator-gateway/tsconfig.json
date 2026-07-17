@@ -8,6 +8,7 @@
   "include": ["src/**/*.ts"],
   "references": [
     { "path": "../../apps/desktop-operator" },
+    { "path": "../learning-governance-runtime" },
     { "path": "../runtime-host" },
     { "path": "../runtime-state" },
     { "path": "../studio-runtime" }

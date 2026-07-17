@@ -7,10 +7,36 @@ import { getDesktopAssets, verifyDesktopAssetIntegrity, assertDesktopAssetsLocal
 import { RuntimeService } from "@sera/runtime-host";
 import { RuntimeStateStore, createRuntimeStateConfig, openRuntimeState } from "@sera/runtime-state";
 import { StudioRuntime, runStudioRuntimeProof } from "@sera/studio-runtime";
+import { LearningGovernanceRuntime } from "@sera/learning-governance-runtime";
 
 export const DESKTOP_OPERATOR_VERSION = "desktop-operator-v1";
 export const OPERATOR_GATEWAY_SERVICE_ID = "operator-gateway";
 export const DESKTOP_OPERATOR_SERVICE_ID = "desktop-operator";
+export const LEARNING_GOVERNANCE_ROUTE_BASE = "/api/v1/operator/learning-governance";
+export const LEARNING_GOVERNANCE_GET_ROUTES = [
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/status`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/sessions`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/sessions/:sessionId`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/failures`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/failures/:failureId`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/lessons`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/lessons/:lessonId`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/prevention-rules`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/innovations`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/innovations/:innovationId`
+] as const;
+export const LEARNING_GOVERNANCE_POST_ROUTES = [
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/hypothesis-review`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/repair-review`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/lesson-certification-request`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/lesson-activation-request`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/scope-generalization-request`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/supersession-request`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/governed-override-request`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/innovation-certification-request`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/innovation-promotion-request`,
+  `${LEARNING_GOVERNANCE_ROUTE_BASE}/innovation-rollback-request`
+] as const;
 
 export type OperatorDecision = "APPROVED" | "REJECTED" | "CANCELLED";
 export type OperatorRequestCategory =
@@ -80,6 +106,7 @@ export class OperatorGateway {
   private readonly now: () => Date;
   private readonly store: RuntimeStateStore;
   private readonly studioRuntime: StudioRuntime;
+  private readonly learningGovernanceRuntime: LearningGovernanceRuntime;
   private readonly assets = getDesktopAssets();
   private server?: http.Server;
   private sequence = 0;
@@ -102,6 +129,7 @@ export class OperatorGateway {
     });
     this.store = openRuntimeState(stateConfig);
     this.studioRuntime = new StudioRuntime({ projectRoot: this.projectRoot, stateRoot: this.stateRoot, databasePath: this.databasePath, outputRoot: path.join(this.projectRoot, ".sera", "studios"), installationId: config.installationId, runtimeInstanceId: config.runtimeInstanceId });
+    this.learningGovernanceRuntime = new LearningGovernanceRuntime(this.store, { projectRoot: this.projectRoot });
     fs.mkdirSync(this.evidenceRoot, { recursive: true });
   }
 
@@ -117,7 +145,11 @@ export class OperatorGateway {
       studios: this.all("SELECT studio_id FROM studio_definitions").length,
       studioSessions: this.all("SELECT session_id FROM studio_sessions").length,
       integratedLoopSessions: this.all("SELECT loop_session_id FROM integrated_loop_sessions").length,
-      integratedLoopPreflights: this.all("SELECT preflight_id FROM learning_preflight_runs").length
+      integratedLoopPreflights: this.all("SELECT preflight_id FROM learning_preflight_runs").length,
+      learningGovernanceSessions: safeCount(() => this.all("SELECT session_id FROM learning_governance_sessions").length),
+      learningGovernanceLessons: safeCount(() => this.all("SELECT lesson_id FROM learning_governance_lessons").length),
+      learningGovernancePreventionRules: safeCount(() => this.all("SELECT rule_id FROM learning_governance_prevention_rules").length),
+      learningGovernanceInnovations: safeCount(() => this.all("SELECT innovation_id FROM learning_governance_innovations").length)
     };
     return {
       ok: integrity.ok && localOnly.ok,
@@ -277,6 +309,22 @@ export class OperatorGateway {
   studioPolicy() { return this.studioRuntime.policy(); }
   studioSessions() { return this.studioRuntime.sessions(); }
   studioInspect(sessionId: string) { return this.studioRuntime.inspectSession(sessionId); }
+  learningGovernanceRoute(pathname: string): unknown {
+    if (!isLearningGovernancePath(pathname)) throw new OperatorGatewayBlockedError("Learning Governance route not found.", "route_not_found");
+    const suffix = pathname.slice(LEARNING_GOVERNANCE_ROUTE_BASE.length).replace(/^\/+/, "");
+    const parts = suffix ? suffix.split("/") : ["status"];
+    if (parts.length > 2 || parts.some((part) => !part)) throw new OperatorGatewayBlockedError("Malformed Learning Governance route.", "malformed_route");
+    const [resource, rawId] = parts;
+    const id = rawId ? decodeURIComponent(rawId) : undefined;
+    if (id && !/^[A-Za-z0-9_.:@-]+$/.test(id)) throw new OperatorGatewayBlockedError("Invalid Learning Governance aggregate id.", "invalid_aggregate_id");
+    if (resource === "status" && !id) return this.learningGovernanceRuntime.status();
+    if (resource === "sessions") return id ? this.learningGovernanceRuntime.inspect(id) : { sessions: this.learningGovernanceRuntime.sessions() };
+    if (resource === "failures") return id ? this.learningGovernanceRuntime.inspect(id) : { failures: this.learningGovernanceRuntime.failures() };
+    if (resource === "lessons") return id ? this.learningGovernanceRuntime.inspect(id) : { lessons: this.learningGovernanceRuntime.lessons() };
+    if (resource === "prevention-rules" && !id) return { preventionRules: this.learningGovernanceRuntime.prevention() };
+    if (resource === "innovations") return id ? this.learningGovernanceRuntime.inspect(id) : { innovations: this.learningGovernanceRuntime.innovations() };
+    throw new OperatorGatewayBlockedError("Learning Governance route not found.", "route_not_found");
+  }
   close() { this.studioRuntime.close(); this.store.close(); }
 
   private route(request: IncomingMessage, response: ServerResponse): void {
@@ -288,6 +336,10 @@ export class OperatorGateway {
         const asset = this.assets.find((candidate) => candidate.path === url.pathname);
         if (asset) return send(response, 200, asset.contentType, asset.body);
         if (url.pathname === "/api/v1/operator/status") return sendJson(response, envelope(true, this.status()));
+        if (isLearningGovernancePath(url.pathname)) {
+          this.validateSession(headersObject(request.headers));
+          return sendJson(response, envelope(true, this.learningGovernanceRoute(url.pathname)));
+        }
         if (url.pathname === "/api/v1/operator/studios") {
           this.validateSession(headersObject(request.headers));
           return sendJson(response, envelope(true, { studios: this.studioCatalog() }));
@@ -339,6 +391,30 @@ export class OperatorGateway {
         this.validateSession(headersObject(request.headers), true);
         void readJson(request)
           .then(() => sendJson(response, envelope(true, { accepted: true, route: url.pathname, authority: "studio-runtime" })))
+          .catch((error) => this.error(response, error));
+        return;
+      }
+      if (request.method === "POST" && isLearningGovernancePostRoute(url.pathname)) {
+        requireExactOrigin(request.headers.origin, this.boundPort());
+        const session = this.validateSession(headersObject(request.headers), true);
+        void readJson(request)
+          .then((body) => {
+            const operation = url.pathname.split("/").at(-1) ?? "learning-governance-request";
+            const request = this.composeRequest({
+              sessionId: session.sessionId,
+              category: "review-approval",
+              text: `${operation}:${sanitizeText(JSON.stringify(body))}`,
+              idempotencyKey: String(body.idempotencyKey ?? `${operation}:${stableHash(body)}`)
+            });
+            const approval = this.createApproval({
+              requestId: request.requestId,
+              riskClass: "HIGH",
+              summary: `Control Plane review required for ${operation}.`,
+              idempotencyKey: `${request.requestId}:approval`
+            });
+            this.audit("learning_governance_request_queued", "PASS", { operation, requestId: request.requestId, approvalId: approval.approvalId });
+            sendJson(response, envelope(true, { accepted: true, operation, authority: "control-plane-review-required", directMutation: false, requestId: request.requestId, approvalId: approval.approvalId }));
+          })
           .catch((error) => this.error(response, error));
         return;
       }
@@ -482,6 +558,20 @@ function isAllowedHostHeader(host: string | undefined, port: number): boolean {
   return [`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`].includes(host);
 }
 
+function isLearningGovernancePath(pathname: string): boolean {
+  return pathname === LEARNING_GOVERNANCE_ROUTE_BASE || pathname.startsWith(`${LEARNING_GOVERNANCE_ROUTE_BASE}/`);
+}
+
+function isLearningGovernancePostRoute(pathname: string): boolean {
+  return (LEARNING_GOVERNANCE_POST_ROUTES as readonly string[]).includes(pathname);
+}
+
+function requireExactOrigin(origin: string | string[] | undefined, port: number): void {
+  const value = Array.isArray(origin) ? origin[0] : origin;
+  if (!value) throw new OperatorGatewayBlockedError("Exact local origin required.", "origin_required");
+  if (![ `http://127.0.0.1:${port}`, `http://localhost:${port}`, `http://[::1]:${port}` ].includes(String(value))) throw new OperatorGatewayBlockedError("Origin blocked.", "origin_blocked");
+}
+
 function send(response: ServerResponse, statusCode: number, contentType: string, body: string): void {
   response.writeHead(statusCode, securityHeaders(contentType));
   response.end(body);
@@ -564,6 +654,14 @@ function randomId(): string {
 function isWithin(root: string, candidate: string): boolean {
   const relative = path.relative(path.resolve(root), path.resolve(candidate));
   return relative === "" || (!!relative && !relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+function safeCount(fn: () => number): number {
+  try {
+    return fn();
+  } catch {
+    return 0;
+  }
 }
 
 function blocked(fn: () => unknown, code: string): boolean {

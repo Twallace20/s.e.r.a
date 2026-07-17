@@ -82,6 +82,7 @@ Browser code does not perform the loop, mutate SQLite directly, invoke models, a
 npm run sera -- loop status
 npm run sera -- loop policy
 npm run sera -- loop sessions
+npm run sera -- loop inspect <session-id>
 npm run sera -- loop prove
 ```
 
@@ -90,3 +91,9 @@ npm run sera -- loop prove
 ## Non-Goals
 
 Integrated Offline Loop v1 does not implement Milestone 14. It does not certify lessons, activate recurrence-prevention rules, prove controlled failure repair, prove clean-machine restart persistence, promote innovation, run distributed Studios, enable Hive Mode, use public web access, use real local models, or implement post-Base MVP behavior.
+
+## Milestone 14 Durable Preflight Update
+
+Milestone 14 adds a production read-only preflight binding from Integrated Loop Runtime to `@sera/learning-governance-runtime`. Runtime health reports `durable-learning-governance-runtime` when durable learning governance is available.
+
+Integrated Loop still does not certify lessons, activate prevention rules, promote innovation, or mutate Learning Governance records. It reads active certified lesson versions, active prevention rules, certified alternatives, valid governed overrides, superseded history, and proven improvement strategies from Learning Governance Runtime.

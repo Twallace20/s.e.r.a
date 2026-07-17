@@ -6,7 +6,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { createControlPlaneRuntimeService, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
 
 export const RUNTIME_STATE_VERSION = "runtime-state-v1";
-export const RUNTIME_STATE_SCHEMA_VERSION = 10;
+export const RUNTIME_STATE_SCHEMA_VERSION = 11;
 export const RUNTIME_STATE_EXPORT_SCHEMA = "sera.runtime-state-export.v1";
 
 export type RuntimeStateStatus = "healthy" | "blocked";
@@ -181,7 +181,28 @@ const TABLES = [
   "integrated_loop_bindings",
   "integrated_loop_artifacts",
   "integrated_loop_events",
-  "integrated_loop_idempotency"
+  "integrated_loop_idempotency",
+  "learning_governance_sessions",
+  "learning_governance_transitions",
+  "learning_governance_failures",
+  "learning_governance_contexts",
+  "learning_governance_hypotheses",
+  "learning_governance_repair_candidates",
+  "learning_governance_reproductions",
+  "learning_governance_repair_proofs",
+  "learning_governance_lessons",
+  "learning_governance_lesson_scopes",
+  "learning_governance_prevention_rules",
+  "learning_governance_overrides",
+  "learning_governance_improvements",
+  "learning_governance_innovations",
+  "learning_governance_evidence_links",
+  "learning_governance_lesson_certifications",
+  "learning_governance_lesson_activations",
+  "learning_governance_lesson_supersessions",
+  "learning_governance_innovation_evidence_links",
+  "learning_governance_events",
+  "learning_governance_idempotency"
 ] as const;
 
 const TERMINAL_STATES = new Set<AttemptState>(["BLOCKED", "FAILED", "CANCELLED", "COMPLETED", "COMPLETED_WITH_WARNINGS"]);
@@ -1530,6 +1551,386 @@ CREATE INDEX idx_integrated_loop_sessions_state ON integrated_loop_sessions(stat
 CREATE INDEX idx_integrated_loop_stage_session ON integrated_loop_stage_transitions(loop_session_id, sequence);
 CREATE INDEX idx_learning_preflight_loop ON learning_preflight_runs(loop_session_id, timestamp);
 CREATE INDEX idx_integrated_loop_events_session ON integrated_loop_events(loop_session_id, sequence);
+`
+  },
+  {
+    version: 11,
+    name: "learning_governance_runtime_v1",
+    sql: `
+CREATE TABLE learning_governance_sessions (
+  session_id TEXT PRIMARY KEY,
+  attempt_id TEXT NOT NULL,
+  context_hash TEXT NOT NULL,
+  state TEXT NOT NULL,
+  lane TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  completed_at TEXT,
+  outcome TEXT,
+  reason TEXT,
+  optimistic_version INTEGER NOT NULL
+);
+
+CREATE TABLE learning_governance_transitions (
+  transition_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  prior_state TEXT,
+  next_state TEXT NOT NULL,
+  actor TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  evidence_reference TEXT NOT NULL,
+  UNIQUE(session_id, sequence),
+  FOREIGN KEY(session_id) REFERENCES learning_governance_sessions(session_id)
+);
+
+CREATE TABLE learning_governance_failures (
+  failure_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  originating_attempt_id TEXT NOT NULL,
+  originating_loop_session_id TEXT,
+  studio_session_reference TEXT,
+  capability_version_reference TEXT NOT NULL,
+  source_set_hash TEXT NOT NULL,
+  context_hash TEXT NOT NULL,
+  failure_classification TEXT NOT NULL,
+  observed_behavior TEXT NOT NULL,
+  expected_behavior TEXT NOT NULL,
+  evidence_json TEXT NOT NULL,
+  reproduction_status TEXT NOT NULL,
+  severity TEXT NOT NULL,
+  risk_class TEXT NOT NULL,
+  side_effect_class TEXT NOT NULL,
+  operator_impact TEXT NOT NULL,
+  first_observed_at TEXT NOT NULL,
+  last_reproduced_at TEXT,
+  integrity_hash TEXT NOT NULL,
+  FOREIGN KEY(session_id) REFERENCES learning_governance_sessions(session_id)
+);
+
+CREATE TABLE learning_governance_contexts (
+  context_id TEXT NOT NULL UNIQUE,
+  context_hash TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  canonical_context_json TEXT NOT NULL,
+  scope_dimensions_json TEXT NOT NULL,
+  excluded_dimensions_json TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  FOREIGN KEY(session_id) REFERENCES learning_governance_sessions(session_id)
+);
+
+CREATE TABLE learning_governance_hypotheses (
+  hypothesis_id TEXT PRIMARY KEY,
+  failure_id TEXT NOT NULL,
+  version TEXT NOT NULL,
+  statement TEXT NOT NULL,
+  causal_mechanism TEXT NOT NULL,
+  supporting_evidence_json TEXT NOT NULL,
+  contradicting_evidence_json TEXT NOT NULL,
+  confidence REAL NOT NULL,
+  scope_json TEXT NOT NULL,
+  non_applicability_json TEXT NOT NULL,
+  operator_author TEXT NOT NULL,
+  review_status TEXT NOT NULL,
+  evaluation_references_json TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  FOREIGN KEY(failure_id) REFERENCES learning_governance_failures(failure_id)
+);
+
+CREATE TABLE learning_governance_repair_candidates (
+  repair_id TEXT PRIMARY KEY,
+  hypothesis_id TEXT NOT NULL,
+  repair_version TEXT NOT NULL,
+  lane TEXT NOT NULL,
+  candidate_digest TEXT NOT NULL,
+  changed_behavior TEXT NOT NULL,
+  unchanged_behavior TEXT NOT NULL,
+  expected_effect TEXT NOT NULL,
+  risk TEXT NOT NULL,
+  side_effects_json TEXT NOT NULL,
+  rollback_plan TEXT NOT NULL,
+  execution_profile TEXT NOT NULL,
+  evaluation_profile TEXT NOT NULL,
+  authorization_reference TEXT NOT NULL,
+  evidence_json TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  FOREIGN KEY(hypothesis_id) REFERENCES learning_governance_hypotheses(hypothesis_id)
+);
+
+CREATE TABLE learning_governance_reproductions (
+  reproduction_id TEXT PRIMARY KEY,
+  failure_id TEXT NOT NULL,
+  execution_id TEXT NOT NULL,
+  evaluation_id TEXT NOT NULL,
+  workspace_identity TEXT NOT NULL,
+  input_hash TEXT NOT NULL,
+  environment_profile TEXT NOT NULL,
+  observed_classification TEXT NOT NULL,
+  stdout_ref TEXT NOT NULL,
+  stderr_ref TEXT NOT NULL,
+  outputs_ref TEXT NOT NULL,
+  evidence_ref TEXT NOT NULL,
+  public_network_used INTEGER NOT NULL,
+  real_model_used INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  FOREIGN KEY(failure_id) REFERENCES learning_governance_failures(failure_id)
+);
+
+CREATE TABLE learning_governance_repair_proofs (
+  proof_id TEXT PRIMARY KEY,
+  repair_id TEXT NOT NULL,
+  execution_id TEXT NOT NULL,
+  evaluation_id TEXT NOT NULL,
+  regression_evaluation_id TEXT NOT NULL,
+  normalized_outcome_hash TEXT NOT NULL,
+  original_failure_prevented INTEGER NOT NULL,
+  regression_passed INTEGER NOT NULL,
+  baseline_behavior_preserved INTEGER NOT NULL,
+  side_effects_declared INTEGER NOT NULL,
+  evidence_json TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  FOREIGN KEY(repair_id) REFERENCES learning_governance_repair_candidates(repair_id)
+);
+
+CREATE TABLE learning_governance_lessons (
+  lesson_id TEXT NOT NULL,
+  version TEXT NOT NULL,
+  state TEXT NOT NULL,
+  failure_ids_json TEXT NOT NULL,
+  hypothesis_id TEXT NOT NULL,
+  repair_id TEXT NOT NULL,
+  statement TEXT NOT NULL,
+  actionable_guidance TEXT NOT NULL,
+  prohibited_path TEXT NOT NULL,
+  certified_alternative_json TEXT NOT NULL,
+  scope_json TEXT NOT NULL,
+  non_applicability_json TEXT NOT NULL,
+  match_policy_json TEXT NOT NULL,
+  evidence_threshold_json TEXT NOT NULL,
+  evaluation_refs_json TEXT NOT NULL,
+  reproduction_refs_json TEXT NOT NULL,
+  certification_ref TEXT,
+  activation_ref TEXT,
+  supersession_ref TEXT,
+  rollback_ref TEXT,
+  digest TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  certified_at TEXT,
+  activated_at TEXT,
+  supersedes_lesson_id TEXT,
+  PRIMARY KEY(lesson_id, version)
+);
+
+CREATE TABLE learning_governance_lesson_scopes (
+  scope_id TEXT PRIMARY KEY,
+  lesson_id TEXT NOT NULL,
+  lesson_version TEXT NOT NULL,
+  scope_json TEXT NOT NULL,
+  non_applicability_json TEXT NOT NULL,
+  context_id TEXT NOT NULL,
+  context_hash TEXT NOT NULL,
+  effective_at TEXT NOT NULL,
+  superseded_at TEXT,
+  integrity_hash TEXT NOT NULL,
+  FOREIGN KEY(lesson_id, lesson_version) REFERENCES learning_governance_lessons(lesson_id, version)
+);
+
+CREATE TABLE learning_governance_prevention_rules (
+  rule_id TEXT NOT NULL,
+  version TEXT NOT NULL,
+  lesson_id TEXT NOT NULL,
+  lesson_version TEXT NOT NULL,
+  active INTEGER NOT NULL,
+  exact_behavior TEXT NOT NULL,
+  materially_equivalent_behavior TEXT NOT NULL,
+  related_context_behavior TEXT NOT NULL,
+  out_of_scope_behavior TEXT NOT NULL,
+  certified_alternative_json TEXT NOT NULL,
+  warning_policy TEXT NOT NULL,
+  review_policy TEXT NOT NULL,
+  override_policy TEXT NOT NULL,
+  activation_authorization TEXT NOT NULL,
+  effective_at TEXT NOT NULL,
+  expires_at TEXT,
+  supersession_ref TEXT,
+  rollback_ref TEXT,
+  integrity_hash TEXT NOT NULL,
+  PRIMARY KEY(rule_id, version),
+  FOREIGN KEY(lesson_id, lesson_version) REFERENCES learning_governance_lessons(lesson_id, version)
+);
+
+CREATE TABLE learning_governance_overrides (
+  override_id TEXT PRIMARY KEY,
+  rule_id TEXT NOT NULL,
+  rule_version TEXT NOT NULL,
+  authority_ref TEXT NOT NULL,
+  operator_identity TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  scope_json TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  evidence_json TEXT NOT NULL,
+  risk_acceptance TEXT NOT NULL,
+  issued_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  use_limit INTEGER NOT NULL,
+  used_count INTEGER NOT NULL,
+  resulting_decision TEXT NOT NULL,
+  audit_ref TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE learning_governance_improvements (
+  comparison_id TEXT PRIMARY KEY,
+  baseline_id TEXT NOT NULL,
+  baseline_version TEXT NOT NULL,
+  candidate_id TEXT NOT NULL,
+  candidate_version TEXT NOT NULL,
+  comparison_profile TEXT NOT NULL,
+  metrics_json TEXT NOT NULL,
+  quality_gates_json TEXT NOT NULL,
+  safety_gates_json TEXT NOT NULL,
+  regression_gates_json TEXT NOT NULL,
+  resource_measurements_json TEXT NOT NULL,
+  result TEXT NOT NULL,
+  evidence_json TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE learning_governance_innovations (
+  innovation_id TEXT NOT NULL,
+  version TEXT NOT NULL,
+  state TEXT NOT NULL,
+  proposal_json TEXT NOT NULL,
+  experiment_refs_json TEXT NOT NULL,
+  certification_ref TEXT,
+  promotion_ref TEXT,
+  rollback_ref TEXT,
+  capability_reference TEXT NOT NULL,
+  baseline_digest TEXT NOT NULL,
+  candidate_digest TEXT NOT NULL,
+  active_digest TEXT,
+  prior_active_digest TEXT,
+  integrity_hash TEXT NOT NULL,
+  PRIMARY KEY(innovation_id, version)
+);
+
+CREATE TABLE learning_governance_evidence_links (
+  link_id TEXT PRIMARY KEY,
+  parent_type TEXT NOT NULL,
+  parent_id TEXT NOT NULL,
+  evidence_type TEXT NOT NULL,
+  evidence_reference TEXT NOT NULL,
+  evidence_hash TEXT NOT NULL,
+  owning_service TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE learning_governance_lesson_certifications (
+  certification_id TEXT PRIMARY KEY,
+  lesson_id TEXT NOT NULL,
+  lesson_version TEXT NOT NULL,
+  exact_lesson_digest TEXT NOT NULL,
+  control_plane_authorization TEXT NOT NULL,
+  operator_review_reference TEXT NOT NULL,
+  reproduction_references_json TEXT NOT NULL,
+  repair_evaluation_references_json TEXT NOT NULL,
+  regression_references_json TEXT NOT NULL,
+  decision TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  evidence_package TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  FOREIGN KEY(lesson_id, lesson_version) REFERENCES learning_governance_lessons(lesson_id, version)
+);
+
+CREATE TABLE learning_governance_lesson_activations (
+  activation_id TEXT PRIMARY KEY,
+  lesson_id TEXT NOT NULL,
+  lesson_version TEXT NOT NULL,
+  exact_lesson_digest TEXT NOT NULL,
+  authorization TEXT NOT NULL,
+  operator_identity TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  effective_timestamp TEXT NOT NULL,
+  expiration_or_review_timestamp TEXT,
+  prevention_rule_reference TEXT NOT NULL,
+  rollback_policy TEXT NOT NULL,
+  status TEXT NOT NULL,
+  evidence_reference TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  FOREIGN KEY(lesson_id, lesson_version) REFERENCES learning_governance_lessons(lesson_id, version)
+);
+
+CREATE TABLE learning_governance_lesson_supersessions (
+  supersession_id TEXT PRIMARY KEY,
+  prior_lesson_id TEXT NOT NULL,
+  prior_lesson_version TEXT NOT NULL,
+  successor_lesson_id TEXT NOT NULL,
+  successor_lesson_version TEXT NOT NULL,
+  authorization TEXT NOT NULL,
+  operator_approval TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  evidence_reference TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL
+);
+
+CREATE TABLE learning_governance_innovation_evidence_links (
+  link_id TEXT PRIMARY KEY,
+  innovation_id TEXT NOT NULL,
+  innovation_version TEXT NOT NULL,
+  experiment_reference TEXT NOT NULL,
+  evaluation_reference TEXT NOT NULL,
+  comparison_reference TEXT NOT NULL,
+  capability_engine_certification_reference TEXT NOT NULL,
+  capability_engine_promotion_reference TEXT NOT NULL,
+  rollback_reference TEXT NOT NULL,
+  evidence_hash TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  integrity_hash TEXT NOT NULL,
+  FOREIGN KEY(innovation_id, innovation_version) REFERENCES learning_governance_innovations(innovation_id, version)
+);
+
+CREATE TABLE learning_governance_events (
+  event_id TEXT PRIMARY KEY,
+  aggregate_type TEXT NOT NULL,
+  aggregate_id TEXT NOT NULL,
+  sequence INTEGER NOT NULL,
+  event_type TEXT NOT NULL,
+  actor TEXT NOT NULL,
+  owning_service TEXT NOT NULL,
+  runtime_instance_id TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  safe_message TEXT NOT NULL,
+  details_json TEXT NOT NULL,
+  UNIQUE(aggregate_id, sequence)
+);
+
+CREATE TABLE learning_governance_idempotency (
+  operation_type TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL,
+  request_hash TEXT NOT NULL,
+  aggregate_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  conflict_status TEXT NOT NULL,
+  PRIMARY KEY(operation_type, idempotency_key)
+);
+
+CREATE INDEX idx_learning_governance_sessions_state ON learning_governance_sessions(state, updated_at);
+CREATE INDEX idx_learning_governance_failures_context ON learning_governance_failures(context_hash, failure_classification);
+CREATE INDEX idx_learning_governance_lessons_state ON learning_governance_lessons(state, certified_at);
+CREATE INDEX idx_learning_governance_rules_active ON learning_governance_prevention_rules(active, lesson_id, lesson_version);
+CREATE INDEX idx_learning_governance_evidence_parent ON learning_governance_evidence_links(parent_type, parent_id);
+CREATE INDEX idx_learning_governance_certifications_lesson ON learning_governance_lesson_certifications(lesson_id, lesson_version);
+CREATE INDEX idx_learning_governance_activations_lesson ON learning_governance_lesson_activations(lesson_id, lesson_version, status);
+CREATE INDEX idx_learning_governance_supersessions_prior ON learning_governance_lesson_supersessions(prior_lesson_id, prior_lesson_version);
+CREATE INDEX idx_learning_governance_innovation_evidence ON learning_governance_innovation_evidence_links(innovation_id, innovation_version);
+CREATE INDEX idx_learning_governance_events_aggregate ON learning_governance_events(aggregate_id, sequence);
 `
   }
 ];

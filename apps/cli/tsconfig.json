@@ -52,6 +52,9 @@
       "path": "../../packages/studio-runtime"
     },
     {
+      "path": "../../packages/learning-governance-runtime"
+    },
+    {
       "path": "../../packages/integrated-loop-runtime"
     },
     {

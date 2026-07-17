@@ -5,14 +5,16 @@ S.E.R.A. only advances when the cert runner proves the current runtime level. Do
 ## Current runtime certification
 
 ```text
-integrated-offline-loop-v1
+learning-generalization-recurrence-prevention-innovation-proof-v1
 ```
 
-Milestone 13 is the current runtime certification. It proves Integrated Offline Loop v1: a model-free, offline, repeatable composition path with required learning preflight before capability or Studio selection, bounded known-record classification, certified-alternative selection, governed-override evidence, Studio/evaluation/review/finalization stages, and immutable evidence package output.
+Milestone 14 final correction: certification includes Learning Governance Runtime schema v11 records, Operator Gateway read/review routes, Desktop Operator read-only surfaces, and Integrated Loop durable preflight from `@sera/learning-governance-runtime`.
 
-The Evidence-Driven Recurrence Prevention and Governed Innovation plan is an architecture lock. Milestone 13 certifies the integrated preflight hook and evidence path, while Milestone 14 remains the proof point for active lesson certification, recurrence-prevention activation, scoped generalization, operator overrides, and governed innovation.
+Milestone 14 is the current runtime certification. It proves Learning Generalization, Recurrence Prevention, and Innovation Proof v1: a model-free, offline, repeatable governed learning path with controlled failure evidence, scoped root-cause hypothesis, repair and regression proof, lesson certification and activation separation, prevention-rule activation, supersession history, governed override, baseline improvement comparison, and governed innovation rollback evidence.
 
-The S.E.R.A. Personal and Professional V1 roadmap is a post-Base MVP planning lock, not a new runtime certification level. It preserves Base MVP completion at Milestone 16, plans Milestones 17 through 24, and keeps `integrated-offline-loop-v1` as the current runtime certification until later implementation and cert runner checks prove otherwise.
+The Evidence-Driven Recurrence Prevention and Governed Innovation plan is an architecture lock. Milestone 14 certifies the bounded proof point for active lesson certification, recurrence-prevention activation, scoped generalization, operator overrides, and governed innovation.
+
+The S.E.R.A. Personal and Professional V1 roadmap is a post-Base MVP planning lock, not a new runtime certification level. It preserves Base MVP completion at Milestone 16, plans Milestones 17 through 24, and keeps `learning-generalization-recurrence-prevention-innovation-proof-v1` as the current runtime certification until later implementation and cert runner checks prove otherwise.
 
 ## Level 1 — `secure-base`
 
@@ -97,6 +99,12 @@ This level does not certify public web research, PDF output, universal document 
 S.E.R.A. can run the certified offline loop from authorization through source intake, knowledge retrieval, learning preflight, capability selection, Studio selection, model-candidate evidence, generation, evaluation, operator review, revision, finalization, closeout, and package evidence.
 
 This level does not certify Milestone 14 behavior: active lesson certification, prevention-rule activation, controlled-failure repair proof, supersession, innovation promotion, clean-machine restart proof, distributed execution, public web access, real model invocation, or post-Base MVP behavior.
+
+## Runtime Level — `learning-generalization-recurrence-prevention-innovation-proof-v1`
+
+S.E.R.A. can run a bounded Learning Governance Runtime proof that records controlled failure evidence, reproduces the failure, scopes a root-cause hypothesis, tests repair and regression evidence, certifies and activates a lesson through distinct governed steps, applies active prevention rules, preserves superseded lessons, governs overrides, compares improvement against a baseline, and keeps innovation distinct from repair with explicit promotion and rollback boundaries.
+
+This level does not certify clean-machine restart proof, portable Base MVP acceptance, public internet use, real model invocation, distributed execution, Hive Mode, or post-Base MVP behavior.
 
 ## Planning Lock — `post-base-mvp-roadmap-v1`
 

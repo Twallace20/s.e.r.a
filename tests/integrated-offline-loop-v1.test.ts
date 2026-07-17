@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeAll } from "vitest";
 import {
   INTEGRATED_LOOP_RUNTIME_VERSION,
+  IntegratedLoopBlockedError,
   IntegratedLoopRuntime,
   createContextFingerprint,
   createLoopAuthorization,
@@ -8,10 +9,13 @@ import {
   evaluatePreflight,
   runIntegratedLoopProof,
   validateAuthorization,
+  type IntegratedLoopInspection,
   type IntegratedLoopProofResult,
+  type LoopState,
   type PreflightRecord
 } from "@sera/integrated-loop-runtime";
 import { createRuntimeStateConfig, openRuntimeState } from "@sera/runtime-state";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -229,7 +233,7 @@ describe("Integrated Offline Loop v1", () => {
     ["197 two proofs use distinct preflight IDs", () => expect(proof.preflightId).not.toBe(second.preflightId)],
     ["198 state database schema is v10", () => {
       const store = openRuntimeState(createRuntimeStateConfig({ projectRoot: proof.proofRoot, stateRoot: proof.stateRoot, databasePath: proof.databasePath }));
-      try { expect(store.inspect().schemaVersion).toBe(10); } finally { store.close(); }
+      try { expect(store.inspect().schemaVersion).toBe(11); } finally { store.close(); }
     }],
     ["199 context hash canonical ordering is stable", () => {
       const a = createContextFingerprint({ sourceTypes: ["inline-text", "local-text-file"] });
@@ -240,6 +244,116 @@ describe("Integrated Offline Loop v1", () => {
       const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-loop-test-"));
       const store = openRuntimeState({ projectRoot: root });
       try { expect(new IntegratedLoopRuntime(store, { projectRoot: root }).status().ok).toBe(true); } finally { store.close(); }
+    }],
+    ["201 completed session inspection returns bounded terminal record", () => {
+      const inspection = inspectProofSession(proof);
+      expect(inspection.ok).toBe(true);
+      expect(inspection.loopSessionId).toBe(proof.loopSessionId);
+      expect(inspection.attemptId).toBeTruthy();
+      expect(inspection.lifecycleState).toBe("COMPLETED");
+      expect(inspection.terminal).toBe(true);
+      expect(inspection.outcome).toBe("COMPLETED");
+    }],
+    ["202 session inspection preserves lifecycle transition ordering", () => {
+      const inspection = inspectProofSession(proof);
+      expect(inspection.transitions.map((transition) => transition.sequence)).toEqual([...inspection.transitions.map((transition) => transition.sequence)].sort((a, b) => Number(a) - Number(b)));
+      expect(inspection.transitions[0]?.next_state).toBe("CREATED");
+      expect(inspection.transitions[inspection.transitions.length - 1]?.next_state).toBe("COMPLETED");
+    }],
+    ["203 session inspection includes durable preflight decision and matches", () => {
+      const inspection = inspectProofSession(proof);
+      expect(inspection.learningPreflight.decision).toBe("APPLY_CERTIFIED_ALTERNATIVE");
+      expect(inspection.learningPreflight.preflightId).toBe(proof.preflightId);
+      expect(inspection.learningPreflight.matches.length).toBeGreaterThan(0);
+      expect(inspection.learningPreflight.matches.some((match) => match.match_class === "MATERIALLY_EQUIVALENT")).toBe(true);
+    }],
+    ["204 session inspection includes service bindings", () => {
+      const inspection = inspectProofSession(proof);
+      expect(inspection.bindings.some((binding) => binding.binding_type === "preflight")).toBe(true);
+      expect(inspection.bindings.some((binding) => binding.binding_type === "capability")).toBe(true);
+      expect(inspection.integrityReferences.authorizationId).toBeTruthy();
+    }],
+    ["205 session inspection includes artifacts with bounded references", () => {
+      const inspection = inspectProofSession(proof);
+      expect(inspection.artifacts.some((artifact) => artifact.artifact_type === "learning-preflight")).toBe(true);
+      expect(inspection.artifacts.some((artifact) => artifact.artifact_type === "final-loop-package")).toBe(true);
+      expect(inspection.artifacts.every((artifact) => !path.isAbsolute(String(artifact.content_addressed_path_or_reference)))).toBe(true);
+    }],
+    ["206 session inspection reports terminal outcome and reason", () => {
+      const inspection = inspectProofSession(proof);
+      expect(inspection.terminalReason).toContain("closeout completed");
+      expect(inspection.reason).toContain("closeout completed");
+      expect(inspection.timestamps.completedAt).toBeTruthy();
+    }],
+    ["207 session inspection safely represents all terminal loop states", () => {
+      for (const state of ["BLOCKED", "FAILED", "CANCELLED", "REVIEW_REQUIRED"] as const) {
+        const inspection = inspectTerminalFixture(state);
+        expect(inspection.lifecycleState).toBe(state);
+        expect(inspection.terminal).toBe(true);
+        expect(inspection.terminalReason).toContain(`fixture ${state}`);
+      }
+    }],
+    ["208 unknown session inspection fails with stable not-found code", () => {
+      const store = openRuntimeState(createRuntimeStateConfig({ projectRoot: proof.proofRoot, stateRoot: proof.stateRoot, databasePath: proof.databasePath }));
+      try {
+        const runtime = new IntegratedLoopRuntime(store, { projectRoot: proof.proofRoot });
+        expect(() => runtime.inspectSession("missing-loop-session")).toThrow(IntegratedLoopBlockedError);
+        try {
+          runtime.inspectSession("missing-loop-session");
+        } catch (error) {
+          expect(error).toBeInstanceOf(IntegratedLoopBlockedError);
+          expect((error as IntegratedLoopBlockedError).code).toBe("integrated_loop_session_not_found");
+        }
+      } finally {
+        store.close();
+      }
+    }],
+    ["209 missing inspect ID has safe usage guidance", () => {
+      const source = fs.readFileSync(path.join(process.cwd(), "apps", "cli", "src", "index.ts"), "utf8");
+      expect(source).toContain("Usage: sera loop inspect <session-id>");
+    }],
+    ["210 inspecting a session does not change session row counts", () => expectRowCountUnchanged(proof, "integrated_loop_sessions")],
+    ["211 inspecting a session does not change transition row counts", () => expectRowCountUnchanged(proof, "integrated_loop_stage_transitions")],
+    ["212 inspecting a session does not change loop event row counts", () => expectRowCountUnchanged(proof, "integrated_loop_events")],
+    ["213 inspecting a session does not change evidence row counts", () => expectRowCountUnchanged(proof, "evidence_references")],
+    ["214 inspecting a session does not change artifact row counts", () => expectRowCountUnchanged(proof, "integrated_loop_artifacts")],
+    ["215 inspecting a session leaves durable content unchanged", () => {
+      const before = durableLoopDigest(proof);
+      inspectProofSession(proof);
+      expect(durableLoopDigest(proof)).toBe(before);
+    }],
+    ["216 inspection remains model-free", () => expect(inspectProofSession(proof).modelUse).toBe(false)],
+    ["217 inspection remains public-network-free", () => expect(inspectProofSession(proof).publicNetworkUse).toBe(false)],
+    ["218 inspection does not mutate repository source", () => {
+      const sourcePath = path.join(process.cwd(), "packages", "integrated-loop-runtime", "src", "integrated-loop-runtime.ts");
+      const before = fileDigest(sourcePath);
+      inspectProofSession(proof);
+      expect(fileDigest(sourcePath)).toBe(before);
+    }],
+    ["219 CLI help lists loop inspect", () => {
+      const source = fs.readFileSync(path.join(process.cwd(), "apps", "cli", "src", "index.ts"), "utf8");
+      expect(source).toContain("sera loop inspect <session-id>");
+    }],
+    ["220 invalid loop command guidance includes inspect", () => {
+      const source = fs.readFileSync(path.join(process.cwd(), "apps", "cli", "src", "index.ts"), "utf8");
+      expect(source).toContain("status, policy, sessions, inspect, prove");
+    }],
+    ["221 authorize-fixture remains unsupported", () => {
+      const source = fs.readFileSync(path.join(process.cwd(), "apps", "cli", "src", "index.ts"), "utf8");
+      expect(source).not.toContain("authorize-fixture");
+      expect(source).toContain("Loop command must be one of: status, policy, sessions, inspect, prove.");
+    }],
+    ["222 existing loop commands remain available", () => {
+      const store = openRuntimeState(createRuntimeStateConfig({ projectRoot: proof.proofRoot, stateRoot: proof.stateRoot, databasePath: proof.databasePath }));
+      try {
+        const runtime = new IntegratedLoopRuntime(store, { projectRoot: proof.proofRoot });
+        expect(runtime.status().ok).toBe(true);
+        expect(runtime.policy().ok).toBe(true);
+        expect(runtime.sessions().some((session) => session.loop_session_id === proof.loopSessionId)).toBe(true);
+        expect(second.ok).toBe(true);
+      } finally {
+        store.close();
+      }
     }]
   ];
 
@@ -247,6 +361,87 @@ describe("Integrated Offline Loop v1", () => {
     it(name, assertion);
   }
 });
+
+type RuntimeStateStoreHandle = ReturnType<typeof openRuntimeState>;
+
+function inspectProofSession(result: IntegratedLoopProofResult): IntegratedLoopInspection {
+  return withProofRuntime(result, (runtime) => runtime.inspectSession(result.loopSessionId));
+}
+
+function withProofRuntime<T>(result: IntegratedLoopProofResult, action: (runtime: IntegratedLoopRuntime, store: RuntimeStateStoreHandle) => T): T {
+  const store = openRuntimeState(createRuntimeStateConfig({ projectRoot: result.proofRoot, stateRoot: result.stateRoot, databasePath: result.databasePath }));
+  try {
+    return action(new IntegratedLoopRuntime(store, { projectRoot: result.proofRoot, outputRoot: result.outputRoot }), store);
+  } finally {
+    store.close();
+  }
+}
+
+function inspectTerminalFixture(state: Extract<LoopState, "BLOCKED" | "FAILED" | "CANCELLED" | "REVIEW_REQUIRED">): IntegratedLoopInspection {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "sera-loop-terminal-"));
+  const store = openRuntimeState(createRuntimeStateConfig({ projectRoot: root }));
+  try {
+    const runtime = new IntegratedLoopRuntime(store, { projectRoot: root });
+    const authorization = createLoopAuthorization();
+    runtime.startLoop({ authorization, idempotencyKey: `terminal:${authorization.loopSessionId}` });
+    if (state === "REVIEW_REQUIRED") {
+      runtime.transition(authorization.loopSessionId, "CREATED", "AUTHORIZING", "operator-gateway", "fixture authorization", "fixture-authorization.json");
+      runtime.transition(authorization.loopSessionId, "AUTHORIZING", "PREFLIGHTING", "integrated-loop-runtime", "fixture preflight", "fixture-preflight.json");
+      runtime.transition(authorization.loopSessionId, "PREFLIGHTING", state, "learning-governance-runtime", `fixture ${state}`, "fixture-review-required.json");
+    } else {
+      runtime.transition(authorization.loopSessionId, "CREATED", state, "integrated-loop-runtime", `fixture ${state}`, `fixture-${state.toLowerCase()}.json`);
+    }
+    return runtime.inspectSession(authorization.loopSessionId);
+  } finally {
+    store.close();
+  }
+}
+
+function expectRowCountUnchanged(result: IntegratedLoopProofResult, table: string): void {
+  withProofRuntime(result, (_runtime, store) => {
+    const before = tableCount(store, table);
+    inspectProofSession(result);
+    expect(tableCount(store, table)).toBe(before);
+  });
+}
+
+function tableCount(store: RuntimeStateStoreHandle, table: string): number {
+  const safeTable = assertKnownInspectionTable(table);
+  const row = store.recoveryGet(`SELECT COUNT(*) AS count FROM ${safeTable}`);
+  return Number(row?.count ?? 0);
+}
+
+function assertKnownInspectionTable(table: string): string {
+  const allowed = new Set(["integrated_loop_sessions", "integrated_loop_stage_transitions", "integrated_loop_events", "evidence_references", "integrated_loop_artifacts"]);
+  if (!allowed.has(table)) throw new Error(`Unexpected inspection table: ${table}`);
+  return table;
+}
+
+function durableLoopDigest(result: IntegratedLoopProofResult): string {
+  return withProofRuntime(result, (_runtime, store) => {
+    const rows = {
+      sessions: store.recoveryAll("SELECT * FROM integrated_loop_sessions WHERE loop_session_id = ? ORDER BY loop_session_id", [result.loopSessionId]),
+      transitions: store.recoveryAll("SELECT * FROM integrated_loop_stage_transitions WHERE loop_session_id = ? ORDER BY sequence", [result.loopSessionId]),
+      events: store.recoveryAll("SELECT * FROM integrated_loop_events WHERE loop_session_id = ? ORDER BY sequence", [result.loopSessionId]),
+      artifacts: store.recoveryAll("SELECT * FROM integrated_loop_artifacts WHERE loop_session_id = ? ORDER BY artifact_type, hash", [result.loopSessionId]),
+      bindings: store.recoveryAll("SELECT * FROM integrated_loop_bindings WHERE loop_session_id = ? ORDER BY binding_type, service_id, aggregate_id", [result.loopSessionId]),
+      preflight: store.recoveryAll("SELECT * FROM learning_preflight_runs WHERE loop_session_id = ? ORDER BY preflight_id", [result.loopSessionId])
+    };
+    return crypto.createHash("sha256").update(JSON.stringify(canonicalTestJson(rows))).digest("hex");
+  });
+}
+
+function fileDigest(filePath: string): string {
+  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+function canonicalTestJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalTestJson);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, canonicalTestJson(item)]));
+  }
+  return value;
+}
 
 function knownFailureWithGoodAlternative(): PreflightRecord {
   return knownFailureWithBadAlternative({});

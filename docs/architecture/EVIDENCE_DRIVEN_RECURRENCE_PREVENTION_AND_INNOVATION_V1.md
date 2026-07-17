@@ -68,3 +68,9 @@ Milestone 14 is canonically named: Milestone 14 - Learning Generalization, Recur
 Milestone 15 must prove restart persistence for failure records, certified lessons, prevention rules, lesson scopes, superseded lessons, overrides, and innovation proposals.
 
 Milestone 16 must prove the portable Base MVP can preserve evidence, correct a controlled mistake, certify the correction, restart, retrieve the certified lesson for a materially equivalent request, prevent the known mistake, and explain the evidence in Desktop Operator.
+
+## Milestone 14 Durable Evidence Update
+
+Milestone 14 implements the Learning Governance Runtime proof using migration v11. The schema includes independent records for evidence links, lesson certifications, lesson activations, lesson supersessions, and innovation evidence links. It also records context IDs separately from context hashes, repair versions, versioned lesson scopes, aggregate type, owning service, and Runtime instance ID on learning events.
+
+Supersession does not erase history. Version `1` remains inspectable as `SUPERSEDED`, version `2` is `ACTIVE`, prevention rules point to version `2`, and Integrated Loop durable preflight returns version `2`.

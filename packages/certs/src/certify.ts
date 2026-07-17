@@ -21,6 +21,7 @@ import { createOperatorGatewayRuntimeServices, runDesktopOperatorProof, runOpera
 import { createStudioRuntimeServices, runStudioRuntimeProof } from "@sera/studio-runtime";
 import { runEvidenceStudioProof } from "@sera/evidence-studio";
 import { INTEGRATED_LOOP_RUNTIME_VERSION, createIntegratedLoopRuntimeServices, runIntegratedLoopProof } from "@sera/integrated-loop-runtime";
+import { LEARNING_GOVERNANCE_RUNTIME_VERSION, createLearningGovernanceRuntimeServices, runLearningGovernanceProof } from "@sera/learning-governance-runtime";
 
 export interface CertCheck {
   id: string;
@@ -31,7 +32,7 @@ export interface CertCheck {
 
 export interface CertReport {
   createdAt: string;
-  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1" | "isolated-execution-v1" | "evaluation-engine-v1" | "local-model-runtime-v1" | "knowledge-intake-runtime-v1" | "capability-engine-recursive-learning-v1" | "desktop-operator-v1" | "first-certified-studio-v1" | "integrated-offline-loop-v1";
+  level: "none" | "secure-base" | "developer-worker-v1" | "developer-worker-v2" | "self-improvement-v1" | "task-memory-v1" | "lesson-review-v1" | "active-lessons-v1" | "planner-task-queue-v1" | "knowledge-retrieval-v1" | "model-provider-v1" | "autonomous-dev-loop-v1" | "operator-console-v1" | "control-plane-v1" | "runtime-host-v1" | "runtime-state-v1" | "persistent-runtime-v1" | "isolated-execution-v1" | "evaluation-engine-v1" | "local-model-runtime-v1" | "knowledge-intake-runtime-v1" | "capability-engine-recursive-learning-v1" | "desktop-operator-v1" | "first-certified-studio-v1" | "integrated-offline-loop-v1" | "learning-generalization-recurrence-prevention-innovation-proof-v1";
   pass: boolean;
   checks: CertCheck[];
 }
@@ -69,6 +70,7 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   checks.push(...await runDesktopOperatorV1Checks(rootDir));
   checks.push(...await runFirstCertifiedStudioV1Checks(rootDir));
   checks.push(...await runIntegratedOfflineLoopV1Checks(rootDir));
+  checks.push(...await runLearningGovernanceV1Checks(rootDir));
 
   const secureChecksPass = checks.filter((c) => !c.id.startsWith("developer_") && !c.id.startsWith("self_improvement_") && !c.id.startsWith("memory_") && !c.id.startsWith("lesson_review_") && !c.id.startsWith("active_lessons_") && !c.id.startsWith("task_queue_") && !c.id.startsWith("knowledge_") && !c.id.startsWith("model_provider_") && !c.id.startsWith("autonomy_") && !c.id.startsWith("console_")).every((c) => c.pass);
   const developerV1ChecksPass = checks.filter((c) => c.id.startsWith("developer_") && !c.id.startsWith("developer_v2_")).every((c) => c.pass);
@@ -96,10 +98,13 @@ export async function runSecureBaseCert(rootDir = process.cwd()): Promise<CertRe
   const desktopOperatorV1ChecksPass = checks.filter((c) => c.id.startsWith("desktop_operator_") || c.id.startsWith("operator_gateway_")).every((c) => c.pass);
   const firstCertifiedStudioV1ChecksPass = checks.filter((c) => c.id.startsWith("first_studio_")).every((c) => c.pass);
   const integratedOfflineLoopV1ChecksPass = checks.filter((c) => c.id.startsWith("integrated_loop_")).every((c) => c.pass);
+  const learningGovernanceV1ChecksPass = checks.filter((c) => c.id.startsWith("learning_")).every((c) => c.pass);
   void repositorySnapshotV1ChecksPass;
   void repositoryTruthV1ChecksPass;
   const pass = checks.every((c) => c.pass);
-  const level = pass && integratedOfflineLoopV1ChecksPass
+  const level = pass && learningGovernanceV1ChecksPass
+    ? "learning-generalization-recurrence-prevention-innovation-proof-v1"
+    : pass && integratedOfflineLoopV1ChecksPass
     ? "integrated-offline-loop-v1"
     : pass && firstCertifiedStudioV1ChecksPass
     ? "first-certified-studio-v1"
@@ -1130,11 +1135,11 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
   const expected = {
     schemaVersion: "sera.base-mvp-manifest.v1",
     totalMilestones: 16,
-    completedMilestones: 13,
-    remainingMilestones: 3,
-    currentMilestone: 14,
+    completedMilestones: 14,
+    remainingMilestones: 2,
+    currentMilestone: 15,
     baseMvpCompletionMilestone: 16,
-    currentCertification: "integrated-offline-loop-v1",
+    currentCertification: "learning-generalization-recurrence-prevention-innovation-proof-v1",
     architectureBranch: "architecture/local-autonomous-runtime-v1"
   };
   let manifest: any;
@@ -1151,11 +1156,11 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
   checks.push({ id: "base_mvp_manifest_parses", name: "Base MVP manifest parses as JSON", pass: Boolean(manifest) && !parseError, detail: parseError || "parsed" });
   checks.push({ id: "base_mvp_manifest_schema", name: "Base MVP manifest schema version is canonical", pass: manifest?.schemaVersion === expected.schemaVersion, detail: String(manifest?.schemaVersion ?? "missing") });
   checks.push({ id: "base_mvp_manifest_total_milestones", name: "Base MVP total milestone count is 16", pass: manifest?.totalMilestones === expected.totalMilestones, detail: String(manifest?.totalMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_completed_milestones", name: "Base MVP completed milestone count is 13", pass: manifest?.completedMilestones === expected.completedMilestones, detail: String(manifest?.completedMilestones ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_completed_milestones", name: "Base MVP completed milestone count is 14", pass: manifest?.completedMilestones === expected.completedMilestones, detail: String(manifest?.completedMilestones ?? "missing") });
   checks.push({ id: "base_mvp_manifest_remaining_milestones", name: "Base MVP remaining milestone count is 3", pass: manifest?.remainingMilestones === expected.remainingMilestones, detail: String(manifest?.remainingMilestones ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_current_milestone", name: "Base MVP current milestone is 14", pass: manifest?.currentMilestone === expected.currentMilestone, detail: String(manifest?.currentMilestone ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_milestone", name: "Base MVP current milestone is 15", pass: manifest?.currentMilestone === expected.currentMilestone, detail: String(manifest?.currentMilestone ?? "missing") });
   checks.push({ id: "base_mvp_manifest_completion_milestone", name: "Base MVP completion milestone is 16", pass: manifest?.baseMvpCompletionMilestone === expected.baseMvpCompletionMilestone, detail: String(manifest?.baseMvpCompletionMilestone ?? "missing") });
-  checks.push({ id: "base_mvp_manifest_current_certification", name: "Base MVP manifest current certification matches Milestone 13", pass: manifest?.currentCertification === expected.currentCertification, detail: String(manifest?.currentCertification ?? "missing") });
+  checks.push({ id: "base_mvp_manifest_current_certification", name: "Base MVP manifest current certification matches Milestone 14", pass: manifest?.currentCertification === expected.currentCertification, detail: String(manifest?.currentCertification ?? "missing") });
   checks.push({ id: "base_mvp_manifest_architecture_branch", name: "Base MVP manifest records architecture branch", pass: manifest?.architectureBranch === expected.architectureBranch, detail: String(manifest?.architectureBranch ?? "missing") });
   checks.push({ id: "base_mvp_manifest_arithmetic_total", name: "Base MVP completed plus remaining equals total", pass: manifest?.completedMilestones + manifest?.remainingMilestones === manifest?.totalMilestones, detail: JSON.stringify({ completed: manifest?.completedMilestones, remaining: manifest?.remainingMilestones, total: manifest?.totalMilestones }) });
   checks.push({ id: "base_mvp_manifest_arithmetic_current", name: "Base MVP current milestone follows completed milestones", pass: manifest?.currentMilestone === manifest?.completedMilestones + 1, detail: JSON.stringify({ completed: manifest?.completedMilestones, current: manifest?.currentMilestone }) });
@@ -1171,9 +1176,9 @@ function runBaseMvpManifestV1Checks(rootDir: string): CertCheck[] {
     name: "Roadmap and Base MVP manifest do not contradict each other",
     pass:
       has("totalMilestones: 16") &&
-      has("completedMilestones: 13") &&
-      has("remainingMilestones: 3") &&
-      has("currentMilestone: 14") &&
+      has("completedMilestones: 14") &&
+      has("remainingMilestones: 2") &&
+      has("currentMilestone: 15") &&
       has("baseMvpCompletionMilestone: 16") &&
       manifest?.totalMilestones === expected.totalMilestones &&
       manifest?.completedMilestones === expected.completedMilestones &&
@@ -1422,9 +1427,9 @@ async function runRuntimeStateV1Checks(): Promise<CertCheck[]> {
   const config = createRuntimeStateConfig({ projectRoot: root, installationId: "installation_cert", runtimeInstanceId: "runtime_cert" });
   const store = openRuntimeState(config);
   const inspection = store.inspect();
-  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 10 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
+  checks.push({ id: "runtime_state_initializes_schema", name: "Runtime State initializes schema", pass: inspection.schemaVersion === 11 && inspection.sqlite.journalMode === "wal" && inspection.sqlite.foreignKeys === true, detail: JSON.stringify(inspection.sqlite) });
   const secondInspection = store.inspect();
-  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 10, detail: JSON.stringify(secondInspection.counts) });
+  checks.push({ id: "runtime_state_migrations_idempotent", name: "Runtime State migrations are idempotent", pass: secondInspection.counts.schema_migrations === 11, detail: JSON.stringify(secondInspection.counts) });
   const command = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   const duplicate = store.acceptCommand({ idempotencyKey: "cert-command", commandType: "cert", payload: { value: 1 }, capability: "control-plane" });
   checks.push({ id: "runtime_state_command_idempotency", name: "Runtime State command idempotency returns original", pass: command.commandId === duplicate.commandId && duplicate.status === "DUPLICATE", detail: `${command.commandId} ${duplicate.status}` });
@@ -1862,7 +1867,7 @@ async function runDesktopOperatorV1Checks(rootDir: string): Promise<CertCheck[]>
 
   const manifestPath = path.join(rootDir, "architecture", "base-mvp-manifest.json");
   const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : {};
-  add("desktop_operator_manifest_aligned", "Base MVP manifest includes or supersedes Desktop Operator certification", ["desktop-operator-v1", "first-certified-studio-v1", "integrated-offline-loop-v1"].includes(manifest.currentCertification) && manifest.completedMilestones >= 11 && manifest.currentMilestone >= 12, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone }));
+  add("desktop_operator_manifest_aligned", "Base MVP manifest includes or supersedes Desktop Operator certification", ["desktop-operator-v1", "first-certified-studio-v1", "integrated-offline-loop-v1", "learning-generalization-recurrence-prevention-innovation-proof-v1"].includes(manifest.currentCertification) && manifest.completedMilestones >= 11 && manifest.currentMilestone >= 12, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone }));
   return checks;
 }
 
@@ -1921,7 +1926,7 @@ async function runFirstCertifiedStudioV1Checks(rootDir: string): Promise<CertChe
 
   const manifestPath = path.join(rootDir, "architecture", "base-mvp-manifest.json");
   const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : {};
-  add("first_studio_manifest_aligned", "Base MVP manifest includes or supersedes First Certified Studio", ["first-certified-studio-v1", "integrated-offline-loop-v1"].includes(manifest.currentCertification) && manifest.completedMilestones >= 12 && manifest.currentMilestone >= 13, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone }));
+  add("first_studio_manifest_aligned", "Base MVP manifest includes or supersedes First Certified Studio", ["first-certified-studio-v1", "integrated-offline-loop-v1", "learning-generalization-recurrence-prevention-innovation-proof-v1"].includes(manifest.currentCertification) && manifest.completedMilestones >= 12 && manifest.currentMilestone >= 13, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone }));
   return checks;
 }
 
@@ -1972,7 +1977,7 @@ async function runIntegratedOfflineLoopV1Checks(rootDir: string): Promise<CertCh
 
   const manifestPath = path.join(rootDir, "architecture", "base-mvp-manifest.json");
   const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : {};
-  add("integrated_loop_manifest_aligned", "Base MVP manifest records Integrated Offline Loop", manifest.currentCertification === "integrated-offline-loop-v1" && manifest.completedMilestones === 13 && manifest.currentMilestone === 14 && manifest.remainingMilestones === 3, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone, remainingMilestones: manifest.remainingMilestones }));
+  add("integrated_loop_manifest_aligned", "Base MVP manifest includes or supersedes Integrated Offline Loop", ["integrated-offline-loop-v1", "learning-generalization-recurrence-prevention-innovation-proof-v1"].includes(manifest.currentCertification) && manifest.completedMilestones >= 13 && manifest.currentMilestone >= 14, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone, remainingMilestones: manifest.remainingMilestones }));
 
   const hostRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-integrated-loop-cert-host-"));
   fs.writeFileSync(path.join(hostRoot, "package.json"), JSON.stringify({ name: "integrated-loop-cert-host", private: true }), "utf8");
@@ -1982,6 +1987,71 @@ async function runIntegratedOfflineLoopV1Checks(rootDir: string): Promise<CertCh
   await host.shutdown("Integrated Loop certification check complete.");
   add("integrated_loop_runtime_host_dependency_health", "Runtime Host dependency health is visible", started.ok && health.services.some((service) => service.serviceId === "integrated-loop-runtime"), JSON.stringify(health.services.map((service) => ({ id: service.serviceId, status: service.status }))));
 
+  return checks;
+}
+
+async function runLearningGovernanceV1Checks(rootDir: string): Promise<CertCheck[]> {
+  const proof = await runLearningGovernanceProof();
+  const second = await runLearningGovernanceProof();
+  const checks: CertCheck[] = [];
+  const add = (id: string, name: string, pass: boolean, detail: string) => checks.push({ id, name, pass, detail });
+
+  add("learning_governance_runtime_registered", "Learning Governance Runtime is registered", proof.checks.runtimeRegistered, LEARNING_GOVERNANCE_RUNTIME_VERSION);
+  add("learning_failure_evidence_required", "Failure evidence is required", proof.checks.failureEvidenceRequired, proof.failureId);
+  add("learning_context_fingerprint_deterministic", "Context fingerprint is deterministic", proof.checks.contextFingerprintDeterministic, proof.sessionId);
+  add("learning_root_cause_hypothesis_scoped", "Root-cause hypothesis is scoped", proof.checks.rootCauseHypothesisScoped, proof.failureId);
+  add("learning_model_hypothesis_candidate_only", "Model hypotheses remain candidate only", proof.checks.modelHypothesisCandidateOnly, "candidate-only");
+  add("learning_failure_reproduced_independently", "Failure is reproduced independently", proof.checks.failureReproducedIndependently, proof.failureId);
+  add("learning_repair_reproduced_independently", "Repair is reproduced independently", proof.checks.repairReproducedIndependently, proof.failureId);
+  add("learning_regression_evaluation_required", "Regression evaluation is required", proof.checks.regressionEvaluationRequired, proof.failureId);
+  add("learning_lesson_candidate_evidence_complete", "Lesson candidate evidence is complete", proof.checks.lessonCandidateEvidenceComplete, proof.lessonId);
+  add("learning_lesson_certification_authorized", "Lesson certification is authorized", proof.checks.lessonCertificationAuthorized, proof.lessonId);
+  add("learning_lesson_certification_distinct_from_activation", "Certification is distinct from activation", proof.checks.certificationDistinctFromActivation, proof.lessonId);
+  add("learning_lesson_activation_authorized", "Lesson activation is authorized", proof.checks.lessonActivationAuthorized, proof.lessonId);
+  add("learning_prevention_rule_created", "Prevention rule is created", proof.checks.preventionRuleCreated, proof.preventionRuleId);
+  add("learning_exact_failure_prevented", "Exact known failure is prevented", proof.checks.exactFailurePrevented, proof.scenarioResults.exact);
+  add("learning_equivalent_failure_prevented", "Materially equivalent failure is prevented", proof.checks.equivalentFailurePrevented, proof.scenarioResults.exact);
+  add("learning_related_context_scoped", "Related context is scoped", proof.checks.relatedContextScoped, proof.scenarioResults.related);
+  add("learning_generalization_separately_certified", "Generalization is separately certified", proof.checks.generalizationSeparatelyCertified, proof.successorLessonVersion);
+  add("learning_out_of_scope_not_blocked", "Out-of-scope context is not blocked", proof.checks.outOfScopeNotBlocked, proof.scenarioResults.outOfScope);
+  add("learning_lesson_supersession_preserved", "Superseded lesson history is preserved", proof.checks.lessonSupersessionPreserved, proof.lessonId);
+  add("learning_active_successor_retrieved", "Active successor is retrieved", proof.checks.activeSuccessorRetrieved, proof.successorLessonVersion);
+  add("learning_override_governed", "Override is governed", proof.checks.overrideGoverned, proof.overrideId);
+  add("learning_override_use_limit_enforced", "Override use limit is enforced", proof.checks.overrideUseLimitEnforced, proof.overrideId);
+  add("learning_improvement_baseline_compared", "Improvement is baseline-compared", proof.checks.improvementBaselineCompared, proof.innovationId);
+  add("learning_innovation_distinct_from_repair", "Innovation is distinct from repair", proof.checks.innovationDistinctFromRepair, proof.innovationId);
+  add("learning_innovation_experiments_isolated", "Innovation experiments are isolated", proof.checks.innovationExperimentsIsolated, proof.innovationId);
+  add("learning_innovation_certified_inactive", "Innovation certification is inactive before promotion", proof.checks.innovationCertifiedInactive, proof.innovationId);
+  add("learning_innovation_promotion_authorized", "Innovation promotion is authorized", proof.checks.innovationPromotionAuthorized, proof.promotedCapabilityDigest);
+  add("learning_innovation_promotion_capability_engine_owned", "Capability Engine owns promotion", proof.checks.innovationPromotionCapabilityEngineOwned, proof.promotedCapabilityDigest);
+  add("learning_innovation_rollback_proven", "Innovation rollback is proven", proof.checks.innovationRollbackProven, proof.rolledBackCapabilityDigest);
+  add("learning_model_cannot_certify", "Model cannot certify", proof.checks.modelCannotCertify, "blocked");
+  add("learning_model_cannot_activate", "Model cannot activate", proof.checks.modelCannotActivate, "blocked");
+  add("learning_model_cannot_promote", "Model cannot promote", proof.checks.modelCannotPromote, "blocked");
+  add("learning_legacy_rules_not_authority", "Legacy active lessons are not imported as authority", proof.checks.legacyRulesNotAuthority, "legacy-boundary");
+  add("learning_integrated_loop_durable_preflight", "Integrated Loop consumes durable preflight source", proof.checks.integratedLoopDurablePreflight, proof.preventionRuleId);
+  add("learning_recovery_conservative", "Recovery is conservative", proof.checks.recoveryConservative, proof.databasePath);
+  add("learning_history_append_only", "History is append-only", proof.checks.historyAppendOnly, proof.sessionId);
+  add("learning_evidence_complete", "Evidence package is complete", proof.checks.evidenceComplete, proof.packagePath);
+  add("learning_non_git_operation", "Proof runs outside Git", proof.checks.nonGitOperation, proof.proofRoot);
+  add("learning_offline_operation", "Proof is offline", proof.checks.offlineOperation && proof.publicNetworkUse === false, "offline");
+  add("learning_no_real_model_required", "No real model is required", proof.checks.noRealModelRequired && proof.modelUse === false, "modelUse=false");
+  add("learning_no_public_network", "No public network is used", proof.checks.noPublicNetwork && proof.publicNetworkUse === false, "publicNetworkUse=false");
+  add("learning_repeatable_proof", "Proof is repeatable and isolated", proof.ok && second.ok && proof.databasePath !== second.databasePath && proof.sessionId !== second.sessionId, `${proof.databasePath} != ${second.databasePath}`);
+  add("learning_manifest_aligned", "Base MVP manifest records Learning Governance milestone", proof.checks.manifestAligned, "manifest-aligned");
+  add("learning_milestone15_boundary_preserved", "Milestone 15 boundary remains preserved", proof.checks.milestone15BoundaryPreserved, "future-locked");
+
+  const hostRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sera-learning-governance-cert-host-"));
+  fs.writeFileSync(path.join(hostRoot, "package.json"), JSON.stringify({ name: "learning-governance-cert-host", private: true }), "utf8");
+  const host = new RuntimeHost({ config: createRuntimeConfig({ projectRoot: hostRoot }), services: createLearningGovernanceRuntimeServices(hostRoot) });
+  const started = await host.start();
+  const health = await host.health();
+  await host.shutdown("Learning Governance certification check complete.");
+  add("learning_runtime_host_registration", "Runtime Host registers learning-governance-runtime", started.ok && health.services.some((service) => service.serviceId === "learning-governance-runtime"), JSON.stringify(health.services.map((service) => ({ id: service.serviceId, status: service.status }))));
+
+  const manifestPath = path.join(rootDir, "architecture", "base-mvp-manifest.json");
+  const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : {};
+  add("learning_base_mvp_manifest_aligned", "Base MVP manifest records Milestone 14", manifest.currentCertification === "learning-generalization-recurrence-prevention-innovation-proof-v1" && manifest.completedMilestones === 14 && manifest.currentMilestone === 15 && manifest.remainingMilestones === 2, JSON.stringify({ currentCertification: manifest.currentCertification, completedMilestones: manifest.completedMilestones, currentMilestone: manifest.currentMilestone, remainingMilestones: manifest.remainingMilestones }));
   return checks;
 }
 
