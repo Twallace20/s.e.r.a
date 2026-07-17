@@ -58,6 +58,9 @@
       "path": "../../packages/integrated-loop-runtime"
     },
     {
+      "path": "../../packages/restart-persistence-proof"
+    },
+    {
       "path": "../../packages/evidence-studio"
     },
     {

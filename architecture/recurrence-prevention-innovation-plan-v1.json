@@ -192,8 +192,8 @@
       ]
     },
     "15": {
-      "name": "Clean-Machine Offline Restart Proof",
-      "status": "future-acceptance-locked",
+      "name": "Fresh-Process Offline Restart Relocated-Root Proof",
+      "status": "certified-fresh-process-offline-restart-relocated-root-lesson-persistence-proof",
       "gates": [
         "failure records persist after restart",
         "certified lessons persist after restart",
@@ -202,7 +202,10 @@
         "superseded lessons persist after restart",
         "overrides persist after restart",
         "innovation proposals persist after restart",
-        "known-failure prevention works after restart with no public internet"
+        "known-failure prevention works after restart with no public internet",
+        "fresh Runtime process identities are distinct while installation identity remains stable",
+        "relocated root has no Git dependency",
+        "transfer integrity rejects corrupted, incomplete, modified, traversal, escape, stale, and future-schema material"
       ]
     },
     "16": {

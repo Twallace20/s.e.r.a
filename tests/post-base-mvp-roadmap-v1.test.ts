@@ -147,11 +147,11 @@ describe("Post-Base MVP roadmap v1", () => {
     expect(readManifest()).toEqual({
       schemaVersion: "sera.base-mvp-manifest.v1",
       totalMilestones: 16,
-      completedMilestones: 14,
-      remainingMilestones: 2,
-      currentMilestone: 15,
+      completedMilestones: 15,
+      remainingMilestones: 1,
+      currentMilestone: 16,
       baseMvpCompletionMilestone: 16,
-      currentCertification: "learning-generalization-recurrence-prevention-innovation-proof-v1",
+      currentCertification: "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1",
       architectureBranch: "architecture/local-autonomous-runtime-v1"
     });
   });

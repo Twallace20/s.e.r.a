@@ -162,6 +162,7 @@ const RUNTIME_PACKAGE_NAME_HINTS = [
   "knowledge-runtime",
   "integrated-loop-runtime",
   "learning-governance-runtime",
+  "restart-persistence-proof",
   "control-plane",
   "execution-engine",
   "evaluation-engine",

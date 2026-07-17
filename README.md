@@ -6,7 +6,7 @@ This repo is the clean rebuild foundation. The legacy SERA repo remains a refere
 
 ## Current certified level
 
-Current runtime certification: `integrated-offline-loop-v1`.
+Current runtime certification: `fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1`.
 
 Certified runtime ladder completed so far:
 
@@ -34,10 +34,16 @@ Certified runtime ladder completed so far:
 - `desktop-operator-v1`
 - `first-certified-studio-v1`
 - `integrated-offline-loop-v1`
+- `learning-generalization-recurrence-prevention-innovation-proof-v1`
+- `fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1`
 
 Milestone 12 adds the first certified Studio: Evidence Studio v1. It composes Studio Runtime, authorized local sources, deterministic evaluation, operator review, immutable final packages, and candidate-only learning signals into the `source-grounded-professional-brief-v1` workflow.
 
 Milestone 13 adds Integrated Offline Loop v1. It composes the offline intake, knowledge, model-candidate, capability, Studio, evaluation, operator-review, and package-finalization path behind a required learning preflight. It does not certify lessons, activate prevention rules, promote innovation, invoke real models, or use public internet.
+
+Milestone 14 adds Learning Generalization, Recurrence Prevention, and Innovation Proof v1. It certifies bounded failure evidence, repair proof, lesson certification and activation, prevention-rule activation, scoped recurrence-prevention, supersession, governed override, baseline improvement comparison, and governed innovation boundaries.
+
+Milestone 15 adds Fresh-Process Offline Restart Relocated-Root Lesson Persistence Proof v1. It proves active certified learning survives a child-process writer shutdown, fresh-process recovery, relocated operational-state recovery, transfer-manifest byte/hash verification, and active process-level offline denial without Git dependency, public network, or real model invocation. It is proof infrastructure only, not the final portable clean-machine Base MVP package; Milestone 16 owns that proof.
 
 Phase 14 is an operational CI certification-gate phase. It adds local hygiene commands and a GitHub Actions workflow, but it does not add runtime authority or change the certified runtime level.
 
@@ -99,6 +105,8 @@ The post-Base MVP roadmap for S.E.R.A. Personal and Professional V1 is locked as
 - Desktop Operator with local graphical assets, loopback-only Operator Gateway, hashed local-owner sessions, approval review, safe evidence viewing, notifications, and repeatable proof
 - Studio Runtime and Evidence Studio v1 with certified professional-brief generation from authorized local sources, claim/source ledgers, deterministic evaluation, operator review, immutable final package evidence, and candidate-only learning signals
 - Integrated Offline Loop v1 with required learning preflight, bounded known-record classification, certified-alternative selection, governed-override evidence, capability and Studio selection after preflight, final package evidence, and repeatable offline proof
+- Learning Governance Runtime with controlled-failure evidence, durable lesson certification and activation, prevention-rule activation, scoped recurrence-prevention, supersession, governed override, and innovation-boundary proof
+- Fresh-process relocated-root restart proof with separate process identities, stable installation identity, durable lesson/prevention-rule retrieval after restart, transfer integrity checks, no Git dependency, no public network, and no real model use
 - Desktop Operator visual contract reservations for governed recurrence-prevention and innovation empty states
 - local and GitHub CI certification gate for hygiene, build, tests, and certification
 - tracked knowledge source map and repeatable local knowledge seed script
@@ -130,7 +138,6 @@ The post-Base MVP roadmap for S.E.R.A. Personal and Professional V1 is locked as
 - no real model download, install, or invocation in Local Model Runtime v1
 - no model-driven tool execution or source mutation
 - no automatic capability promotion or activation
-- no clean-machine restart proof yet
 - no portable Base MVP acceptance proof yet
 - no ungoverned automatic lesson certification or recurrence-prevention activation
 - no automatic innovation activation or promotion
@@ -150,7 +157,16 @@ npm run verify
 Expected current certification result:
 
 ```text
-S.E.R.A. certify: PASS level=learning-generalization-recurrence-prevention-innovation-proof-v1
+S.E.R.A. certify: PASS level=fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1
+```
+
+Milestone 15 proof commands:
+
+```bash
+npm run sera -- restart-persistence status
+npm run sera -- restart-persistence policy
+npm run sera -- restart-persistence prove
+npm run sera -- restart-persistence inspect <proof-root-or-id>
 ```
 
 ## Starter secure-base run

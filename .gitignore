@@ -32,6 +32,7 @@ coverage/
 .sera/studio-runtime/
 .sera/integrated-loop/
 .sera/learning-governance/
+.sera/restart-persistence-proof/
 .sera-local/
 *.log
 .DS_Store

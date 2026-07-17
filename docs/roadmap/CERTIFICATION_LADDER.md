@@ -5,16 +5,16 @@ S.E.R.A. only advances when the cert runner proves the current runtime level. Do
 ## Current runtime certification
 
 ```text
-learning-generalization-recurrence-prevention-innovation-proof-v1
+fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1
 ```
 
-Milestone 14 final correction: certification includes Learning Governance Runtime schema v11 records, Operator Gateway read/review routes, Desktop Operator read-only surfaces, and Integrated Loop durable preflight from `@sera/learning-governance-runtime`.
+Milestone 15 certification includes the Fresh-Process Offline Restart Relocated-Root Lesson Persistence Proof. It proves active certified lessons and prevention rules survive child-process writer termination, fresh-process recovery, relocated operational-state recovery, and active process-level offline denial without Git dependency, public network use, or real model invocation.
 
-Milestone 14 is the current runtime certification. It proves Learning Generalization, Recurrence Prevention, and Innovation Proof v1: a model-free, offline, repeatable governed learning path with controlled failure evidence, scoped root-cause hypothesis, repair and regression proof, lesson certification and activation separation, prevention-rule activation, supersession history, governed override, baseline improvement comparison, and governed innovation rollback evidence.
+Milestone 15 is the current runtime certification. It is proof infrastructure only and does not certify the final downloadable, portable, or separate clean-machine Base MVP package. Milestone 16 owns that proof.
 
 The Evidence-Driven Recurrence Prevention and Governed Innovation plan is an architecture lock. Milestone 14 certifies the bounded proof point for active lesson certification, recurrence-prevention activation, scoped generalization, operator overrides, and governed innovation.
 
-The S.E.R.A. Personal and Professional V1 roadmap is a post-Base MVP planning lock, not a new runtime certification level. It preserves Base MVP completion at Milestone 16, plans Milestones 17 through 24, and keeps `learning-generalization-recurrence-prevention-innovation-proof-v1` as the current runtime certification until later implementation and cert runner checks prove otherwise.
+The S.E.R.A. Personal and Professional V1 roadmap is a post-Base MVP planning lock, not a new runtime certification level. It preserves Base MVP completion at Milestone 16 and plans Milestones 17 through 24 without implementing post-Base Runtime behavior.
 
 ## Level 1 — `secure-base`
 
@@ -105,6 +105,12 @@ This level does not certify Milestone 14 behavior: active lesson certification, 
 S.E.R.A. can run a bounded Learning Governance Runtime proof that records controlled failure evidence, reproduces the failure, scopes a root-cause hypothesis, tests repair and regression evidence, certifies and activates a lesson through distinct governed steps, applies active prevention rules, preserves superseded lessons, governs overrides, compares improvement against a baseline, and keeps innovation distinct from repair with explicit promotion and rollback boundaries.
 
 This level does not certify clean-machine restart proof, portable Base MVP acceptance, public internet use, real model invocation, distributed execution, Hive Mode, or post-Base MVP behavior.
+
+## Runtime Proof Level — `fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1`
+
+S.E.R.A. can prove that certified and activated learning survives child-process writer termination, fresh-process recovery, and relocated operational-state recovery on the supported development machine. The proof confirms fresh Runtime instance identities, stable installation identity, durable lesson and prevention-rule retrieval, recurrence-prevention decisions before selection/generation/execution, exact and materially equivalent known-failure prevention, related-context warning scope, out-of-scope nonblocking, transfer byte-size and hash verification, WAL-safe backup/export transfer, migration integrity, terminal immutability, lease fencing, no Git dependency, active public-network denial, no real model use, and no source mutation.
+
+This level does not certify a downloadable installer, final portable Base MVP package, release updater, release signing, production uninstall, browser automation, public web access, distributed execution, Hive Mode, or post-Base MVP behavior.
 
 ## Planning Lock — `post-base-mvp-roadmap-v1`
 

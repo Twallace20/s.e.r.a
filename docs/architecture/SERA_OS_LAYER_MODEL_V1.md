@@ -131,8 +131,9 @@ Current repository candidates:
 | `packages/model-runtime` | confirmed; Local Model Runtime v1 |
 | `packages/knowledge-runtime` | confirmed; Knowledge and Universal Intake Runtime v1 |
 | `packages/integrated-loop-runtime` | confirmed; Integrated Offline Loop v1 composition, preflight, and package evidence |
+| `packages/restart-persistence-proof` | confirmed; Milestone 15 certification/proof infrastructure, not authority-owning Runtime service |
 | `.sera-*` runtime directories | legacy/runtime-data; not source authority |
-| recurrence-prevention Runtime | Milestone 14 bounded active lesson/prevention proof certified; Milestone 15 restart proof pending |
+| recurrence-prevention Runtime | Milestone 14 bounded active lesson/prevention proof certified; Milestone 15 fresh-process relocated-root restart persistence proof certified |
 
 Migration targets:
 
