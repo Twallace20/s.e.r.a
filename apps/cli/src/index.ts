@@ -13,7 +13,8 @@ import { CapabilityEngine, runCapabilityEngineProof, runRecursiveLearningProof }
 import { OperatorGateway, runDesktopOperatorProof, runOperatorGatewayProof } from "@sera/operator-gateway";
 import { StudioRuntime, createEvidenceStudioDefinition, runStudioRuntimeProof } from "@sera/studio-runtime";
 import { getEvidenceStudioStatus, runEvidenceStudioProof } from "@sera/evidence-studio";
-import { IntegratedLoopRuntime, runIntegratedLoopProof } from "@sera/integrated-loop-runtime";
+import { IntegratedLoopBlockedError, IntegratedLoopRuntime, runIntegratedLoopProof } from "@sera/integrated-loop-runtime";
+import { LearningGovernanceRuntime, runLearningGovernanceProof } from "@sera/learning-governance-runtime";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -149,7 +150,17 @@ Usage:
   sera loop status
   sera loop policy
   sera loop sessions
+  sera loop inspect <session-id>
   sera loop prove
+  sera learning-governance status
+  sera learning-governance policy
+  sera learning-governance sessions
+  sera learning-governance failures
+  sera learning-governance lessons
+  sera learning-governance prevention
+  sera learning-governance innovations
+  sera learning-governance inspect <aggregate-id>
+  sera learning-governance prove
   sera snapshot
   sera truth
 
@@ -205,6 +216,7 @@ NPM examples:
   npm run sera -- knowledge prove
   npm run sera -- model providers
   npm run sera -- model prove
+  npm run sera -- loop inspect <session-id>
 
 Secure base behavior:
   - runs locally
@@ -1530,11 +1542,14 @@ async function main(): Promise<void> {
   }
 
   if (cmd === "loop") {
-    const [loopMode] = rest;
+    const [loopMode, loopSessionId] = rest;
     if (loopMode === "prove") {
       const result = await runIntegratedLoopProof();
       console.log(JSON.stringify(result, null, 2));
       process.exit(result.ok ? 0 : 1);
+    }
+    if (loopMode === "inspect" && !loopSessionId) {
+      throw new Error("Usage: sera loop inspect <session-id>");
     }
     const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
     const store = openRuntimeState(config);
@@ -1552,10 +1567,71 @@ async function main(): Promise<void> {
         console.log(JSON.stringify({ ok: true, sessions: runtime.sessions(), modelUse: false, publicNetworkUse: false }, null, 2));
         process.exit(0);
       }
+      if (loopMode === "inspect") {
+        try {
+          console.log(JSON.stringify(runtime.inspectSession(loopSessionId), null, 2));
+          process.exit(0);
+        } catch (error) {
+          if (error instanceof IntegratedLoopBlockedError && error.code === "integrated_loop_session_not_found") {
+            console.error(JSON.stringify({ ok: false, errorCode: error.code, safeMessage: error.message, modelUse: false, publicNetworkUse: false }, null, 2));
+            process.exit(1);
+          }
+          throw error;
+        }
+      }
     } finally {
       store.close();
     }
-    throw new Error("Loop command must be 'status', 'policy', 'sessions', or 'prove'.");
+    throw new Error("Loop command must be one of: status, policy, sessions, inspect, prove.");
+  }
+
+  if (cmd === "learning-governance") {
+    const [mode, aggregateId] = rest;
+    if (mode === "prove") {
+      const result = await runLearningGovernanceProof();
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    const config = createRuntimeStateConfig({ projectRoot: process.cwd() });
+    const store = openRuntimeState(config);
+    try {
+      const runtime = new LearningGovernanceRuntime(store, { projectRoot: process.cwd() });
+      if (mode === "status") {
+        console.log(JSON.stringify(runtime.status(), null, 2));
+        process.exit(0);
+      }
+      if (mode === "policy") {
+        console.log(JSON.stringify(runtime.policy(), null, 2));
+        process.exit(0);
+      }
+      if (mode === "sessions") {
+        console.log(JSON.stringify({ ok: true, sessions: runtime.sessions(), modelUse: false, publicNetworkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (mode === "failures") {
+        console.log(JSON.stringify({ ok: true, failures: runtime.failures(), modelUse: false, publicNetworkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (mode === "lessons") {
+        console.log(JSON.stringify({ ok: true, lessons: runtime.lessons(), modelUse: false, publicNetworkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (mode === "prevention") {
+        console.log(JSON.stringify({ ok: true, prevention: runtime.prevention(), modelUse: false, publicNetworkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (mode === "innovations") {
+        console.log(JSON.stringify({ ok: true, innovations: runtime.innovations(), modelUse: false, publicNetworkUse: false }, null, 2));
+        process.exit(0);
+      }
+      if (mode === "inspect") {
+        console.log(JSON.stringify(runtime.inspect(aggregateId ?? ""), null, 2));
+        process.exit(0);
+      }
+    } finally {
+      store.close();
+    }
+    throw new Error("Learning Governance command must be 'status', 'policy', 'sessions', 'failures', 'lessons', 'prevention', 'innovations', 'inspect', or 'prove'.");
   }
 
   if (cmd === "desktop") {

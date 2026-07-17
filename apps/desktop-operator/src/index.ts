@@ -48,6 +48,26 @@ export const REQUIRED_DESKTOP_VIEWS = [
   "integrated-loop-closeout",
   "integrated-loop-evidence-package",
   "learning",
+  "learning-governance-sessions",
+  "learning-governance-failures",
+  "learning-governance-evidence-chains",
+  "learning-governance-context-fingerprints",
+  "learning-governance-hypotheses",
+  "learning-governance-repair-candidates",
+  "learning-governance-reproductions",
+  "learning-governance-lesson-versions",
+  "learning-governance-scope",
+  "learning-governance-certification",
+  "learning-governance-activation",
+  "learning-governance-prevention-rules",
+  "learning-governance-related-context-warnings",
+  "learning-governance-out-of-scope",
+  "learning-governance-superseded-versions",
+  "learning-governance-overrides",
+  "learning-governance-improvement-comparisons",
+  "learning-governance-innovations",
+  "learning-governance-promotion-rollback",
+  "learning-governance-lifecycle-events",
   "recovery",
   "evidence",
   "certification-and-milestones",
@@ -68,9 +88,64 @@ export const RESERVED_GOVERNED_SURFACES = [
   "supporting-evidence",
   "applicability-explanations",
   "non-applicability-explanations"
+  ,
+  "learning-sessions",
+  "failure-records",
+  "evidence-chains",
+  "context-fingerprints",
+  "hypotheses",
+  "repair-candidates",
+  "reproductions",
+  "lesson-versions",
+  "scope-and-non-applicability",
+  "certification-status",
+  "activation-status",
+  "prevention-rules",
+  "related-context-warnings",
+  "out-of-scope-explanations",
+  "superseded-versions",
+  "overrides",
+  "improvement-comparisons",
+  "innovation-status",
+  "promotion-and-rollback-evidence",
+  "lifecycle-events"
 ] as const;
 
 export type ReservedGovernedSurface = (typeof RESERVED_GOVERNED_SURFACES)[number];
+
+export interface LearningGovernanceViewBinding {
+  view: DesktopOperatorView;
+  route: string;
+  dataRole: string;
+  emptyState: string;
+  blockedState: string;
+  renders: string[];
+}
+
+const LEARNING_GOVERNANCE_ROUTE_BASE = "/api/v1/operator/learning-governance";
+export const LEARNING_GOVERNANCE_VIEW_BINDINGS: LearningGovernanceViewBinding[] = [
+  { view: "learning", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/status`, dataRole: "learning-learning-governance", emptyState: "No Learning Governance status is available.", blockedState: "Learning Governance status is blocked or unavailable.", renders: ["boundedStatus", "modelUse", "publicNetworkUse"] },
+  { view: "learning-governance-sessions", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/sessions`, dataRole: "learning-governance-sessions-learning-governance", emptyState: "No learning sessions are present.", blockedState: "Learning sessions are blocked or unavailable.", renders: ["sessionId", "lifecycleState", "lane", "evidenceReference"] },
+  { view: "learning-governance-failures", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/failures`, dataRole: "learning-governance-failures-learning-governance", emptyState: "No failure records are present.", blockedState: "Failure records are blocked or unavailable.", renders: ["failureId", "classification", "severity", "evidenceReference"] },
+  { view: "learning-governance-evidence-chains", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/lessons`, dataRole: "learning-governance-evidence-chains-learning-governance", emptyState: "No lesson evidence chains are present.", blockedState: "Evidence chains are blocked or unavailable.", renders: ["evidenceReference", "evaluationRefs", "reproductionRefs", "immutableEvidence"] },
+  { view: "learning-governance-context-fingerprints", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/status`, dataRole: "learning-governance-context-fingerprints-learning-governance", emptyState: "No context fingerprints are present.", blockedState: "Context fingerprints are blocked or unavailable.", renders: ["contextHash", "scopeDimensions", "policyVersion"] },
+  { view: "learning-governance-hypotheses", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/failures`, dataRole: "learning-governance-hypotheses-learning-governance", emptyState: "No hypotheses are present.", blockedState: "Hypotheses are blocked or unavailable.", renders: ["hypothesis", "causalMechanism", "reviewStatus"] },
+  { view: "learning-governance-repair-candidates", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/failures`, dataRole: "learning-governance-repair-candidates-learning-governance", emptyState: "No repair candidates are present.", blockedState: "Repair candidates are blocked or unavailable.", renders: ["repairId", "changedBehavior", "rollbackPlan"] },
+  { view: "learning-governance-reproductions", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/failures`, dataRole: "learning-governance-reproductions-learning-governance", emptyState: "No reproductions are present.", blockedState: "Reproductions are blocked or unavailable.", renders: ["executionId", "evaluationId", "independentEvidence"] },
+  { view: "learning-governance-lesson-versions", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/lessons`, dataRole: "learning-governance-lesson-versions-learning-governance", emptyState: "No lesson versions are present.", blockedState: "Lesson versions are blocked or unavailable.", renders: ["lessonId", "lessonVersion", "lifecycleState", "successorVersion"] },
+  { view: "learning-governance-scope", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/lessons`, dataRole: "learning-governance-scope-learning-governance", emptyState: "No certified scope is present.", blockedState: "Lesson scope is blocked or unavailable.", renders: ["scope", "nonApplicability", "matchPolicy"] },
+  { view: "learning-governance-certification", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/lessons`, dataRole: "learning-governance-certification-learning-governance", emptyState: "No certification records are present.", blockedState: "Certification records are blocked or unavailable.", renders: ["certificationReference", "operatorReview", "decision"] },
+  { view: "learning-governance-activation", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/lessons`, dataRole: "learning-governance-activation-learning-governance", emptyState: "No activation records are present.", blockedState: "Activation records are blocked or unavailable.", renders: ["activationReference", "authorization", "effectiveTimestamp"] },
+  { view: "learning-governance-prevention-rules", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/prevention-rules`, dataRole: "learning-governance-prevention-rules-learning-governance", emptyState: "No prevention rules are active.", blockedState: "Prevention rules are blocked or unavailable.", renders: ["ruleId", "preventionScope", "lessonVersion", "overridePolicy"] },
+  { view: "learning-governance-related-context-warnings", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/prevention-rules`, dataRole: "learning-governance-related-context-warnings-learning-governance", emptyState: "No related-context warnings are present.", blockedState: "Related-context warnings are blocked or unavailable.", renders: ["relatedContextBehavior", "reviewPolicy", "warningPolicy"] },
+  { view: "learning-governance-out-of-scope", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/lessons`, dataRole: "learning-governance-out-of-scope-learning-governance", emptyState: "No out-of-scope explanations are present.", blockedState: "Out-of-scope explanations are blocked or unavailable.", renders: ["outOfScope", "nonApplicability", "safeClear"] },
+  { view: "learning-governance-superseded-versions", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/lessons`, dataRole: "learning-governance-superseded-versions-learning-governance", emptyState: "No superseded lesson history is present.", blockedState: "Superseded history is blocked or unavailable.", renders: ["supersededHistory", "successorVersion", "supersessionReference"] },
+  { view: "learning-governance-overrides", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/prevention-rules`, dataRole: "learning-governance-overrides-learning-governance", emptyState: "No governed overrides are present.", blockedState: "Overrides are blocked or unavailable.", renders: ["overrideLimit", "usedCount", "expiresAt", "auditReference"] },
+  { view: "learning-governance-improvement-comparisons", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/innovations`, dataRole: "learning-governance-improvement-comparisons-learning-governance", emptyState: "No improvement comparisons are present.", blockedState: "Improvement comparisons are blocked or unavailable.", renders: ["baseline", "candidate", "qualityGates", "result"] },
+  { view: "learning-governance-innovations", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/innovations`, dataRole: "learning-governance-innovations-learning-governance", emptyState: "No innovations are present.", blockedState: "Innovations are blocked or unavailable.", renders: ["innovationCertification", "promotionReference", "rollbackReference", "activeDigest"] },
+  { view: "learning-governance-promotion-rollback", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/innovations`, dataRole: "learning-governance-promotion-rollback-learning-governance", emptyState: "No promotion or rollback history is present.", blockedState: "Promotion and rollback history is blocked or unavailable.", renders: ["innovationPromotion", "innovationRollback", "priorActiveDigest", "restoredDigest"] },
+  { view: "learning-governance-lifecycle-events", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/sessions`, dataRole: "learning-governance-lifecycle-events-learning-governance", emptyState: "No lifecycle events are present.", blockedState: "Lifecycle events are blocked or unavailable.", renders: ["lifecycleEvent", "actor", "sequence", "safeMessage"] }
+];
 
 export interface DesktopAsset {
   path: "/" | "/assets/app.css" | "/assets/app.js" | "/assets/manifest.json";
@@ -103,7 +178,7 @@ export interface DesktopVisualContract {
   hasEvidenceViewer: boolean;
   hasStatusRegion: boolean;
   reservedGovernedSurfaces: ReservedGovernedSurface[];
-  recurrencePreventionRuntimeImplemented: false;
+  recurrencePreventionRuntimeImplemented: true;
   accessibility: {
     landmarks: string[];
     focusVisible: true;
@@ -119,8 +194,9 @@ export interface DesktopVisualContract {
 }
 
 const navItems = REQUIRED_DESKTOP_VIEWS.map((view) => `<button type="button" class="nav-button" data-view="${view}" aria-controls="view-${view}">${titleCase(view)}</button>`).join("");
-const viewSections = REQUIRED_DESKTOP_VIEWS.map(
-  (view) => `<section id="view-${view}" class="operator-view" data-view="${view}" aria-labelledby="heading-${view}" hidden>
+const viewSections = REQUIRED_DESKTOP_VIEWS.map((view) => {
+  const binding = LEARNING_GOVERNANCE_VIEW_BINDINGS.find((candidate) => candidate.view === view);
+  return `<section id="view-${view}" class="operator-view" data-view="${view}" data-learning-route="${binding?.route ?? `${LEARNING_GOVERNANCE_ROUTE_BASE}/status`}" aria-labelledby="heading-${view}" hidden>
     <h2 id="heading-${view}">${titleCase(view)}</h2>
     <div class="view-grid">
       <article>
@@ -133,11 +209,12 @@ const viewSections = REQUIRED_DESKTOP_VIEWS.map(
       </article>
       <article>
         <h3>Governed Learning</h3>
-        <p data-role="${view}-governed-learning-empty">No certified recurrence-prevention Runtime data is available yet.</p>
+        <p data-role="${view}-governed-learning-empty">Learning Governance data is read through the authenticated local Operator Gateway.</p>
+        <pre data-role="${view}-learning-governance" aria-label="${titleCase(view)} learning governance data"></pre>
       </article>
     </div>
-  </section>`
-).join("");
+  </section>`;
+}).join("");
 
 export const DESKTOP_OPERATOR_HTML = `<!doctype html>
 <html lang="en">
@@ -210,11 +287,59 @@ export const DESKTOP_OPERATOR_JS = `
 (() => {
   "use strict";
   const views = ${JSON.stringify(REQUIRED_DESKTOP_VIEWS)};
+  const learningBindings = ${JSON.stringify(LEARNING_GOVERNANCE_VIEW_BINDINGS)};
   const status = document.getElementById("status-region");
   const connection = document.getElementById("connection-state");
+  const maxRenderedBytes = 12000;
+  function authHeaders() {
+    const token = sessionStorage.getItem("sera.operatorToken") || "";
+    const headers = { "Accept": "application/json" };
+    if (token) headers.Authorization = "Bearer " + token;
+    return headers;
+  }
+  function redact(value) {
+    return JSON.stringify(value, (key, item) => /token|secret|password|credential/i.test(key) ? "REDACTED" : item, 2);
+  }
+  function boundedText(value) {
+    const text = redact(value);
+    return text.length > maxRenderedBytes ? text.slice(0, maxRenderedBytes) + "\\n...bounded..." : text;
+  }
+  function payloadIsEmpty(payload) {
+    if (!payload) return true;
+    if (Array.isArray(payload)) return payload.length === 0;
+    if (typeof payload === "object") return Object.values(payload).every((value) => Array.isArray(value) && value.length === 0);
+    return false;
+  }
+  function renderLearningGovernance(binding, payload) {
+    if (payloadIsEmpty(payload)) return binding.emptyState;
+    return [
+      "Surface: " + binding.view,
+      "Gateway route: " + binding.route,
+      "Renders: " + binding.renders.join(", "),
+      boundedText(payload)
+    ].join("\\n");
+  }
+  async function refreshLearningGovernance(view) {
+    const binding = learningBindings.find((candidate) => candidate.view === view) || learningBindings.find((candidate) => candidate.view === "learning");
+    const target = document.querySelector('[data-role="' + view + '-learning-governance"]');
+    if (!binding || !target) return;
+    target.textContent = binding.emptyState;
+    try {
+      const response = await fetch(binding.route, { headers: authHeaders() });
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) {
+        target.textContent = binding.blockedState + " " + (payload.safeMessage || payload.errorCode || "blocked");
+        return;
+      }
+      target.textContent = renderLearningGovernance(binding, payload.data);
+    } catch {
+      target.textContent = binding.blockedState;
+    }
+  }
   function show(view) {
     for (const section of document.querySelectorAll(".operator-view")) section.hidden = section.dataset.view !== view;
     for (const button of document.querySelectorAll(".nav-button")) button.setAttribute("aria-current", button.dataset.view === view ? "page" : "false");
+    refreshLearningGovernance(view);
   }
   async function refresh() {
     try {
@@ -290,7 +415,7 @@ export function getDesktopVisualContract(): DesktopVisualContract {
     hasEvidenceViewer: true,
     hasStatusRegion: true,
     reservedGovernedSurfaces: [...RESERVED_GOVERNED_SURFACES],
-    recurrencePreventionRuntimeImplemented: false,
+    recurrencePreventionRuntimeImplemented: true,
     accessibility: { landmarks: ["header", "main", "nav", "section"], focusVisible: true, reducedMotion: true, labelledControls: true },
     security: { remoteReferences: false, inlineScript: false, evalLikeApis: false, tokenInUrl: false }
   };

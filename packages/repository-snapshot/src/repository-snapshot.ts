@@ -182,6 +182,7 @@ const DEFAULT_EXCLUSIONS = [
   ".sera/studios",
   ".sera/studio-runtime",
   ".sera/integrated-loop",
+  ".sera/learning-governance",
   ".sera-runs",
   ".sera-cert",
   ".sera-local",

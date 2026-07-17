@@ -625,3 +625,19 @@ The free-core covenant checkpoint is local-only and planning-only. It may write 
 `apps/operator-console/` owns the private operator web app shell. In Phase 46 it is frontend-only and may contain sample data, local UI state, navigation, cards, forms, and preview panels.
 
 It must not own backend execution, command running, runner connectivity, authentication, branch mutation, source mutation, auto-merge, secrets, or cloud-only behavior. Those capabilities require later certified phases and explicit safety gates.
+
+## Milestone 14 Learning Governance Boundary
+
+`@sera/learning-governance-runtime` is a Runtime-layer package below Operator Gateway and Desktop Operator. It does not depend on `@sera/operator-gateway`.
+
+Allowed direction:
+
+- `@sera/operator-gateway -> @sera/learning-governance-runtime`
+- `@sera/integrated-loop-runtime -> @sera/learning-governance-runtime`
+
+Forbidden direction:
+
+- `@sera/learning-governance-runtime -> @sera/operator-gateway`
+- `@sera/learning-governance-runtime -> @sera/integrated-loop-runtime`
+
+Operator Gateway may expose authenticated read routes and governed review-request routes. Integrated Loop Runtime may consume the read-only durable preflight API. Neither package may bypass Control Plane authorization.

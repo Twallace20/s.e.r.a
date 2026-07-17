@@ -41,7 +41,7 @@ Milestone 12 — First Certified Studio is COMPLETE. S.E.R.A. has Studio Runtime
 
 Milestone 13 — Integrated Offline Loop is COMPLETE. S.E.R.A. can compose the certified offline path through intake, retrieval, model-candidate generation, capability selection, Studio selection, evaluation, operator review, and final package closeout, and it requires a bounded learning preflight before selecting a capability or Studio.
 
-Cross-cutting plan lock — Evidence-Driven Recurrence Prevention and Governed Innovation is ACTIVE as an architecture and Base MVP acceptance invariant. Milestone 13 certifies the integrated preflight hook and evidence path; Milestone 14 remains the proof point for active lesson certification, prevention-rule activation, governed innovation proof, supersession, and recurrence-prevention behavior.
+Cross-cutting plan lock — Evidence-Driven Recurrence Prevention and Governed Innovation is ACTIVE as an architecture and Base MVP acceptance invariant. Milestone 14 certifies active lesson certification, prevention-rule activation, governed innovation proof, supersession, governed override, and recurrence-prevention behavior.
 
 Post-Base MVP roadmap lock — S.E.R.A. Personal and Professional V1 is PLANNING-LOCKED and not implemented. The locked plan lives in `docs/architecture/SERA_PERSONAL_PROFESSIONAL_V1_ROADMAP.md` and `architecture/post-base-mvp-roadmap-v1.json`. It preserves Base MVP completion at Milestone 16, plans Milestones 17 through 24, and does not add additional Milestone 13 behavior, web access, browser automation, iOS Runtime execution, update, backup, enterprise, Hive Mode, robotics, or post-Base Runtime behavior.
 
@@ -52,13 +52,13 @@ Milestone 10 - Capability Engine and Recursive Learning: COMPLETE
 Milestone 11 - Desktop Operator: COMPLETE
 Milestone 12 - First Certified Studio: COMPLETE
 Milestone 13 - Integrated Offline Loop: COMPLETE
-Milestone 14 - Learning Generalization, Recurrence Prevention, and Innovation Proof: PENDING
+Milestone 14 - Learning Generalization, Recurrence Prevention, and Innovation Proof: COMPLETE
 Milestone 15 - Clean-Machine Offline Restart Proof: PENDING
 Milestone 16 - Portable Base MVP Acceptance: PENDING
 
-completedMilestones: 13
-remainingMilestones: 3
-currentMilestone: 14
+completedMilestones: 14
+remainingMilestones: 2
+currentMilestone: 15
 baseMvpCompletionMilestone: 16
 
 ### Era II — Cognition
@@ -99,9 +99,9 @@ The Base MVP milestone manifest is frozen:
 
 ```text
 totalMilestones: 16
-completedMilestones: 13
-remainingMilestones: 3
-currentMilestone: 14
+completedMilestones: 14
+remainingMilestones: 2
+currentMilestone: 15
 baseMvpCompletionMilestone: 16
 ```
 
@@ -151,7 +151,7 @@ The locked implementation order is:
 11. Desktop Operator — `desktop-operator-v1` — implemented as the local Desktop-layer graphical surface and Runtime-layer Operator Gateway for loopback sessions, approvals, notifications, safe evidence viewing, and operator audit state
 12. First Certified Studio — `website-studio-provisional-v1` — must produce evidence-linked operator corrections, failed-output signals, evaluation failures, improvement opportunities, and innovation opportunities without automatically promoting interaction history into reusable rules
 13. Integrated Offline Loop — `integrated-offline-loop-v1` — implemented and certified as the offline composition loop with required learning preflight before capability or approach selection
-14. Learning Generalization, Recurrence Prevention, and Innovation Proof — `learning-generalization-recurrence-prevention-innovation-proof-v1` — must prove controlled failure, durable evidence, reproduction, scoped root cause, repair, regression proof, reproducibility, lesson certification, prevention activation, equivalent-context retrieval, known-failure avoidance, related-context generalization, out-of-scope non-application, improvement comparison, governed innovation, supersession, governed override, and proof that model output does not automatically become a lesson
+14. Learning Generalization, Recurrence Prevention, and Innovation Proof — `learning-generalization-recurrence-prevention-innovation-proof-v1` — implemented and certified as the governed Learning Runtime proof for controlled failure, durable evidence, reproduction, scoped root cause, repair, regression proof, reproducibility, lesson certification, prevention activation, equivalent-context retrieval, known-failure avoidance, related-context generalization, out-of-scope non-application, improvement comparison, governed innovation, supersession, governed override, and proof that model output does not automatically become a lesson
 15. Clean-Machine Offline Restart Proof — `clean-machine-offline-restart-proof-v1` — must preserve and retrieve failure records, certified lessons, prevention rules, scopes, superseded lessons, overrides, and innovation proposals after restart with no public internet
 16. Portable Base MVP Acceptance — `portable-base-mvp-acceptance-v1` — must prove controlled mistake, evidence preservation, correction, certification, shutdown, restart, materially equivalent request, certified-lesson retrieval, prevention of the known mistake, and visible explanation/evidence in Desktop Operator
 

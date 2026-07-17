@@ -1,5 +1,5 @@
 {
-  "name": "@sera/integrated-loop-runtime",
+  "name": "@sera/learning-governance-runtime",
   "version": "0.1.0",
   "private": true,
   "type": "commonjs",
@@ -12,14 +12,9 @@
     "@sera/capability-engine": "0.1.0",
     "@sera/evaluation-engine": "0.1.0",
     "@sera/execution-engine": "0.1.0",
-    "@sera/knowledge-runtime": "0.1.0",
-    "@sera/learning-governance-runtime": "0.1.0",
-    "@sera/model-runtime": "0.1.0",
-    "@sera/operator-gateway": "0.1.0",
     "@sera/runtime-host": "0.1.0",
     "@sera/runtime-recovery": "0.1.0",
-    "@sera/runtime-state": "0.1.0",
-    "@sera/studio-runtime": "0.1.0"
+    "@sera/runtime-state": "0.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

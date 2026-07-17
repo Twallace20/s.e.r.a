@@ -2,7 +2,7 @@
   "schemaVersion": "sera.recurrence-prevention-innovation-plan.v1",
   "invariantId": "evidence-driven-recurrence-prevention-and-innovation-v1",
   "invariantTitle": "Evidence-Driven Recurrence Prevention and Governed Innovation",
-  "status": "architecture-locked-integrated-preflight-certified",
+  "status": "architecture-locked-learning-proof-certified",
   "effectiveMilestone": 11,
   "architecturalPrinciples": [
     "A materially evidenced and certified failure must not be unknowingly repeated under materially equivalent conditions.",
@@ -167,7 +167,7 @@
     },
     "14": {
       "name": "Learning Generalization, Recurrence Prevention, and Innovation Proof",
-      "status": "future-acceptance-locked",
+      "status": "certified-learning-generalization-recurrence-prevention-innovation-proof",
       "acceptanceProof": [
         "controlled failure",
         "durable evidence",

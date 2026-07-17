@@ -58,3 +58,9 @@ Desktop Operator v1 does not activate lessons, create prevention rules, promote 
 Milestone 12 adds Studio surfaces to the Desktop Operator visual contract. These surfaces route state-changing actions through Operator Gateway and Studio Runtime; browser code still does not directly finalize Studio sessions or write Studio state.
 
 Milestone 13 adds Integrated Offline Loop surfaces for loop composition, sessions, timeline, authorization, learning preflight, applicable and non-applicable records, prevention warnings, certified alternatives, governed overrides, source intake, knowledge retrieval, Studio and capability selection, model candidates, evaluation summary, review revisions, finalization, closeout, and evidence packages. These surfaces remain visual/operator surfaces only; browser code does not run the loop, mutate SQLite directly, certify lessons, activate prevention rules, invoke real models, or promote innovation.
+
+## Milestone 14 Learning Governance Surfaces
+
+Milestone 14 adds inspectable local surfaces for learning sessions, failure records, evidence chains, context fingerprints, hypotheses, repair candidates, reproductions, lesson versions, scope and non-applicability, certification status, activation status, prevention rules, related-context warnings, out-of-scope explanations, superseded versions, overrides, improvement comparisons, innovation status, promotion and rollback evidence, and lifecycle events.
+
+These surfaces read through authenticated local Operator Gateway routes. Desktop Operator does not write SQLite directly, edit immutable evidence, certify lessons, activate prevention rules, expand scope, apply overrides, promote innovations, roll back innovations, or fabricate Control Plane authorization.

@@ -7,6 +7,7 @@ import { RuntimeStateBlockedError, RuntimeStateStore, createRuntimeStateConfig, 
 import { createPersistentRuntimeServices } from "@sera/runtime-recovery";
 import { createStudioRuntimeServices, createEvidenceStudioDefinition, runStudioRuntimeProof } from "@sera/studio-runtime";
 import { runOperatorGatewayProof } from "@sera/operator-gateway";
+import { LearningGovernanceRuntime, createLearningContextFingerprint } from "@sera/learning-governance-runtime";
 
 export const INTEGRATED_LOOP_RUNTIME_VERSION = "integrated-offline-loop-v1";
 export const INTEGRATED_LOOP_RUNTIME_SERVICE_ID = "integrated-loop-runtime";
@@ -159,6 +160,61 @@ export interface IntegratedLoopProofResult {
   publicNetworkUse: false;
 }
 
+export interface IntegratedLoopInspection {
+  ok: true;
+  loopSessionId: string;
+  attemptId: string;
+  lifecycleState: string;
+  terminal: boolean;
+  outcome: string | null;
+  reason: string | null;
+  timestamps: {
+    createdAt: string;
+    updatedAt: string;
+    completedAt: string | null;
+  };
+  learningPreflight: {
+    preflightId: string | null;
+    decision: string | null;
+    sourceVersions: unknown;
+    selectedAlternative: unknown;
+    overrideReference: unknown;
+    warningOrBlockReason: string | null;
+    integrityHash: string | null;
+    immutable: boolean;
+    matches: Array<Record<string, unknown>>;
+  };
+  references: {
+    lessons: string[];
+    preventionRules: string[];
+    certifiedAlternatives: string[];
+    overrides: string[];
+    supersededHistory: string[];
+  };
+  bindings: Array<Record<string, unknown>>;
+  reviewAndRevision: {
+    awaitingReview: boolean;
+    revisionBudget: number;
+    reviewRequired: boolean;
+    reviewOrRevisionTransitions: Array<Record<string, unknown>>;
+  };
+  artifacts: Array<Record<string, unknown>>;
+  transitions: Array<Record<string, unknown>>;
+  events: Array<Record<string, unknown>>;
+  terminalReason: string | null;
+  owningRuntimeIdentity: string;
+  integrityReferences: {
+    authorizationId: string;
+    requestHash: string;
+    sourceSetHash: string;
+    contextHash: string;
+    preflightIntegrityHash: string | null;
+    artifactHashes: string[];
+  };
+  modelUse: false;
+  publicNetworkUse: false;
+}
+
 export class IntegratedLoopBlockedError extends Error {
   constructor(message: string, readonly code: string) {
     super(message);
@@ -239,7 +295,7 @@ export class IntegratedLoopRuntime {
       preflightWarningCount: preflightWarnings.length,
       reviewRequiredCount: counts.REVIEW_REQUIRED ?? 0,
       dependencyStatus: requiredRuntimeDependencies().map((id) => ({ serviceId: id, status: "required" })),
-      recurrencePreflightSourceStatus: "read-only-fixture-capable",
+      recurrencePreflightSourceStatus: "durable-learning-governance-runtime",
       modelUse: false,
       localLoopbackUse: true,
       publicNetworkUse: false
@@ -270,6 +326,80 @@ export class IntegratedLoopRuntime {
 
   sessions() {
     return this.store.recoveryAll("SELECT loop_session_id, attempt_id, operator_request_id, authorization_id, studio_id, studio_version_digest, workflow_profile, state, risk_class, revision_budget, created_at, updated_at, completed_at, outcome, reason FROM integrated_loop_sessions ORDER BY created_at, loop_session_id");
+  }
+
+  inspectSession(loopSessionId: string): IntegratedLoopInspection {
+    const id = String(loopSessionId ?? "").trim();
+    if (!id || id.length > 160 || !/^[A-Za-z0-9_.:@-]+$/.test(id)) throw new IntegratedLoopBlockedError("Integrated Loop session was not found.", "integrated_loop_session_not_found");
+    const session = this.store.recoveryGet("SELECT * FROM integrated_loop_sessions WHERE loop_session_id = ?", [id]);
+    if (!session) throw new IntegratedLoopBlockedError("Integrated Loop session was not found.", "integrated_loop_session_not_found");
+    const preflight = this.store.recoveryGet("SELECT * FROM learning_preflight_runs WHERE loop_session_id = ? ORDER BY timestamp, preflight_id LIMIT 1", [id]);
+    const matches = preflight
+      ? this.store.recoveryAll("SELECT ordering, record_type, record_id, record_version, match_class, applicability, non_applicability, active_status, certification_reference, evidence_reference FROM learning_preflight_matches WHERE preflight_id = ? ORDER BY ordering", [String(preflight.preflight_id)])
+      : [];
+    const bindings = this.store.recoveryAll("SELECT binding_type, service_id, aggregate_id, exact_version_or_digest, evidence_reference, timestamp FROM integrated_loop_bindings WHERE loop_session_id = ? ORDER BY binding_type, service_id, aggregate_id", [id]);
+    const artifacts: Array<Record<string, unknown>> = this.store.recoveryAll("SELECT artifact_type, owned_by_service, content_addressed_path_or_reference, hash, status, timestamp, metadata_json FROM integrated_loop_artifacts WHERE loop_session_id = ? ORDER BY artifact_type", [id])
+      .map((artifact) => ({ ...artifact, content_addressed_path_or_reference: boundedReference(String(artifact.content_addressed_path_or_reference ?? "")), metadata_json: boundedJsonText(artifact.metadata_json) }));
+    const transitions = this.store.recoveryAll("SELECT sequence, prior_state, next_state, owning_service, timestamp, reason, evidence_reference FROM integrated_loop_stage_transitions WHERE loop_session_id = ? ORDER BY sequence", [id]);
+    const events = this.store.recoveryAll("SELECT sequence, event_type, owning_service, timestamp, outcome, safe_message, structured_details_json FROM integrated_loop_events WHERE loop_session_id = ? ORDER BY sequence LIMIT 100", [id])
+      .map((event) => ({ ...event, structured_details_json: boundedJsonText(event.structured_details_json) }));
+    const selectedAlternative = parseJsonOrNull(preflight?.selected_alternative_json);
+    const overrideReference = parseJsonOrNull(preflight?.override_reference_json);
+    const lessonReferences = unique(matches.filter((match) => ["certified-lesson", "known-failure"].includes(String(match.record_type))).map((match) => `${match.record_id}@${match.record_version}`));
+    return {
+      ok: true,
+      loopSessionId: String(session.loop_session_id),
+      attemptId: String(session.attempt_id),
+      lifecycleState: String(session.state),
+      terminal: TERMINAL_STATES.has(String(session.state) as LoopState),
+      outcome: nullableString(session.outcome),
+      reason: nullableString(session.reason),
+      timestamps: {
+        createdAt: String(session.created_at),
+        updatedAt: String(session.updated_at),
+        completedAt: nullableString(session.completed_at)
+      },
+      learningPreflight: {
+        preflightId: nullableString(preflight?.preflight_id),
+        decision: nullableString(preflight?.decision),
+        sourceVersions: parseJsonOrNull(preflight?.source_versions_json),
+        selectedAlternative,
+        overrideReference,
+        warningOrBlockReason: nullableString(preflight?.warning_or_block_reason),
+        integrityHash: nullableString(preflight?.integrity_hash),
+        immutable: Number(preflight?.immutable ?? 0) === 1,
+        matches
+      },
+      references: {
+        lessons: lessonReferences,
+        preventionRules: unique(matches.filter((match) => String(match.record_type) === "active-prevention-rule").map((match) => `${match.record_id}@${match.record_version}`)),
+        certifiedAlternatives: selectedAlternative && typeof selectedAlternative === "object" ? [`${(selectedAlternative as Record<string, unknown>).capabilityId}@${(selectedAlternative as Record<string, unknown>).version}`] : [],
+        overrides: overrideReference && typeof overrideReference === "object" ? [String((overrideReference as Record<string, unknown>).overrideId ?? "")].filter(Boolean) : [],
+        supersededHistory: unique(matches.filter((match) => String(match.record_type) === "superseded-lesson").map((match) => `${match.record_id}@${match.record_version}`))
+      },
+      bindings,
+      reviewAndRevision: {
+        awaitingReview: String(session.state) === "AWAITING_REVIEW",
+        revisionBudget: Number(session.revision_budget),
+        reviewRequired: String(session.state) === "REVIEW_REQUIRED",
+        reviewOrRevisionTransitions: transitions.filter((transition) => ["AWAITING_REVIEW", "REVISING", "READY_FOR_FINALIZATION", "REVIEW_REQUIRED"].includes(String(transition.next_state)))
+      },
+      artifacts,
+      transitions,
+      events,
+      terminalReason: TERMINAL_STATES.has(String(session.state) as LoopState) ? nullableString(session.reason) : null,
+      owningRuntimeIdentity: this.config.runtimeInstanceId ?? this.store.currentRuntimeInstanceId(),
+      integrityReferences: {
+        authorizationId: String(session.authorization_id),
+        requestHash: String(session.request_hash),
+        sourceSetHash: String(session.source_set_hash),
+        contextHash: String(session.context_hash),
+        preflightIntegrityHash: nullableString(preflight?.integrity_hash),
+        artifactHashes: artifacts.map((artifact) => String(artifact.hash))
+      },
+      modelUse: false,
+      publicNetworkUse: false
+    };
   }
 
   startLoop(input: { authorization: LoopAuthorization; idempotencyKey: string }): { loopSessionId: string; status: "CREATED" | "DUPLICATE" } {
@@ -676,6 +806,61 @@ export function evaluatePreflight(context: LoopContextFingerprint, records: Pref
   return { ...resultBase, integrityHash: stableHash(resultBase) };
 }
 
+export function evaluateDurableLearningGovernancePreflight(store: RuntimeStateStore, context: LoopContextFingerprint, requestHash?: string): PreflightResult {
+  const learning = new LearningGovernanceRuntime(store);
+  const learningContext = createLearningContextFingerprint({
+    taskType: context.taskType,
+    deliverableType: context.requestedDeliverable,
+    studioId: context.studioId,
+    studioVersion: context.studioVersion,
+    workflowProfile: context.workflowProfile,
+    capabilityVersions: context.capabilityRequirements,
+    providerModelProfile: context.providerModelProfile,
+    sourceTypes: context.sourceTypes,
+    sourceCharacteristics: context.sourceCharacteristics,
+    environmentProfile: context.environmentProfile,
+    operatingSystemProfile: context.operatingSystemProfile,
+    riskClass: context.riskClass,
+    resourceLimits: context.resourceLimits,
+    operatorConstraints: context.operatorConstraints,
+    policyVersions: context.policyVersions,
+    evidenceReferences: context.evidenceReferences,
+    failureClassification: "unsupported claim"
+  });
+  const durable = learning.durablePreflightQuery(learningContext, requestHash);
+  const records = learning.durablePreflightRecords();
+  const preflightRecords: PreflightRecord[] = [];
+  for (const lesson of records.activeCertifiedLessons as Array<Record<string, unknown>>) {
+    preflightRecords.push({
+      recordType: durable.decision === "APPLY_CERTIFIED_ALTERNATIVE" || (durable.activeLessonVersion && context.taskType !== "creative-fiction") ? "known-failure" : "certified-lesson",
+      recordId: String(lesson.lesson_id),
+      recordVersion: String(lesson.version),
+      matchClass: durable.decision === "APPLY_CERTIFIED_ALTERNATIVE" || (durable.activeLessonVersion && context.taskType !== "creative-fiction") ? "MATERIALLY_EQUIVALENT" : durable.matchClass === "OUT_OF_SCOPE" ? "OUT_OF_SCOPE" : durable.matchClass,
+      activeStatus: "active",
+      certificationReference: String((lesson as any).activation_ref ?? ""),
+      evidenceReference: `learning-governance:lesson:${lesson.lesson_id}@${lesson.version}`,
+      applicability: durable.explanation,
+      nonApplicability: durable.matchClass === "OUT_OF_SCOPE" ? durable.explanation : undefined,
+      alternative: { capabilityId: "source-grounded-brief-authoring", version: "fixture-certified-v1", digest: "fixture-certified-v1", certified: true, available: true, compatible: true, authorized: true },
+      fixture: false
+    });
+  }
+  for (const item of records.supersededHistory as Array<Record<string, unknown>>) {
+    preflightRecords.push({
+      recordType: "superseded-lesson",
+      recordId: String(item.lesson_id),
+      recordVersion: String(item.version),
+      matchClass: "SUPERSEDED",
+      activeStatus: "superseded",
+      evidenceReference: `learning-governance:superseded:${item.lesson_id}@${item.version}`,
+      applicability: "Superseded history remains inspectable but is not active authority.",
+      fixture: false
+    });
+  }
+  const result = evaluatePreflight(context, preflightRecords);
+  return { ...result, sourceVersions: ["durable-learning-governance-runtime"] };
+}
+
 export function createIntegratedLoopRuntimeServices(projectRoot: string): RuntimeService[] {
   let runtime: IntegratedLoopRuntime | undefined;
   const base = createPersistentRuntimeServices(projectRoot);
@@ -761,7 +946,30 @@ export async function runIntegratedLoopProof(): Promise<IntegratedLoopProofResul
     runtime.transition(auth.loopSessionId, "AUTHORIZING", "PREFLIGHTING", "control-plane", "control plane authorization accepted", "authorization.json");
 
     const scenarioA = evaluatePreflight(auth.contextFingerprint, []);
-    const scenarioB = evaluatePreflight(auth.contextFingerprint, [fixtureKnownFailure("MATERIALLY_EQUIVALENT", true)]);
+    const learningGovernance = new LearningGovernanceRuntime(store, { projectRoot: proofRoot });
+    const learningSessionId = `learning_session_${randomId()}`;
+    const learningContext = createLearningContextFingerprint({
+      taskType: auth.contextFingerprint.taskType,
+      deliverableType: auth.contextFingerprint.requestedDeliverable,
+      studioId: auth.contextFingerprint.studioId,
+      studioVersion: auth.contextFingerprint.studioVersion,
+      workflowProfile: auth.contextFingerprint.workflowProfile,
+      capabilityVersions: auth.contextFingerprint.capabilityRequirements,
+      providerModelProfile: auth.contextFingerprint.providerModelProfile,
+      sourceTypes: auth.contextFingerprint.sourceTypes,
+      sourceCharacteristics: auth.contextFingerprint.sourceCharacteristics,
+      environmentProfile: auth.contextFingerprint.environmentProfile,
+      operatingSystemProfile: auth.contextFingerprint.operatingSystemProfile,
+      riskClass: auth.contextFingerprint.riskClass,
+      resourceLimits: auth.contextFingerprint.resourceLimits,
+      operatorConstraints: auth.contextFingerprint.operatorConstraints,
+      policyVersions: auth.contextFingerprint.policyVersions,
+      evidenceReferences: auth.contextFingerprint.evidenceReferences,
+      failureClassification: "unsupported claim"
+    });
+    learningGovernance.startSession({ sessionId: learningSessionId, attemptId: auth.attemptId, contextHash: stableHash(learningContext), idempotencyKey: `integrated-proof:${learningSessionId}` });
+    learningGovernance.recordFixtureLifecycle({ sessionId: learningSessionId, context: learningContext });
+    const scenarioB = evaluateDurableLearningGovernancePreflight(store, auth.contextFingerprint);
     const scenarioC = evaluatePreflight(auth.contextFingerprint, [fixtureRelatedLesson()]);
     const scenarioD = evaluatePreflight(auth.contextFingerprint, [fixtureOutOfScopeLesson()]);
     const scenarioExact = evaluatePreflight(auth.contextFingerprint, [fixtureKnownFailure("EXACT", true)]);
@@ -962,7 +1170,7 @@ export async function runIntegratedLoopProof(): Promise<IntegratedLoopProofResul
       proofNoRealModel: true,
       proofNoPublicNetwork: true,
       proofMutatesNoRepositorySource: true,
-      migrationsHistoricalPreserved: inspection.schemaVersion === 10 && inspection.counts.schema_migrations === 10,
+      migrationsHistoricalPreserved: inspection.schemaVersion === 11 && inspection.counts.schema_migrations === 11,
       repositoryTruthClassifiesRuntime: true,
       controlPlaneRetainsTerminalAuthority: true,
       baseMvpManifestArithmeticValid: true,
@@ -1127,6 +1335,34 @@ function canonical(value: unknown): unknown {
 
 function stableJson(value: unknown): string {
   return JSON.stringify(canonical(value), null, 2);
+}
+
+function parseJsonOrNull(value: unknown): unknown {
+  if (value === null || value === undefined || value === "") return null;
+  try {
+    return JSON.parse(String(value));
+  } catch {
+    return null;
+  }
+}
+
+function boundedJsonText(value: unknown): string {
+  const text = typeof value === "string" ? value : stableJson(value ?? null);
+  return text.length > 4000 ? `${text.slice(0, 4000)}...bounded` : text;
+}
+
+function boundedReference(value: string): string {
+  if (!value) return value;
+  if (path.isAbsolute(value)) return `<absolute-path-redacted:${path.basename(value)}>`;
+  return value.length > 300 ? `${value.slice(0, 300)}...bounded` : value;
+}
+
+function nullableString(value: unknown): string | null {
+  return value === null || value === undefined ? null : String(value);
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values.filter(Boolean))];
 }
 
 function stableHash(value: unknown): string {

@@ -10,13 +10,8 @@
     { "path": "../capability-engine" },
     { "path": "../evaluation-engine" },
     { "path": "../execution-engine" },
-    { "path": "../knowledge-runtime" },
-    { "path": "../learning-governance-runtime" },
-    { "path": "../model-runtime" },
-    { "path": "../operator-gateway" },
     { "path": "../runtime-host" },
     { "path": "../runtime-recovery" },
-    { "path": "../runtime-state" },
-    { "path": "../studio-runtime" }
+    { "path": "../runtime-state" }
   ]
 }

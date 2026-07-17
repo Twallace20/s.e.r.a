@@ -183,7 +183,7 @@ describe("First Certified Studio v1", () => {
     ["Desktop revision-history view renders.", () => DESKTOP_OPERATOR_HTML.includes("studio-revision-history")],
     ["Desktop final-deliverable view renders.", () => DESKTOP_OPERATOR_HTML.includes("studio-final-deliverable")],
     ["Desktop learning-signal view renders.", () => DESKTOP_OPERATOR_HTML.includes("studio-learning-signals")],
-    ["Desktop recurrence empty state is honest.", () => DESKTOP_OPERATOR_HTML.includes("No certified recurrence-prevention Runtime data")],
+    ["Desktop recurrence state is gateway-backed.", () => DESKTOP_OPERATOR_HTML.includes("Learning Governance data is read through the authenticated local Operator Gateway")],
     ["Gateway Studio reads require session.", () => gatewayProof.checks.authenticatedSession],
     ["Gateway Studio mutation requires CSRF.", () => gatewayProof.checks.csrfRequired],
     ["Gateway Studio payload limit enforced.", () => true],
@@ -198,7 +198,7 @@ describe("First Certified Studio v1", () => {
     ["incomplete artifact is not finalized after restart.", () => firstStudioProof.checks.finalPackageCreated],
     ["incomplete evaluation is not assumed passed.", () => firstStudioProof.checks.unsupportedClaimDetected],
     ["modified artifact does not retain approval after restart.", () => firstStudioProof.checks.operatorReviewExact],
-    ["revision budget survives restart.", () => DEFAULT_RUNTIME_STATE_MIGRATIONS.at(-1)?.sql.includes("revision_budget") ?? false],
+    ["revision budget survives restart.", () => DEFAULT_RUNTIME_STATE_MIGRATIONS[8]?.sql.includes("revision_budget") ?? false],
     ["Runtime service reports healthy.", () => firstStudioProof.ok],
     ["shutdown refuses new Studio sessions.", () => definition.requiredRuntimeServices.includes("studio-runtime")],
     ["cancellation propagates.", () => definition.stageDefinitions.includes("CANCELLED")],
@@ -230,7 +230,7 @@ describe("First Certified Studio v1", () => {
     const store = openRuntimeState({ projectRoot: root });
     try {
       const inspection = store.inspect();
-      expect(inspection.schemaVersion).toBe(10);
+      expect(inspection.schemaVersion).toBe(11);
       expect(inspection.counts.studio_definitions).toBe(0);
       expect(inspection.counts.studio_sessions).toBe(0);
     } finally {

@@ -161,6 +161,7 @@ const RUNTIME_PACKAGE_NAME_HINTS = [
   "model-runtime",
   "knowledge-runtime",
   "integrated-loop-runtime",
+  "learning-governance-runtime",
   "control-plane",
   "execution-engine",
   "evaluation-engine",

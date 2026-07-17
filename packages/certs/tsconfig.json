@@ -46,6 +46,9 @@
       "path": "../capability-engine"
     },
     {
+      "path": "../learning-governance-runtime"
+    },
+    {
       "path": "../studio-runtime"
     },
     {
