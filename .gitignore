@@ -34,6 +34,7 @@ coverage/
 .sera/learning-governance/
 .sera/restart-persistence-proof/
 .sera/base-mvp/
+.sera/validation-ledger/
 .sera-local/
 *.log
 .DS_Store
