@@ -1,0 +1,20 @@
+{
+  "name": "@sera/portable-base-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@sera/knowledge-runtime": "0.1.0",
+    "@sera/model-runtime": "0.1.0",
+    "@sera/runtime-state": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}

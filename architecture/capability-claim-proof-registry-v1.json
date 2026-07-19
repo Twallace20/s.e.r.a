@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "sera.capability-claim-proof-registry.v1",
+  "registryVersion": "portable-offline-base-mvp-v1",
+  "claims": [
+    {
+      "claimId": "portable-package-candidate",
+      "layer": "Runtime",
+      "statement": "S.E.R.A. can build a bounded Windows x64 portable Base MVP release candidate artifact.",
+      "proofRequired": [
+        "release-manifest",
+        "sha256",
+        "zip-integrity"
+      ],
+      "status": "implemented",
+      "authorityBoundary": "Release packaging produces evidence only; it does not certify clean-machine operation."
+    },
+    {
+      "claimId": "real-local-ollama-candidate",
+      "layer": "Provider",
+      "statement": "S.E.R.A. can use an installed local Ollama model through a loopback-only governed provider.",
+      "proofRequired": [
+        "ollama-tags",
+        "model-digest",
+        "local-model-runtime-invocation"
+      ],
+      "status": "implemented",
+      "authorityBoundary": "Model output is untrusted candidate intelligence and cannot approve, execute, certify, or close work."
+    },
+    {
+      "claimId": "clean-environment-offline-launch",
+      "layer": "Desktop",
+      "statement": "S.E.R.A. Base MVP launches on a separate clean Windows environment without Git, npm, Codex, ChatGPT, or a source checkout.",
+      "proofRequired": [
+        "external-clean-environment-run",
+        "desktop-operator-review",
+        "restart-retrieval"
+      ],
+      "status": "blocked",
+      "authorityBoundary": "This claim remains blocked until actual clean-environment evidence is supplied."
+    }
+  ],
+  "modelUse": false,
+  "publicNetworkUse": false
+}

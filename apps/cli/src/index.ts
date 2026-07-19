@@ -16,6 +16,7 @@ import { getEvidenceStudioStatus, runEvidenceStudioProof } from "@sera/evidence-
 import { IntegratedLoopBlockedError, IntegratedLoopRuntime, runIntegratedLoopProof } from "@sera/integrated-loop-runtime";
 import { LearningGovernanceRuntime, runLearningGovernanceProof } from "@sera/learning-governance-runtime";
 import { RestartPersistenceProofError, inspectRestartPersistenceProof, restartPersistencePolicy, restartPersistenceStatus, runRestartPersistenceProof } from "@sera/restart-persistence-proof";
+import { PortableBaseMvpError, baseMvpPolicy, baseMvpStatus, buildCleanProofKit, buildPortableBaseMvp, capabilityClaimRegistry, inspectCleanEnvironmentOptions, inspectPortableBaseMvpProof, proveReleaseReproducibility, runPortableBaseMvpProof, verifyPortableBaseMvp } from "@sera/portable-base-mvp";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -166,6 +167,16 @@ Usage:
   sera restart-persistence policy
   sera restart-persistence inspect <proof-id-or-proof-root>
   sera restart-persistence prove
+  sera base-mvp status
+  sera base-mvp policy
+  sera base-mvp claims
+  sera base-mvp build
+  sera base-mvp verify <release-root-or-zip>
+  sera base-mvp reproducibility
+  sera base-mvp clean-kit
+  sera base-mvp clean-env inspect
+  sera base-mvp prove [--clean-evidence <path>] [--model <model-id>]
+  sera base-mvp inspect <proof-root>
   sera snapshot
   sera truth
 
@@ -223,6 +234,7 @@ NPM examples:
   npm run sera -- model prove
   npm run sera -- loop inspect <session-id>
   npm run sera -- restart-persistence prove
+  npm run sera -- base-mvp prove
 
 Secure base behavior:
   - runs locally
@@ -256,6 +268,7 @@ Secure base behavior:
   - Knowledge and Universal Intake Runtime preserves provenance-linked local information as candidate knowledge with deterministic lexical retrieval
   - Capability Engine creates, evaluates, certifies, promotes and rolls back exact bounded capability versions under Control Plane authority
   - Studio Runtime coordinates certified Studio definitions, source-grounded briefs, review-bound final packages, and candidate-only learning signals
+  - Portable Base MVP builds a Windows x64 release candidate, records claim-to-proof evidence, and blocks final certification until clean-environment proof exists
   - does not require an LLM provider
 `);
 }
@@ -1670,6 +1683,77 @@ async function main(): Promise<void> {
       }
     }
     throw new Error("Restart Persistence command must be one of: status, policy, inspect, prove.");
+  }
+
+  if (cmd === "base-mvp") {
+    const [mode, subject] = rest;
+    if (mode === "status") {
+      console.log(JSON.stringify(baseMvpStatus(process.cwd()), null, 2));
+      process.exit(0);
+    }
+    if (mode === "policy") {
+      console.log(JSON.stringify(baseMvpPolicy(), null, 2));
+      process.exit(0);
+    }
+    if (mode === "claims") {
+      console.log(JSON.stringify(capabilityClaimRegistry(), null, 2));
+      process.exit(0);
+    }
+    if (mode === "build") {
+      const outputRoot = optionValue(rest, "--output");
+      const result = buildPortableBaseMvp({ projectRoot: process.cwd(), outputRoot });
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (mode === "verify") {
+      const result = verifyPortableBaseMvp(requireArg(subject, "release root or zip path"));
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (mode === "reproducibility") {
+      const outputRoot = optionValue(rest, "--output");
+      const result = proveReleaseReproducibility({ projectRoot: process.cwd(), outputRoot });
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (mode === "clean-kit") {
+      const outputRoot = optionValue(rest, "--output");
+      const releaseZipPath = optionValue(rest, "--release-zip");
+      const result = buildCleanProofKit({ projectRoot: process.cwd(), outputRoot, releaseZipPath });
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (mode === "clean-env") {
+      const submode = subject;
+      if (submode !== "inspect") throw new Error("Usage: sera base-mvp clean-env inspect");
+      const outputRoot = optionValue(rest, "--output");
+      const result = inspectCleanEnvironmentOptions({ projectRoot: process.cwd(), outputRoot });
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (mode === "prove") {
+      const result = await runPortableBaseMvpProof({
+        projectRoot: process.cwd(),
+        cleanEnvironmentEvidenceRoot: optionValue(rest, "--clean-evidence"),
+        modelId: optionValue(rest, "--model")
+      });
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(result.ok ? 0 : 1);
+    }
+    if (mode === "inspect") {
+      if (!subject) throw new Error("Usage: sera base-mvp inspect <proof-root>");
+      try {
+        console.log(JSON.stringify(inspectPortableBaseMvpProof(subject), null, 2));
+        process.exit(0);
+      } catch (error) {
+        if (error instanceof PortableBaseMvpError) {
+          console.error(JSON.stringify({ ok: false, errorCode: error.code, safeMessage: error.message, modelUse: false, publicNetworkUse: false }, null, 2));
+          process.exit(1);
+        }
+        throw error;
+      }
+    }
+    throw new Error("Base MVP command must be one of: status, policy, claims, build, verify, prove, inspect.");
   }
 
   if (cmd === "desktop") {

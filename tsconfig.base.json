@@ -108,6 +108,9 @@
       "@sera/restart-persistence-proof": [
         "packages/restart-persistence-proof/src/index.ts"
       ],
+      "@sera/portable-base-mvp": [
+        "packages/portable-base-mvp/src/index.ts"
+      ],
       "@sera/evidence-studio": [
         "packages/evidence-studio/src/index.ts"
       ],

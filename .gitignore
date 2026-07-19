@@ -33,6 +33,7 @@ coverage/
 .sera/integrated-loop/
 .sera/learning-governance/
 .sera/restart-persistence-proof/
+.sera/base-mvp/
 .sera-local/
 *.log
 .DS_Store
