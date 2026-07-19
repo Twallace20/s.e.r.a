@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { createValidationEvidence, runCommand } from "./lib/validation-ledger-v1.mjs";
+import { createValidationEvidence, runCommand, validationEvidenceOutcome } from "./lib/validation-ledger-v1.mjs";
 
 const root = process.cwd();
 const commands = [
@@ -25,5 +25,6 @@ const evidencePath = path.join(outDir, "validation-evidence.json");
 fs.writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`, "utf8");
 fs.writeFileSync(path.join(root, ".sera", "validation-ledger", "latest.json"), `${JSON.stringify({ path: path.relative(root, evidencePath).replace(/\\/g, "/"), validationId: evidence.validationId, finalEvidenceDigest: evidence.finalEvidenceDigest }, null, 2)}\n`, "utf8");
 
-console.log(JSON.stringify({ ok: results.every((result) => result.exitCode === 0), validationId: evidence.validationId, evidencePath, finalEvidenceDigest: evidence.finalEvidenceDigest, testFileCount: evidence.testFileCount, testCount: evidence.testCount }, null, 2));
-process.exit(results.every((result) => result.exitCode === 0) ? 0 : 1);
+const outcome = validationEvidenceOutcome(evidence);
+console.log(JSON.stringify({ ok: outcome.ok, failureReasons: outcome.failureReasons, validationId: evidence.validationId, evidencePath, finalEvidenceDigest: evidence.finalEvidenceDigest, testFileCount: evidence.testFileCount, testCount: evidence.testCount, testParsing: evidence.testParsing }, null, 2));
+process.exit(outcome.ok ? 0 : 1);

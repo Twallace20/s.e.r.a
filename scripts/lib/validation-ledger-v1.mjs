@@ -6,6 +6,8 @@ import { execFileSync, spawnSync } from "node:child_process";
 
 export const VALIDATION_LEDGER_SCHEMA = "sera.validation-ledger.v1";
 export const CLEAN_TREE_REQUIRED_CODE = "validation_evidence_requires_clean_tree";
+export const TEST_EVIDENCE_UNRESOLVED_CODE = "validation_test_evidence_unresolved";
+export const VALIDATION_EVIDENCE_INCONSISTENT_CODE = "validation_evidence_inconsistent";
 export const REQUIRED_COMPONENTS = ["hygiene", "free-core", "knowledge", "build", "vitest"];
 
 export function sha256Buffer(buffer) {
@@ -113,14 +115,52 @@ export function runCommand(root, component, command, args) {
 }
 
 export function parseVitest(commandResult) {
-  const combined = `${commandResult.stdoutTail}\n${commandResult.stderrTail}`;
+  const combined = stripAnsi(`${commandResult.stdoutTail ?? ""}\n${commandResult.stderrTail ?? ""}`).replace(/\r\n?/g, "\n");
   const fileMatch = combined.match(/Test Files\s+(\d+)\s+passed\s+\((\d+)\)/);
   const testMatch = combined.match(/Tests\s+(\d+)\s+passed\s+\((\d+)\)/);
+  const testFileCountParsed = Boolean(fileMatch);
+  const testCountParsed = Boolean(testMatch);
+  const testFileCount = fileMatch ? Number(fileMatch[2]) : 0;
+  const testCount = testMatch ? Number(testMatch[2]) : 0;
   return {
-    testFileCount: fileMatch ? Number(fileMatch[2]) : 0,
-    testCount: testMatch ? Number(testMatch[2]) : 0,
-    passed: commandResult.exitCode === 0 && Boolean(fileMatch) && Boolean(testMatch)
+    testFileCount,
+    testCount,
+    testFileCountParsed,
+    testCountParsed,
+    summaryParsed: testFileCountParsed && testCountParsed,
+    passed: commandResult.exitCode === 0 && testFileCountParsed && testCountParsed && Number.isInteger(testFileCount) && testFileCount > 0 && Number.isInteger(testCount) && testCount > 0,
+    failureReason: !testFileCountParsed || !testCountParsed || testFileCount <= 0 || testCount <= 0 ? TEST_EVIDENCE_UNRESOLVED_CODE : commandResult.exitCode !== 0 ? "validation_test_command_failed" : null
   };
+}
+
+export function stripAnsi(text) {
+  return String(text).replace(/[\u001B\u009B][[\]()#;?]*(?:(?:(?:[a-zA-Z\d]*(?:;[-a-zA-Z\d\/#&.:=?%@~_]+)*)?\u0007)|(?:(?:\d{1,4}(?:[;:]\d{0,4})*)?[\dA-PR-TZcf-nq-uy=><~]))/g, "");
+}
+
+export function validationEvidenceOutcome(evidence) {
+  const commands = Array.isArray(evidence.commands) ? evidence.commands : [];
+  const vitestCommand = commands.find((result) => result.component === "vitest");
+  const parsingResolved = evidence.testParsing
+    ? evidence.testParsing.testFileCountParsed === true && evidence.testParsing.testCountParsed === true && evidence.testParsing.summaryParsed === true
+    : evidence.testResult === "PASS" && Number(evidence.testFileCount) > 0 && Number(evidence.testCount) > 0;
+  const checks = {
+    everyRequiredComponentRan: REQUIRED_COMPONENTS.every((component) => commands.some((result) => result.component === component)),
+    everyRequiredComponentPassed: REQUIRED_COMPONENTS.every((component) => commands.some((result) => result.component === component && result.exitCode === 0)),
+    buildPassed: evidence.buildResult === "PASS",
+    testCommandPassed: vitestCommand?.exitCode === 0,
+    testParsingResolved: parsingResolved,
+    positiveTestFileCount: Number.isInteger(evidence.testFileCount) && evidence.testFileCount > 0,
+    positiveTestCount: Number.isInteger(evidence.testCount) && evidence.testCount > 0,
+    testResultPassed: evidence.testResult === "PASS"
+  };
+  const failureReasons = [];
+  if (!checks.everyRequiredComponentRan) failureReasons.push("validation_required_component_missing");
+  if (!checks.everyRequiredComponentPassed) failureReasons.push("validation_required_component_failed");
+  if (!checks.buildPassed) failureReasons.push("validation_build_failed");
+  if (!checks.testCommandPassed) failureReasons.push("validation_test_command_failed");
+  if (!checks.testParsingResolved || !checks.positiveTestFileCount || !checks.positiveTestCount) failureReasons.push(TEST_EVIDENCE_UNRESOLVED_CODE);
+  if (!checks.testResultPassed) failureReasons.push("validation_tests_failed");
+  return { ok: Object.values(checks).every(Boolean), checks, failureReasons: [...new Set(failureReasons)] };
 }
 
 export function createValidationEvidence(root, commandResults) {
@@ -144,12 +184,15 @@ export function createValidationEvidence(root, commandResults) {
     testFileCount: vitest.testFileCount,
     testCount: vitest.testCount,
     testResult: vitest.passed ? "PASS" : "FAIL",
+    testParsing: vitest,
     environmentProfile: environmentProfile(),
     requiredComponents: REQUIRED_COMPONENTS,
     modelUse: false,
     publicNetworkUse: false
   };
-  return { ...evidence, finalEvidenceDigest: finalEvidenceDigest(evidence) };
+  const validationResult = validationEvidenceOutcome(evidence);
+  const complete = { ...evidence, validationResult };
+  return { ...complete, finalEvidenceDigest: finalEvidenceDigest(complete) };
 }
 
 export function latestEvidencePath(root = process.cwd()) {
@@ -161,6 +204,8 @@ export function latestEvidencePath(root = process.cwd()) {
 
 export function verifyValidationEvidence(evidence, expected, options = {}) {
   const requireCleanTree = options.requireCleanTree === true;
+  const outcome = validationEvidenceOutcome(evidence);
+  const recordedOutcomeConsistent = evidence.validationResult === undefined || stableJson(evidence.validationResult) === stableJson(outcome);
   const checks = {
     schema: evidence.schemaVersion === VALIDATION_LEDGER_SCHEMA,
     digest: evidence.finalEvidenceDigest === finalEvidenceDigest(evidence),
@@ -169,16 +214,22 @@ export function verifyValidationEvidence(evidence, expected, options = {}) {
     sourceTreeDigest: evidence.sourceTreeDigest === expected.sourceTreeDigest,
     packageLockDigest: evidence.packageLockDigest === expected.packageLockDigest,
     dirtyTreeState: stableJson(evidence.dirtyTreeState) === stableJson(expected.dirtyTreeState),
-    requiredComponentsPassed: REQUIRED_COMPONENTS.every((component) => evidence.commands?.some((command) => command.component === component && command.exitCode === 0)),
-    buildPassed: evidence.buildResult === "PASS",
-    testsPassed: evidence.testResult === "PASS" && Number(evidence.testFileCount) > 0 && Number(evidence.testCount) > 0,
+    requiredComponentsPassed: outcome.checks.everyRequiredComponentRan && outcome.checks.everyRequiredComponentPassed,
+    buildPassed: outcome.checks.buildPassed,
+    testParsingResolved: outcome.checks.testParsingResolved,
+    testsPassed: outcome.checks.testCommandPassed && outcome.checks.positiveTestFileCount && outcome.checks.positiveTestCount && outcome.checks.testResultPassed,
+    validationConsistency: outcome.ok && recordedOutcomeConsistent,
     ...(requireCleanTree ? {
       evidenceCreatedFromCleanTree: evidence.cleanTree === true && evidence.dirtyTreeState?.dirty === false && evidence.dirtyTreeState?.statusShort === "",
       currentTreeClean: expected.cleanTree === true && expected.dirtyTreeState?.dirty === false && expected.dirtyTreeState?.statusShort === ""
     } : {})
   };
   const ok = Object.values(checks).every(Boolean);
-  return { ok, checks, failureCode: !ok && requireCleanTree && (!checks.evidenceCreatedFromCleanTree || !checks.currentTreeClean) ? CLEAN_TREE_REQUIRED_CODE : undefined };
+  const failureCode = !ok && requireCleanTree && (!checks.evidenceCreatedFromCleanTree || !checks.currentTreeClean)
+    ? CLEAN_TREE_REQUIRED_CODE
+    : !checks.validationConsistency ? VALIDATION_EVIDENCE_INCONSISTENT_CODE
+      : !checks.testParsingResolved || !checks.testsPassed ? TEST_EVIDENCE_UNRESOLVED_CODE : undefined;
+  return { ok, checks, failureCode };
 }
 
 export function currentEvidenceExpectations(root = process.cwd()) {

@@ -49,6 +49,31 @@ function expectations() {
 }
 
 describe("Validation Ledger v1 evidence verifier", () => {
+  it.each([
+    ["plain LF", " Test Files  154 passed (154)\n      Tests  2234 passed (2234)\n"],
+    ["ANSI", "\u001b[2m Test Files \u001b[22m \u001b[32m154 passed\u001b[39m (154)\n\u001b[2m      Tests \u001b[22m \u001b[32m2234 passed\u001b[39m (2234)\n"],
+    ["CRLF", " Test Files  154 passed (154)\r\n      Tests  2234 passed (2234)\r\n"]
+  ])("parses %s Vitest summaries", async (_name, stdoutTail) => {
+    const { parseVitest } = await ledger();
+    expect(parseVitest({ exitCode: 0, stdoutTail, stderrTail: "" })).toMatchObject({ testFileCount: 154, testCount: 2234, testFileCountParsed: true, testCountParsed: true, summaryParsed: true, passed: true });
+  });
+
+  it("rejects successful commands with unparseable or zero-count summaries", async () => {
+    const { parseVitest } = await ledger();
+    expect(parseVitest({ exitCode: 0, stdoutTail: "all good", stderrTail: "" }).passed).toBe(false);
+    expect(parseVitest({ exitCode: 0, stdoutTail: "Test Files  0 passed (0)\nTests  1 passed (1)", stderrTail: "" }).passed).toBe(false);
+    expect(parseVitest({ exitCode: 0, stdoutTail: "Test Files  1 passed (1)\nTests  0 passed (0)", stderrTail: "" }).passed).toBe(false);
+  });
+
+  it("requires parsed positive test evidence and a successful test command", async () => {
+    const { validationEvidenceOutcome } = await ledger();
+    expect(validationEvidenceOutcome({ ...baseEvidence(), testResult: undefined }).ok).toBe(false);
+    expect(validationEvidenceOutcome({ ...baseEvidence(), testFileCount: 0 }).ok).toBe(false);
+    expect(validationEvidenceOutcome({ ...baseEvidence(), testCount: 0 }).ok).toBe(false);
+    const failedCommand = { ...baseEvidence(), commands: baseEvidence().commands.map((command) => command.component === "vitest" ? { ...command, exitCode: 1 } : command) };
+    expect(validationEvidenceOutcome(failedCommand).ok).toBe(false);
+  });
+
   it("accepts matching dirty-tree evidence for development inspection only", async () => {
     const { finalEvidenceDigest, verifyValidationEvidence } = await ledger();
     const evidence = baseEvidence();
@@ -86,6 +111,18 @@ describe("Validation Ledger v1 evidence verifier", () => {
     const expected = { ...expectations(), cleanTree: true, dirtyTreeState: { dirty: false, statusShort: "" } };
     const signed = { ...clean, finalEvidenceDigest: finalEvidenceDigest(clean) };
     expect(verifyValidationEvidence(signed, expected, { requireCleanTree: true }).ok).toBe(true);
+  });
+
+  it("rejects contradictory and zero-count certification evidence", async () => {
+    const { finalEvidenceDigest, validationEvidenceOutcome, verifyValidationEvidence } = await ledger();
+    const expected = { ...expectations(), cleanTree: true, dirtyTreeState: { dirty: false, statusShort: "" } };
+    const contradictoryBase = { ...baseEvidence(), cleanTree: true, dirtyTreeState: { dirty: false, statusShort: "" }, testResult: "FAIL", validationResult: { ok: true, checks: {}, failureReasons: [] } };
+    const contradictory = { ...contradictoryBase, finalEvidenceDigest: finalEvidenceDigest(contradictoryBase) };
+    expect(verifyValidationEvidence(contradictory, expected, { requireCleanTree: true }).checks.validationConsistency).toBe(false);
+    const zeroBase: any = { ...baseEvidence(), cleanTree: true, dirtyTreeState: { dirty: false, statusShort: "" }, testFileCount: 0 };
+    zeroBase.validationResult = validationEvidenceOutcome(zeroBase);
+    const zero = { ...zeroBase, finalEvidenceDigest: finalEvidenceDigest(zeroBase) };
+    expect(verifyValidationEvidence(zero, expected, { requireCleanTree: true }).checks.testsPassed).toBe(false);
   });
 
   it("ignores generated Runtime evidence for source-tree classification", async () => {
