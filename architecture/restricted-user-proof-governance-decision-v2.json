@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "sera.proof-governance-decision.v1",
+  "decisionId": "milestone-16-same-host-restricted-user-boundary-v2",
+  "status": "approved",
+  "approvedRole": "project-owner",
+  "approvedProfile": "same-host-restricted-user-release-only-v1",
+  "allowedClaims": [
+    "RELEASE_INDEPENDENCE_PROVEN",
+    "CERTIFIED_HOST_PROFILE_PROVEN"
+  ],
+  "prohibitedClaims": [
+    "CROSS_HOST_PORTABILITY_PROVEN",
+    "DIFFERENT_PHYSICAL_HARDWARE_PROVEN",
+    "SEPARATE_WINDOWS_INSTALLATION_PROVEN",
+    "EXTERNAL_CLEAN_MACHINE_PROVEN",
+    "UNIVERSAL_WINDOWS_COMPATIBILITY_PROVEN",
+    "MALICIOUS_ADMINISTRATOR_RESISTANCE_PROVEN",
+    "HARDWARE_BACKED_REMOTE_ATTESTATION_PROVEN"
+  ],
+  "rationale": "Approve operational release independence on one declared Windows host profile under a restricted-user, source-inaccessible, release-only execution boundary.",
+  "decisionDate": "2026-07-21",
+  "externalCleanMachineTier": "External clean-machine proof remains a stronger future proof tier."
+}

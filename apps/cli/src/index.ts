@@ -16,7 +16,7 @@ import { getEvidenceStudioStatus, runEvidenceStudioProof } from "@sera/evidence-
 import { IntegratedLoopBlockedError, IntegratedLoopRuntime, runIntegratedLoopProof } from "@sera/integrated-loop-runtime";
 import { LearningGovernanceRuntime, runLearningGovernanceProof } from "@sera/learning-governance-runtime";
 import { RestartPersistenceProofError, inspectRestartPersistenceProof, restartPersistencePolicy, restartPersistenceStatus, runRestartPersistenceProof } from "@sera/restart-persistence-proof";
-import { PortableBaseMvpError, baseMvpPolicy, baseMvpStatus, buildCleanProofKit, buildPortableBaseMvp, capabilityClaimRegistry, inspectCleanEnvironmentOptions, inspectPortableBaseMvpProof, proveReleaseReproducibility, runPortableBaseMvpProof, verifyPortableBaseMvp } from "@sera/portable-base-mvp";
+import { PortableBaseMvpError, baseMvpPolicy, baseMvpStatus, buildCleanProofKit, buildPortableBaseMvp, capabilityClaimRegistry, inspectCleanEnvironmentOptions, inspectPortableBaseMvpProof, invokePackagedCollector, privilegedObserverPlan, proveIntegratedRestrictedUserEvidence, proveReleaseReproducibility, runPortableBaseMvpProof, verifyIntegratedRestrictedUserEvidence, verifyPortableBaseMvp, inspectRestrictedUserEvidence, prepareRestrictedUserProof, restrictedUserCleanupPlan, restrictedUserPolicy, restrictedUserRestoreNetworkPlan } from "@sera/portable-base-mvp";
 
 function printHelp(): void {
   console.log(`S.E.R.A. CLI
@@ -177,6 +177,17 @@ Usage:
   sera base-mvp clean-env inspect
   sera base-mvp prove [--clean-evidence <path>] [--model <model-id>]
   sera base-mvp inspect <proof-root>
+  sera base-mvp restricted-user policy
+  sera base-mvp restricted-user prepare [--output <path>] [--release-root <path>]
+  sera base-mvp restricted-user observer-plan <preparation.json>
+  sera base-mvp restricted-user inspect <evidence.json>
+  sera base-mvp restricted-user collect-pre-restart <preparation.json>
+  sera base-mvp restricted-user capture <stage> --preparation <preparation.json>
+  sera base-mvp restricted-user collect-post-restart <preparation.json>
+  sera base-mvp restricted-user prove <evidence-root>
+  sera base-mvp restricted-user verify <evidence-root>
+  sera base-mvp restricted-user restore-network <evidence-root>
+  sera base-mvp restricted-user cleanup <evidence-root>
   sera snapshot
   sera truth
 
@@ -1699,6 +1710,25 @@ async function main(): Promise<void> {
       console.log(JSON.stringify(capabilityClaimRegistry(), null, 2));
       process.exit(0);
     }
+    if (mode === "restricted-user") {
+      const action = subject;
+      const target = rest[2];
+      let result: unknown;
+      if (action === "policy") result = restrictedUserPolicy();
+      else if (action === "prepare") result = prepareRestrictedUserProof({ projectRoot: process.cwd(), outputRoot: optionValue(rest, "--output"), releaseZip: optionValue(rest, "--release-zip"), extractionRoot: optionValue(rest, "--extraction-root"), releaseManifest: optionValue(rest, "--release-manifest"), proofAccountName: optionValue(rest, "--proof-account"), proofSid: optionValue(rest, "--proof-sid"), developmentSid: optionValue(rest, "--development-sid"), hostProfileId: optionValue(rest, "--host-profile"), governanceDecision: optionValue(rest, "--governance-decision"), observerRoot:optionValue(rest,"--observer-root"), invocationMode:optionValue(rest,"--invocation-mode"), collectorFiles: optionValue(rest, "--collector") ? [optionValue(rest, "--collector")] : [] });
+      else if (action === "observer-plan") result = privilegedObserverPlan(requireArg(target, "preparation manifest"),(optionValue(rest,"--stage")??"PRE_RESTART") as "PRE_RESTART"|"POST_RESTART");
+      else if (action === "inspect") result = inspectRestrictedUserEvidence(requireArg(target, "evidence root"));
+      else if (action === "collect-pre-restart") result = invokePackagedCollector(requireArg(target, "preparation manifest"), "collect-pre-restart", [requireArg(target, "preparation manifest")]);
+      else if (action === "capture") { const prep=requireArg(optionValue(rest, "--preparation"), "preparation manifest"); result = invokePackagedCollector(prep, "capture", [requireArg(target, "capture stage"), prep]); }
+      else if (action === "collect-post-restart") result = invokePackagedCollector(requireArg(target, "preparation manifest"), "collect-post-restart", [requireArg(target, "preparation manifest")]);
+      else if (action === "prove") result = proveIntegratedRestrictedUserEvidence(requireArg(target, "subject evidence root"), optionValue(rest, "--observer-root"));
+      else if (action === "verify") result = verifyIntegratedRestrictedUserEvidence(requireArg(target, "subject evidence root"), optionValue(rest, "--observer-root"));
+      else if (action === "restore-network") result = restrictedUserRestoreNetworkPlan(requireArg(target, "evidence root"));
+      else if (action === "cleanup") result = restrictedUserCleanupPlan(requireArg(target, "evidence root"));
+      else throw new Error("Restricted-user command must be one of: policy, prepare, observer-plan, inspect, collect-pre-restart, capture, collect-post-restart, prove, verify, restore-network, cleanup.");
+      console.log(JSON.stringify(result, null, 2));
+      process.exit((result as { ok?: boolean }).ok === false ? 1 : 0);
+    }
     if (mode === "build") {
       const outputRoot = optionValue(rest, "--output");
       const result = buildPortableBaseMvp({ projectRoot: process.cwd(), outputRoot });
@@ -1735,6 +1765,7 @@ async function main(): Promise<void> {
       const result = await runPortableBaseMvpProof({
         projectRoot: process.cwd(),
         cleanEnvironmentEvidenceRoot: optionValue(rest, "--clean-evidence"),
+        restrictedUserEvidenceRoot: optionValue(rest, "--restricted-evidence"),
         modelId: optionValue(rest, "--model")
       });
       console.log(JSON.stringify(result, null, 2));
@@ -1753,7 +1784,7 @@ async function main(): Promise<void> {
         throw error;
       }
     }
-    throw new Error("Base MVP command must be one of: status, policy, claims, build, verify, prove, inspect.");
+    throw new Error("Base MVP command must be one of: status, policy, claims, build, verify, prove, inspect, restricted-user.");
   }
 
   if (cmd === "desktop") {

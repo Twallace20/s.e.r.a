@@ -146,6 +146,12 @@ describe('Phase 110 — Validation Profiles + Proof Gate v1', () => {
     expect(Object.values(writes)[0]).toContain('npm run sera:proof');
   });
 
+  it('rejects injected profile names before process execution', () => {
+    const result = runValidationProfile('gate;whoami', { dryRun: false });
+    expect(result.valid).toBe(false);
+    expect(result.executedCommands).toEqual([]);
+  });
+
   it('records validation failure evidence when profile counts, safety gates, or old validation stacking regress', () => {
     const result = buildValidationProfilesProofGate({
       validationProfileCommandCount: 999,

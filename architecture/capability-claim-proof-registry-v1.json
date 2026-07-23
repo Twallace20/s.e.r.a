@@ -37,6 +37,21 @@
       ],
       "status": "blocked",
       "authorityBoundary": "This claim remains blocked until actual clean-environment evidence is supplied."
+    },
+    {
+      "claimId": "same-host-restricted-user-release-independence",
+      "layer": "Desktop",
+      "statement": "A same-host restricted standard-user profile can prove release independence and one certified host profile using release-only execution.",
+      "proofRequired": [
+        "restricted-user-token",
+        "source-denial-probes",
+        "bundled-runtime",
+        "network-denial",
+        "desktop-visual-proof",
+        "restart-recovery"
+      ],
+      "status": "blocked",
+      "authorityBoundary": "Successful real evidence may grant RELEASE_INDEPENDENCE_PROVEN and CERTIFIED_HOST_PROFILE_PROVEN only; it never grants CROSS_HOST_PORTABILITY_PROVEN."
     }
   ],
   "modelUse": false,

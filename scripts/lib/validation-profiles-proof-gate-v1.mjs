@@ -433,8 +433,13 @@ export function runValidationProfile(profileName, options = {}) {
       continue;
     }
 
-    const result = childProcess.spawnSync(command, {
-      shell: true,
+    const parts = command.split(' ');
+    if (parts[0] !== 'npm' || !parts.slice(1).every((part) => /^[a-zA-Z0-9:_-]+$/.test(part))) {
+      return { valid: false, profileName, exitCode: 1, failures: [`unsafe-command:${command}`], executedCommands };
+    }
+    const executable = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    const result = childProcess.spawnSync(executable, parts.slice(1), {
+      shell: false,
       stdio: 'inherit',
       cwd: options.cwd ?? process.cwd(),
       env: process.env,
