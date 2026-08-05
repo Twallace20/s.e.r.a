@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "DA-001",
+  "title": "Packaged Runtime Truth Audit",
+  "created": "2026-08-05",
+  "manager": "Tyler Wallace",
+  "status": "APPROVED",
+  "operatingMode": "read_only",
+  "allowedPaths": [
+    "apps/cli/**",
+    "packages/runtime-host/**",
+    "packages/operator-gateway/**",
+    "packages/portable-base-mvp/**",
+    "packages/kernel/**",
+    "packages/certs/**",
+    "contracts/**",
+    "docs/architecture/**",
+    "docs/governance/**",
+    "package.json",
+    "package-lock.json",
+    "README.md"
+  ],
+  "allowedActions": [
+    "git_status_short",
+    "git_log_head",
+    "git_ls_files",
+    "git_grep",
+    "read_approved_files",
+    "npm_build",
+    "npm_test",
+    "base_mvp_verify_existing_release"
+  ],
+  "networkPolicy": {
+    "mode": "denied",
+    "permittedEndpoints": []
+  },
+  "forbiddenActions": [
+    "Edit any file",
+    "Create commits, push branches, merge, release, or deploy",
+    "Install dependencies, software, extensions, or models",
+    "Start a long-running service",
+    "Access secrets, credentials, tokens, or private keys",
+    "Invoke Ollama or any external model provider",
+    "Use network access or web research",
+    "Expand approved paths, actions, tools, or scope",
+    "Treat documentation, mocks, or unit tests as restricted-user Windows proof"
+  ],
+  "acceptanceCriteria": [
+    {
+      "id": "AC-001",
+      "condition": "Identify the current package build, launcher, verification, runtime-host, operator, and evidence/state paths using exact repository paths."
+    },
+    {
+      "id": "AC-002",
+      "condition": "Label every conclusion as DEMONSTRATED, HYPOTHESIS, or BLOCKED."
+    },
+    {
+      "id": "AC-003",
+      "condition": "Distinguish existing repository code from executed proof."
+    },
+    {
+      "id": "AC-004",
+      "condition": "Identify one smallest bounded next implementation task for the packaged Desktop Operator lifecycle."
+    },
+    {
+      "id": "AC-005",
+      "condition": "Make no repository files, configuration, dependency, or Git changes."
+    }
+  ],
+  "requiredEvidence": [
+    "SHA-256 hash of this task manifest",
+    "Git baseline identity: branch and HEAD commit",
+    "Sanitized command records and results",
+    "Exact repository paths supporting each finding",
+    "Changed-file list proving no source files changed",
+    "Final evidence report using evidence-report-template-v1.md"
+  ],
+  "managerApproval": {
+    "approvedBy": "Tyler Wallace",
+    "approvalDate": "2026-08-05",
+    "approvedMode": "read_only"
+  },
+  "humanDecisionPoint": "Tyler Wallace must review the audit evidence and explicitly choose REJECT, REVISE, APPROVE_NEXT_TASK, or CLOSE_AS_BLOCKED before any implementation work begins."
+}
