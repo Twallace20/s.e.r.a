@@ -18,6 +18,8 @@
     "certify": "npm run build && npm test && node packages/certs/dist/certify.js",
     "sera": "npm run build --silent && node apps/cli/dist/index.js",
     "doctor": "node scripts/doctor.mjs",
+    "development-agent:verify": "node scripts/test-development-agent-runner-v1.mjs",
+    "development-agent:run": "node scripts/run-development-agent-runner-v1.mjs",
     "knowledge:seed": "npm run build --silent && node scripts/seed-local-knowledge.mjs --reset",
     "knowledge:source-map": "node scripts/check-knowledge-source-map.mjs",
     "knowledge:verify": "npm run knowledge:source-map",
