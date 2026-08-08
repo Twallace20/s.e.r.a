@@ -404,8 +404,15 @@ export function createIsolatedExecutionService(input: ExecutionEngineConfigInput
   };
 }
 
-export function createIsolatedExecutionRuntimeServices(projectRoot: string, input: ExecutionEngineConfigInput = {}): RuntimeService[] {
-  const controlPlane = createControlPlaneRuntimeService(projectRoot);
+export function createIsolatedExecutionRuntimeServices(
+  projectRoot: string,
+  input: ExecutionEngineConfigInput = {},
+  controlPlaneService?: RuntimeService
+): RuntimeService[] {
+  const controlPlane =
+    controlPlaneService ??
+    createControlPlaneRuntimeService(projectRoot);
+
   return [
     createRuntimeStateService(input),
     { ...controlPlane, dependencies: ["operational-state"] },

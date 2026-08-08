@@ -621,7 +621,10 @@ export class RuntimeHost {
   }
 }
 
-export function createControlPlaneRuntimeService(projectRoot: string): RuntimeService {
+export function createControlPlaneRuntimeService(
+  projectRoot: string,
+  sharedControlPlane?: ControlPlane
+): RuntimeService {
   let controlPlane: ControlPlane | undefined;
   return {
     id: "unified-control-plane",
@@ -629,7 +632,9 @@ export function createControlPlaneRuntimeService(projectRoot: string): RuntimeSe
     required: true,
     dependencies: [],
     start() {
-      controlPlane = new ControlPlane({ repositoryRoot: projectRoot });
+      controlPlane =
+        sharedControlPlane ??
+        new ControlPlane({ repositoryRoot: projectRoot });
     },
     health(context) {
       const inspect = controlPlane?.inspect();

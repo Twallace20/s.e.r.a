@@ -61,6 +61,7 @@ export interface OperatorGatewayConfig {
   port?: number;
   installationId?: string;
   runtimeInstanceId?: string;
+  controlPlane?: ControlPlane;
   now?: () => Date;
 }
 
@@ -146,9 +147,11 @@ export class OperatorGateway {
       runtimeInstanceId: config.runtimeInstanceId ?? `runtime_operator_gateway_${process.pid}`
     });
     this.store = openRuntimeState(stateConfig);
-    this.controlPlane = new ControlPlane({
-      repositoryRoot: this.projectRoot
-    });
+    this.controlPlane =
+      config.controlPlane ??
+      new ControlPlane({
+        repositoryRoot: this.projectRoot
+      });
 
     const auditSequence = this.get(
       "SELECT COALESCE(MAX(sequence), 0) AS sequence FROM operator_audit_events"
@@ -821,7 +824,7 @@ export class OperatorGateway {
   private nowIso() { return this.now().toISOString(); }
 }
 
-export function createOperatorGatewayRuntimeService(projectRoot: string): RuntimeService {
+export function createOperatorGatewayRuntimeService(projectRoot: string, controlPlane?: ControlPlane): RuntimeService {
   let gateway: OperatorGateway | undefined;
   let binding: { host: string; port: number } | undefined;
 
@@ -829,11 +832,12 @@ export function createOperatorGatewayRuntimeService(projectRoot: string): Runtim
     id: OPERATOR_GATEWAY_SERVICE_ID,
     version: DESKTOP_OPERATOR_VERSION,
     required: true,
-    dependencies: ["operational-state"],
+    dependencies: ["operational-state", "unified-control-plane"],
 
     async start(context) {
       gateway = new OperatorGateway({
         projectRoot,
+        controlPlane,
         stateRoot: context.config.stateRoot,
         evidenceRoot: path.join(
           context.config.evidenceRoot,
@@ -886,8 +890,11 @@ export function createOperatorGatewayRuntimeService(projectRoot: string): Runtim
   };
 }
 
-export function createOperatorGatewayRuntimeServices(projectRoot: string): RuntimeService[] {
-  return [createOperatorGatewayRuntimeService(projectRoot)];
+export function createOperatorGatewayRuntimeServices(
+  projectRoot: string,
+  controlPlane?: ControlPlane
+): RuntimeService[] {
+  return [createOperatorGatewayRuntimeService(projectRoot, controlPlane)];
 }
 
 export async function runDesktopOperatorProof(): Promise<OperatorProofResult> {

@@ -2,7 +2,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { SeraKernel } from "@sera/kernel";
-import { RuntimeHost, createRuntimeConfig, loadOrCreateRuntimeIdentity, runRuntimeHostProof } from "@sera/runtime-host";
+import { ControlPlane } from "@sera/control-plane";
+import { RuntimeHost, createControlPlaneRuntimeService, createRuntimeConfig, loadOrCreateRuntimeIdentity, runRuntimeHostProof } from "@sera/runtime-host";
 import { createRuntimeStateConfig, openRuntimeState, runRuntimeStateProof } from "@sera/runtime-state";
 import { PersistentRuntimeRecoveryCoordinator, createPersistentRuntimeServices, runPersistentRuntimeRecoveryProof } from "@sera/runtime-recovery";
 import { IsolatedExecutionEngine, createIsolatedExecutionRuntimeServices, runIsolatedExecutionProof } from "@sera/execution-engine";
@@ -313,9 +314,23 @@ function optionValue(args: string[], name: string): string | undefined {
 }
 
 function createProductRuntimeServices(projectRoot: string) {
+  const controlPlane = new ControlPlane({
+    repositoryRoot: projectRoot
+  });
+
+  const controlPlaneService =
+    createControlPlaneRuntimeService(projectRoot, controlPlane);
+
   return [
-    ...createIsolatedExecutionRuntimeServices(projectRoot),
-    createOperatorGatewayRuntimeService(projectRoot)
+    ...createIsolatedExecutionRuntimeServices(
+      projectRoot,
+      {},
+      controlPlaneService
+    ),
+    createOperatorGatewayRuntimeService(
+      projectRoot,
+      controlPlane
+    )
   ];
 }
 
