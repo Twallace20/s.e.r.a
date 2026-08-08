@@ -6,7 +6,7 @@ import { ControlPlane } from "@sera/control-plane";
 import { RuntimeHost, createControlPlaneRuntimeService, createRuntimeConfig, loadOrCreateRuntimeIdentity, runRuntimeHostProof } from "@sera/runtime-host";
 import { createRuntimeStateConfig, openRuntimeState, runRuntimeStateProof } from "@sera/runtime-state";
 import { PersistentRuntimeRecoveryCoordinator, createPersistentRuntimeServices, runPersistentRuntimeRecoveryProof } from "@sera/runtime-recovery";
-import { IsolatedExecutionEngine, createIsolatedExecutionRuntimeServices, runIsolatedExecutionProof } from "@sera/execution-engine";
+import { IsolatedExecutionEngine, createIsolatedExecutionRuntimeServices, runIsolatedExecutionProof, type IsolatedExecutionServiceHandle } from "@sera/execution-engine";
 import { EvaluationEngine, runEvaluationEngineProof } from "@sera/evaluation-engine";
 import { LocalModelRuntime, runLocalModelRuntimeProof } from "@sera/model-runtime";
 import { KnowledgeRuntime, createIntakeAuthorization, normalizeIntakeRequest, runKnowledgeIntakeProof, runKnowledgeRetrievalProof } from "@sera/knowledge-runtime";
@@ -321,15 +321,19 @@ function createProductRuntimeServices(projectRoot: string) {
   const controlPlaneService =
     createControlPlaneRuntimeService(projectRoot, controlPlane);
 
+  const executionHandle: IsolatedExecutionServiceHandle = {};
+
   return [
     ...createIsolatedExecutionRuntimeServices(
       projectRoot,
       {},
-      controlPlaneService
+      controlPlaneService,
+      executionHandle
     ),
     createOperatorGatewayRuntimeService(
       projectRoot,
-      controlPlane
+      controlPlane,
+      executionHandle
     )
   ];
 }

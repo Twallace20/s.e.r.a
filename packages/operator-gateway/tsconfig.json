@@ -16,6 +16,9 @@
       "path": "../../apps/desktop-operator"
     },
     {
+      "path": "../execution-engine"
+    },
+    {
       "path": "../learning-governance-runtime"
     },
     {

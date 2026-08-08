@@ -367,9 +367,33 @@ export class IsolatedExecutionEngine {
   }
 }
 
-export function createIsolatedExecutionService(input: ExecutionEngineConfigInput = {}): RuntimeService {
+export interface ExecutionAuthority {
+  execute(
+    request: ExecutionRequest,
+    authorization?: ExecutionAuthorization
+  ): Promise<ExecutionResult>;
+  cancelExecution(executionId: string, reason?: string): boolean;
+  inspectExecution(executionId: string): Record<string, unknown>;
+  listExecutions(limit?: number): Array<Record<string, unknown>>;
+  policy(): Record<string, unknown>;
+}
+
+export interface IsolatedExecutionServiceHandle {
+  authority?: ExecutionAuthority;
+}
+
+export interface IsolatedExecutionServiceInput {
+  engine?: IsolatedExecutionEngine;
+  handle?: IsolatedExecutionServiceHandle;
+}
+
+export function createIsolatedExecutionService(
+  input: ExecutionEngineConfigInput = {},
+  serviceInput: IsolatedExecutionServiceInput = {}
+): RuntimeService {
   let store: RuntimeStateStore | undefined;
-  let engine: IsolatedExecutionEngine | undefined;
+  let engine: IsolatedExecutionEngine | undefined = serviceInput.engine;
+  const ownsEngine = !serviceInput.engine;
   return {
     id: ISOLATED_EXECUTION_SERVICE_ID,
     version: ISOLATED_EXECUTION_VERSION,
@@ -386,19 +410,53 @@ export function createIsolatedExecutionService(input: ExecutionEngineConfigInput
         runtimeInstanceId: context.identity.runtimeInstanceId,
         runtimeVersion: ISOLATED_EXECUTION_VERSION
       });
-      engine = new IsolatedExecutionEngine(store, { ...input, projectRoot: context.config.projectRoot });
+      if (!engine) {
+        engine = new IsolatedExecutionEngine(
+          store,
+          { ...input, projectRoot: context.config.projectRoot }
+        );
+      }
+
+      serviceInput.handle && (serviceInput.handle.authority = engine);
+
       engine.policy();
-      if (context.signal.aborted) engine.shutdown();
-      context.signal.addEventListener("abort", () => engine?.shutdown(), { once: true });
+      if (context.signal.aborted) {
+        if (serviceInput.handle) {
+          serviceInput.handle.authority = undefined;
+        }
+        if (ownsEngine) {
+          engine.shutdown();
+        }
+      }
+
+      context.signal.addEventListener(
+        "abort",
+        () => {
+          if (serviceInput.handle) {
+            serviceInput.handle.authority = undefined;
+          }
+          if (ownsEngine) {
+            engine?.shutdown();
+          }
+        },
+        { once: true }
+      );
     },
     health(context) {
       const policy = engine?.policy();
       return { serviceId: ISOLATED_EXECUTION_SERVICE_ID, status: policy ? "healthy" : "blocked", checkedAt: new Date().toISOString(), message: "Isolated Execution Engine policy and registry are available.", details: { runtimeInstanceId: context.identity.runtimeInstanceId, policyVersion: EXECUTION_POLICY_VERSION } };
     },
     stop() {
-      engine?.shutdown();
+      if (serviceInput.handle) {
+        serviceInput.handle.authority = undefined;
+      }
+
+      if (ownsEngine) {
+        engine?.shutdown();
+        engine = undefined;
+      }
+
       store?.close();
-      engine = undefined;
       store = undefined;
     }
   };
@@ -407,7 +465,8 @@ export function createIsolatedExecutionService(input: ExecutionEngineConfigInput
 export function createIsolatedExecutionRuntimeServices(
   projectRoot: string,
   input: ExecutionEngineConfigInput = {},
-  controlPlaneService?: RuntimeService
+  controlPlaneService?: RuntimeService,
+  executionHandle?: IsolatedExecutionServiceHandle
 ): RuntimeService[] {
   const controlPlane =
     controlPlaneService ??
@@ -417,7 +476,10 @@ export function createIsolatedExecutionRuntimeServices(
     createRuntimeStateService(input),
     { ...controlPlane, dependencies: ["operational-state"] },
     createPersistentRuntimeRecoveryService({ ...input, projectRoot }),
-    createIsolatedExecutionService({ ...input, projectRoot })
+    createIsolatedExecutionService(
+      { ...input, projectRoot },
+      { handle: executionHandle }
+    )
   ];
 }
 

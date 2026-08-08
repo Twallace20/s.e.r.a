@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { ControlPlane } from "@sera/control-plane";
 import { getDesktopAssets, verifyDesktopAssetIntegrity, assertDesktopAssetsLocalOnly, getDesktopVisualContract, REQUIRED_DESKTOP_VIEWS } from "@sera/desktop-operator";
+import type { ExecutionAuthority, IsolatedExecutionServiceHandle } from "@sera/execution-engine";
 import { RuntimeService } from "@sera/runtime-host";
 import { RuntimeStateStore, createRuntimeStateConfig, openRuntimeState } from "@sera/runtime-state";
 import { StudioRuntime, runStudioRuntimeProof } from "@sera/studio-runtime";
@@ -62,6 +63,7 @@ export interface OperatorGatewayConfig {
   installationId?: string;
   runtimeInstanceId?: string;
   controlPlane?: ControlPlane;
+  executionAuthority?: ExecutionAuthority;
   now?: () => Date;
 }
 
@@ -124,6 +126,7 @@ export class OperatorGateway {
   private readonly now: () => Date;
   private readonly store: RuntimeStateStore;
   private readonly controlPlane: ControlPlane;
+  private readonly executionAuthority?: ExecutionAuthority;
   private readonly studioRuntime: StudioRuntime;
   private readonly learningGovernanceRuntime: LearningGovernanceRuntime;
   private readonly assets = getDesktopAssets();
@@ -138,6 +141,7 @@ export class OperatorGateway {
     this.host = config.host ?? "127.0.0.1";
     this.port = config.port ?? 0;
     this.now = config.now ?? (() => new Date());
+    this.executionAuthority = config.executionAuthority;
     validateLoopbackHost(this.host);
     const stateConfig = createRuntimeStateConfig({
       projectRoot: this.projectRoot,
@@ -824,7 +828,11 @@ export class OperatorGateway {
   private nowIso() { return this.now().toISOString(); }
 }
 
-export function createOperatorGatewayRuntimeService(projectRoot: string, controlPlane?: ControlPlane): RuntimeService {
+export function createOperatorGatewayRuntimeService(
+  projectRoot: string,
+  controlPlane?: ControlPlane,
+  executionHandle?: IsolatedExecutionServiceHandle
+): RuntimeService {
   let gateway: OperatorGateway | undefined;
   let binding: { host: string; port: number } | undefined;
 
@@ -832,12 +840,22 @@ export function createOperatorGatewayRuntimeService(projectRoot: string, control
     id: OPERATOR_GATEWAY_SERVICE_ID,
     version: DESKTOP_OPERATOR_VERSION,
     required: true,
-    dependencies: ["operational-state", "unified-control-plane"],
+    dependencies: ["operational-state", "unified-control-plane", "isolated-execution"],
 
     async start(context) {
+      const executionAuthority = executionHandle?.authority;
+
+      if (!executionAuthority) {
+        throw new OperatorGatewayBlockedError(
+          "Execution authority is unavailable.",
+          "execution_authority_unavailable"
+        );
+      }
+
       gateway = new OperatorGateway({
         projectRoot,
         controlPlane,
+        executionAuthority,
         stateRoot: context.config.stateRoot,
         evidenceRoot: path.join(
           context.config.evidenceRoot,
@@ -892,9 +910,16 @@ export function createOperatorGatewayRuntimeService(projectRoot: string, control
 
 export function createOperatorGatewayRuntimeServices(
   projectRoot: string,
-  controlPlane?: ControlPlane
+  controlPlane?: ControlPlane,
+  executionHandle?: IsolatedExecutionServiceHandle
 ): RuntimeService[] {
-  return [createOperatorGatewayRuntimeService(projectRoot, controlPlane)];
+  return [
+    createOperatorGatewayRuntimeService(
+      projectRoot,
+      controlPlane,
+      executionHandle
+    )
+  ];
 }
 
 export async function runDesktopOperatorProof(): Promise<OperatorProofResult> {
