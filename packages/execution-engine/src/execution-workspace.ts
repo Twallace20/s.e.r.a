@@ -85,8 +85,18 @@ export function materializeInputs(input: { workspaceRoot: string; projectRoot: s
   return results;
 }
 
-export function harvestOutputs(workspaceRoot: string, outputs: ExecutionOutputDeclaration[], evidenceRoot: string): { declared: HarvestedOutput[]; undeclared: string[] } {
-  const declaredPaths = new Set(outputs.map((item) => normalizeRelative(item.workspacePath)));
+export function harvestOutputs(
+  workspaceRoot: string,
+  outputs: ExecutionOutputDeclaration[],
+  evidenceRoot: string,
+  inputs: MaterializedInput[] = []
+): { declared: HarvestedOutput[]; undeclared: string[] } {
+  const declaredPaths = new Set(
+    outputs.map((item) => normalizeRelative(item.workspacePath))
+  );
+  const knownInputPaths = new Set(
+    inputs.map((item) => normalizeRelative(item.workspacePath))
+  );
   const declared: HarvestedOutput[] = outputs.map((output) => {
     const absolute = safeJoin(workspaceRoot, output.workspacePath);
     if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) {
@@ -99,7 +109,13 @@ export function harvestOutputs(workspaceRoot: string, outputs: ExecutionOutputDe
   });
   const undeclared = listFiles(workspaceRoot)
     .map((absolute) => normalizeRelative(path.relative(workspaceRoot, absolute)))
-    .filter((relative) => !relative.startsWith(".sera-fixture/") && !declaredPaths.has(relative) && !relative.endsWith(".tmp"));
+    .filter(
+      (relative) =>
+        !relative.startsWith(".sera-fixture/") &&
+        !declaredPaths.has(relative) &&
+        !knownInputPaths.has(relative) &&
+        !relative.endsWith(".tmp")
+    );
   return { declared, undeclared };
 }
 

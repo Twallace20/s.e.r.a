@@ -5,7 +5,12 @@ import os from "node:os";
 import path from "node:path";
 import { ControlPlane } from "@sera/control-plane";
 import { getDesktopAssets, verifyDesktopAssetIntegrity, assertDesktopAssetsLocalOnly, getDesktopVisualContract, REQUIRED_DESKTOP_VIEWS } from "@sera/desktop-operator";
-import type { ExecutionAuthority, IsolatedExecutionServiceHandle } from "@sera/execution-engine";
+import {
+  createExecutionAuthorization,
+  type ExecutionAuthority,
+  type ExecutionRequest,
+  type IsolatedExecutionServiceHandle
+} from "@sera/execution-engine";
 import { RuntimeService } from "@sera/runtime-host";
 import { RuntimeStateStore, createRuntimeStateConfig, openRuntimeState } from "@sera/runtime-state";
 import { StudioRuntime, runStudioRuntimeProof } from "@sera/studio-runtime";
@@ -276,7 +281,7 @@ export class OperatorGateway {
     return true;
   }
 
-  composeRequest(input: { sessionId: string; category: OperatorRequestCategory; text: string; idempotencyKey: string }): { ok: true; requestId: string; requestHash: string; normalizedText: string; status: "QUEUED" } {
+  composeRequest(input: { sessionId: string; category: OperatorRequestCategory; text: string; idempotencyKey: string }): { ok: true; requestId: string; requestHash: string; normalizedText: string; category: OperatorRequestCategory; status: "QUEUED" } {
     if (!SUPPORTED_CATEGORIES.has(input.category)) throw new OperatorGatewayBlockedError("Unsupported request category.", "unsupported_request_category");
     const normalizedText = sanitizeText(input.text);
     if (Buffer.byteLength(normalizedText, "utf8") > 4000) throw new OperatorGatewayBlockedError("Request is too large.", "request_too_large");
@@ -287,18 +292,405 @@ export class OperatorGateway {
       return JSON.parse(String(existing.response_json));
     }
     const requestId = `operator_request_${randomId()}`;
-    const response = { ok: true as const, requestId, requestHash, normalizedText, status: "QUEUED" as const };
+    const response = { ok: true as const, requestId, requestHash, normalizedText, category: input.category, status: "QUEUED" as const };
     this.run("INSERT INTO operator_requests (request_id, session_id, category, normalized_text, request_hash, status, idempotency_key, created_at, response_json, governed_reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [requestId, input.sessionId, input.category, normalizedText, requestHash, "QUEUED", input.idempotencyKey, this.nowIso(), JSON.stringify(response), `control-plane:request:${requestId}`]);
     this.event("request_queued", { requestId });
     return response;
   }
 
-  private dispatchOperatorRequest(input: {
+  private async dispatchCertifiedTextNormalizer(input: {
     requestId: string;
     requestHash: string;
     normalizedText: string;
+    category: OperatorRequestCategory;
     status: "QUEUED";
-  }): OperatorDispatchResult {
+  }): Promise<OperatorDispatchResult> {
+    const expectedRequest =
+      "Normalize docs/BUILD_VALIDATION.md with text-normalizer-v1.";
+
+    if (input.normalizedText !== expectedRequest) {
+      const blocked: OperatorDispatchResult = {
+        ok: true,
+        requestId: input.requestId,
+        requestHash: input.requestHash,
+        normalizedText: input.normalizedText,
+        status: "BLOCKED",
+        failureCode: "unsupported_certified_capability_request",
+        safeMessage:
+          "The certified execution path currently accepts only the text-normalizer-v1 proof request.",
+        modelUse: false,
+        networkUse: false
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ? WHERE request_id = ?",
+        ["BLOCKED", this.nowIso(), JSON.stringify(blocked), input.requestId]
+      );
+
+      this.event("request_blocked", {
+        requestId: input.requestId,
+        failureCode: blocked.failureCode
+      });
+
+      return blocked;
+    }
+
+    const command = this.store.acceptCommand({
+      idempotencyKey: `operator-execution:${input.requestId}`,
+      commandType: "run-certified-capability",
+      payload: {
+        operatorRequestId: input.requestId,
+        requestHash: input.requestHash,
+        capabilityId: "text-normalizer-v1"
+      },
+      capability: "text-normalizer-v1"
+    });
+
+    if (!command.attemptId) {
+      throw new OperatorGatewayBlockedError(
+        "Runtime State did not create an execution attempt.",
+        "execution_attempt_not_created"
+      );
+    }
+
+    const attemptId = command.attemptId;
+
+    this.store.transitionAttempt({
+      attemptId,
+      fromState: "PENDING",
+      toState: "RUNNING",
+      actor: "control-plane",
+      reason:
+        "Authenticated Operator request authorized bounded certified capability execution.",
+      correlation: {
+        operatorRequestId: input.requestId,
+        requestHash: input.requestHash
+      }
+    });
+
+    const executionId = `operator_execution_${randomId()}`;
+    const authorizationId = `operator_execution_auth_${randomId()}`;
+
+    const request: ExecutionRequest = {
+      executionId,
+      attemptId,
+      authorizationId,
+      executableId: "text-normalizer-v1",
+      args: ["input/source.md", "out/normalized.md"],
+      inputs: [
+        {
+          id: "source",
+          sourceType: "copy-file",
+          source: "docs/BUILD_VALIDATION.md",
+          workspacePath: "input/source.md"
+        }
+      ],
+      outputs: [
+        {
+          id: "normalized",
+          workspacePath: "out/normalized.md",
+          required: true
+        }
+      ],
+      workingDirectory: ".",
+      environmentProfile: "offline-minimal",
+      timeoutMs: 5000,
+      gracefulCancellationMs: 100,
+      maxStdoutBytes: 65536,
+      maxStderrBytes: 65536,
+      maxCombinedOutputBytes: 98304,
+      expectedExitCodes: [0],
+      networkPolicy: "offline-strict",
+      cleanupPolicy: "delete-workspace",
+      correlation: {
+        operatorRequestId: input.requestId,
+        operatorRequestHash: input.requestHash,
+        capabilityId: "text-normalizer-v1"
+      }
+    };
+
+    const authorization = createExecutionAuthorization({
+      request,
+      requiredGateRefs: ["control-plane-execution-gate"],
+      completedGateRefs: ["control-plane-execution-gate"]
+    });
+
+    this.event("request_dispatched", {
+      requestId: input.requestId,
+      attemptId,
+      executionId,
+      executableId: request.executableId
+    });
+
+    const executionAuthority = this.executionAuthority;
+
+    if (!executionAuthority) {
+      const blocked: OperatorDispatchResult = {
+        ok: true,
+        requestId: input.requestId,
+        requestHash: input.requestHash,
+        normalizedText: input.normalizedText,
+        status: "BLOCKED",
+        attemptId,
+        failureCode: "execution_authority_unavailable",
+        safeMessage: "Execution authority is unavailable.",
+        modelUse: false,
+        networkUse: false
+      };
+
+      this.store.transitionAttempt({
+        attemptId,
+        fromState: "RUNNING",
+        toState: "BLOCKED",
+        actor: "control-plane",
+        reason: "Execution authority is unavailable.",
+        correlation: { executionId }
+      });
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ? WHERE request_id = ?",
+        ["BLOCKED", this.nowIso(), JSON.stringify(blocked), input.requestId]
+      );
+
+      this.event("request_blocked", {
+        requestId: input.requestId,
+        attemptId,
+        executionId,
+        failureCode: blocked.failureCode
+      });
+
+      return blocked;
+    }
+
+    try {
+      const execution = await executionAuthority.execute(
+        request,
+        authorization
+      );
+
+      const output = execution.outputs.find(
+        (candidate) => candidate.id === "normalized"
+      );
+
+      const completed =
+        execution.ok === true &&
+        execution.status === "SUCCEEDED_PROCESS" &&
+        execution.workspaceOutsideRepository === true &&
+        execution.cleanup.cleaned === true &&
+        execution.sourceNotMutated === true &&
+        execution.attemptSuccessManufactured === false &&
+        execution.undeclaredOutputs.length === 0 &&
+        output?.status === "harvested" &&
+        Boolean(output.evidenceReference);
+
+      if (!completed || !output?.evidenceReference) {
+        this.store.transitionAttempt({
+          attemptId,
+          fromState: "RUNNING",
+          toState: "BLOCKED",
+          actor: "control-plane",
+          reason:
+            "Certified capability execution did not satisfy required evidence conditions.",
+          correlation: {
+            executionId,
+            executionStatus: execution.status
+          }
+        });
+
+        const blocked: OperatorDispatchResult = {
+          ok: true,
+          requestId: input.requestId,
+          requestHash: input.requestHash,
+          normalizedText: input.normalizedText,
+          status: "BLOCKED",
+          attemptId,
+          attemptPath: execution.evidenceRoot,
+          terminalDecision: execution.status,
+          failureCode: "certified_execution_not_verified",
+          safeMessage:
+            "Certified capability execution did not satisfy the required evidence conditions.",
+          modelUse: false,
+          networkUse: false
+        };
+
+        this.run(
+          "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+          [
+            "BLOCKED",
+            this.nowIso(),
+            JSON.stringify(blocked),
+            `execution:${execution.executionId}`,
+            input.requestId
+          ]
+        );
+
+        this.event("request_blocked", {
+          requestId: input.requestId,
+          attemptId,
+          executionId,
+          failureCode: blocked.failureCode
+        });
+
+        return blocked;
+      }
+
+      const evidenceOutputPath = path.join(
+        execution.evidenceRoot,
+        output.evidenceReference
+      );
+
+      const normalizedText = fs.readFileSync(
+        evidenceOutputPath,
+        "utf8"
+      );
+
+      const executionEvidenceId =
+        this.store.recordEvidenceReference({
+          attemptId,
+          evidenceType: "certified-execution-output",
+          location: path
+            .relative(this.projectRoot, evidenceOutputPath)
+            .replace(/\\/g, "/"),
+          integrityHash: output.hash,
+          producer: "operator-gateway",
+          metadata: {
+            executionId,
+            executableId: request.executableId,
+            outputId: output.id,
+            executionStatus: execution.status,
+            workspaceOutsideRepository:
+              execution.workspaceOutsideRepository,
+            cleanupCleaned: execution.cleanup.cleaned,
+            sourceNotMutated: execution.sourceNotMutated,
+            attemptSuccessManufactured:
+              execution.attemptSuccessManufactured,
+            undeclaredOutputCount:
+              execution.undeclaredOutputs.length
+          }
+        });
+
+      this.store.recordGateOutcome({
+        attemptId,
+        gateName: "certified-execution-evidence-gate",
+        required: true,
+        outcome: "PASS",
+        evidenceReferences: [executionEvidenceId],
+        evaluator: "operator-gateway",
+        message:
+          "Certified execution completed and satisfied all required evidence conditions."
+      });
+
+      this.store.transitionAttempt({
+        attemptId,
+        fromState: "RUNNING",
+        toState: "COMPLETED",
+        actor: "control-plane",
+        reason:
+          "Certified capability execution completed with required evidence.",
+        correlation: {
+          executionId,
+          outputHash: output.hash ?? null
+        }
+      });
+
+      const response: OperatorDispatchResult = {
+        ok: true,
+        requestId: input.requestId,
+        requestHash: input.requestHash,
+        normalizedText: input.normalizedText,
+        status: "COMPLETED",
+        attemptId,
+        attemptPath: execution.evidenceRoot,
+        terminalDecision: execution.status,
+        output: normalizedText,
+        modelUse: false,
+        networkUse: false
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+        [
+          "COMPLETED",
+          this.nowIso(),
+          JSON.stringify(response),
+          `execution:${execution.executionId}`,
+          input.requestId
+        ]
+      );
+
+      this.event("request_completed", {
+        requestId: input.requestId,
+        attemptId,
+        executionId,
+        terminalDecision: execution.status,
+        verified: true,
+        outputHash: output.hash ?? null
+      });
+
+      return response;
+    } catch (error) {
+      const state = this.store.recoveryGet(
+        "SELECT current_state FROM attempts WHERE attempt_id = ?",
+        [attemptId]
+      );
+
+      if (String(state?.current_state ?? "") === "RUNNING") {
+        this.store.transitionAttempt({
+          attemptId,
+          fromState: "RUNNING",
+          toState: "BLOCKED",
+          actor: "control-plane",
+          reason:
+            error instanceof Error
+              ? error.message
+              : "Certified capability execution failed.",
+          correlation: { executionId }
+        });
+      }
+
+      const blocked: OperatorDispatchResult = {
+        ok: true,
+        requestId: input.requestId,
+        requestHash: input.requestHash,
+        normalizedText: input.normalizedText,
+        status: "BLOCKED",
+        attemptId,
+        failureCode: "certified_execution_failed",
+        safeMessage:
+          error instanceof Error
+            ? error.message
+            : "Certified capability execution failed.",
+        modelUse: false,
+        networkUse: false
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ? WHERE request_id = ?",
+        ["BLOCKED", this.nowIso(), JSON.stringify(blocked), input.requestId]
+      );
+
+      this.event("request_blocked", {
+        requestId: input.requestId,
+        attemptId,
+        executionId,
+        failureCode: blocked.failureCode
+      });
+
+      return blocked;
+    }
+  }
+
+  private async dispatchOperatorRequest(input: {
+    requestId: string;
+    requestHash: string;
+    normalizedText: string;
+    category: OperatorRequestCategory;
+    status: "QUEUED";
+  }): Promise<OperatorDispatchResult> {
+    if (input.category === "run-certified-capability") {
+      return this.dispatchCertifiedTextNormalizer(input);
+    }
+
     const expectedRequest =
       "Return the text SERA_REQUEST_PIPELINE_OK.";
 
@@ -708,7 +1100,7 @@ export class OperatorGateway {
 
         void readJson(request)
 
-          .then((body) => {
+          .then(async (body) => {
 
             const result = this.composeRequest({
 
@@ -733,7 +1125,7 @@ export class OperatorGateway {
 
             const dispatched =
               result.status === "QUEUED"
-                ? this.dispatchOperatorRequest(result)
+                ? await this.dispatchOperatorRequest(result)
                 : result;
 
             sendJson(

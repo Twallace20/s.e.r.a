@@ -313,20 +313,45 @@ function optionValue(args: string[], name: string): string | undefined {
   return index >= 0 ? args[index + 1] : undefined;
 }
 
-function createProductRuntimeServices(projectRoot: string) {
+function createProductRuntimeServices(
+  config: ReturnType<typeof createRuntimeConfig>
+) {
+  const projectRoot = config.projectRoot;
+
+  const productState = {
+    projectRoot,
+    stateRoot: config.stateRoot,
+    databasePath: path.join(
+      config.stateRoot,
+      "sera-operational.db"
+    ),
+    backupRoot: path.join(
+      config.stateRoot,
+      "backups"
+    ),
+    exportRoot: path.join(
+      config.stateRoot,
+      "exports"
+    )
+  };
+
   const controlPlane = new ControlPlane({
     repositoryRoot: projectRoot
   });
 
   const controlPlaneService =
-    createControlPlaneRuntimeService(projectRoot, controlPlane);
+    createControlPlaneRuntimeService(
+      projectRoot,
+      controlPlane
+    );
 
-  const executionHandle: IsolatedExecutionServiceHandle = {};
+  const executionHandle:
+    IsolatedExecutionServiceHandle = {};
 
   return [
     ...createIsolatedExecutionRuntimeServices(
       projectRoot,
-      {},
+      productState,
       controlPlaneService,
       executionHandle
     ),
@@ -1189,7 +1214,7 @@ async function main(): Promise<void> {
       process.exit(0);
     }
     if (runtimeMode === "health" || runtimeMode === "prove") {
-      const proof = await runRuntimeHostProof(config, createProductRuntimeServices(config.projectRoot));
+      const proof = await runRuntimeHostProof(config, createProductRuntimeServices(config));
       console.log(JSON.stringify({
         ok: proof.ok,
         status: proof.status,
@@ -1204,7 +1229,7 @@ async function main(): Promise<void> {
       process.exit(proof.ok ? 0 : 1);
     }
     if (runtimeMode === "start") {
-      const host = new RuntimeHost({ config, services: createProductRuntimeServices(config.projectRoot) });
+      const host = new RuntimeHost({ config, services: createProductRuntimeServices(config) });
       const started = await host.start();
       console.log(JSON.stringify({
         ok: started.ok,

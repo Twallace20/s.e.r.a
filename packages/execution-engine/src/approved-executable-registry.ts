@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { ExecutionRequest } from "./execution-request";
+import { TEXT_NORMALIZER_VERSION } from "./text-normalizer-tool";
 
 export interface ApprovedExecutable {
   id: string;
@@ -78,5 +79,32 @@ export function createDefaultExecutableRegistry(): ApprovedExecutableRegistry {
       return [path.join(workspaceRoot, ".sera-fixture", "fixture.js"), request.args[0]];
     }
   });
+  registry.register({
+    id: "text-normalizer-v1",
+    resolvePath: () => process.execPath,
+    fingerprint: `node:${process.version}:${TEXT_NORMALIZER_VERSION}`,
+    risk: "local-tool",
+    offlineCompatible: true,
+    networkCapable: false,
+    validateArgs(args) {
+      if (
+        args.length !== 2 ||
+        args[0] !== "input/source.md" ||
+        args[1] !== "out/normalized.md"
+      ) {
+        throw new Error(
+          "text-normalizer-v1 accepts only input/source.md -> out/normalized.md."
+        );
+      }
+    },
+    materializeArgs(request, workspaceRoot) {
+      return [
+        path.join(__dirname, "text-normalizer-tool.js"),
+        path.join(workspaceRoot, request.args[0]),
+        path.join(workspaceRoot, request.args[1])
+      ];
+    }
+  });
+
   return registry;
 }

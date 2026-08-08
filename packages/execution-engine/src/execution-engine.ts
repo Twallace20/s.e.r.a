@@ -199,7 +199,12 @@ export class IsolatedExecutionEngine {
         onActive: (handle) => this.active.set(request.executionId, handle)
       });
       this.active.delete(request.executionId);
-      const harvested = harvestOutputs(workspaceRoot, request.outputs, evidenceRoot);
+      const harvested = harvestOutputs(
+        workspaceRoot,
+        request.outputs,
+        evidenceRoot,
+        workspace.inputs
+      );
       outputs = harvested.declared;
       undeclaredOutputs = harvested.undeclared;
       for (const output of outputs) this.recordOutput(request.executionId, output);
