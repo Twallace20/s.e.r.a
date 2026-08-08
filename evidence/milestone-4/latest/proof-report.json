@@ -1,0 +1,416 @@
+{
+  "schemaVersion": "sera.milestone-proof.v1",
+  "milestone": 4,
+  "title": "Unified Control Plane v1",
+  "generatedAt": "2026-08-08T12:20:41.055Z",
+  "repositoryRoot": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a",
+  "passCount": 11,
+  "totalCount": 14,
+  "checks": [
+    {
+      "id": "M4-01",
+      "pass": true,
+      "detail": "typed attempt, stage, and gate contracts present"
+    },
+    {
+      "id": "M4-02",
+      "pass": true,
+      "detail": "stage-a -> stage-b dependency ordering proven",
+      "data": [
+        {
+          "schemaVersion": "sera.control-plane.v1",
+          "stageId": "stage-a",
+          "status": "COMPLETED",
+          "required": true,
+          "attempts": 1,
+          "startedAt": "2026-08-08T12:20:40.850Z",
+          "finishedAt": "2026-08-08T12:20:40.854Z",
+          "evidenceIds": [
+            "evidence-a"
+          ],
+          "warnings": [],
+          "errors": [],
+          "normalizedOutcome": {
+            "stderrPresent": false,
+            "objectiveSuccess": true,
+            "outcomeBasis": "Structured Control Plane stage outcome; stderr and exit code are evidence, not sole authority."
+          }
+        },
+        {
+          "schemaVersion": "sera.control-plane.v1",
+          "stageId": "stage-b",
+          "status": "COMPLETED",
+          "required": true,
+          "attempts": 1,
+          "startedAt": "2026-08-08T12:20:40.854Z",
+          "finishedAt": "2026-08-08T12:20:40.859Z",
+          "evidenceIds": [
+            "evidence-b"
+          ],
+          "warnings": [],
+          "errors": [],
+          "normalizedOutcome": {
+            "stderrPresent": false,
+            "objectiveSuccess": true,
+            "outcomeBasis": "Structured Control Plane stage outcome; stderr and exit code are evidence, not sole authority."
+          }
+        }
+      ]
+    },
+    {
+      "id": "M4-03",
+      "pass": true,
+      "detail": "required explicit verification gate passed",
+      "data": [
+        {
+          "schemaVersion": "sera.control-plane.v1",
+          "gateId": "verification-gate",
+          "gateType": "verification",
+          "status": "PASS",
+          "required": true,
+          "evidenceIds": [
+            "evidence-b"
+          ],
+          "warnings": [],
+          "errors": []
+        }
+      ]
+    },
+    {
+      "id": "M4-04",
+      "pass": true,
+      "detail": "required evidence references persisted and valid",
+      "data": [
+        {
+          "schemaVersion": "sera.control-plane.v1",
+          "evidenceId": "evidence-a",
+          "attemptId": "m4_success",
+          "stageId": "stage-a",
+          "kind": "structured",
+          "path": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success/evidence/evidence-a.json",
+          "sha256": "0a57dd160a7022696063539692db1a2311c437e6870f40fc190ebc348f183ace",
+          "valid": true,
+          "createdAt": "2026-08-08T12:20:40.838Z",
+          "warnings": [],
+          "errors": []
+        },
+        {
+          "schemaVersion": "sera.control-plane.v1",
+          "evidenceId": "evidence-b",
+          "attemptId": "m4_success",
+          "stageId": "stage-b",
+          "kind": "structured",
+          "path": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success/evidence/evidence-b.json",
+          "sha256": "ed770742632e19ac996c5b76849bcd7e98a892667d59a2d1c3c88e0bd87819f9",
+          "valid": true,
+          "createdAt": "2026-08-08T12:20:40.838Z",
+          "warnings": [],
+          "errors": []
+        }
+      ]
+    },
+    {
+      "id": "M4-06",
+      "pass": true,
+      "detail": "successful attempt reached COMPLETE",
+      "data": {
+        "ok": true,
+        "status": "COMPLETED",
+        "message": "Unified Control Plane v1 completed.",
+        "attemptId": "m4_success",
+        "outputRoot": "evidence/milestone-4/latest/.work/control-plane",
+        "attemptPath": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success",
+        "terminalDecision": "COMPLETE",
+        "summary": {
+          "attemptId": "m4_success",
+          "status": "COMPLETED",
+          "terminalDecision": "COMPLETE",
+          "warningCount": 0,
+          "errorCount": 0,
+          "modelUse": false,
+          "networkUse": false
+        },
+        "execution": {
+          "commandId": "control-plane-v1",
+          "attemptId": "m4_success",
+          "status": "COMPLETED",
+          "evidenceDirectory": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success"
+        }
+      }
+    },
+    {
+      "id": "M4-07",
+      "pass": true,
+      "detail": "required blocked path produced structured blocked handoff",
+      "data": {
+        "schemaVersion": "sera.control-plane.v1",
+        "code": "DEPENDENCY_OR_PERMISSION_BLOCKED",
+        "reason": "Permission intentionally absent.",
+        "blockedAt": "2026-08-08T12:20:40.913Z",
+        "requiredDecision": "Owner must grant permission, provide missing evidence, revise the spec, or cancel the attempt.",
+        "missingInputs": [],
+        "evidencePaths": [],
+        "safeResumePolicy": "Resume only with the same repository baseline or after a fresh Snapshot then Truth sequence."
+      }
+    },
+    {
+      "id": "M4-08",
+      "pass": true,
+      "detail": "required stage failure produced FAIL",
+      "data": {
+        "ok": false,
+        "status": "FAILED",
+        "message": "Unified Control Plane v1 failed.",
+        "attemptId": "m4_failed",
+        "outputRoot": "evidence/milestone-4/latest/.work/control-plane",
+        "attemptPath": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_failed",
+        "terminalDecision": "FAIL",
+        "summary": {
+          "attemptId": "m4_failed",
+          "status": "FAILED",
+          "terminalDecision": "FAIL",
+          "warningCount": 0,
+          "errorCount": 2,
+          "modelUse": false,
+          "networkUse": false
+        },
+        "execution": {
+          "commandId": "control-plane-v1",
+          "attemptId": "m4_failed",
+          "status": "FAILED",
+          "evidenceDirectory": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_failed",
+          "reason": "Required stage intentionally failed."
+        }
+      }
+    },
+    {
+      "id": "M4-09",
+      "pass": true,
+      "detail": "FAIL precedence over later BLOCK proven"
+    },
+    {
+      "id": "M4-10",
+      "pass": true,
+      "detail": "independent verification operation succeeded",
+      "data": {
+        "ok": true,
+        "status": "VERIFIED",
+        "message": "Control Plane attempt verified.",
+        "attemptId": "m4_success",
+        "outputRoot": "evidence/milestone-4/latest/.work/control-plane",
+        "attemptPath": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success",
+        "terminalDecision": "COMPLETE",
+        "summary": {
+          "errorCount": 0,
+          "modelUse": false,
+          "networkUse": false
+        },
+        "execution": {
+          "commandId": "control-plane-v1:verify",
+          "attemptId": "m4_success",
+          "status": "COMPLETED",
+          "evidenceDirectory": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success"
+        }
+      }
+    },
+    {
+      "id": "M4-11",
+      "pass": true,
+      "detail": "closeout remained separate and owner-gated",
+      "data": {
+        "before": {
+          "schemaVersion": "sera.control-plane.v1",
+          "attemptId": "m4_success",
+          "closeoutId": "closeout_pending_m4_success",
+          "status": "CLOSEOUT_BLOCKED",
+          "createdAt": "2026-08-08T12:20:40.860Z",
+          "mergeAllowed": false,
+          "promotionAllowed": false,
+          "ownerApprovalRequired": true,
+          "ownerApproved": false,
+          "message": "Closeout is a separate operation and has not been completed."
+        },
+        "after": {
+          "ok": false,
+          "status": "CLOSEOUT_BLOCKED",
+          "message": "Control Plane closeout recorded; merge and promotion remain disabled in v1.",
+          "attemptId": "m4_success",
+          "outputRoot": "evidence/milestone-4/latest/.work/control-plane",
+          "attemptPath": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success",
+          "terminalDecision": "COMPLETE",
+          "summary": {
+            "closeout": {
+              "schemaVersion": "sera.control-plane.v1",
+              "attemptId": "m4_success",
+              "closeoutId": "closeout_97e584facd8a",
+              "status": "CLOSEOUT_BLOCKED",
+              "createdAt": "2026-08-08T12:20:41.048Z",
+              "mergeAllowed": false,
+              "promotionAllowed": false,
+              "ownerApprovalRequired": true,
+              "ownerApproved": false,
+              "message": "Control Plane closeout recorded; merge and promotion remain disabled in v1."
+            },
+            "modelUse": false,
+            "networkUse": false
+          },
+          "execution": {
+            "commandId": "control-plane-v1:closeout",
+            "attemptId": "m4_success",
+            "status": "BLOCKED",
+            "evidenceDirectory": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success",
+            "reason": "Control Plane closeout recorded; merge and promotion remain disabled in v1."
+          }
+        }
+      }
+    },
+    {
+      "id": "M4-13",
+      "pass": true,
+      "detail": "reference Control Plane exposes no shell executor and reports model/network use false"
+    },
+    {
+      "id": "M4-05",
+      "pass": false,
+      "detail": "Control Plane is not yet bound to product ExecutionAuthority"
+    },
+    {
+      "id": "M4-12",
+      "pass": false,
+      "detail": "Control Plane idempotency is not yet bound to Runtime State"
+    },
+    {
+      "id": "M4-14",
+      "pass": false,
+      "detail": "Control Plane file evidence exists but authoritative Runtime State binding is missing"
+    }
+  ],
+  "artifacts": {
+    "success": {
+      "ok": true,
+      "status": "COMPLETED",
+      "message": "Unified Control Plane v1 completed.",
+      "attemptId": "m4_success",
+      "outputRoot": "evidence/milestone-4/latest/.work/control-plane",
+      "attemptPath": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success",
+      "terminalDecision": "COMPLETE",
+      "summary": {
+        "attemptId": "m4_success",
+        "status": "COMPLETED",
+        "terminalDecision": "COMPLETE",
+        "warningCount": 0,
+        "errorCount": 0,
+        "modelUse": false,
+        "networkUse": false
+      },
+      "execution": {
+        "commandId": "control-plane-v1",
+        "attemptId": "m4_success",
+        "status": "COMPLETED",
+        "evidenceDirectory": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success"
+      }
+    },
+    "blocked": {
+      "ok": false,
+      "status": "BLOCKED",
+      "message": "Unified Control Plane v1 blocked.",
+      "attemptId": "m4_blocked",
+      "outputRoot": "evidence/milestone-4/latest/.work/control-plane",
+      "attemptPath": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_blocked",
+      "terminalDecision": "BLOCK",
+      "summary": {
+        "attemptId": "m4_blocked",
+        "status": "BLOCKED",
+        "terminalDecision": "BLOCK",
+        "warningCount": 0,
+        "errorCount": 1,
+        "modelUse": false,
+        "networkUse": false
+      },
+      "execution": {
+        "commandId": "control-plane-v1",
+        "attemptId": "m4_blocked",
+        "status": "BLOCKED",
+        "evidenceDirectory": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_blocked",
+        "reason": "Permission intentionally absent."
+      }
+    },
+    "failed": {
+      "ok": false,
+      "status": "FAILED",
+      "message": "Unified Control Plane v1 failed.",
+      "attemptId": "m4_failed",
+      "outputRoot": "evidence/milestone-4/latest/.work/control-plane",
+      "attemptPath": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_failed",
+      "terminalDecision": "FAIL",
+      "summary": {
+        "attemptId": "m4_failed",
+        "status": "FAILED",
+        "terminalDecision": "FAIL",
+        "warningCount": 0,
+        "errorCount": 2,
+        "modelUse": false,
+        "networkUse": false
+      },
+      "execution": {
+        "commandId": "control-plane-v1",
+        "attemptId": "m4_failed",
+        "status": "FAILED",
+        "evidenceDirectory": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_failed",
+        "reason": "Required stage intentionally failed."
+      }
+    },
+    "verification": {
+      "ok": true,
+      "status": "VERIFIED",
+      "message": "Control Plane attempt verified.",
+      "attemptId": "m4_success",
+      "outputRoot": "evidence/milestone-4/latest/.work/control-plane",
+      "attemptPath": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success",
+      "terminalDecision": "COMPLETE",
+      "summary": {
+        "errorCount": 0,
+        "modelUse": false,
+        "networkUse": false
+      },
+      "execution": {
+        "commandId": "control-plane-v1:verify",
+        "attemptId": "m4_success",
+        "status": "COMPLETED",
+        "evidenceDirectory": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success"
+      }
+    },
+    "closeout": {
+      "ok": false,
+      "status": "CLOSEOUT_BLOCKED",
+      "message": "Control Plane closeout recorded; merge and promotion remain disabled in v1.",
+      "attemptId": "m4_success",
+      "outputRoot": "evidence/milestone-4/latest/.work/control-plane",
+      "attemptPath": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success",
+      "terminalDecision": "COMPLETE",
+      "summary": {
+        "closeout": {
+          "schemaVersion": "sera.control-plane.v1",
+          "attemptId": "m4_success",
+          "closeoutId": "closeout_97e584facd8a",
+          "status": "CLOSEOUT_BLOCKED",
+          "createdAt": "2026-08-08T12:20:41.048Z",
+          "mergeAllowed": false,
+          "promotionAllowed": false,
+          "ownerApprovalRequired": true,
+          "ownerApproved": false,
+          "message": "Control Plane closeout recorded; merge and promotion remain disabled in v1."
+        },
+        "modelUse": false,
+        "networkUse": false
+      },
+      "execution": {
+        "commandId": "control-plane-v1:closeout",
+        "attemptId": "m4_success",
+        "status": "BLOCKED",
+        "evidenceDirectory": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success",
+        "reason": "Control Plane closeout recorded; merge and promotion remain disabled in v1."
+      }
+    }
+  }
+}
