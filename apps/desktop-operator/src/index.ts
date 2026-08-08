@@ -291,11 +291,91 @@ export const DESKTOP_OPERATOR_JS = `
   const status = document.getElementById("status-region");
   const connection = document.getElementById("connection-state");
   const maxRenderedBytes = 12000;
-  function authHeaders() {
-    const token = sessionStorage.getItem("sera.operatorToken") || "";
+  function authHeaders(requireCsrf = false) {
+    const token =
+      sessionStorage.getItem("sera.operatorToken") || "";
+
+    const csrfToken =
+      sessionStorage.getItem("sera.operatorCsrfToken") || "";
+
     const headers = { "Accept": "application/json" };
-    if (token) headers.Authorization = "Bearer " + token;
+
+    if (token) {
+      headers.Authorization = "Bearer " + token;
+    }
+
+    if (requireCsrf && csrfToken) {
+      headers["x-sera-csrf"] = csrfToken;
+    }
+
     return headers;
+  }
+
+  function idempotencyKey(prefix) {
+    return prefix + ":" +
+      Date.now().toString(36) + ":" +
+      Math.random().toString(36).slice(2);
+  }
+
+  async function ensureSession() {
+    const token =
+      sessionStorage.getItem("sera.operatorToken");
+
+    const csrfToken =
+      sessionStorage.getItem("sera.operatorCsrfToken");
+
+    if (token && csrfToken) {
+      return {
+        token,
+        csrfToken,
+        sessionId:
+          sessionStorage.getItem(
+            "sera.operatorSessionId"
+          ) || ""
+      };
+    }
+
+    const response = await fetch(
+      "/api/v1/operator/session",
+      {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          idempotencyKey:
+            idempotencyKey("desktop-session")
+        })
+      }
+    );
+
+    const payload = await response.json();
+
+    if (!response.ok || !payload.ok || !payload.data) {
+      throw new Error(
+        payload.safeMessage ||
+        payload.errorCode ||
+        "Session creation failed."
+      );
+    }
+
+    sessionStorage.setItem(
+      "sera.operatorToken",
+      payload.data.token
+    );
+
+    sessionStorage.setItem(
+      "sera.operatorCsrfToken",
+      payload.data.csrfToken
+    );
+
+    sessionStorage.setItem(
+      "sera.operatorSessionId",
+      payload.data.sessionId
+    );
+
+    return payload.data;
   }
   function redact(value) {
     return JSON.stringify(value, (key, item) => /token|secret|password|credential/i.test(key) ? "REDACTED" : item, 2);
@@ -354,12 +434,107 @@ export const DESKTOP_OPERATOR_JS = `
   }
   document.querySelectorAll(".nav-button").forEach((button) => button.addEventListener("click", () => show(button.dataset.view)));
   document.getElementById("refresh-status").addEventListener("click", refresh);
-  document.getElementById("request-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    status.textContent = "Request composer is ready; authentication is required before submission.";
-  });
+  document.getElementById("request-form")
+    .addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const category =
+        document.getElementById(
+          "request-category"
+        ).value;
+
+      const text =
+        document.getElementById(
+          "request-text"
+        ).value.trim();
+
+      if (!text) {
+        status.textContent =
+          "Enter a request before queuing it.";
+        return;
+      }
+
+      try {
+        status.textContent =
+          "Establishing local Operator session...";
+
+        await ensureSession();
+
+        status.textContent =
+          "Queuing governed request...";
+
+        const response = await fetch(
+          "/api/v1/operator/requests",
+          {
+            method: "POST",
+            headers: {
+              ...authHeaders(true),
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              category,
+              text,
+              idempotencyKey:
+                idempotencyKey("desktop-request")
+            })
+          }
+        );
+
+        const payload = await response.json();
+
+        if (
+          !response.ok ||
+          !payload.ok ||
+          !payload.data
+        ) {
+          throw new Error(
+            payload.safeMessage ||
+            payload.errorCode ||
+            "Request submission failed."
+          );
+        }
+
+        status.textContent =
+          "Request queued: " +
+          payload.data.requestId +
+          " (" +
+          payload.data.status +
+          ").";
+
+        document.getElementById(
+          "request-text"
+        ).value = "";
+
+        await refresh();
+      } catch (error) {
+        status.textContent =
+          "Request blocked: " +
+          (
+            error instanceof Error
+              ? error.message
+              : "Unknown error."
+          );
+      }
+    });
+
   show(views[0]);
-  refresh();
+
+  void ensureSession()
+    .then(() => {
+      status.textContent =
+        "Local Operator session ready.";
+
+      return refresh();
+    })
+    .catch((error) => {
+      status.textContent =
+        "Operator session unavailable: " +
+        (
+          error instanceof Error
+            ? error.message
+            : "Unknown error."
+        );
+    });
 })();
 `;
 

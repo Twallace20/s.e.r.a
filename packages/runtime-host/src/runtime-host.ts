@@ -87,6 +87,28 @@ export interface RuntimeLifecycleEvent {
   details?: Record<string, unknown>;
 }
 
+export type RuntimeReconciliationClassification =
+  | "first_runtime"
+  | "clean_shutdown"
+  | "abnormal_termination";
+
+export interface RuntimeReconciliationResult {
+  schemaVersion: "sera.runtime-reconciliation.v1";
+  currentRuntimeInstanceId: string;
+  previousRuntimeInstanceId?: string;
+  installationId: string;
+  classification: RuntimeReconciliationClassification;
+  reason: string;
+  checkedAt: string;
+  evidence: {
+    previousRuntimeFound: boolean;
+    previousIdentityValid: boolean;
+    sameInstallation: boolean;
+    runtimeStopStartedFound: boolean;
+    runtimeStopCompletedFound: boolean;
+  };
+}
+
 export interface RuntimeHostStartResult {
   ok: boolean;
   status: RuntimeHealthStatus;
@@ -239,6 +261,7 @@ export class RuntimeHost {
   private shutdownStarted = false;
   private shutdownResult?: RuntimeShutdownResult;
   private runtimeInstanceRoot?: string;
+  private reconciliation?: RuntimeReconciliationResult;
 
   constructor(input: { config: RuntimeHostConfigInput | RuntimeHostConfig; services: RuntimeService[]; clock?: RuntimeHostClock }) {
     this.config = isRuntimeHostConfig(input.config) ? input.config : createRuntimeConfig(input.config);
@@ -265,6 +288,26 @@ export class RuntimeHost {
       fs.mkdirSync(this.runtimeInstanceRoot, { recursive: true });
       atomicWriteJson(path.join(this.runtimeInstanceRoot, "identity.json"), this.identity);
       atomicWriteJson(path.join(this.runtimeInstanceRoot, "configuration.json"), serializableConfig(this.config));
+
+      this.reconciliation = this.reconcilePreviousRuntime();
+
+      atomicWriteJson(
+        path.join(this.runtimeInstanceRoot, "runtime-reconciliation.json"),
+        this.reconciliation
+      );
+
+      this.event(
+        "runtime-reconciliation",
+        "COMPLETED",
+        undefined,
+        this.reconciliation.reason,
+        {
+          classification: this.reconciliation.classification,
+          previousRuntimeInstanceId:
+            this.reconciliation.previousRuntimeInstanceId,
+          evidence: this.reconciliation.evidence
+        }
+      );
       this.event("runtime-start", "STARTED", undefined, "Runtime Host starting.");
 
       let degraded = false;
@@ -384,6 +427,160 @@ export class RuntimeHost {
       signal: this.abortController.signal,
       evidenceRoot: this.config.evidenceRoot,
       runtimeInstanceRoot: this.runtimeInstanceRoot ?? this.config.evidenceRoot
+    };
+  }
+
+  private reconcilePreviousRuntime(): RuntimeReconciliationResult {
+    const identity = this.requireIdentity();
+    const currentRuntimeInstanceId = identity.runtimeInstanceId;
+
+    const previousRuntimes = fs
+      .readdirSync(this.config.evidenceRoot, { withFileTypes: true })
+      .filter(
+        (entry) =>
+          entry.isDirectory()
+          && entry.name.startsWith("runtime_")
+          && entry.name !== currentRuntimeInstanceId
+      )
+      .map((entry) => {
+        const fullPath = path.join(
+          this.config.evidenceRoot,
+          entry.name
+        );
+
+        return {
+          runtimeInstanceId: entry.name,
+          fullPath,
+          modifiedAt: fs.statSync(fullPath).mtimeMs
+        };
+      })
+      .sort((a, b) => b.modifiedAt - a.modifiedAt);
+
+    if (previousRuntimes.length === 0) {
+      return {
+        schemaVersion: "sera.runtime-reconciliation.v1",
+        currentRuntimeInstanceId,
+        installationId: identity.installationId,
+        classification: "first_runtime",
+        reason: "No previous Runtime Host instance was found.",
+        checkedAt: this.clock.now().toISOString(),
+        evidence: {
+          previousRuntimeFound: false,
+          previousIdentityValid: false,
+          sameInstallation: false,
+          runtimeStopStartedFound: false,
+          runtimeStopCompletedFound: false
+        }
+      };
+    }
+
+    const previous = previousRuntimes[0];
+
+    const previousIdentityPath = path.join(
+      previous.fullPath,
+      "identity.json"
+    );
+
+    let previousIdentity: Partial<RuntimeIdentity> | undefined;
+
+    if (fs.existsSync(previousIdentityPath)) {
+      try {
+        previousIdentity = JSON.parse(
+          fs.readFileSync(previousIdentityPath, "utf8")
+        ) as Partial<RuntimeIdentity>;
+      } catch {
+        previousIdentity = undefined;
+      }
+    }
+
+    const previousIdentityValid =
+      previousIdentity?.schemaVersion === RUNTIME_IDENTITY_SCHEMA_VERSION
+      && previousIdentity.runtimeInstanceId === previous.runtimeInstanceId
+      && typeof previousIdentity.installationId === "string";
+
+    const sameInstallation =
+      previousIdentityValid
+      && previousIdentity?.installationId === identity.installationId;
+
+    const lifecyclePath = path.join(
+      previous.fullPath,
+      "lifecycle-events.jsonl"
+    );
+
+    const events: RuntimeLifecycleEvent[] = [];
+
+    if (fs.existsSync(lifecyclePath)) {
+      for (
+        const line of fs
+          .readFileSync(lifecyclePath, "utf8")
+          .split(/\r?\n/)
+          .filter(Boolean)
+      ) {
+        try {
+          events.push(
+            JSON.parse(line) as RuntimeLifecycleEvent
+          );
+        } catch {
+          // Invalid lifecycle lines remain non-authoritative.
+        }
+      }
+    }
+
+    const runtimeStopStartedFound = events.some(
+      (event) =>
+        event.eventType === "runtime-stop"
+        && event.outcome === "STARTED"
+    );
+
+    const runtimeStopCompletedFound = events.some(
+      (event) =>
+        event.eventType === "runtime-stop"
+        && event.outcome === "COMPLETED"
+    );
+
+    if (
+      previousIdentityValid
+      && sameInstallation
+      && runtimeStopCompletedFound
+    ) {
+      return {
+        schemaVersion: "sera.runtime-reconciliation.v1",
+        currentRuntimeInstanceId,
+        previousRuntimeInstanceId:
+          previous.runtimeInstanceId,
+        installationId: identity.installationId,
+        classification: "clean_shutdown",
+        reason:
+          "Previous runtime has a completed runtime-stop lifecycle event.",
+        checkedAt: this.clock.now().toISOString(),
+        evidence: {
+          previousRuntimeFound: true,
+          previousIdentityValid,
+          sameInstallation,
+          runtimeStopStartedFound,
+          runtimeStopCompletedFound
+        }
+      };
+    }
+
+    return {
+      schemaVersion: "sera.runtime-reconciliation.v1",
+      currentRuntimeInstanceId,
+      previousRuntimeInstanceId:
+        previous.runtimeInstanceId,
+      installationId: identity.installationId,
+      classification: "abnormal_termination",
+      reason: runtimeStopStartedFound
+        ? "Previous runtime began shutdown but did not record runtime-stop COMPLETED."
+        : "Previous runtime has no completed runtime-stop lifecycle event.",
+      checkedAt: this.clock.now().toISOString(),
+      evidence: {
+        previousRuntimeFound: true,
+        previousIdentityValid,
+        sameInstallation,
+        runtimeStopStartedFound,
+        runtimeStopCompletedFound
+      }
     };
   }
 

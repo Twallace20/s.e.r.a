@@ -10,7 +10,7 @@ import { EvaluationEngine, runEvaluationEngineProof } from "@sera/evaluation-eng
 import { LocalModelRuntime, runLocalModelRuntimeProof } from "@sera/model-runtime";
 import { KnowledgeRuntime, createIntakeAuthorization, normalizeIntakeRequest, runKnowledgeIntakeProof, runKnowledgeRetrievalProof } from "@sera/knowledge-runtime";
 import { CapabilityEngine, runCapabilityEngineProof, runRecursiveLearningProof } from "@sera/capability-engine";
-import { OperatorGateway, runDesktopOperatorProof, runOperatorGatewayProof } from "@sera/operator-gateway";
+import { OperatorGateway, createOperatorGatewayRuntimeService, runDesktopOperatorProof, runOperatorGatewayProof } from "@sera/operator-gateway";
 import { StudioRuntime, createEvidenceStudioDefinition, runStudioRuntimeProof } from "@sera/studio-runtime";
 import { getEvidenceStudioStatus, runEvidenceStudioProof } from "@sera/evidence-studio";
 import { IntegratedLoopBlockedError, IntegratedLoopRuntime, runIntegratedLoopProof } from "@sera/integrated-loop-runtime";
@@ -310,6 +310,13 @@ function readJsonSpec(relativePath: string): unknown {
 function optionValue(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : undefined;
+}
+
+function createProductRuntimeServices(projectRoot: string) {
+  return [
+    ...createIsolatedExecutionRuntimeServices(projectRoot),
+    createOperatorGatewayRuntimeService(projectRoot)
+  ];
 }
 
 function createCliAttempt(store: ReturnType<typeof openRuntimeState>, capability: string): string {
@@ -1163,7 +1170,7 @@ async function main(): Promise<void> {
       process.exit(0);
     }
     if (runtimeMode === "health" || runtimeMode === "prove") {
-      const proof = await runRuntimeHostProof(config, createIsolatedExecutionRuntimeServices(config.projectRoot));
+      const proof = await runRuntimeHostProof(config, createProductRuntimeServices(config.projectRoot));
       console.log(JSON.stringify({
         ok: proof.ok,
         status: proof.status,
@@ -1178,7 +1185,7 @@ async function main(): Promise<void> {
       process.exit(proof.ok ? 0 : 1);
     }
     if (runtimeMode === "start") {
-      const host = new RuntimeHost({ config, services: createIsolatedExecutionRuntimeServices(config.projectRoot) });
+      const host = new RuntimeHost({ config, services: createProductRuntimeServices(config.projectRoot) });
       const started = await host.start();
       console.log(JSON.stringify({
         ok: started.ok,
@@ -1191,7 +1198,6 @@ async function main(): Promise<void> {
         networkUse: false
       }, null, 2));
       if (!started.ok) process.exit(1);
-      host.bindProcessSignals();
       await new Promise<void>((resolve) => {
         process.once("SIGINT", () => resolve());
         process.once("SIGTERM", () => resolve());

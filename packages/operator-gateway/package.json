@@ -8,6 +8,7 @@
     "build": "tsc -b"
   },
   "dependencies": {
+    "@sera/control-plane": "^0.1.0",
     "@sera/desktop-operator": "0.1.0",
     "@sera/learning-governance-runtime": "0.1.0",
     "@sera/runtime-host": "0.1.0",

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import http, { IncomingMessage, ServerResponse } from "node:http";
 import os from "node:os";
 import path from "node:path";
+import { ControlPlane } from "@sera/control-plane";
 import { getDesktopAssets, verifyDesktopAssetIntegrity, assertDesktopAssetsLocalOnly, getDesktopVisualContract, REQUIRED_DESKTOP_VIEWS } from "@sera/desktop-operator";
 import { RuntimeService } from "@sera/runtime-host";
 import { RuntimeStateStore, createRuntimeStateConfig, openRuntimeState } from "@sera/runtime-state";
@@ -63,6 +64,22 @@ export interface OperatorGatewayConfig {
   now?: () => Date;
 }
 
+export interface OperatorDispatchResult {
+  ok: true;
+  requestId: string;
+  requestHash: string;
+  normalizedText: string;
+  status: "COMPLETED" | "BLOCKED";
+  attemptId?: string;
+  attemptPath?: string;
+  terminalDecision?: string;
+  output?: string;
+  failureCode?: string;
+  safeMessage?: string;
+  modelUse: false;
+  networkUse: false;
+}
+
 export interface OperatorProofResult {
   ok: boolean;
   proofRoot: string;
@@ -105,6 +122,7 @@ export class OperatorGateway {
   private readonly port: number;
   private readonly now: () => Date;
   private readonly store: RuntimeStateStore;
+  private readonly controlPlane: ControlPlane;
   private readonly studioRuntime: StudioRuntime;
   private readonly learningGovernanceRuntime: LearningGovernanceRuntime;
   private readonly assets = getDesktopAssets();
@@ -128,6 +146,23 @@ export class OperatorGateway {
       runtimeInstanceId: config.runtimeInstanceId ?? `runtime_operator_gateway_${process.pid}`
     });
     this.store = openRuntimeState(stateConfig);
+    this.controlPlane = new ControlPlane({
+      repositoryRoot: this.projectRoot
+    });
+
+    const auditSequence = this.get(
+      "SELECT COALESCE(MAX(sequence), 0) AS sequence FROM operator_audit_events"
+    ) as { sequence?: number | bigint | null } | undefined;
+
+    const eventSequence = this.get(
+      "SELECT COALESCE(MAX(sequence), 0) AS sequence FROM operator_events"
+    ) as { sequence?: number | bigint | null } | undefined;
+
+    this.sequence = Math.max(
+      Number(auditSequence?.sequence ?? 0),
+      Number(eventSequence?.sequence ?? 0),
+      0
+    );
     this.studioRuntime = new StudioRuntime({ projectRoot: this.projectRoot, stateRoot: this.stateRoot, databasePath: this.databasePath, outputRoot: path.join(this.projectRoot, ".sera", "studios"), installationId: config.installationId, runtimeInstanceId: config.runtimeInstanceId });
     this.learningGovernanceRuntime = new LearningGovernanceRuntime(this.store, { projectRoot: this.projectRoot });
     fs.mkdirSync(this.evidenceRoot, { recursive: true });
@@ -251,6 +286,276 @@ export class OperatorGateway {
     return response;
   }
 
+  private dispatchOperatorRequest(input: {
+    requestId: string;
+    requestHash: string;
+    normalizedText: string;
+    status: "QUEUED";
+  }): OperatorDispatchResult {
+    const expectedRequest =
+      "Return the text SERA_REQUEST_PIPELINE_OK.";
+
+    if (input.normalizedText !== expectedRequest) {
+      const blocked: OperatorDispatchResult = {
+        ok: true,
+        requestId: input.requestId,
+        requestHash: input.requestHash,
+        normalizedText: input.normalizedText,
+        status: "BLOCKED",
+        failureCode: "unsupported_bounded_workflow",
+        safeMessage:
+          "This Base MVP proof currently supports only the certified deterministic request fixture.",
+        modelUse: false,
+        networkUse: false
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ? WHERE request_id = ?",
+        [
+          "BLOCKED",
+          this.nowIso(),
+          JSON.stringify(blocked),
+          input.requestId
+        ]
+      );
+
+      this.event("request_blocked", {
+        requestId: input.requestId,
+        failureCode: blocked.failureCode
+      });
+
+      return blocked;
+    }
+
+    const attemptId = input.requestId.replace(
+      /^operator_request_/,
+      "operator_attempt_"
+    );
+
+    this.event("request_dispatched", {
+      requestId: input.requestId,
+      attemptId
+    });
+
+    try {
+      const result = this.controlPlane.run({
+        attemptId,
+        title: `Governed Operator request ${input.requestId}`,
+        owner: "local-owner",
+
+        sourceBaseline: {
+          operatorRequestId: input.requestId,
+          requestHash: input.requestHash,
+          normalizedText: input.normalizedText,
+          modelUse: false,
+          networkUse: false
+        },
+
+        stages: [
+          {
+            id: "operator-request-intake",
+            title: "Record authenticated Operator request",
+            executionMode: "emit-evidence",
+            required: true,
+
+            input: {
+              evidenceId: "operator-request-intake",
+              kind: "operator-request",
+              value: {
+                requestId: input.requestId,
+                requestHash: input.requestHash,
+                normalizedText: input.normalizedText
+              }
+            },
+
+            evidence: [
+              {
+                id: "operator-request-intake",
+                kind: "operator-request",
+                required: true
+              }
+            ]
+          },
+
+          {
+            id: "deterministic-response",
+            title: "Produce certified deterministic response",
+            dependsOn: ["operator-request-intake"],
+            executionMode: "emit-evidence",
+            required: true,
+
+            input: {
+              evidenceId: "operator-deterministic-response",
+              kind: "deterministic-output",
+              value: {
+                output: "SERA_REQUEST_PIPELINE_OK",
+                modelUse: false,
+                networkUse: false
+              }
+            },
+
+            evidence: [
+              {
+                id: "operator-deterministic-response",
+                kind: "deterministic-output",
+                required: true
+              }
+            ]
+          }
+        ],
+
+        gates: [
+          {
+            id: "operator-response-evidence-gate",
+            gateType: "verification",
+            required: true,
+            evaluationTiming: "after",
+
+            evidenceRequirements: [
+              {
+                id: "operator-request-intake",
+                required: true
+              },
+              {
+                id: "operator-deterministic-response",
+                required: true
+              }
+            ],
+
+            passCriteria: {
+              kind: "evidence-valid",
+              evidenceIds: [
+                "operator-request-intake",
+                "operator-deterministic-response"
+              ]
+            }
+          }
+        ],
+
+        requiredEvidence: [
+          {
+            id: "operator-request-intake",
+            required: true
+          },
+          {
+            id: "operator-deterministic-response",
+            required: true
+          }
+        ],
+
+        closeoutPolicy: {
+          requireOwnerApproval: false,
+          ownerApproved: true,
+          promotionAllowed: false,
+          mergeAllowed: false
+        }
+      });
+
+      const verification = this.controlPlane.verify(attemptId);
+
+      const completed =
+        result.ok === true &&
+        result.terminalDecision === "COMPLETE" &&
+        verification.ok === true;
+
+      const response: OperatorDispatchResult =
+        completed
+          ? {
+              ok: true,
+              requestId: input.requestId,
+              requestHash: input.requestHash,
+              normalizedText: input.normalizedText,
+              status: "COMPLETED",
+              attemptId,
+              attemptPath: result.attemptPath,
+              terminalDecision: result.terminalDecision,
+              output: "SERA_REQUEST_PIPELINE_OK",
+              modelUse: false,
+              networkUse: false
+            }
+          : {
+              ok: true,
+              requestId: input.requestId,
+              requestHash: input.requestHash,
+              normalizedText: input.normalizedText,
+              status: "BLOCKED",
+              attemptId,
+              attemptPath: result.attemptPath,
+              terminalDecision: result.terminalDecision,
+              failureCode:
+                "control_plane_attempt_not_verified",
+              safeMessage:
+                verification.message ||
+                result.message ||
+                "Control Plane attempt did not verify.",
+              modelUse: false,
+              networkUse: false
+            };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+        [
+          response.status,
+          this.nowIso(),
+          JSON.stringify(response),
+          `control-plane:attempt:${attemptId}`,
+          input.requestId
+        ]
+      );
+
+      this.event(
+        completed
+          ? "request_completed"
+          : "request_blocked",
+        {
+          requestId: input.requestId,
+          attemptId,
+          terminalDecision: result.terminalDecision,
+          verified: verification.ok
+        }
+      );
+
+      return response;
+    } catch (error) {
+      const safeMessage =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
+      const blocked: OperatorDispatchResult = {
+        ok: true,
+        requestId: input.requestId,
+        requestHash: input.requestHash,
+        normalizedText: input.normalizedText,
+        status: "BLOCKED",
+        attemptId,
+        failureCode: "control_plane_dispatch_failed",
+        safeMessage,
+        modelUse: false,
+        networkUse: false
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+        [
+          "BLOCKED",
+          this.nowIso(),
+          JSON.stringify(blocked),
+          `control-plane:attempt:${attemptId}`,
+          input.requestId
+        ]
+      );
+
+      this.event("request_blocked", {
+        requestId: input.requestId,
+        attemptId,
+        failureCode: blocked.failureCode
+      });
+
+      return blocked;
+    }
+  }
+
   createApproval(input: { requestId: string; riskClass: "LOW" | "HIGH" | "DESTRUCTIVE" | "EXTERNAL"; summary: string; idempotencyKey: string }): { approvalId: string; integrityHash: string; status: "PENDING" } {
     const requestHash = stableHash(input);
     const existing = this.get("SELECT request_hash, response_json FROM operator_approvals WHERE idempotency_key = ?", [input.idempotencyKey]);
@@ -302,6 +607,7 @@ export class OperatorGateway {
   }
 
   sessions() { return this.all("SELECT session_id, operator_identity, state, issued_at, expires_at, last_activity_at, integrity_hash FROM operator_sessions ORDER BY issued_at"); }
+  requests() { return this.all("SELECT request_id, session_id, category, normalized_text, request_hash, status, idempotency_key, created_at, governed_reference FROM operator_requests ORDER BY created_at"); }
   approvals() { return this.all("SELECT approval_id, request_id, status, risk_class, summary, integrity_hash, created_at, decided_at FROM operator_approvals ORDER BY created_at"); }
   notifications() { return this.all("SELECT notification_id, notification_type, severity, message, status, created_at FROM operator_notifications ORDER BY created_at"); }
   events() { return this.all("SELECT event_id, sequence, event_type, created_at, payload_json FROM operator_events ORDER BY sequence"); }
@@ -336,6 +642,13 @@ export class OperatorGateway {
         const asset = this.assets.find((candidate) => candidate.path === url.pathname);
         if (asset) return send(response, 200, asset.contentType, asset.body);
         if (url.pathname === "/api/v1/operator/status") return sendJson(response, envelope(true, this.status()));
+        if (url.pathname === "/api/v1/operator/requests") {
+          this.validateSession(headersObject(request.headers));
+          return sendJson(
+            response,
+            envelope(true, { requests: this.requests() })
+          );
+        }
         if (isLearningGovernancePath(url.pathname)) {
           this.validateSession(headersObject(request.headers));
           return sendJson(response, envelope(true, this.learningGovernanceRoute(url.pathname)));
@@ -375,6 +688,62 @@ export class OperatorGateway {
           .catch((error) => this.error(response, error));
         return;
       }
+      if (request.method === "POST" && url.pathname === "/api/v1/operator/requests") {
+
+        const session = this.validateSession(
+
+          headersObject(request.headers),
+
+          true
+
+        );
+
+
+        void readJson(request)
+
+          .then((body) => {
+
+            const result = this.composeRequest({
+
+              sessionId: session.sessionId,
+
+              category: String(
+
+                body.category ?? "general-operator-request"
+
+              ) as OperatorRequestCategory,
+
+              text: String(body.text ?? ""),
+
+              idempotencyKey: String(
+
+                body.idempotencyKey ?? `request:${randomId()}`
+
+              )
+
+            });
+
+
+            const dispatched =
+              result.status === "QUEUED"
+                ? this.dispatchOperatorRequest(result)
+                : result;
+
+            sendJson(
+              response,
+              envelope(true, dispatched)
+            );
+
+          })
+
+          .catch((error) => this.error(response, error));
+
+
+        return;
+
+      }
+
+
       if (request.method === "POST" && url.pathname === "/api/v1/operator/logout") {
         const session = this.validateSession(headersObject(request.headers), true);
         this.revokeSession(session.sessionId);
@@ -454,21 +823,65 @@ export class OperatorGateway {
 
 export function createOperatorGatewayRuntimeService(projectRoot: string): RuntimeService {
   let gateway: OperatorGateway | undefined;
+  let binding: { host: string; port: number } | undefined;
+
   return {
     id: OPERATOR_GATEWAY_SERVICE_ID,
     version: DESKTOP_OPERATOR_VERSION,
-    required: false,
+    required: true,
     dependencies: ["operational-state"],
-    start(context) {
-      gateway = new OperatorGateway({ projectRoot, stateRoot: context.config.stateRoot, evidenceRoot: path.join(context.config.evidenceRoot, "operator-gateway"), runtimeInstanceId: context.identity.runtimeInstanceId, installationId: context.identity.installationId });
+
+    async start(context) {
+      gateway = new OperatorGateway({
+        projectRoot,
+        stateRoot: context.config.stateRoot,
+        evidenceRoot: path.join(
+          context.config.evidenceRoot,
+          "operator-gateway"
+        ),
+        runtimeInstanceId: context.identity.runtimeInstanceId,
+        installationId: context.identity.installationId
+      });
+
+      binding = await gateway.start();
     },
+
     health() {
       const status = gateway?.status();
-      return { serviceId: OPERATOR_GATEWAY_SERVICE_ID, status: status?.ok ? "healthy" : "degraded", checkedAt: new Date().toISOString(), message: status?.ok ? "Operator Gateway ready." : "Operator Gateway degraded.", details: status };
+
+      const listening =
+        Boolean(gateway) &&
+        Boolean(binding) &&
+        Boolean(status?.ok) &&
+        Number(binding?.port ?? 0) > 0;
+
+      return {
+        serviceId: OPERATOR_GATEWAY_SERVICE_ID,
+        status: listening ? "healthy" : "blocked",
+        checkedAt: new Date().toISOString(),
+        message: listening
+          ? "Operator Gateway is listening."
+          : "Operator Gateway is unavailable.",
+        details: {
+          ...status,
+          host: binding?.host,
+          port: binding?.port,
+          url: binding
+            ? `http://${binding.host}:${binding.port}`
+            : undefined,
+          listening
+        }
+      };
     },
-    stop() {
-      gateway?.close();
-      gateway = undefined;
+
+    async stop() {
+      try {
+        await gateway?.stop();
+      } finally {
+        gateway?.close();
+        gateway = undefined;
+        binding = undefined;
+      }
     }
   };
 }
