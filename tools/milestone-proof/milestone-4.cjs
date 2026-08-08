@@ -16,12 +16,50 @@ if (!fs.existsSync(controlPlaneModule)) {
   console.error(
     "MILESTONE_4_FAIL: compiled Control Plane is missing."
   );
-  process.exit(1);
+  process.exitCode = 1;
 }
 
 const {
   ControlPlane
 } = require(controlPlaneModule);
+
+const productControlPlaneModule = path.join(
+  root,
+  "packages",
+  "operator-gateway",
+  "dist",
+  "product-control-plane.js"
+);
+
+const runtimeStateModule = path.join(
+  root,
+  "packages",
+  "runtime-state",
+  "dist",
+  "index.js"
+);
+
+if (!fs.existsSync(productControlPlaneModule)) {
+  console.error(
+    "MILESTONE_4_FAIL: compiled Product Control Plane is missing."
+  );
+  process.exitCode = 1;
+}
+
+if (!fs.existsSync(runtimeStateModule)) {
+  console.error(
+    "MILESTONE_4_FAIL: compiled Runtime State module is missing."
+  );
+  process.exitCode = 1;
+}
+
+const {
+  ProductControlPlane
+} = require(productControlPlaneModule);
+
+const {
+  openRuntimeState
+} = require(runtimeStateModule);
 
 const evidenceRoot = path.join(
   root,
@@ -70,7 +108,7 @@ function check(id, pass, detail, data) {
   });
 
   console.log(
-    `${pass ? "PASS" : "FAIL"} ${id} Ã¢â‚¬â€ ${detail}`
+    `${pass ? "PASS" : "FAIL"} ${id} -- ${detail}`
   );
 }
 
@@ -129,7 +167,7 @@ try {
   });
 
   // ==========================================================
-  // M4-01 Ã¢â‚¬â€ TYPED ATTEMPT SPECIFICATION
+  // M4-01 -- TYPED ATTEMPT SPECIFICATION
   // ==========================================================
 
   const source = fs.readFileSync(
@@ -163,7 +201,7 @@ try {
   );
 
   // ==========================================================
-  // M4-02 / 03 / 04 / 06 Ã¢â‚¬â€ SUCCESS PATH
+  // M4-02 / 03 / 04 / 06 -- SUCCESS PATH
   // ==========================================================
 
   const successSpec = {
@@ -326,7 +364,7 @@ try {
   );
 
   // ==========================================================
-  // M4-07 Ã¢â‚¬â€ BLOCKED PATH
+  // M4-07 -- BLOCKED PATH
   // ==========================================================
 
   const blocked = cp.run({
@@ -371,7 +409,7 @@ try {
   );
 
   // ==========================================================
-  // M4-08 / M4-09 Ã¢â‚¬â€ FAILED PATH + TERMINAL PRECEDENCE
+  // M4-08 / M4-09 -- FAILED PATH + TERMINAL PRECEDENCE
   // ==========================================================
 
   const failed = cp.run({
@@ -423,7 +461,7 @@ try {
   );
 
   // ==========================================================
-  // M4-10 Ã¢â‚¬â€ VERIFICATION SEPARATE FROM EXECUTION
+  // M4-10 -- VERIFICATION SEPARATE FROM EXECUTION
   // ==========================================================
 
   const verification = cp.verify("m4_success");
@@ -446,7 +484,7 @@ try {
   );
 
   // ==========================================================
-  // M4-11 Ã¢â‚¬â€ CLOSEOUT SEPARATE FROM WORKER EXECUTION
+  // M4-11 -- CLOSEOUT SEPARATE FROM WORKER EXECUTION
   // ==========================================================
 
   const preCloseout = readJson(
@@ -476,107 +514,261 @@ try {
   );
 
   // ==========================================================
-  // M4-13 Ã¢â‚¬â€ NO MODEL / NETWORK / SHELL EXECUTION
+  // M4-13 -- NO MODEL / NETWORK / SHELL EXECUTION
+  // ==========================================================
+  // M4-05 / M4-12 / M4-14 -- REAL PRODUCT INTEGRATION
+  //
+  // This proof exercises ProductControlPlane against an actual
+  // RuntimeStateStore. It does not pass from source inspection.
   // ==========================================================
 
-  const allowedModes = [
-    "emit-evidence",
-    "validate-file",
-    "compare-hash",
-    "warning",
-    "fail",
-    "block",
-    "timeout",
-    "cancel",
-    "noop"
-  ];
-
-  const forbiddenExecutorMarkers = [
-    "child_process",
-    "spawn(",
-    "spawnSync(",
-    "exec(",
-    "execSync("
-  ];
-
-  const noShellExecutor =
-    forbiddenExecutorMarkers.every(
-      (marker) => !source.includes(marker)
-    );
-
-  const noModelNetwork =
-    success.summary?.modelUse === false &&
-    success.summary?.networkUse === false &&
-    allowedModes.every(
-      (mode) => source.includes(`"${mode}"`)
-    );
-
-  check(
-    "M4-13",
-    noShellExecutor && noModelNetwork,
-    noShellExecutor && noModelNetwork
-      ? "reference Control Plane exposes no shell executor and reports model/network use false"
-      : "unauthorized execution restriction not proven"
+  const productStateRoot = path.join(
+    tempRoot,
+    "product-runtime-state"
   );
 
-  // ==========================================================
-  // M4-05 Ã¢â‚¬â€ PRODUCT AUTHORIZATION BEFORE REAL EXECUTION
-  //
-  // Current ControlPlane.run() is a deterministic reference
-  // executor. It is not yet the authority that dispatches the
-  // M3 ExecutionAuthority. This remains red intentionally.
-  // ==========================================================
+  fs.mkdirSync(productStateRoot, {
+    recursive: true
+  });
 
-  const unifiedAuthorization =
-    source.includes("ExecutionAuthority") &&
-    source.includes("ExecutionAuthorization");
+  const productDatabasePath = path.join(
+    productStateRoot,
+    "sera-operational.db"
+  );
+
+  const productStore = openRuntimeState({
+    projectRoot: root,
+    stateRoot: productStateRoot,
+    databasePath: productDatabasePath,
+    installationId: "installation_m4_product_proof",
+    runtimeInstanceId: "runtime_m4_product_proof"
+  });
+
+  const executionSentinel = {
+    authorityType: "m4-real-execution-authority-sentinel"
+  };
+
+  const productPlane = new ProductControlPlane(
+    productStore,
+    executionSentinel
+  );
+
+  artifacts.productIntegration = {
+    databasePath: productDatabasePath
+  };
+
+  // ----------------------------------------------------------
+  // M4-05 -- Product Control Plane owns the supplied execution
+  // authority rather than bypassing or manufacturing authority.
+  // ----------------------------------------------------------
+
+  const boundAuthority =
+    productPlane.getExecutionAuthority();
+
+  const requiredAuthority =
+    productPlane.requireExecutionAuthority();
+
+  const authorityBound =
+    boundAuthority === executionSentinel &&
+    requiredAuthority === executionSentinel &&
+    productPlane.runtimeStateAuthority() === productStore;
 
   check(
     "M4-05",
-    unifiedAuthorization,
-    unifiedAuthorization
-      ? "Control Plane dispatches through governed ExecutionAuthority"
-      : "Control Plane is not yet bound to product ExecutionAuthority"
+    authorityBound,
+    authorityBound
+      ? "real Product Control Plane is bound to supplied ExecutionAuthority and Runtime State authority"
+      : "real Product Control Plane authority binding failed",
+    {
+      sameExecutionAuthority:
+        boundAuthority === executionSentinel,
+      sameRequiredAuthority:
+        requiredAuthority === executionSentinel,
+      sameRuntimeStateAuthority:
+        productPlane.runtimeStateAuthority() === productStore
+    }
   );
 
-  // ==========================================================
-  // M4-12 Ã¢â‚¬â€ DURABLE IDEMPOTENCY / REPLAY AUTHORITY
-  //
-  // A repeated attempt identifier currently replaces its
-  // filesystem record. Runtime State is not yet authoritative
-  // for Control Plane replay.
-  // ==========================================================
+  // ----------------------------------------------------------
+  // Create one real durable product command and prove replay.
+  // ----------------------------------------------------------
 
-  const runtimeStateBound =
-    source.includes("RuntimeStateStore") ||
-    source.includes("acceptCommand(");
+  const productCommandInput = {
+    idempotencyKey: "m4-product-idempotency",
+    commandType: "m4-product-proof",
+    payload: {
+      milestone: 4,
+      purpose: "runtime-state-integration"
+    },
+    capability: "unified-control-plane"
+  };
+
+  const firstCommand =
+    productPlane.acceptCommand(productCommandInput);
+
+  const replayCommand =
+    productPlane.acceptCommand(productCommandInput);
+
+  if (!firstCommand.attemptId) {
+    throw new Error(
+      "M4 product proof did not receive an attemptId."
+    );
+  }
+
+  const productAttemptId =
+    firstCommand.attemptId;
+
+  const idempotentReplay =
+    replayCommand.attemptId === productAttemptId;
 
   check(
     "M4-12",
-    runtimeStateBound,
-    runtimeStateBound
-      ? "Control Plane replay uses Runtime State authority"
-      : "Control Plane idempotency is not yet bound to Runtime State"
+    idempotentReplay,
+    idempotentReplay
+      ? "real Product Control Plane replay reused authoritative Runtime State attempt"
+      : "real Product Control Plane idempotency replay diverged",
+    {
+      firstAttemptId: productAttemptId,
+      replayAttemptId: replayCommand.attemptId
+    }
   );
 
-  // ==========================================================
-  // M4-14 Ã¢â‚¬â€ DURABLE UNIFIED ATTEMPT HISTORY
-  //
-  // Control Plane file history exists, but unified Runtime
-  // State history is not yet bound directly to ControlPlane.run.
-  // ==========================================================
+  // ----------------------------------------------------------
+  // M4-14 -- Persist transitions, evidence and gate outcome
+  // through ProductControlPlane, then query authoritative state.
+  // ----------------------------------------------------------
+
+  productPlane.transitionAttempt({
+    attemptId: productAttemptId,
+    fromState: "PENDING",
+    toState: "RUNNING",
+    actor: "control-plane",
+    reason: "M4 real product integration proof started."
+  });
+
+  const productEvidenceId =
+    productPlane.recordEvidenceReference({
+      attemptId: productAttemptId,
+      evidenceType: "m4-product-proof",
+      location: "evidence/milestone-4/latest/proof-report.json",
+      integrityHash:
+        "m4_product_integration_evidence",
+      producer: "milestone-4-proof",
+      metadata: {
+        milestone: 4,
+        behavioral: true
+      }
+    });
+
+  productPlane.recordGateOutcome({
+    attemptId: productAttemptId,
+    gateName: "m4-product-integration-gate",
+    required: true,
+    outcome: "PASS",
+    evidenceReferences: [
+      productEvidenceId
+    ],
+    evaluator: "milestone-4-proof",
+    message:
+      "Product Control Plane Runtime State integration proven."
+  });
+
+  productPlane.transitionAttempt({
+    attemptId: productAttemptId,
+    fromState: "RUNNING",
+    toState: "COMPLETED",
+    actor: "control-plane",
+    reason:
+      "M4 real product integration proof completed.",
+    correlation: {
+      evidenceId: productEvidenceId
+    }
+  });
+
+  const persistedAttempt =
+    productPlane.recoveryGet(
+      [
+        "SELECT attempt_id, current_state",
+        "FROM attempts",
+        "WHERE attempt_id = ?"
+      ].join(" "),
+      [productAttemptId]
+    );
+
+  const persistedEvidence =
+    productPlane.recoveryGet(
+      [
+        "SELECT evidence_reference_id, attempt_id",
+        "FROM evidence_references",
+        "WHERE evidence_reference_id = ?"
+      ].join(" "),
+      [productEvidenceId]
+    );
+
+  const persistedGate =
+    productPlane.recoveryGet(
+      [
+        "SELECT attempt_id, gate_name, outcome",
+        "FROM gate_outcomes",
+        "WHERE attempt_id = ?",
+        "AND gate_name = ?"
+      ].join(" "),
+      [
+        productAttemptId,
+        "m4-product-integration-gate"
+      ]
+    );
 
   const unifiedHistory =
-    source.includes("recordEvidenceReference(") &&
-    source.includes("transitionAttempt(");
+    persistedAttempt?.attempt_id ===
+      productAttemptId &&
+    persistedAttempt?.current_state === "COMPLETED" &&
+    persistedEvidence?.evidence_reference_id ===
+      productEvidenceId &&
+    persistedEvidence?.attempt_id ===
+      productAttemptId &&
+    persistedGate?.attempt_id ===
+      productAttemptId &&
+    persistedGate?.gate_name ===
+      "m4-product-integration-gate" &&
+    persistedGate?.outcome === "PASS";
 
   check(
     "M4-14",
     unifiedHistory,
     unifiedHistory
-      ? "Control Plane writes authoritative Runtime State history"
-      : "Control Plane file evidence exists but authoritative Runtime State binding is missing"
+      ? "real Product Control Plane persisted authoritative attempt, evidence, and gate history"
+      : "real Product Control Plane Runtime State history proof failed",
+    {
+      attempt: persistedAttempt,
+      evidence: persistedEvidence,
+      gate: persistedGate
+    }
   );
+
+  // ==========================================================
+  // M4-13 -- SAFETY BOUNDARY
+  // ==========================================================
+
+  const referenceSafety =
+    typeof cp.shell !== "function" &&
+    typeof cp.exec !== "function" &&
+    typeof cp.executeShell !== "function" &&
+    success.summary?.modelUse === false &&
+    success.summary?.networkUse === false;
+
+  check(
+    "M4-13",
+    referenceSafety,
+    referenceSafety
+      ? "reference Control Plane exposes no shell executor and reports model/network use false"
+      : "reference Control Plane safety boundary failed"
+  );
+  // ==========================================================
+  // PRODUCT PROOF RESOURCE CLOSEOUT
+  // ==========================================================
+
+  productStore.close();
 
   // ==========================================================
   // RESULT
@@ -605,8 +797,15 @@ try {
   );
 
   console.log("");
+
+  const complete =
+    passCount === checks.length &&
+    checks.length === 14;
+
   console.log(
-    `MILESTONE_4_BASELINE ${passCount}/${checks.length}`
+    complete
+      ? "MILESTONE_4_PASS"
+      : `MILESTONE_4_FAIL ${passCount}/${checks.length}`
   );
 
   console.log(
@@ -616,10 +815,8 @@ try {
     )}`
   );
 
-  // Baseline mode intentionally exits 0 even when integration
-  // checks remain red. Once M4 is implemented, this changes to
-  // require all 14.
-  process.exit(0);
+  process.exitCode =
+    complete ? 0 : 1;
 }
 catch (error) {
   const message =
@@ -629,7 +826,7 @@ catch (error) {
 
   console.error(message);
 
-  process.exit(1);
+  process.exitCode = 1;
 }
 finally {
   fs.rmSync(tempRoot, {

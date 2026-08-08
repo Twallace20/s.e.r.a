@@ -2,9 +2,9 @@
   "schemaVersion": "sera.milestone-proof.v1",
   "milestone": 4,
   "title": "Unified Control Plane v1",
-  "generatedAt": "2026-08-08T12:20:41.055Z",
+  "generatedAt": "2026-08-08T13:08:30.703Z",
   "repositoryRoot": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a",
-  "passCount": 11,
+  "passCount": 14,
   "totalCount": 14,
   "checks": [
     {
@@ -23,8 +23,8 @@
           "status": "COMPLETED",
           "required": true,
           "attempts": 1,
-          "startedAt": "2026-08-08T12:20:40.850Z",
-          "finishedAt": "2026-08-08T12:20:40.854Z",
+          "startedAt": "2026-08-08T13:08:28.041Z",
+          "finishedAt": "2026-08-08T13:08:28.047Z",
           "evidenceIds": [
             "evidence-a"
           ],
@@ -42,8 +42,8 @@
           "status": "COMPLETED",
           "required": true,
           "attempts": 1,
-          "startedAt": "2026-08-08T12:20:40.854Z",
-          "finishedAt": "2026-08-08T12:20:40.859Z",
+          "startedAt": "2026-08-08T13:08:28.047Z",
+          "finishedAt": "2026-08-08T13:08:28.050Z",
           "evidenceIds": [
             "evidence-b"
           ],
@@ -90,7 +90,7 @@
           "path": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success/evidence/evidence-a.json",
           "sha256": "0a57dd160a7022696063539692db1a2311c437e6870f40fc190ebc348f183ace",
           "valid": true,
-          "createdAt": "2026-08-08T12:20:40.838Z",
+          "createdAt": "2026-08-08T13:08:28.031Z",
           "warnings": [],
           "errors": []
         },
@@ -103,7 +103,7 @@
           "path": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success/evidence/evidence-b.json",
           "sha256": "ed770742632e19ac996c5b76849bcd7e98a892667d59a2d1c3c88e0bd87819f9",
           "valid": true,
-          "createdAt": "2026-08-08T12:20:40.838Z",
+          "createdAt": "2026-08-08T13:08:28.031Z",
           "warnings": [],
           "errors": []
         }
@@ -146,7 +146,7 @@
         "schemaVersion": "sera.control-plane.v1",
         "code": "DEPENDENCY_OR_PERMISSION_BLOCKED",
         "reason": "Permission intentionally absent.",
-        "blockedAt": "2026-08-08T12:20:40.913Z",
+        "blockedAt": "2026-08-08T13:08:28.285Z",
         "requiredDecision": "Owner must grant permission, provide missing evidence, revise the spec, or cancel the attempt.",
         "missingInputs": [],
         "evidencePaths": [],
@@ -223,7 +223,7 @@
           "attemptId": "m4_success",
           "closeoutId": "closeout_pending_m4_success",
           "status": "CLOSEOUT_BLOCKED",
-          "createdAt": "2026-08-08T12:20:40.860Z",
+          "createdAt": "2026-08-08T13:08:28.051Z",
           "mergeAllowed": false,
           "promotionAllowed": false,
           "ownerApprovalRequired": true,
@@ -242,9 +242,9 @@
             "closeout": {
               "schemaVersion": "sera.control-plane.v1",
               "attemptId": "m4_success",
-              "closeoutId": "closeout_97e584facd8a",
+              "closeoutId": "closeout_de7aeb6fef38",
               "status": "CLOSEOUT_BLOCKED",
-              "createdAt": "2026-08-08T12:20:41.048Z",
+              "createdAt": "2026-08-08T13:08:28.549Z",
               "mergeAllowed": false,
               "promotionAllowed": false,
               "ownerApprovalRequired": true,
@@ -265,24 +265,48 @@
       }
     },
     {
-      "id": "M4-13",
-      "pass": true,
-      "detail": "reference Control Plane exposes no shell executor and reports model/network use false"
-    },
-    {
       "id": "M4-05",
-      "pass": false,
-      "detail": "Control Plane is not yet bound to product ExecutionAuthority"
+      "pass": true,
+      "detail": "real Product Control Plane is bound to supplied ExecutionAuthority and Runtime State authority",
+      "data": {
+        "sameExecutionAuthority": true,
+        "sameRequiredAuthority": true,
+        "sameRuntimeStateAuthority": true
+      }
     },
     {
       "id": "M4-12",
-      "pass": false,
-      "detail": "Control Plane idempotency is not yet bound to Runtime State"
+      "pass": true,
+      "detail": "real Product Control Plane replay reused authoritative Runtime State attempt",
+      "data": {
+        "firstAttemptId": "attempt_6064e29c0ada113e",
+        "replayAttemptId": "attempt_6064e29c0ada113e"
+      }
     },
     {
       "id": "M4-14",
-      "pass": false,
-      "detail": "Control Plane file evidence exists but authoritative Runtime State binding is missing"
+      "pass": true,
+      "detail": "real Product Control Plane persisted authoritative attempt, evidence, and gate history",
+      "data": {
+        "attempt": {
+          "attempt_id": "attempt_6064e29c0ada113e",
+          "current_state": "COMPLETED"
+        },
+        "evidence": {
+          "evidence_reference_id": "evidence_3896a23b0dffb15b",
+          "attempt_id": "attempt_6064e29c0ada113e"
+        },
+        "gate": {
+          "attempt_id": "attempt_6064e29c0ada113e",
+          "gate_name": "m4-product-integration-gate",
+          "outcome": "PASS"
+        }
+      }
+    },
+    {
+      "id": "M4-13",
+      "pass": true,
+      "detail": "reference Control Plane exposes no shell executor and reports model/network use false"
     }
   ],
   "artifacts": {
@@ -392,9 +416,9 @@
         "closeout": {
           "schemaVersion": "sera.control-plane.v1",
           "attemptId": "m4_success",
-          "closeoutId": "closeout_97e584facd8a",
+          "closeoutId": "closeout_de7aeb6fef38",
           "status": "CLOSEOUT_BLOCKED",
-          "createdAt": "2026-08-08T12:20:41.048Z",
+          "createdAt": "2026-08-08T13:08:28.549Z",
           "mergeAllowed": false,
           "promotionAllowed": false,
           "ownerApprovalRequired": true,
@@ -411,6 +435,9 @@
         "evidenceDirectory": "evidence/milestone-4/latest/.work/control-plane/attempts/m4_success",
         "reason": "Control Plane closeout recorded; merge and promotion remain disabled in v1."
       }
+    },
+    "productIntegration": {
+      "databasePath": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-4\\latest\\.work\\product-runtime-state\\sera-operational.db"
     }
   }
 }

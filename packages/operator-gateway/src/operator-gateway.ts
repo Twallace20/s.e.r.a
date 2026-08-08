@@ -15,6 +15,7 @@ import { RuntimeService } from "@sera/runtime-host";
 import { RuntimeStateStore, createRuntimeStateConfig, openRuntimeState } from "@sera/runtime-state";
 import { StudioRuntime, runStudioRuntimeProof } from "@sera/studio-runtime";
 import { LearningGovernanceRuntime } from "@sera/learning-governance-runtime";
+import { ProductControlPlane } from "./product-control-plane.js";
 
 export const DESKTOP_OPERATOR_VERSION = "desktop-operator-v1";
 export const OPERATOR_GATEWAY_SERVICE_ID = "operator-gateway";
@@ -131,6 +132,7 @@ export class OperatorGateway {
   private readonly now: () => Date;
   private readonly store: RuntimeStateStore;
   private readonly controlPlane: ControlPlane;
+  private readonly productControlPlane: ProductControlPlane;
   private readonly executionAuthority?: ExecutionAuthority;
   private readonly studioRuntime: StudioRuntime;
   private readonly learningGovernanceRuntime: LearningGovernanceRuntime;
@@ -156,6 +158,10 @@ export class OperatorGateway {
       runtimeInstanceId: config.runtimeInstanceId ?? `runtime_operator_gateway_${process.pid}`
     });
     this.store = openRuntimeState(stateConfig);
+    this.productControlPlane = new ProductControlPlane(
+      this.store,
+      this.executionAuthority
+    );
     this.controlPlane =
       config.controlPlane ??
       new ControlPlane({
@@ -335,7 +341,7 @@ export class OperatorGateway {
       return blocked;
     }
 
-    const command = this.store.acceptCommand({
+    const command = this.productControlPlane.acceptCommand({
       idempotencyKey: `operator-execution:${input.requestId}`,
       commandType: "run-certified-capability",
       payload: {
@@ -355,7 +361,7 @@ export class OperatorGateway {
 
     const attemptId = command.attemptId;
 
-    this.store.transitionAttempt({
+    this.productControlPlane.transitionAttempt({
       attemptId,
       fromState: "PENDING",
       toState: "RUNNING",
@@ -422,7 +428,7 @@ export class OperatorGateway {
       executableId: request.executableId
     });
 
-    const executionAuthority = this.executionAuthority;
+    const executionAuthority = this.productControlPlane.getExecutionAuthority();
 
     if (!executionAuthority) {
       const blocked: OperatorDispatchResult = {
@@ -438,7 +444,7 @@ export class OperatorGateway {
         networkUse: false
       };
 
-      this.store.transitionAttempt({
+      this.productControlPlane.transitionAttempt({
         attemptId,
         fromState: "RUNNING",
         toState: "BLOCKED",
@@ -484,7 +490,7 @@ export class OperatorGateway {
         Boolean(output.evidenceReference);
 
       if (!completed || !output?.evidenceReference) {
-        this.store.transitionAttempt({
+        this.productControlPlane.transitionAttempt({
           attemptId,
           fromState: "RUNNING",
           toState: "BLOCKED",
@@ -545,7 +551,7 @@ export class OperatorGateway {
       );
 
       const executionEvidenceId =
-        this.store.recordEvidenceReference({
+        this.productControlPlane.recordEvidenceReference({
           attemptId,
           evidenceType: "certified-execution-output",
           location: path
@@ -569,7 +575,7 @@ export class OperatorGateway {
           }
         });
 
-      this.store.recordGateOutcome({
+      this.productControlPlane.recordGateOutcome({
         attemptId,
         gateName: "certified-execution-evidence-gate",
         required: true,
@@ -580,7 +586,7 @@ export class OperatorGateway {
           "Certified execution completed and satisfied all required evidence conditions."
       });
 
-      this.store.transitionAttempt({
+      this.productControlPlane.transitionAttempt({
         attemptId,
         fromState: "RUNNING",
         toState: "COMPLETED",
@@ -629,13 +635,13 @@ export class OperatorGateway {
 
       return response;
     } catch (error) {
-      const state = this.store.recoveryGet(
+      const state = this.productControlPlane.recoveryGet(
         "SELECT current_state FROM attempts WHERE attempt_id = ?",
         [attemptId]
       );
 
       if (String(state?.current_state ?? "") === "RUNNING") {
-        this.store.transitionAttempt({
+        this.productControlPlane.transitionAttempt({
           attemptId,
           fromState: "RUNNING",
           toState: "BLOCKED",
