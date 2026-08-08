@@ -1,5 +1,4 @@
 const fs = require("node:fs");
-const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
@@ -71,7 +70,7 @@ function check(id, pass, detail, data) {
   });
 
   console.log(
-    `${pass ? "PASS" : "FAIL"} ${id} â€” ${detail}`
+    `${pass ? "PASS" : "FAIL"} ${id} Ã¢â‚¬â€ ${detail}`
   );
 }
 
@@ -130,7 +129,7 @@ try {
   });
 
   // ==========================================================
-  // M4-01 â€” TYPED ATTEMPT SPECIFICATION
+  // M4-01 Ã¢â‚¬â€ TYPED ATTEMPT SPECIFICATION
   // ==========================================================
 
   const source = fs.readFileSync(
@@ -164,7 +163,7 @@ try {
   );
 
   // ==========================================================
-  // M4-02 / 03 / 04 / 06 â€” SUCCESS PATH
+  // M4-02 / 03 / 04 / 06 Ã¢â‚¬â€ SUCCESS PATH
   // ==========================================================
 
   const successSpec = {
@@ -327,7 +326,7 @@ try {
   );
 
   // ==========================================================
-  // M4-07 â€” BLOCKED PATH
+  // M4-07 Ã¢â‚¬â€ BLOCKED PATH
   // ==========================================================
 
   const blocked = cp.run({
@@ -372,7 +371,7 @@ try {
   );
 
   // ==========================================================
-  // M4-08 / M4-09 â€” FAILED PATH + TERMINAL PRECEDENCE
+  // M4-08 / M4-09 Ã¢â‚¬â€ FAILED PATH + TERMINAL PRECEDENCE
   // ==========================================================
 
   const failed = cp.run({
@@ -424,7 +423,7 @@ try {
   );
 
   // ==========================================================
-  // M4-10 â€” VERIFICATION SEPARATE FROM EXECUTION
+  // M4-10 Ã¢â‚¬â€ VERIFICATION SEPARATE FROM EXECUTION
   // ==========================================================
 
   const verification = cp.verify("m4_success");
@@ -447,7 +446,7 @@ try {
   );
 
   // ==========================================================
-  // M4-11 â€” CLOSEOUT SEPARATE FROM WORKER EXECUTION
+  // M4-11 Ã¢â‚¬â€ CLOSEOUT SEPARATE FROM WORKER EXECUTION
   // ==========================================================
 
   const preCloseout = readJson(
@@ -477,7 +476,7 @@ try {
   );
 
   // ==========================================================
-  // M4-13 â€” NO MODEL / NETWORK / SHELL EXECUTION
+  // M4-13 Ã¢â‚¬â€ NO MODEL / NETWORK / SHELL EXECUTION
   // ==========================================================
 
   const allowedModes = [
@@ -521,7 +520,7 @@ try {
   );
 
   // ==========================================================
-  // M4-05 â€” PRODUCT AUTHORIZATION BEFORE REAL EXECUTION
+  // M4-05 Ã¢â‚¬â€ PRODUCT AUTHORIZATION BEFORE REAL EXECUTION
   //
   // Current ControlPlane.run() is a deterministic reference
   // executor. It is not yet the authority that dispatches the
@@ -541,7 +540,7 @@ try {
   );
 
   // ==========================================================
-  // M4-12 â€” DURABLE IDEMPOTENCY / REPLAY AUTHORITY
+  // M4-12 Ã¢â‚¬â€ DURABLE IDEMPOTENCY / REPLAY AUTHORITY
   //
   // A repeated attempt identifier currently replaces its
   // filesystem record. Runtime State is not yet authoritative
@@ -561,7 +560,7 @@ try {
   );
 
   // ==========================================================
-  // M4-14 â€” DURABLE UNIFIED ATTEMPT HISTORY
+  // M4-14 Ã¢â‚¬â€ DURABLE UNIFIED ATTEMPT HISTORY
   //
   // Control Plane file history exists, but unified Runtime
   // State history is not yet bound directly to ControlPlane.run.
