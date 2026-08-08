@@ -1,0 +1,258 @@
+{
+  "schemaVersion": "sera.runtime-capability-registry.v1",
+  "milestone": 5,
+  "purpose": "Canonical runtime-operability and composition registry. This registry does not replace repository inventory or portable-release claim/proof state.",
+  "authorityRule": "Registered capabilities cannot self-authorize execution, terminal state, certification, or promotion.",
+  "realResourceProofRule": {
+    "requiredForExternalCapabilityClaims": true,
+    "syntheticFixtureCanCertifyFormatClaim": false,
+    "requiredEvidence": [
+      "resource-identity-or-provenance",
+      "expected-result",
+      "actual-result",
+      "validation-assertions",
+      "evidence-reference",
+      "failure-path",
+      "clean-closeout"
+    ],
+    "multiFormatRule": "Every advertised resource format requires its own representative real-resource proof."
+  },
+  "capabilities": [
+    {
+      "capabilityId": "planner",
+      "name": "Planner / Task Capability",
+      "layer": "Capability",
+      "productionEntryPoint": "packages/planner",
+      "compositionState": "composition-pending",
+      "authority": {
+        "requestAuthority": "unified-control-plane",
+        "executionAuthority": "execution-authority",
+        "stateAuthority": "runtime-state",
+        "evidenceAuthority": "runtime-state",
+        "selfAuthorizationAllowed": false
+      },
+      "resourceTypes": [
+        {
+          "id": "task-request",
+          "description": "Real governed task request",
+          "requiresRealResource": true,
+          "proofState": "required"
+        }
+      ],
+      "existingEvidence": [],
+      "knownLimitations": [
+        "M5 composition not yet certified"
+      ]
+    },
+    {
+      "capabilityId": "worker",
+      "name": "Worker Capability",
+      "layer": "Worker",
+      "productionEntryPoint": "packages/workers",
+      "compositionState": "composition-pending",
+      "authority": {
+        "requestAuthority": "unified-control-plane",
+        "executionAuthority": "execution-authority",
+        "stateAuthority": "runtime-state",
+        "evidenceAuthority": "runtime-state",
+        "selfAuthorizationAllowed": false
+      },
+      "resourceTypes": [
+        {
+          "id": "workspace-task",
+          "description": "Real bounded workspace task",
+          "requiresRealResource": true,
+          "proofState": "required"
+        }
+      ],
+      "existingEvidence": [
+        "tests/integration/developer-worker.test.ts",
+        "tests/integration/developer-worker-v2.test.ts"
+      ],
+      "knownLimitations": [
+        "historical worker tests do not by themselves certify M5 runtime composition"
+      ]
+    },
+    {
+      "capabilityId": "tool",
+      "name": "Governed Tool Capability",
+      "layer": "Tool",
+      "productionEntryPoint": "packages/tools",
+      "compositionState": "composition-pending",
+      "authority": {
+        "requestAuthority": "unified-control-plane",
+        "executionAuthority": "execution-authority",
+        "stateAuthority": "runtime-state",
+        "evidenceAuthority": "runtime-state",
+        "selfAuthorizationAllowed": false
+      },
+      "resourceTypes": [
+        {
+          "id": "local-file",
+          "description": "Real local file resource",
+          "requiresRealResource": true,
+          "proofState": "required"
+        }
+      ],
+      "existingEvidence": [],
+      "knownLimitations": [
+        "direct or legacy tool execution must not bypass execution authority"
+      ]
+    },
+    {
+      "capabilityId": "local-model",
+      "name": "Local Model Runtime",
+      "layer": "Provider",
+      "productionEntryPoint": "packages/model-runtime/src/model-runtime.ts",
+      "compositionState": "composition-pending",
+      "authority": {
+        "requestAuthority": "unified-control-plane",
+        "executionAuthority": "runtime-model-boundary",
+        "stateAuthority": "runtime-state",
+        "evidenceAuthority": "runtime-state",
+        "selfAuthorizationAllowed": false
+      },
+      "resourceTypes": [
+        {
+          "id": "installed-local-model",
+          "description": "Actually installed local model such as governed Ollama",
+          "requiresRealResource": true,
+          "proofState": "required",
+          "knownLimitations": [
+            "existing Local Model Runtime inventory explicitly states real models are not yet invoked"
+          ]
+        }
+      ],
+      "existingEvidence": [
+        "tests/local-model-runtime-v1.test.ts",
+        "architecture/capability-claim-proof-registry-v1.json"
+      ],
+      "knownLimitations": [
+        "fixture provider proof is not sufficient for real-local-model certification",
+        "model output remains candidate intelligence only"
+      ]
+    },
+    {
+      "capabilityId": "knowledge-intake",
+      "name": "Knowledge and Universal Intake Runtime",
+      "layer": "Knowledge",
+      "productionEntryPoint": "packages/knowledge-runtime/src/knowledge-runtime.ts",
+      "compositionState": "composition-pending",
+      "authority": {
+        "requestAuthority": "unified-control-plane",
+        "executionAuthority": "runtime-capability-boundary",
+        "stateAuthority": "runtime-state",
+        "evidenceAuthority": "runtime-state",
+        "selfAuthorizationAllowed": false
+      },
+      "resourceTypes": [
+        {
+          "id": "local-text-file",
+          "description": "Real local textual file",
+          "requiresRealResource": true,
+          "proofState": "required"
+        },
+        {
+          "id": "local-directory",
+          "description": "Real local directory",
+          "requiresRealResource": true,
+          "proofState": "required"
+        },
+        {
+          "id": "predownloaded-snapshot",
+          "description": "Real predownloaded source snapshot",
+          "requiresRealResource": true,
+          "proofState": "required"
+        },
+        {
+          "id": "opaque-media",
+          "description": "Real media resource preserved opaquely when extraction is unsupported",
+          "requiresRealResource": true,
+          "proofState": "required"
+        },
+        {
+          "id": "archive",
+          "description": "Real archive resource",
+          "requiresRealResource": true,
+          "proofState": "required"
+        },
+        {
+          "id": "url-reference",
+          "description": "Real URL reference metadata",
+          "requiresRealResource": true,
+          "proofState": "required",
+          "knownLimitations": [
+            "current capability records URL references but does not fetch public URLs"
+          ]
+        }
+      ],
+      "existingEvidence": [
+        "tests/knowledge-intake-runtime-v1.test.ts"
+      ],
+      "knownLimitations": [
+        "no OCR",
+        "no transcription provider",
+        "no public URL fetch",
+        "no archive extraction",
+        "imported content is not executed"
+      ]
+    },
+    {
+      "capabilityId": "memory",
+      "name": "Memory Capability",
+      "layer": "Memory",
+      "productionEntryPoint": "packages/memory/src/memory-store.ts",
+      "compositionState": "composition-pending",
+      "authority": {
+        "requestAuthority": "unified-control-plane",
+        "executionAuthority": "runtime-capability-boundary",
+        "stateAuthority": "runtime-state",
+        "evidenceAuthority": "runtime-state",
+        "selfAuthorizationAllowed": false
+      },
+      "resourceTypes": [
+        {
+          "id": "durable-memory-record",
+          "description": "Real persisted memory record tied to governed work",
+          "requiresRealResource": true,
+          "proofState": "required"
+        }
+      ],
+      "existingEvidence": [],
+      "knownLimitations": [
+        "M5 must prove memory participates in authoritative attempt/evidence lifecycle"
+      ]
+    },
+    {
+      "capabilityId": "capability-engine",
+      "name": "Capability Engine",
+      "layer": "Capability",
+      "productionEntryPoint": "packages/capability-engine/src/capability-engine.ts",
+      "compositionState": "composition-pending",
+      "authority": {
+        "requestAuthority": "unified-control-plane",
+        "executionAuthority": "execution-authority",
+        "stateAuthority": "runtime-state",
+        "evidenceAuthority": "runtime-state",
+        "selfAuthorizationAllowed": false
+      },
+      "resourceTypes": [
+        {
+          "id": "capability-candidate-bundle",
+          "description": "Real immutable capability candidate bundle",
+          "requiresRealResource": true,
+          "proofState": "required"
+        }
+      ],
+      "existingEvidence": [
+        "tests/capability-engine-recursive-learning-v1.test.ts"
+      ],
+      "knownLimitations": [
+        "cannot load arbitrary code",
+        "cannot execute unrestricted shell",
+        "cannot invoke real models/public network",
+        "cannot automatically mutate core source or self-promote"
+      ]
+    }
+  ]
+}

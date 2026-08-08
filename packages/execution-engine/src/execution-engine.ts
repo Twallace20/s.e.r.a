@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -159,7 +160,97 @@ export class IsolatedExecutionEngine {
 
   async execute(request: ExecutionRequest, authorization?: ExecutionAuthorization): Promise<ExecutionResult> {
     if (!this.accepting) throw new ExecutionEngineBlockedError("Execution Engine is shutting down and refuses new execution.", "shutdown_refuses_execution");
-    const baselineHash = directoryHash(this.config.projectRoot);
+    const sourceIntegrityBaseline = request.inputs
+      .filter(
+        (input) =>
+          input.sourceType === "copy-file" ||
+          input.sourceType === "copy-directory"
+      )
+      .map((input) => {
+        const source = input.source;
+
+        if (!source) {
+          throw new Error(
+            `Execution ${input.sourceType} input requires a source for integrity verification.`
+          );
+        }
+
+        const resolvedSource = path.resolve(
+          this.config.projectRoot,
+          source
+        );
+
+        if (!isInside(this.config.projectRoot, resolvedSource)) {
+          throw new Error(
+            "Execution source integrity path escaped project root."
+          );
+        }
+
+        const stat = fs.lstatSync(resolvedSource);
+
+        if (stat.isSymbolicLink()) {
+          throw new Error(
+            "Execution source integrity symlink is blocked."
+          );
+        }
+
+        if (
+          input.sourceType === "copy-file" &&
+          !stat.isFile()
+        ) {
+          throw new Error(
+            "Execution source integrity expected a file."
+          );
+        }
+
+        if (
+          input.sourceType === "copy-directory" &&
+          !stat.isDirectory()
+        ) {
+          throw new Error(
+            "Execution source integrity expected a directory."
+          );
+        }
+
+        return {
+          sourceType: input.sourceType,
+          source: resolvedSource,
+          hash:
+            input.sourceType === "copy-file"
+              ? sha256File(resolvedSource)
+              : directoryHash(resolvedSource)
+        };
+      });
+
+    const declaredSourcesNotMutated = () =>
+      sourceIntegrityBaseline.every((baseline) => {
+        if (!fs.existsSync(baseline.source)) {
+          return false;
+        }
+
+        const stat =
+          fs.lstatSync(baseline.source);
+
+        if (stat.isSymbolicLink()) {
+          return false;
+        }
+
+        if (
+          baseline.sourceType === "copy-file"
+        ) {
+          return (
+            stat.isFile() &&
+            sha256File(baseline.source) ===
+              baseline.hash
+          );
+        }
+
+        return (
+          stat.isDirectory() &&
+          directoryHash(baseline.source) ===
+            baseline.hash
+        );
+      });
     const hash = requestHash(request);
     const evidenceRoot = path.join(this.config.evidenceRoot, request.executionId);
     fs.mkdirSync(evidenceRoot, { recursive: true });
@@ -220,7 +311,7 @@ export class IsolatedExecutionEngine {
       this.updateState(request.executionId, "CLEANED", { completed_at: new Date().toISOString() });
       this.event(request.executionId, "CLEANED", cleanup.cleaned ? "PASS" : "REVIEW", cleanup.message, cleanup);
       writeJson(path.join(evidenceRoot, "cleanup-report.json"), cleanup);
-      const sourceNotMutated = directoryHash(this.config.projectRoot) === baselineHash;
+      const sourceNotMutated = declaredSourcesNotMutated();
       const attempt = this.store.recoveryGet("SELECT current_state FROM attempts WHERE attempt_id = ?", [request.attemptId]);
       const result: ExecutionResult = {
         ok: finalState === "SUCCEEDED_PROCESS" && cleanup.cleaned && sourceNotMutated,
@@ -269,7 +360,7 @@ export class IsolatedExecutionEngine {
         outputs,
         undeclaredOutputs,
         cleanup,
-        sourceNotMutated: directoryHash(this.config.projectRoot) === baselineHash,
+        sourceNotMutated: declaredSourcesNotMutated(),
         attemptSuccessManufactured: false,
         modelUse: false,
         networkUse: false
@@ -588,6 +679,13 @@ function environmentFor(profile: string): Record<string, string> {
   env.PATH = "";
   env.SERA_EXECUTION_ENV = "offline-minimal";
   return env;
+}
+
+function sha256File(filePath: string): string {
+  return crypto
+    .createHash("sha256")
+    .update(fs.readFileSync(filePath))
+    .digest("hex");
 }
 
 function directoryHash(root: string): string {
