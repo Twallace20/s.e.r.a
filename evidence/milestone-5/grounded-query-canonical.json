@@ -1,0 +1,33 @@
+{
+  "ok": true,
+  "status": "ANSWERED",
+  "prompt": "Who is the primary contact for Project Orion?",
+  "answer": "Maya Chen",
+  "sources": [
+    {
+      "rank": 1,
+      "documentId": "knowledge_document_27600575e41fe0d4a4c3265f",
+      "chunkId": "knowledge_chunk_7df7cac08c744cc7be5d280d",
+      "score": 9,
+      "provenance": {
+        "intakeId": "intake_cli_1786472432552",
+        "assetId": "asset_4e4e215da748d4ad96d7390f",
+        "sourceReference": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\SERA_REAL_INTAKE_001.txt",
+        "contentHash": "fb5bd1671d91513a9685c664c5a7659fcf9f778b3e0e56b1b7dce250cd01a1d6"
+      },
+      "trustState": "unreviewed",
+      "candidateStatus": "candidate"
+    }
+  ],
+  "model": {
+    "invocationId": "grounded_model_a1e98f67-8312-44f4-867c-181a176a5373",
+    "providerId": "ollama-loopback-local",
+    "modelId": "qwen2.5-coder:3b",
+    "responseHash": "fa48b9a07789bee6142b94bd72ecb6f87ed17648667a3f806cd65b0407f33f9b",
+    "evidenceRoot": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\.sera\\model-runtime\\grounded_model_a1e98f67-8312-44f4-867c-181a176a5373",
+    "candidateIntelligence": true,
+    "localLoopbackUse": true,
+    "publicNetworkUse": false,
+    "modelUse": true
+  }
+}

@@ -5,11 +5,13 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { RuntimeHost, createRuntimeConfig } from "@sera/runtime-host";
 import {
   DEFAULT_MODEL_POLICY,
+  GOVERNED_LOCAL_MODEL_POLICY,
   LocalModelRuntime,
   ModelRuntimeBlockedError,
   ProviderRegistry,
   createDeterministicFixtureProvider,
   createDisabledLoopbackProvider,
+  createOllamaLoopbackProvider,
   createModelAuthorization,
   createModelRuntimeServices,
   normalizeRequest,
@@ -174,6 +176,18 @@ describe("Local Model Runtime v1", () => {
       const response = readJson(path.join(run.result.evidenceRoot, "response-summary.json"));
       expect(response.observedByteCounts.retainedBytes).toBeLessThanOrEqual(DEFAULT_MODEL_POLICY.limits.maxOutputBytes);
       expect(response.observedByteCounts.outputBytes).toBeGreaterThanOrEqual(response.observedByteCounts.retainedBytes);
+      expect(Buffer.byteLength(run.result.candidateResponseText ?? "", "utf8")).toBeLessThanOrEqual(DEFAULT_MODEL_POLICY.limits.maxOutputBytes);
+    } finally {
+      run.close();
+    }
+  });
+
+  it("candidate response returned to callers is redacted", async () => {
+    const provider = respondingProvider("secret-output", { textContent: "SECRET_TOKEN=provider-leak" });
+    const run = await invokeWithRegistry(new ProviderRegistry([provider]), { providerId: "secret-output" });
+    try {
+      expect(run.result.candidateResponseText).toContain("[REDACTED]");
+      expect(run.result.candidateResponseText).not.toContain("provider-leak");
     } finally {
       run.close();
     }
@@ -719,3 +733,187 @@ function normalizedProof(proof: Awaited<ReturnType<typeof runLocalModelRuntimePr
   for (const key of ["proofRoot", "databasePath", "firstInvocation", "secondInvocation"]) delete clone[key];
   return clone;
 }
+
+describe("M5.7F real Ollama certification", () => {
+  const realOllamaIt = process.env.SERA_REAL_OLLAMA === "1" ? it : it.skip;
+  const modelId = "qwen2.5-coder:3b";
+
+  realOllamaIt("completes a governed real Ollama invocation with durable evidence", async () => {
+    const root = makeRoot("m57f-real");
+    const store = openRuntimeState({ projectRoot: root });
+
+    try {
+      const command = store.acceptCommand({
+        idempotencyKey: nextId("m57f-command"),
+        commandType: "model",
+        payload: {},
+        capability: "local-model-runtime"
+      });
+
+      const attemptId = command.attemptId!;
+
+      store.transitionAttempt({
+        attemptId,
+        fromState: "PENDING",
+        toState: "RUNNING",
+        actor: "m57f-real-ollama-certification"
+      });
+
+      const provider = createOllamaLoopbackProvider({ modelId });
+      const registry = new ProviderRegistry([provider]);
+
+      expect(provider.descriptor.providerId).toBe("ollama-loopback-local");
+      expect(provider.descriptor.fixture).toBe(false);
+      expect(provider.descriptor.localOnly).toBe(true);
+      expect(provider.descriptor.networkCapability).toBe("loopback-local");
+
+      const runtime = new LocalModelRuntime(
+        store,
+        {
+          projectRoot: root,
+          policy: GOVERNED_LOCAL_MODEL_POLICY
+        },
+        registry
+      );
+
+      const invocationId = nextId("m57f-real-invocation");
+      const challenge = "SERA_M57F_GOVERNED_OLLAMA_OK";
+
+      const req = normalizeRequest(
+        request(attemptId, invocationId, {
+          providerId: "ollama-loopback-local",
+          modelId,
+          invocationMode: "chat-completion",
+          capabilities: ["text-generation", "chat-completion"],
+          timeoutMs: GOVERNED_LOCAL_MODEL_POLICY.limits.maxDurationMs,
+          content: "Reply with exactly: " + challenge
+        }),
+        GOVERNED_LOCAL_MODEL_POLICY
+      );
+
+      const authorization = createModelAuthorization(req, {
+        invocationProfile: GOVERNED_LOCAL_MODEL_POLICY.defaultProfile
+      });
+
+      const result = await runtime.invoke(
+        req,
+        authorization,
+        "m57f-real:" + invocationId
+      );
+
+      expect(result.status).toBe("COMPLETED");
+      expect(result.responseHash).toMatch(/^[a-f0-9]{64}$/);
+
+      const invocation = store.recoveryGet(
+        "SELECT * FROM model_invocations WHERE invocation_id = ?",
+        [result.invocationId]
+      );
+
+      expect(invocation?.state).toBe("COMPLETED");
+      expect(invocation?.provider_id).toBe("ollama-loopback-local");
+      expect(invocation?.model_id).toBe(modelId);
+
+      const events = store.recoveryAll(
+        "SELECT * FROM model_events WHERE invocation_id = ? ORDER BY sequence",
+        [result.invocationId]
+      );
+
+      expect(events.length).toBeGreaterThan(0);
+
+      expect(
+        fs.existsSync(
+          path.join(result.evidenceRoot, "final-invocation-report.json")
+        )
+      ).toBe(true);
+
+      expect(
+        fs.existsSync(
+          path.join(result.evidenceRoot, "response-summary.json")
+        )
+      ).toBe(true);
+
+      const response = readJson(
+        path.join(result.evidenceRoot, "response-summary.json")
+      );
+
+      expect(JSON.stringify(response)).toContain(challenge);
+    } finally {
+      store.close();
+    }
+  }, 60_000);
+
+  realOllamaIt("blocks expired authorization before contacting Ollama", async () => {
+    const root = makeRoot("m57f-blocked");
+    const store = openRuntimeState({ projectRoot: root });
+
+    try {
+      const command = store.acceptCommand({
+        idempotencyKey: nextId("m57f-block-command"),
+        commandType: "model",
+        payload: {},
+        capability: "local-model-runtime"
+      });
+
+      const attemptId = command.attemptId!;
+
+      store.transitionAttempt({
+        attemptId,
+        fromState: "PENDING",
+        toState: "RUNNING",
+        actor: "m57f-expired-authorization-certification"
+      });
+
+      let providerCalls = 0;
+      const realProvider = createOllamaLoopbackProvider({ modelId });
+
+      const countedProvider: ModelRuntimeProvider = {
+        ...realProvider,
+        invoke: async (...args) => {
+          providerCalls += 1;
+          return realProvider.invoke(...args);
+        }
+      };
+
+      const runtime = new LocalModelRuntime(
+        store,
+        {
+          projectRoot: root,
+          policy: GOVERNED_LOCAL_MODEL_POLICY
+        },
+        new ProviderRegistry([countedProvider])
+      );
+
+      const invocationId = nextId("m57f-blocked-invocation");
+
+      const req = normalizeRequest(
+        request(attemptId, invocationId, {
+          providerId: "ollama-loopback-local",
+          modelId,
+          invocationMode: "chat-completion",
+          capabilities: ["text-generation", "chat-completion"],
+          timeoutMs: GOVERNED_LOCAL_MODEL_POLICY.limits.maxDurationMs,
+          content: "THIS_REQUEST_MUST_NOT_REACH_OLLAMA"
+        }),
+        GOVERNED_LOCAL_MODEL_POLICY
+      );
+
+      const authorization = createModelAuthorization(req, {
+        invocationProfile: GOVERNED_LOCAL_MODEL_POLICY.defaultProfile,
+        issuedAt: "2000-01-01T00:00:00.000Z",
+        expiresAt: "2000-01-01T00:00:01.000Z"
+      });
+
+      const result = await runtime.invoke(
+        req,
+        authorization,
+        "m57f-blocked:" + invocationId
+      );
+
+      expect(result.status).toBe("BLOCKED");
+      expect(providerCalls).toBe(0);
+      expect(blockReason(result).toLowerCase()).toContain("expired");
+    } finally {
+      store.close();
+    }
+  });
+});

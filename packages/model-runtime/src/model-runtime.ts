@@ -17,6 +17,7 @@ export type ProviderType = "deterministic-fixture" | "local-process" | "loopback
 export type ModelCapability = "text-generation" | "chat-completion" | "structured-json" | "embeddings" | "tool-call-proposal" | "vision-input";
 export type InvocationState = "CREATED" | "AUTHORIZING" | "READY" | "INVOKING" | "COMPLETED" | "FAILED" | "TIMED_OUT" | "CANCELLED" | "BLOCKED";
 export type InvocationMode = "chat-completion" | "text-generation" | "structured-json";
+export type InvocationProfile = "deterministic-local-fixture" | "governed-local-model";
 export type OfflinePolicy = "offline-local";
 
 export interface ModelRuntimeLimits {
@@ -33,7 +34,7 @@ export interface ModelRuntimeLimits {
 
 export interface ModelRuntimePolicy {
   version: typeof MODEL_POLICY_VERSION;
-  defaultProfile: "deterministic-local-fixture";
+  defaultProfile: InvocationProfile;
   offlinePolicy: OfflinePolicy;
   localOnlyRequired: true;
   toolExecutionAllowed: false;
@@ -131,7 +132,7 @@ export interface ModelAuthorization {
   providerId: string;
   modelId: string;
   requestHash: string;
-  invocationProfile: "deterministic-local-fixture";
+  invocationProfile: InvocationProfile;
   allowedCapabilities: ModelCapability[];
   maximumInputBytes: number;
   maximumOutputBytes: number;
@@ -165,6 +166,7 @@ export interface ModelInvocationResult {
   providerId: string;
   modelId: string;
   responseHash?: string;
+  candidateResponseText?: string;
   evidenceRoot: string;
   databasePath: string;
   candidateIntelligence: true;
@@ -266,6 +268,15 @@ export const DEFAULT_MODEL_POLICY: ModelRuntimePolicy = {
 
 const TERMINAL_INVOCATIONS = new Set<InvocationState>(["COMPLETED", "FAILED", "TIMED_OUT", "CANCELLED", "BLOCKED"]);
 
+
+export const GOVERNED_LOCAL_MODEL_POLICY: ModelRuntimePolicy = {
+  ...DEFAULT_MODEL_POLICY,
+  defaultProfile: "governed-local-model",
+  limits: {
+    ...DEFAULT_MODEL_POLICY.limits,
+    maxDurationMs: 30_000
+  }
+};
 export class ModelRuntimeBlockedError extends Error {
   constructor(message: string, readonly code: string) {
     super(message);
@@ -576,7 +587,7 @@ export class LocalModelRuntime {
       request.invocationId
     ]);
     this.event(request.invocationId, "COMPLETED", "PASS", "Provider returned bounded candidate intelligence.", { responseHash: normalized.responseHash, candidateIntelligence: true, localLoopbackUse, publicNetworkUse });
-    return this.resultFromDurableInvocation(request.invocationId);
+    return { ...this.resultFromDurableInvocation(request.invocationId), candidateResponseText: normalized.candidateResponseText };
   }
 
   private blockInvocation(request: NormalizedModelRequest, evidenceRoot: string, reason: string): ModelInvocationResult {
@@ -653,7 +664,7 @@ export function createModelAuthorization(request: NormalizedModelRequest, input:
     providerId: input.providerId ?? request.providerId,
     modelId: input.modelId ?? request.modelId,
     requestHash: input.requestHash ?? request.requestHash,
-    invocationProfile: input.invocationProfile ?? "deterministic-local-fixture",
+    invocationProfile: input.invocationProfile ?? DEFAULT_MODEL_POLICY.defaultProfile,
     allowedCapabilities: input.allowedCapabilities ?? request.capabilities,
     maximumInputBytes: input.maximumInputBytes ?? DEFAULT_MODEL_POLICY.limits.maxInputBytes,
     maximumOutputBytes: input.maximumOutputBytes ?? DEFAULT_MODEL_POLICY.limits.maxOutputBytes,
@@ -768,6 +779,288 @@ export function createDeterministicFixtureProvider(): ModelRuntimeProvider {
   };
 }
 
+export interface OllamaLoopbackProviderInput {
+  endpoint?: string;
+  modelId: string;
+  modelVersion?: string | null;
+  displayName?: string;
+  modelFamily?: string;
+  contextLimit?: number | null;
+  outputLimit?: number | null;
+  localStorageReference?: string | null;
+}
+
+export function createOllamaLoopbackProvider(
+  input: OllamaLoopbackProviderInput
+): ModelRuntimeProvider {
+  const endpoint = input.endpoint ?? "http://127.0.0.1:11434";
+
+  if (!isLoopbackEndpoint(endpoint)) {
+    throw new ModelRuntimeBlockedError(
+      "Ollama provider endpoint must be loopback-local.",
+      "public_endpoint_blocked"
+    );
+  }
+
+  if (!input.modelId || input.modelId.trim().length === 0) {
+    throw new ModelRuntimeBlockedError(
+      "Ollama provider requires an explicit installed model ID.",
+      "invalid_model_id"
+    );
+  }
+
+  const normalizedEndpoint =
+    endpoint.replace(/\/+$/, "");
+
+  const descriptor = providerDescriptor({
+    providerId: "ollama-loopback-local",
+    providerVersion: "v1",
+    providerType: "loopback-local-endpoint",
+    displayName: "Ollama Loopback Local Provider",
+    enabled: true,
+    localOnly: true,
+    offlineCompatible: true,
+    fixture: false,
+    networkCapability: "loopback-local",
+    endpointIdentity: redactSecrets(normalizedEndpoint),
+    cancellationSupport: "supported",
+    supportedInvocationModes: [
+      "chat-completion",
+      "text-generation"
+    ],
+    supportedModelCapabilities: [
+      "text-generation",
+      "chat-completion"
+    ],
+    limitations: [
+      "candidate intelligence only",
+      "no tool execution authority",
+      "explicitly configured installed models only",
+      "no automatic model download",
+      "loopback endpoint only"
+    ]
+  });
+
+  const model: ModelDescriptor = {
+    providerId: descriptor.providerId,
+    modelId: input.modelId,
+    modelVersion: input.modelVersion ?? null,
+    displayName:
+      input.displayName ??
+      input.modelId,
+    modelFamily:
+      input.modelFamily ??
+      input.modelId.split(":")[0] ??
+      "ollama-local",
+    contextLimit:
+      input.contextLimit ?? null,
+    outputLimit:
+      input.outputLimit ?? null,
+    supportedCapabilities: [
+      "text-generation",
+      "chat-completion"
+    ],
+    toolUseSupport: false,
+    structuredOutputSupport: false,
+    embeddingSupport: false,
+    availability: "available",
+    localStorageReference:
+      input.localStorageReference ??
+      `ollama:${input.modelId}`,
+    modelFingerprint: stableHash({
+      providerId: descriptor.providerId,
+      modelId: input.modelId,
+      modelVersion: input.modelVersion ?? null,
+      endpoint: normalizedEndpoint,
+      local: true
+    }),
+    factSources: {
+      provider:
+        "explicit S.E.R.A. Ollama loopback provider configuration",
+      availability:
+        "configured as an already-installed local Ollama model; live invocation is required for certification",
+      network:
+        "loopback-local endpoint only"
+    },
+    unknownFields: [
+      ...(input.modelVersion === undefined
+        ? ["modelVersion"]
+        : []),
+      ...(input.contextLimit === undefined
+        ? ["contextLimit"]
+        : []),
+      ...(input.outputLimit === undefined
+        ? ["outputLimit"]
+        : [])
+    ]
+  };
+
+  return {
+    descriptor,
+
+    health: () => ({
+      status: "healthy",
+      message:
+        "Ollama provider is explicitly configured for loopback-local invocation; live provider availability is established by governed invocation.",
+      localLoopbackUse: true,
+      publicNetworkUse: false
+    }),
+
+    catalog: () => [
+      { ...model }
+    ],
+
+    async invoke(
+      request,
+      signal
+    ): Promise<ProviderResponse> {
+      const payload = {
+        model: request.modelId,
+        stream: false,
+        messages: [
+          ...(request.systemInstruction
+            ? [
+                {
+                  role: "system",
+                  content:
+                    request.systemInstruction
+                }
+              ]
+            : []),
+          ...request.messages.map(
+            (message) => ({
+              role: message.role,
+              content: message.content
+            })
+          )
+        ],
+        options: {
+          temperature:
+            request.temperature ?? 0,
+          ...(request.seed !== undefined &&
+          request.seed !== null
+            ? { seed: request.seed }
+            : {}),
+          num_predict:
+            request.maxOutputUnits
+        }
+      };
+
+      let response: Response;
+
+      try {
+        response = await fetch(
+          `${normalizedEndpoint}/api/chat`,
+          {
+            method: "POST",
+            headers: {
+              "content-type":
+                "application/json"
+            },
+            body: JSON.stringify(payload),
+            signal
+          }
+        );
+      }
+      catch (error) {
+        if (signal.aborted) {
+          return {
+            status: "cancelled",
+            textContent: "",
+            finishReason:
+              "aborted",
+            warnings: [
+              "Ollama loopback invocation was aborted."
+            ]
+          };
+        }
+
+        throw new ModelRuntimeBlockedError(
+          `Ollama loopback invocation failed: ${errorMessage(error)}`,
+          "ollama_invocation_failed"
+        );
+      }
+
+      if (!response.ok) {
+        const body =
+          await response.text();
+
+        throw new ModelRuntimeBlockedError(
+          `Ollama loopback returned HTTP ${response.status}: ${strictRedact(body).slice(0, 500)}`,
+          "ollama_http_failure"
+        );
+      }
+
+      const body =
+        await response.json() as {
+          model?: string;
+          message?: {
+            role?: string;
+            content?: string;
+            tool_calls?: unknown[];
+          };
+          response?: string;
+          done?: boolean;
+          done_reason?: string;
+          prompt_eval_count?: number;
+          eval_count?: number;
+          total_duration?: number;
+          load_duration?: number;
+        };
+
+      const textContent =
+        typeof body.message?.content ===
+        "string"
+          ? body.message.content
+          : typeof body.response ===
+              "string"
+            ? body.response
+            : "";
+
+      if (
+        textContent.length === 0
+      ) {
+        throw new ModelRuntimeBlockedError(
+          "Ollama returned no text content.",
+          "ollama_empty_response"
+        );
+      }
+
+      return {
+        status: "completed",
+        textContent,
+        finishReason:
+          body.done_reason ??
+          (body.done
+            ? "stop"
+            : "completed"),
+        usage: {
+          providerReported: true,
+          providerModel:
+            body.model ??
+            request.modelId,
+          promptEvalCount:
+            body.prompt_eval_count ??
+            null,
+          evalCount:
+            body.eval_count ??
+            null,
+          totalDurationNs:
+            body.total_duration ??
+            null,
+          loadDurationNs:
+            body.load_duration ??
+            null
+        },
+        warnings: [
+          "real local Ollama model",
+          "candidate intelligence only",
+          "loopback-local provider"
+        ]
+      };
+    }
+  };
+}
 export function createDisabledLoopbackProvider(endpoint = "http://127.0.0.1:11434"): ModelRuntimeProvider {
   const local = isLoopbackEndpoint(endpoint);
   const descriptor = providerDescriptor({
@@ -1056,9 +1349,10 @@ function validateProviderDescriptorThrows(provider: ProviderDescriptor): boolean
   }
 }
 
-function normalizeResponse(request: NormalizedModelRequest, provider: ProviderDescriptor, model: ModelDescriptor, response: ProviderResponse, policy: ModelRuntimePolicy): { responseHash: string; outputBytes: number; responseSummary: Record<string, unknown>; usage: Record<string, unknown>; finalReport: Record<string, unknown> } {
+function normalizeResponse(request: NormalizedModelRequest, provider: ProviderDescriptor, model: ModelDescriptor, response: ProviderResponse, policy: ModelRuntimePolicy): { responseHash: string; outputBytes: number; candidateResponseText: string; responseSummary: Record<string, unknown>; usage: Record<string, unknown>; finalReport: Record<string, unknown> } {
   const observedOutputBytes = Buffer.byteLength(response.textContent, "utf8");
-  const text = response.textContent.slice(0, policy.limits.maxOutputBytes);
+  const text = truncateUtf8(response.textContent, policy.limits.maxOutputBytes);
+  const candidateResponseText = strictRedact(text);
   const outputBytes = Buffer.byteLength(text, "utf8");
   const structured = stableJson(response.structuredContent ?? {});
   if (Buffer.byteLength(structured, "utf8") > policy.limits.maxStructuredBytes) throw new ModelRuntimeBlockedError("Structured response size limit exceeded.", "structured_output_limit");
@@ -1069,7 +1363,7 @@ function normalizeResponse(request: NormalizedModelRequest, provider: ProviderDe
     providerId: request.providerId,
     modelId: request.modelId,
     responseStatus: "COMPLETED",
-    textContentRedacted: strictRedact(text),
+    textContentRedacted: candidateResponseText,
     structuredContent: response.structuredContent ?? null,
     proposedToolCalls: toolCalls.map((call) => ({ ...call, inert: true, executed: false, requiresControlPlaneAuthorization: true })),
     finishReason: response.finishReason,
@@ -1088,6 +1382,7 @@ function normalizeResponse(request: NormalizedModelRequest, provider: ProviderDe
   return {
     responseHash,
     outputBytes,
+    candidateResponseText,
     responseSummary: { ...normalized, responseHash },
     usage: { providerReportedUsage: response.usage ?? null, providerTokenCountsGuaranteed: false, observedOutputBytes: outputBytes },
     finalReport: {
@@ -1131,6 +1426,12 @@ function strictRedact(value: string): string {
   return redactSecrets(value)
     .replace(/SECRET[_-]?[A-Z0-9_:-]*/gi, "[REDACTED]")
     .replace(/TOKEN[_-]?[A-Z0-9_:-]*/gi, "[REDACTED]");
+}
+
+function truncateUtf8(value: string, maximumBytes: number): string {
+  const bytes = Buffer.from(value, "utf8");
+  if (bytes.length <= maximumBytes) return value;
+  return bytes.subarray(0, maximumBytes).toString("utf8").replace(/\uFFFD$/, "");
 }
 
 function redactionReport(request: NormalizedModelRequest): Record<string, unknown> {

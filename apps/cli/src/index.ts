@@ -154,6 +154,7 @@ Usage:
   sera loop policy
   sera loop sessions
   sera loop inspect <session-id>
+  sera loop run <grounded-question>
   sera loop prove
   sera learning-governance status
   sera learning-governance policy
@@ -1622,7 +1623,8 @@ async function main(): Promise<void> {
   }
 
   if (cmd === "loop") {
-    const [loopMode, loopSessionId] = rest;
+    const [loopMode, ...loopRest] = rest;
+    const loopSessionId = loopRest[0];
     if (loopMode === "prove") {
       const result = await runIntegratedLoopProof();
       console.log(JSON.stringify(result, null, 2));
@@ -1635,6 +1637,12 @@ async function main(): Promise<void> {
     const store = openRuntimeState(config);
     try {
       const runtime = new IntegratedLoopRuntime(store, { projectRoot: process.cwd() });
+      if (loopMode === "run") {
+        const question = loopRest.join(" ").trim();
+        const result = await runtime.runGroundedQuery(requireArg(question, "grounded question"));
+        console.log(JSON.stringify(result, null, 2));
+        process.exit(result.ok ? 0 : 1);
+      }
       if (loopMode === "status") {
         console.log(JSON.stringify(runtime.status(), null, 2));
         process.exit(0);
@@ -1662,7 +1670,7 @@ async function main(): Promise<void> {
     } finally {
       store.close();
     }
-    throw new Error("Loop command must be one of: status, policy, sessions, inspect, prove.");
+    throw new Error("Loop command must be one of: status, policy, sessions, inspect, run, prove.");
   }
 
   if (cmd === "learning-governance") {
