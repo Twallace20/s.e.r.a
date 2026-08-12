@@ -104,7 +104,7 @@
       "name": "Local Model Runtime",
       "layer": "Provider",
       "productionEntryPoint": "packages/model-runtime/src/model-runtime.ts",
-      "compositionState": "composition-pending",
+      "compositionState": "certified",
       "authority": {
         "requestAuthority": "unified-control-plane",
         "executionAuthority": "runtime-model-boundary",
@@ -117,18 +117,21 @@
           "id": "installed-local-model",
           "description": "Actually installed local model such as governed Ollama",
           "requiresRealResource": true,
-          "proofState": "required",
+          "proofState": "certified",
           "knownLimitations": [
-            "existing Local Model Runtime inventory explicitly states real models are not yet invoked"
+            "certification is bounded to the captured Ollama model identity and governed invocation evidence"
           ]
         }
       ],
       "existingEvidence": [
         "tests/local-model-runtime-v1.test.ts",
-        "architecture/capability-claim-proof-registry-v1.json"
+        "architecture/capability-claim-proof-registry-v1.json",
+        "evidence/milestone-5/grounded-query-canonical.json",
+        "evidence/milestone-5/ollama-model-identity.json",
+        "evidence/milestone-5/ollama-expired-authorization-proof.json"
       ],
       "knownLimitations": [
-        "fixture provider proof is not sufficient for real-local-model certification",
+        "certification does not extend beyond the captured real Ollama model and invocation",
         "model output remains candidate intelligence only"
       ]
     },

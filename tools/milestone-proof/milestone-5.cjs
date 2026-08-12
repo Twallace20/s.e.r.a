@@ -26,6 +26,11 @@ const architecturePath = path.join(
   "RUNTIME_CAPABILITY_COMPOSITION_V1.md"
 );
 
+const claimRegistryPath = path.join(root, "architecture", "capability-claim-proof-registry-v1.json");
+const groundedQueryEvidencePath = path.join(root, "evidence", "milestone-5", "grounded-query-canonical.json");
+const ollamaIdentityEvidencePath = path.join(root, "evidence", "milestone-5", "ollama-model-identity.json");
+const ollamaFailureEvidencePath = path.join(root, "evidence", "milestone-5", "ollama-expired-authorization-proof.json");
+
 const compositionModule = path.join(
   root,
   "packages",
@@ -290,8 +295,12 @@ async function main() {
             typeof resource.id === "string" &&
             resource.requiresRealResource ===
               true &&
-            resource.proofState !==
+            [
+              "required",
               "certified"
+            ].includes(
+              resource.proofState
+            )
         )
     );
 
@@ -1218,6 +1227,93 @@ async function main() {
   }
 
   // =========================================================
+  // M5-06 — LOCAL MODEL RUNTIME
+  // =========================================================
+
+  for (const [filePath, label] of [
+    [claimRegistryPath, "Capability claim/proof registry"],
+    [groundedQueryEvidencePath, "Governed grounded-query evidence"],
+    [ollamaIdentityEvidencePath, "Ollama model identity evidence"],
+    [ollamaFailureEvidencePath, "Expired-authorization failure evidence"]
+  ]) {
+    requireFile(filePath, label);
+  }
+
+  const claimRegistry = JSON.parse(fs.readFileSync(claimRegistryPath, "utf8"));
+  const groundedQuery = JSON.parse(fs.readFileSync(groundedQueryEvidencePath, "utf8"));
+  const ollamaIdentity = JSON.parse(fs.readFileSync(ollamaIdentityEvidencePath, "utf8"));
+  const ollamaFailure = JSON.parse(fs.readFileSync(ollamaFailureEvidencePath, "utf8"));
+  const localModelCapability = capabilities.find(capability => capability.capabilityId === "local-model");
+  const localOllamaClaim = claimRegistry.claims.find(claim => claim.claimId === "real-local-ollama-candidate");
+  const serializedGroundedQuery = JSON.stringify(groundedQuery);
+
+  const localModelPass = Boolean(
+    architecture.includes("M5-06 certifies Local Model Runtime (`local-model`)") &&
+    localModelCapability &&
+    localModelCapability.compositionState === "certified" &&
+    localModelCapability.authority.requestAuthority === "unified-control-plane" &&
+    localModelCapability.authority.selfAuthorizationAllowed === false &&
+    localModelCapability.resourceTypes.some(resource =>
+      resource.id === "installed-local-model" && resource.proofState === "certified"
+    ) &&
+    localOllamaClaim &&
+    ["ollama-tags", "model-digest", "local-model-runtime-invocation"].every(required =>
+      localOllamaClaim.proofRequired.includes(required)
+    ) &&
+    ollamaIdentity.schemaVersion === "sera.m5.local-model-identity.v1" &&
+    ollamaIdentity.providerId === "ollama-loopback-local" &&
+    ollamaIdentity.modelId === groundedQuery.model.modelId &&
+    /^[a-f0-9]{64}$/.test(String(ollamaIdentity.digest)) &&
+    ollamaIdentity.localLoopbackUse === true &&
+    ollamaIdentity.publicNetworkUse === false &&
+    groundedQuery.ok === true &&
+    groundedQuery.status === "ANSWERED" &&
+    groundedQuery.prompt === "Who is the primary contact for Project Orion?" &&
+    groundedQuery.answer === "Maya Chen" &&
+    groundedQuery.sources.length > 0 &&
+    groundedQuery.sources.every(source =>
+      source.candidateStatus === "candidate" &&
+      /^[a-f0-9]{64}$/.test(String(source.provenance.contentHash)) &&
+      String(source.provenance.sourceReference).startsWith("<REPOSITORY_ROOT>/")
+    ) &&
+    groundedQuery.model.providerId === "ollama-loopback-local" &&
+    /^[a-f0-9]{64}$/.test(String(groundedQuery.model.responseHash)) &&
+    String(groundedQuery.model.evidenceRoot).startsWith("<REPOSITORY_ROOT>/.sera/model-runtime/") &&
+    groundedQuery.model.candidateIntelligence === true &&
+    groundedQuery.model.localLoopbackUse === true &&
+    groundedQuery.model.publicNetworkUse === false &&
+    !/[A-Za-z]:\\\\Users\\\\/i.test(serializedGroundedQuery) &&
+    ollamaFailure.success === true &&
+    ollamaFailure.numPassedTests === 1 &&
+    ollamaFailure.numFailedTests === 0
+  );
+
+  check(
+    "M5-06",
+    localModelPass,
+    localModelPass
+      ? "installed Ollama model identity and digest, governed candidate-only invocation, durable hashed evidence, loopback-only boundary, and pre-provider expired-authorization block certified"
+      : "local-model certification evidence or authority boundary incomplete",
+    {
+      modelId: ollamaIdentity.modelId,
+      modelDigest: ollamaIdentity.digest,
+      invocationId: groundedQuery.model.invocationId,
+      responseHash: groundedQuery.model.responseHash,
+      failureProof: {
+        success: ollamaFailure.success,
+        passed: ollamaFailure.numPassedTests,
+        failed: ollamaFailure.numFailedTests
+      }
+    }
+  );
+
+  artifacts.localModel = {
+    groundedQuery: path.relative(root, groundedQueryEvidencePath),
+    modelIdentity: path.relative(root, ollamaIdentityEvidencePath),
+    expiredAuthorization: path.relative(root, ollamaFailureEvidencePath)
+  };
+
+  // =========================================================
   // FINAL REPORT
   // =========================================================
 
@@ -1233,7 +1329,7 @@ async function main() {
     milestone: 5,
 
     scope:
-      "M5-01-M5-05",
+      "M5-01-M5-06",
 
     passCount,
 
@@ -1245,7 +1341,6 @@ async function main() {
     artifacts,
 
     remainingMilestoneGates: [
-      "M5-06",
       "M5-07",
       "M5-08",
       "M5-09",
@@ -1269,15 +1364,15 @@ async function main() {
   );
 
   const complete =
-    checks.length === 5 &&
-    passCount === 5;
+    checks.length === 6 &&
+    passCount === 6;
 
   console.log("");
 
   console.log(
     complete
       ? "MILESTONE_5_BATCH_2_PASS"
-      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/5`
+      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/6`
   );
 
   console.log(

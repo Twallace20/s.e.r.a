@@ -65,3 +65,8 @@ These registries must not silently overwrite one another's meaning.
 
 Milestone 5 contains exactly twelve gates: M5-01 through M5-12.
 Additional discoveries do not silently expand the milestone.
+
+M5-06 certifies Local Model Runtime (`local-model`) against the universal
+requirements above and the `real-local-ollama-candidate` claim requirements.
+Later gate meanings must be added only when their acceptance boundaries are
+made explicit.
