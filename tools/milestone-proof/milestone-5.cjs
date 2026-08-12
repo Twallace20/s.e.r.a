@@ -30,6 +30,7 @@ const claimRegistryPath = path.join(root, "architecture", "capability-claim-proo
 const groundedQueryEvidencePath = path.join(root, "evidence", "milestone-5", "grounded-query-canonical.json");
 const ollamaIdentityEvidencePath = path.join(root, "evidence", "milestone-5", "ollama-model-identity.json");
 const ollamaFailureEvidencePath = path.join(root, "evidence", "milestone-5", "ollama-expired-authorization-proof.json");
+const knowledgeIntakeEvidencePath = path.join(root, "evidence", "milestone-5", "knowledge-intake-real-resource-proof.json");
 
 const compositionModule = path.join(
   root,
@@ -1314,6 +1315,83 @@ async function main() {
   };
 
   // =========================================================
+  // M5-07 — KNOWLEDGE AND UNIVERSAL INTAKE RUNTIME
+  // =========================================================
+
+  requireFile(knowledgeIntakeEvidencePath, "Knowledge intake real-resource evidence");
+  const knowledgeEvidence = JSON.parse(fs.readFileSync(knowledgeIntakeEvidencePath, "utf8"));
+  const knowledgeCapability = capabilities.find(capability => capability.capabilityId === "knowledge-intake");
+  const expectedResources = new Map([
+    ["local-text-file", ["INDEXED"]],
+    ["local-directory", ["INDEXED", "OPAQUE_PRESERVED"]],
+    ["predownloaded-snapshot", ["INDEXED", "OPAQUE_PRESERVED"]],
+    ["opaque-media", ["OPAQUE_PRESERVED"]],
+    ["archive", ["OPAQUE_PRESERVED"]],
+    ["url-reference", ["INDEXED", "OPAQUE_PRESERVED"]]
+  ]);
+  const resultByLabel = new Map((knowledgeEvidence.results ?? []).map(result => [result.label, result]));
+  const knowledgeSerialized = JSON.stringify(knowledgeEvidence);
+  const resourceEvidencePass = [...expectedResources].every(([label, statuses]) => {
+    const result = resultByLabel.get(label);
+    return Boolean(
+      result &&
+      statuses.includes(result.actualStatus) &&
+      Array.isArray(result.contentHashes) &&
+      result.contentHashes.length > 0 &&
+      result.contentHashes.every(value => /^[a-f0-9]{64}$/.test(String(value))) &&
+      result.candidateStatus === "candidate" &&
+      result.publicNetworkUse === false &&
+      result.modelUse === false &&
+      result.durableEvidenceCreated === true
+    );
+  });
+  const knowledgeAssertions = knowledgeEvidence.assertions ?? {};
+  const knowledgePass = Boolean(
+    architecture.includes("M5-07 certifies Knowledge and Universal Intake Runtime (`knowledge-intake`)") &&
+    knowledgeCapability &&
+    knowledgeCapability.compositionState === "certified" &&
+    knowledgeCapability.authority.requestAuthority === "unified-control-plane" &&
+    knowledgeCapability.authority.stateAuthority === "runtime-state" &&
+    knowledgeCapability.authority.evidenceAuthority === "runtime-state" &&
+    knowledgeCapability.authority.selfAuthorizationAllowed === false &&
+    knowledgeCapability.resourceTypes.length === expectedResources.size &&
+    knowledgeCapability.resourceTypes.every(resource => expectedResources.has(resource.id) && resource.proofState === "certified") &&
+    knowledgeEvidence.schemaVersion === "sera.m5.knowledge-intake-real-resource-proof.v1" &&
+    knowledgeEvidence.gateId === "M5-07" &&
+    knowledgeEvidence.capabilityId === "knowledge-intake" &&
+    resourceEvidencePass &&
+    Object.values(knowledgeAssertions).every(Boolean) &&
+    knowledgeEvidence.failurePath?.actualStatus === "BLOCKED" &&
+    knowledgeEvidence.failurePath?.contactedPublicNetwork === false &&
+    knowledgeEvidence.failurePath?.modelUse === false &&
+    knowledgeEvidence.authority?.requestAuthority === "unified-control-plane" &&
+    knowledgeEvidence.authority?.stateAuthority === "runtime-state" &&
+    knowledgeEvidence.authority?.evidenceAuthority === "runtime-state" &&
+    knowledgeEvidence.authority?.selfAuthorizationAllowed === false &&
+    /^[a-f0-9]{64}$/.test(String(knowledgeEvidence.evidenceDigest)) &&
+    knowledgeEvidence.portablePathsOnly === true &&
+    knowledgeEvidence.cleanCloseout === true &&
+    !/[A-Za-z]:\\\\Users\\\\/i.test(knowledgeSerialized)
+  );
+
+  check(
+    "M5-07",
+    knowledgePass,
+    knowledgePass
+      ? "real local text, directory, predownloaded snapshot, opaque media, archive, and no-fetch URL reference traversed governed Knowledge Runtime with hashes, candidate state, failure proof, and clean closeout"
+      : "knowledge-intake real-resource certification evidence or authority boundary incomplete",
+    {
+      resourceCount: resultByLabel.size,
+      resourceStatuses: Object.fromEntries([...resultByLabel].map(([label, result]) => [label, result.actualStatus])),
+      failureStatus: knowledgeEvidence.failurePath?.actualStatus
+    }
+  );
+
+  artifacts.knowledgeIntake = {
+    realResourceProof: path.relative(root, knowledgeIntakeEvidencePath)
+  };
+
+  // =========================================================
   // FINAL REPORT
   // =========================================================
 
@@ -1341,7 +1419,6 @@ async function main() {
     artifacts,
 
     remainingMilestoneGates: [
-      "M5-07",
       "M5-08",
       "M5-09",
       "M5-10",
@@ -1364,15 +1441,15 @@ async function main() {
   );
 
   const complete =
-    checks.length === 6 &&
-    passCount === 6;
+    checks.length === 7 &&
+    passCount === 7;
 
   console.log("");
 
   console.log(
     complete
       ? "MILESTONE_5_BATCH_2_PASS"
-      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/6`
+      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/7`
   );
 
   console.log(

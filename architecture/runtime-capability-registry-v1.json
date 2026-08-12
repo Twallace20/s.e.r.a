@@ -140,7 +140,7 @@
       "name": "Knowledge and Universal Intake Runtime",
       "layer": "Knowledge",
       "productionEntryPoint": "packages/knowledge-runtime/src/knowledge-runtime.ts",
-      "compositionState": "composition-pending",
+      "compositionState": "certified",
       "authority": {
         "requestAuthority": "unified-control-plane",
         "executionAuthority": "runtime-capability-boundary",
@@ -153,44 +153,45 @@
           "id": "local-text-file",
           "description": "Real local textual file",
           "requiresRealResource": true,
-          "proofState": "required"
+          "proofState": "certified"
         },
         {
           "id": "local-directory",
           "description": "Real local directory",
           "requiresRealResource": true,
-          "proofState": "required"
+          "proofState": "certified"
         },
         {
           "id": "predownloaded-snapshot",
           "description": "Real predownloaded source snapshot",
           "requiresRealResource": true,
-          "proofState": "required"
+          "proofState": "certified"
         },
         {
           "id": "opaque-media",
           "description": "Real media resource preserved opaquely when extraction is unsupported",
           "requiresRealResource": true,
-          "proofState": "required"
+          "proofState": "certified"
         },
         {
           "id": "archive",
           "description": "Real archive resource",
           "requiresRealResource": true,
-          "proofState": "required"
+          "proofState": "certified"
         },
         {
           "id": "url-reference",
           "description": "Real URL reference metadata",
           "requiresRealResource": true,
-          "proofState": "required",
+          "proofState": "certified",
           "knownLimitations": [
             "current capability records URL references but does not fetch public URLs"
           ]
         }
       ],
       "existingEvidence": [
-        "tests/knowledge-intake-runtime-v1.test.ts"
+        "tests/knowledge-intake-runtime-v1.test.ts",
+        "evidence/milestone-5/knowledge-intake-real-resource-proof.json"
       ],
       "knownLimitations": [
         "no OCR",

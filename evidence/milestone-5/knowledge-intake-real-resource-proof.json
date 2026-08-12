@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "sera.m5.knowledge-intake-real-resource-proof.v1",
+  "gateId": "M5-07",
+  "capabilityId": "knowledge-intake",
+  "resourceIdentity": {
+    "localFile": {
+      "byteSize": 248,
+      "sha256": "fb5bd1671d91513a9685c664c5a7659fcf9f778b3e0e56b1b7dce250cd01a1d6"
+    },
+    "localDirectory": {
+      "entries": [
+        {
+          "relativePath": "ADR-001-CAPABILITY-BASED-EVOLUTION.md",
+          "byteSize": 1617,
+          "sha256": "ff9d5fcbf56fb77067cb6518a6019641169de62f7559b2f9e31e2fd220568ca0"
+        },
+        {
+          "relativePath": "ADR-002-SERA-OS-LAYER-BOUNDARIES.md",
+          "byteSize": 5500,
+          "sha256": "5dccd5247dc0d79f241de7519a9f6a99300950ec718d99d86bfdb2053e397afb"
+        }
+      ],
+      "manifestSha256": "05ac2a5efd56ae4dcd28f589e00d639ad36ae343fb2251768b21754c89262006"
+    },
+    "predownloadedSnapshot": {
+      "byteSize": 3545725,
+      "sha256": "636ae6633b9d1e39133e600560d6faab9f2afe456ea0b3f3215979efe6c1a3fb"
+    },
+    "opaqueMedia": {
+      "byteSize": 44360,
+      "sha256": "d0c2d7664be113d6f3173e8f546247393348de47c0c731313785a87577b4059c"
+    },
+    "archive": {
+      "byteSize": 86838,
+      "sha256": "34e1235579ad50237fc08c8d92515c487433895eb197357b8b78a9b7088c3d11"
+    },
+    "urlReference": {
+      "reference": "https://www.rfc-editor.org/rfc/rfc3986",
+      "fetched": false
+    }
+  },
+  "results": [
+    {
+      "label": "local-text-file",
+      "sourceType": "local-file",
+      "expectedStatuses": [
+        "INDEXED"
+      ],
+      "actualStatus": "INDEXED",
+      "contentHashes": [
+        "fb5bd1671d91513a9685c664c5a7659fcf9f778b3e0e56b1b7dce250cd01a1d6"
+      ],
+      "candidateStatus": "candidate",
+      "trustState": "unreviewed",
+      "modelUse": false,
+      "publicNetworkUse": false,
+      "durableEvidenceCreated": true
+    },
+    {
+      "label": "local-directory",
+      "sourceType": "local-directory",
+      "expectedStatuses": [
+        "INDEXED",
+        "OPAQUE_PRESERVED"
+      ],
+      "actualStatus": "INDEXED",
+      "contentHashes": [
+        "5dccd5247dc0d79f241de7519a9f6a99300950ec718d99d86bfdb2053e397afb",
+        "ff9d5fcbf56fb77067cb6518a6019641169de62f7559b2f9e31e2fd220568ca0"
+      ],
+      "candidateStatus": "candidate",
+      "trustState": "unreviewed",
+      "modelUse": false,
+      "publicNetworkUse": false,
+      "durableEvidenceCreated": true
+    },
+    {
+      "label": "predownloaded-snapshot",
+      "sourceType": "predownloaded-web-snapshot",
+      "expectedStatuses": [
+        "INDEXED",
+        "OPAQUE_PRESERVED"
+      ],
+      "actualStatus": "INDEXED",
+      "contentHashes": [
+        "fa5116e676889b8fd8c1c82413567fa21c8e92db3a1f7c4cbbe056819af6a3ee"
+      ],
+      "candidateStatus": "candidate",
+      "trustState": "unreviewed",
+      "modelUse": false,
+      "publicNetworkUse": false,
+      "durableEvidenceCreated": true
+    },
+    {
+      "label": "opaque-media",
+      "sourceType": "local-file",
+      "expectedStatuses": [
+        "OPAQUE_PRESERVED"
+      ],
+      "actualStatus": "OPAQUE_PRESERVED",
+      "contentHashes": [
+        "d0c2d7664be113d6f3173e8f546247393348de47c0c731313785a87577b4059c"
+      ],
+      "candidateStatus": "candidate",
+      "trustState": "unreviewed",
+      "modelUse": false,
+      "publicNetworkUse": false,
+      "durableEvidenceCreated": true
+    },
+    {
+      "label": "archive",
+      "sourceType": "local-file",
+      "expectedStatuses": [
+        "OPAQUE_PRESERVED"
+      ],
+      "actualStatus": "OPAQUE_PRESERVED",
+      "contentHashes": [
+        "34e1235579ad50237fc08c8d92515c487433895eb197357b8b78a9b7088c3d11"
+      ],
+      "candidateStatus": "candidate",
+      "trustState": "unreviewed",
+      "modelUse": false,
+      "publicNetworkUse": false,
+      "durableEvidenceCreated": true
+    },
+    {
+      "label": "url-reference",
+      "sourceType": "url-reference",
+      "expectedStatuses": [
+        "INDEXED",
+        "OPAQUE_PRESERVED"
+      ],
+      "actualStatus": "INDEXED",
+      "contentHashes": [
+        "0caf26096f62b601dc95dce7f6b538805a6290ec6ae942e2e5d0ea1b4f26929c"
+      ],
+      "candidateStatus": "candidate",
+      "trustState": "unreviewed",
+      "modelUse": false,
+      "publicNetworkUse": false,
+      "durableEvidenceCreated": true
+    }
+  ],
+  "failurePath": {
+    "expectedStatus": "BLOCKED",
+    "actualStatus": "BLOCKED",
+    "contactedPublicNetwork": false,
+    "modelUse": false
+  },
+  "assertions": {
+    "allAdvertisedResourceClassesExercised": true,
+    "expectedResultsMatch": true,
+    "durableEvidenceCreated": true,
+    "candidateOnly": true,
+    "offlineAndModelFree": true,
+    "urlNotFetched": true,
+    "failurePathBlocked": true,
+    "authoritativeAttemptCompleted": true
+  },
+  "authority": {
+    "requestAuthority": "unified-control-plane",
+    "stateAuthority": "runtime-state",
+    "evidenceAuthority": "runtime-state",
+    "selfAuthorizationAllowed": false
+  },
+  "limitations": [
+    "URL reference metadata was recorded but not fetched.",
+    "Opaque media and archives were preserved without semantic extraction."
+  ],
+  "evidenceDigest": "aeb0b0c2b39b5da7a0b7f9314d99e7788e518f8c9c19563e1f30ea8897292f94",
+  "portablePathsOnly": true,
+  "cleanCloseout": true
+}

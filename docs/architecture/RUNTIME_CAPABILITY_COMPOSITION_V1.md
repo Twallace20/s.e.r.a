@@ -68,5 +68,10 @@ Additional discoveries do not silently expand the milestone.
 
 M5-06 certifies Local Model Runtime (`local-model`) against the universal
 requirements above and the `real-local-ollama-candidate` claim requirements.
+M5-07 certifies Knowledge and Universal Intake Runtime (`knowledge-intake`)
+against the universal requirements above for real local text, local directory,
+predownloaded snapshot, opaque media, archive, and URL-reference resources.
+The URL-reference boundary records metadata without fetching, and opaque media
+and archives are preserved without semantic extraction.
 Later gate meanings must be added only when their acceptance boundaries are
 made explicit.
