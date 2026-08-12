@@ -10,6 +10,7 @@
   "references": [
     { "path": "../artifacts" },
     { "path": "../execution-engine" },
+    { "path": "../memory" },
     { "path": "../operator-gateway" },
     { "path": "../safety" },
     { "path": "../tools" },

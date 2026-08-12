@@ -372,7 +372,8 @@ async function main() {
   }
 
   const {
-    RuntimeCapabilityComposition
+    RuntimeCapabilityComposition,
+    createGovernedMemoryAuthorization
   } = require(compositionModule);
 
   const {
@@ -429,7 +430,8 @@ async function main() {
 
     const composition =
       new RuntimeCapabilityComposition(
-        productPlane
+        productPlane,
+        path.join(workRoot, "memory-proof")
       );
 
     // =======================================================
@@ -1222,6 +1224,65 @@ async function main() {
           [toolCommand.attemptId]
         )
     };
+
+    // =======================================================
+    // M5-08 — GOVERNED MEMORY COMPOSITION
+    // =======================================================
+
+    const memoryCommand = productPlane.acceptCommand({
+      idempotencyKey: "m5-08-governed-memory",
+      commandType: "record-governed-memory",
+      payload: { resource: "real-durable-memory-record" },
+      capability: "memory"
+    });
+    productPlane.transitionAttempt({ attemptId: memoryCommand.attemptId, fromState: "PENDING", toState: "RUNNING", actor: "control-plane", reason: "M5-08 governed memory proof" });
+    const memoryAuthorization = createGovernedMemoryAuthorization(memoryCommand.attemptId);
+    const memoryRecord = {
+      runId: "m5-08-real-run",
+      taskId: "m5-08-real-task",
+      prompt: "Retain governed completion evidence",
+      status: "completed",
+      summary: "Governed durable memory record retained.",
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      runDir: "<PROOF_ROOT>/run",
+      artifacts: ["evidence/milestone-5/latest/proof-report.json"]
+    };
+    const memoryRoot = path.join(workRoot, "memory-proof", ".sera-memory");
+    let invalidAuthorizationBlocked = false;
+    try {
+      composition.memory.record({ attemptId: memoryCommand.attemptId, authorization: { ...memoryAuthorization, attemptId: "tampered" }, record: memoryRecord });
+    } catch {
+      invalidAuthorizationBlocked = true;
+    }
+    const noWriteBeforeAuthorization = !fs.existsSync(memoryRoot);
+    const governedMemory = composition.memory.record({ attemptId: memoryCommand.attemptId, authorization: memoryAuthorization, record: memoryRecord });
+    const memoryAttemptBeforeCloseout = productPlane.recoveryGet("SELECT current_state FROM attempts WHERE attempt_id = ?", [memoryCommand.attemptId]);
+    const memoryEvidence = productPlane.recoveryGet("SELECT evidence_type, location, integrity_hash, producer FROM evidence_references WHERE evidence_reference_id = ?", [governedMemory.evidenceReferenceId]);
+    const memoryCapability = capabilities.find(capability => capability.capabilityId === "memory");
+    const memoryPass = Boolean(
+      architecture.includes("M5-08 certifies Memory Capability (`memory`)") &&
+      memoryCapability?.compositionState === "certified" &&
+      memoryCapability?.authority.requestAuthority === "unified-control-plane" &&
+      memoryCapability?.authority.stateAuthority === "runtime-state" &&
+      memoryCapability?.authority.evidenceAuthority === "runtime-state" &&
+      memoryCapability?.authority.selfAuthorizationAllowed === false &&
+      memoryCapability?.resourceTypes.some(resource => resource.id === "durable-memory-record" && resource.proofState === "certified") &&
+      invalidAuthorizationBlocked && noWriteBeforeAuthorization &&
+      memoryAttemptBeforeCloseout?.current_state === "RUNNING" &&
+      governedMemory.attemptTerminalStateChanged === false &&
+      governedMemory.modelUse === false && governedMemory.publicNetworkUse === false &&
+      fs.existsSync(governedMemory.result.runRecordPath) && fs.existsSync(governedMemory.evidencePath) &&
+      sha256File(governedMemory.evidencePath) === governedMemory.recordHash &&
+      memoryEvidence?.evidence_type === "durable-memory-record" &&
+      memoryEvidence?.integrity_hash === governedMemory.recordHash &&
+      memoryEvidence?.producer === "governed-memory-composition"
+    );
+    productPlane.recordGateOutcome({ attemptId: memoryCommand.attemptId, gateName: "m5-08-governed-memory", required: true, outcome: memoryPass ? "PASS" : "FAIL", evidenceReferences: [governedMemory.evidenceReferenceId], evaluator: "milestone-5-proof" });
+    if (memoryPass) productPlane.transitionAttempt({ attemptId: memoryCommand.attemptId, fromState: "RUNNING", toState: "COMPLETED", actor: "control-plane", reason: "M5-08 proof complete" });
+    const memoryTerminal = productPlane.recoveryGet("SELECT current_state FROM attempts WHERE attempt_id = ?", [memoryCommand.attemptId]);
+    check("M5-08", memoryPass && memoryTerminal?.current_state === "COMPLETED", memoryPass ? "real durable memory record bound to authoritative Runtime attempt, immutable evidence hash, pre-write authorization block, and Control Plane closeout" : "governed memory composition or evidence lifecycle incomplete", { recordHash: governedMemory.recordHash, evidenceReferenceId: governedMemory.evidenceReferenceId, invalidAuthorizationBlocked, noWriteBeforeAuthorization, stateBeforeCloseout: memoryAttemptBeforeCloseout?.current_state, terminalState: memoryTerminal?.current_state });
+    artifacts.memory = { evidenceType: memoryEvidence?.evidence_type, recordHash: governedMemory.recordHash, evidenceLocation: memoryEvidence?.location };
   }
   finally {
     store.close();
@@ -1395,6 +1456,8 @@ async function main() {
   // FINAL REPORT
   // =========================================================
 
+  checks.sort((a, b) => a.id.localeCompare(b.id));
+
   const passCount =
     checks.filter(
       row => row.pass
@@ -1407,7 +1470,7 @@ async function main() {
     milestone: 5,
 
     scope:
-      "M5-01-M5-06",
+      "M5-01-M5-08",
 
     passCount,
 
@@ -1419,7 +1482,6 @@ async function main() {
     artifacts,
 
     remainingMilestoneGates: [
-      "M5-08",
       "M5-09",
       "M5-10",
       "M5-11",
@@ -1441,15 +1503,15 @@ async function main() {
   );
 
   const complete =
-    checks.length === 7 &&
-    passCount === 7;
+    checks.length === 8 &&
+    passCount === 8;
 
   console.log("");
 
   console.log(
     complete
       ? "MILESTONE_5_BATCH_2_PASS"
-      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/7`
+      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/8`
   );
 
   console.log(

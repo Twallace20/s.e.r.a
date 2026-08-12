@@ -73,5 +73,9 @@ against the universal requirements above for real local text, local directory,
 predownloaded snapshot, opaque media, archive, and URL-reference resources.
 The URL-reference boundary records metadata without fetching, and opaque media
 and archives are preserved without semantic extraction.
+M5-08 certifies Memory Capability (`memory`) against the universal requirements
+above. A real durable memory record must be bound to an authoritative Runtime
+attempt and immutable evidence hash, invalid authorization must block before
+writing, and only the Control Plane may complete the attempt.
 Later gate meanings must be added only when their acceptance boundaries are
 made explicit.

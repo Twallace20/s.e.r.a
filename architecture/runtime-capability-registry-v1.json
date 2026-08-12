@@ -206,7 +206,7 @@
       "name": "Memory Capability",
       "layer": "Memory",
       "productionEntryPoint": "packages/memory/src/memory-store.ts",
-      "compositionState": "composition-pending",
+      "compositionState": "certified",
       "authority": {
         "requestAuthority": "unified-control-plane",
         "executionAuthority": "runtime-capability-boundary",
@@ -219,12 +219,16 @@
           "id": "durable-memory-record",
           "description": "Real persisted memory record tied to governed work",
           "requiresRealResource": true,
-          "proofState": "required"
+          "proofState": "certified"
         }
       ],
-      "existingEvidence": [],
+      "existingEvidence": [
+        "tests/governed-memory-composition-v1.test.ts",
+        "evidence/milestone-5/latest/proof-report.json"
+      ],
       "knownLimitations": [
-        "M5 must prove memory participates in authoritative attempt/evidence lifecycle"
+        "certification is bounded to durable run-memory records composed through authoritative Runtime attempts",
+        "lesson certification and recurrence prevention remain governed by their dedicated later Runtime boundaries"
       ]
     },
     {
