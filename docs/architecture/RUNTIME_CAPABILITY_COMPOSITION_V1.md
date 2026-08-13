@@ -95,5 +95,13 @@ output hashes plus authoritative execution evidence, preserve the source and
 clean its isolated workspace, and use neither a model nor public networking.
 Missing authorization must block before workspace preparation or process
 launch, and only the Control Plane may complete the authoritative attempt.
+M5-12 certifies Governed Tool Capability (`tool`) against the universal
+requirements above. The real `docs/BUILD_VALIDATION.md` local-file resource
+must traverse the governed Tool composition with exact source and output
+hashes, authoritative execution evidence, isolated-workspace cleanup, no source
+mutation, and no model or public-network use. Missing authorization, request
+mutation, incomplete gates, and corrupted authorization integrity must each
+block before workspace preparation or process launch. Only the Control Plane
+may complete the authoritative attempt after the certification gate passes.
 Later gate meanings must be added only when their acceptance boundaries are
 made explicit.

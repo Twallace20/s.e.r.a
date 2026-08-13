@@ -1585,7 +1585,9 @@ async function main() {
         processLaunched:
           Boolean(
             noAuthResult.process
-          )
+          ),
+        workspacePrepared:
+          noAuthResult.workspaceRoot !== ""
       },
 
       requestMutation: {
@@ -1595,7 +1597,9 @@ async function main() {
         processLaunched:
           Boolean(
             tamperedResult.process
-          )
+          ),
+        workspacePrepared:
+          tamperedResult.workspaceRoot !== ""
       },
 
       incompleteGate: {
@@ -1605,7 +1609,9 @@ async function main() {
         processLaunched:
           Boolean(
             incompleteGateResult.process
-          )
+          ),
+        workspacePrepared:
+          incompleteGateResult.workspaceRoot !== ""
       },
 
       corruptedAuthorizationIntegrity: {
@@ -1615,7 +1621,9 @@ async function main() {
         processLaunched:
           Boolean(
             integrityResult.process
-          )
+          ),
+        workspacePrepared:
+          integrityResult.workspaceRoot !== ""
       }
     };
 
@@ -1625,7 +1633,8 @@ async function main() {
       ).every(
         row =>
           row.blocked === true &&
-          row.processLaunched === false
+          row.processLaunched === false &&
+          row.workspacePrepared === false
       );
 
     const toolPass =
@@ -1707,6 +1716,74 @@ async function main() {
       }
     );
 
+    const toolAttemptBeforeCloseout = productPlane.recoveryGet(
+      "SELECT current_state FROM attempts WHERE attempt_id = ?",
+      [toolCommand.attemptId]
+    );
+    const toolEvidence = productPlane.recoveryGet(
+      "SELECT evidence_type, location, integrity_hash, producer FROM evidence_references WHERE evidence_reference_id = ?",
+      [toolEvidenceId]
+    );
+    const toolCapability = capabilities.find(
+      capability => capability.capabilityId === "tool"
+    );
+    const toolCertificationPass = Boolean(
+      architecture.includes("M5-12 certifies Governed Tool Capability (`tool`)") &&
+      toolCapability?.compositionState === "certified" &&
+      toolCapability?.authority.requestAuthority === "unified-control-plane" &&
+      toolCapability?.authority.executionAuthority === "execution-authority" &&
+      toolCapability?.authority.stateAuthority === "runtime-state" &&
+      toolCapability?.authority.evidenceAuthority === "runtime-state" &&
+      toolCapability?.authority.selfAuthorizationAllowed === false &&
+      toolCapability?.resourceTypes.some(resource => resource.id === "local-file" && resource.proofState === "certified") &&
+      toolPass &&
+      toolGoverned.result.attemptSuccessManufactured === false &&
+      toolAttemptBeforeCloseout?.current_state === "RUNNING" &&
+      toolEvidence?.evidence_type === "m5-tool-real-resource" &&
+      toolEvidence?.integrity_hash === toolInspection.actualHash &&
+      toolEvidence?.producer === "milestone-5-proof"
+    );
+    productPlane.recordGateOutcome({
+      attemptId: toolCommand.attemptId,
+      gateName: "m5-12-governed-tool",
+      required: true,
+      outcome: toolCertificationPass ? "PASS" : "FAIL",
+      evidenceReferences: [toolEvidenceId],
+      message: toolCertificationPass ? "Tool capability certification passed." : "Tool capability certification failed.",
+      evaluator: "milestone-5-proof"
+    });
+    if (toolCertificationPass) {
+      productPlane.transitionAttempt({
+        attemptId: toolCommand.attemptId,
+        fromState: "RUNNING",
+        toState: "COMPLETED",
+        actor: "control-plane",
+        reason: "M5-12 tool proof complete."
+      });
+    }
+    const toolTerminal = productPlane.recoveryGet(
+      "SELECT current_state FROM attempts WHERE attempt_id = ?",
+      [toolCommand.attemptId]
+    );
+    check(
+      "M5-12",
+      toolCertificationPass && toolTerminal?.current_state === "COMPLETED",
+      toolCertificationPass
+        ? "real local file traversed governed Tool composition with exact hashes and authoritative evidence; four authorization failures blocked before workspace preparation or process launch; Control Plane closeout completed"
+        : "tool certification evidence, failure paths, or authority lifecycle incomplete",
+      {
+        resourceType: "local-file",
+        source: realSource,
+        sourceHashBefore,
+        expectedHash,
+        actualHash: toolInspection.actualHash,
+        adversarial,
+        evidenceReferenceId: toolEvidenceId,
+        stateBeforeCloseout: toolAttemptBeforeCloseout?.current_state,
+        terminalState: toolTerminal?.current_state
+      }
+    );
+
     artifacts.tool = {
       request:
         toolRequest,
@@ -1725,7 +1802,11 @@ async function main() {
         toolInspection.outputRow,
       adversarial,
       evidenceReferenceId:
-        toolEvidenceId
+        toolEvidenceId,
+      stateBeforeCloseout:
+        toolAttemptBeforeCloseout?.current_state,
+      terminalState:
+        toolTerminal?.current_state
     };
 
     artifacts.runtimeState = {
@@ -2062,7 +2143,7 @@ async function main() {
     milestone: 5,
 
     scope:
-      "M5-01-M5-11",
+      "M5-01-M5-12",
 
     passCount,
 
@@ -2073,9 +2154,7 @@ async function main() {
 
     artifacts,
 
-    remainingMilestoneGates: [
-      "M5-12"
-    ]
+    remainingMilestoneGates: []
   };
 
   fs.writeFileSync(
@@ -2092,15 +2171,15 @@ async function main() {
   );
 
   const complete =
-    checks.length === 11 &&
-    passCount === 11;
+    checks.length === 12 &&
+    passCount === 12;
 
   console.log("");
 
   console.log(
     complete
       ? "MILESTONE_5_BATCH_2_PASS"
-      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/11`
+      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/12`
   );
 
   console.log(

@@ -83,7 +83,7 @@
       "name": "Governed Tool Capability",
       "layer": "Tool",
       "productionEntryPoint": "packages/tools",
-      "compositionState": "composition-pending",
+      "compositionState": "certified",
       "authority": {
         "requestAuthority": "unified-control-plane",
         "executionAuthority": "execution-authority",
@@ -96,12 +96,16 @@
           "id": "local-file",
           "description": "Real local file resource",
           "requiresRealResource": true,
-          "proofState": "required"
+          "proofState": "certified"
         }
       ],
-      "existingEvidence": [],
+      "existingEvidence": [
+        "packages/runtime-capability-composition/src/governed-tool-composition.ts",
+        "evidence/milestone-5/latest/proof-report.json"
+      ],
       "knownLimitations": [
-        "direct or legacy tool execution must not bypass execution authority"
+        "certification is bounded to governed text normalization over the real docs/BUILD_VALIDATION.md local file",
+        "direct or legacy tool execution must not bypass execution authority or self-authorize terminal state"
       ]
     },
     {
