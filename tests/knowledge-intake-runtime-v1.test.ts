@@ -446,6 +446,54 @@ describe("Knowledge and Universal Intake Runtime v1", () => {
     });
   });
 
+  it.each([
+    ["WAV", "sample.wav", "audio/wav", "wav", 16000],
+    ["MP3", "sample.mp3", "audio/mpeg", "mp3", 44100]
+  ])("validates, hashes, and evidences the genuine %s fixture", async (_label, fixtureName, mediaType, format, sampleRateHz) => {
+    await withHarness(`universal-${fixtureName}`, async (harness) => {
+      const source = path.join(UNIVERSAL_INGESTION_FIXTURES, fixtureName);
+      const result = await intake(harness, { sourceType: "local-file", sourceReference: source, allowedRoots: [UNIVERSAL_INGESTION_FIXTURES] });
+      const asset = harness.store.recoveryGet("SELECT content_hash, byte_size, media_type, preservation_path FROM intake_assets WHERE intake_id = ?", [result.intakeId]);
+      const extraction = harness.store.recoveryGet("SELECT status, extracted_text_hash, extracted_byte_count, metadata_json FROM intake_extractions WHERE intake_id = ?", [result.intakeId]);
+      const metadata = JSON.parse(String(extraction?.metadata_json));
+      const report = JSON.parse(fs.readFileSync(path.join(result.evidenceRoot, "extraction-report.json"), "utf8"));
+
+      expect(result.status).toBe("REVIEW_REQUIRED");
+      expect(result.chunkCount).toBe(0);
+      expect(result.modelUse).toBe(false);
+      expect(result.publicNetworkUse).toBe(false);
+      expect(asset?.media_type).toBe(mediaType);
+      expect(asset?.content_hash).toBe(sha256File(source));
+      expect(Number(asset?.byte_size)).toBe(fs.statSync(source).size);
+      expect(sha256File(String(asset?.preservation_path))).toBe(asset?.content_hash);
+      expect(extraction?.status).toBe("extracted");
+      expect(extraction?.extracted_text_hash).toBeNull();
+      expect(Number(extraction?.extracted_byte_count)).toBe(0);
+      expect(metadata).toMatchObject({ extractor: "bounded-audio-header-v1", format, channels: 1, sampleRateHz });
+      expect(metadata.durationMs).toBeGreaterThanOrEqual(400);
+      expect(metadata.durationMs).toBeLessThanOrEqual(700);
+      expect(report[0].metadata).toMatchObject({ format, channels: 1, sampleRateHz });
+      expect(fs.existsSync(path.join(result.evidenceRoot, "provenance.json"))).toBe(true);
+    });
+  });
+
+  it.each([
+    ["WAV", "malformed.wav", "Malformed or unreadable audio/wav"],
+    ["MP3", "malformed.mp3", "Malformed or unreadable audio/mpeg"]
+  ])("blocks malformed %s before metadata promotion", async (_label, fixtureName, expectedReason) => {
+    await withHarness(`malformed-${fixtureName}`, async (harness) => {
+      const source = path.join(UNIVERSAL_INGESTION_FIXTURES, fixtureName);
+      const result = await intake(harness, { sourceType: "local-file", sourceReference: source, allowedRoots: [UNIVERSAL_INGESTION_FIXTURES] });
+      const report = JSON.parse(fs.readFileSync(path.join(result.evidenceRoot, "final-intake-report.json"), "utf8"));
+      expect(result.status).toBe("BLOCKED");
+      expect(result.documentIds).toHaveLength(0);
+      expect(blockReason(harness.store, result.intakeId)).toContain(expectedReason);
+      expect(report.status).toBe("BLOCKED");
+      expect(report.modelUse).toBe(false);
+      expect(report.publicNetworkUse).toBe(false);
+    });
+  });
+
   it("invalid UTF-8 is handled honestly as opaque", async () => {
     await withHarness("invalid-utf8", async (harness) => {
       const file = path.join(harness.root, "bad.txt");
@@ -513,8 +561,6 @@ describe("Knowledge and Universal Intake Runtime v1", () => {
 
   it.each([
     ["GIF", "anim.gif", Buffer.from("GIF89a")],
-    ["MP3", "sound.mp3", Buffer.from([0, 1, 2, 3])],
-    ["WAV", "sound.wav", Buffer.from([0, 1, 2, 3])],
     ["MP4", "movie.mp4", Buffer.from([0, 1, 2, 3])],
     ["ZIP", "archive.zip", Buffer.from([0x50, 0x4b, 0x03, 0x04])]
   ])("preserves opaque %s without extraction", async (_label, fileName, bytes) => {

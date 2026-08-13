@@ -187,7 +187,8 @@ export const DEFAULT_KNOWLEDGE_POLICY: KnowledgeRuntimePolicy = {
 const TEXT_TYPES = new Set(["text/plain", "text/markdown", "application/json", "text/csv", "text/html"]);
 const DOCUMENT_TYPES = new Set(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]);
 const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
-const OPAQUE_TYPES = new Set(["image/gif", "audio/mpeg", "audio/wav", "video/mp4", "application/zip", "application/octet-stream"]);
+const AUDIO_TYPES = new Set(["audio/mpeg", "audio/wav"]);
+const OPAQUE_TYPES = new Set(["image/gif", "video/mp4", "application/zip", "application/octet-stream"]);
 const TERMINAL_INTAKE_STATES = new Set<IntakeState>(["INDEXED", "OPAQUE_PRESERVED", "REVIEW_REQUIRED", "BLOCKED", "FAILED", "CANCELLED"]);
 
 export class KnowledgeRuntime {
@@ -215,7 +216,7 @@ export class KnowledgeRuntime {
       status: "INSPECTED",
       schemaVersion: KNOWLEDGE_RUNTIME_SCHEMA_VERSION,
       supportedSourceTypes: ["inline-text", "local-file", "local-directory", "url-reference", "predownloaded-web-snapshot", "generated-fixture"] as IntakeSourceType[],
-      deterministicExtraction: [...TEXT_TYPES, ...DOCUMENT_TYPES, ...IMAGE_TYPES].sort(),
+      deterministicExtraction: [...TEXT_TYPES, ...DOCUMENT_TYPES, ...IMAGE_TYPES, ...AUDIO_TYPES].sort(),
       opaquePreservation: [...OPAQUE_TYPES].sort(),
       archiveBehavior: "archives are preserved as opaque assets and never extracted in v1",
       urlBehavior: "URL references are recorded but not fetched",
@@ -787,6 +788,7 @@ async function extractBytes(asset: AssetRecord, bytes: Buffer, policy: Knowledge
   if (asset.mediaType === "application/pdf") return extractPdf(bytes);
   if (asset.mediaType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return extractDocx(bytes);
   if (IMAGE_TYPES.has(asset.mediaType)) return extractImageMetadata(asset.mediaType, bytes);
+  if (AUDIO_TYPES.has(asset.mediaType)) return extractAudioMetadata(asset.mediaType, bytes);
   if (!TEXT_TYPES.has(asset.mediaType)) return { status: "opaque", text: "", reason: `Opaque ${asset.mediaType} preserved; future processor required.`, language: null, metadata: { extractor: "opaque-preserve-v1" } };
   if (asset.mediaType === "application/json") {
     try {
@@ -800,6 +802,63 @@ async function extractBytes(asset: AssetRecord, bytes: Buffer, policy: Knowledge
   const text = bytes.toString("utf8");
   if (text.includes("\uFFFD")) return { status: "opaque", text: "", reason: "Invalid UTF-8 handled as opaque content.", language: null, metadata: { extractor: "utf8-text-v1" } };
   return { status: "extracted", text: text.replace(/\r\n/g, "\n"), reason: null, language: "und", metadata: { extractor: "utf8-text-v1" } };
+}
+
+function extractAudioMetadata(mediaType: string, bytes: Buffer): ExtractionResult {
+  let metadata: Record<string, unknown>;
+  try {
+    metadata = mediaType === "audio/wav" ? parseWavMetadata(bytes) : parseMp3Metadata(bytes);
+  } catch (error) {
+    throw new KnowledgeRuntimeBlockedError(`Malformed or unreadable ${mediaType} blocked extraction: ${errorMessage(error)}`, `malformed_${mediaType === "audio/wav" ? "wav" : "mp3"}`);
+  }
+  return { status: "extracted", text: "", reason: "Deterministic audio metadata extracted; source audio preserved without transcription or semantic interpretation.", language: null, metadata };
+}
+
+function parseWavMetadata(bytes: Buffer): Record<string, unknown> {
+  if (bytes.length < 44 || bytes.subarray(0, 4).toString("ascii") !== "RIFF" || bytes.subarray(8, 12).toString("ascii") !== "WAVE") throw new Error("invalid WAV RIFF header");
+  if (bytes.readUInt32LE(4) + 8 > bytes.length) throw new Error("truncated WAV payload");
+  let offset = 12;
+  let format: { audioFormat: number; channels: number; sampleRate: number; byteRate: number; bitsPerSample: number } | undefined;
+  let dataSize: number | undefined;
+  while (offset + 8 <= bytes.length) {
+    const chunkId = bytes.subarray(offset, offset + 4).toString("ascii");
+    const chunkSize = bytes.readUInt32LE(offset + 4);
+    const dataOffset = offset + 8;
+    if (dataOffset + chunkSize > bytes.length) throw new Error("truncated WAV chunk");
+    if (chunkId === "fmt ") {
+      if (chunkSize < 16) throw new Error("invalid WAV format chunk");
+      format = { audioFormat: bytes.readUInt16LE(dataOffset), channels: bytes.readUInt16LE(dataOffset + 2), sampleRate: bytes.readUInt32LE(dataOffset + 4), byteRate: bytes.readUInt32LE(dataOffset + 8), bitsPerSample: bytes.readUInt16LE(dataOffset + 14) };
+    } else if (chunkId === "data") dataSize = chunkSize;
+    offset = dataOffset + chunkSize + (chunkSize % 2);
+  }
+  if (!format || dataSize === undefined || !format.channels || !format.sampleRate || !format.byteRate) throw new Error("required WAV chunks missing or invalid");
+  if (![1, 3].includes(format.audioFormat)) throw new Error("unsupported WAV sample encoding");
+  return { extractor: "bounded-audio-header-v1", format: "wav", codec: format.audioFormat === 1 ? "pcm" : "ieee-float", channels: format.channels, sampleRateHz: format.sampleRate, bitsPerSample: format.bitsPerSample, durationMs: Math.round((dataSize / format.byteRate) * 1000), dataBytes: dataSize };
+}
+
+function parseMp3Metadata(bytes: Buffer): Record<string, unknown> {
+  let offset = 0;
+  if (bytes.length >= 10 && bytes.subarray(0, 3).toString("ascii") === "ID3") {
+    if ([bytes[6], bytes[7], bytes[8], bytes[9]].some((value) => value > 0x7f)) throw new Error("invalid MP3 ID3 size");
+    offset = 10 + ((bytes[6] << 21) | (bytes[7] << 14) | (bytes[8] << 7) | bytes[9]);
+  }
+  while (offset + 4 <= bytes.length && !(bytes[offset] === 0xff && (bytes[offset + 1] & 0xe0) === 0xe0)) offset += 1;
+  if (offset + 4 > bytes.length) throw new Error("MP3 frame header not found");
+  const header = bytes.readUInt32BE(offset);
+  const versionBits = (header >>> 19) & 0x3;
+  const layerBits = (header >>> 17) & 0x3;
+  const bitrateIndex = (header >>> 12) & 0xf;
+  const sampleRateIndex = (header >>> 10) & 0x3;
+  if (versionBits === 1 || layerBits !== 1 || bitrateIndex === 0 || bitrateIndex === 15 || sampleRateIndex === 3) throw new Error("unsupported or invalid MP3 frame header");
+  const version = versionBits === 3 ? 1 : versionBits === 2 ? 2 : 2.5;
+  const bitrateTable = version === 1 ? [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320] : [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160];
+  const sampleRateTable = version === 1 ? [44100, 48000, 32000] : version === 2 ? [22050, 24000, 16000] : [11025, 12000, 8000];
+  const bitrateKbps = bitrateTable[bitrateIndex];
+  const sampleRateHz = sampleRateTable[sampleRateIndex];
+  const channelMode = (header >>> 6) & 0x3;
+  const audioBytes = bytes.length - offset;
+  if (audioBytes < 8) throw new Error("truncated MP3 audio payload");
+  return { extractor: "bounded-audio-header-v1", format: "mp3", codec: `mpeg-${version}-layer-3`, channels: channelMode === 3 ? 1 : 2, sampleRateHz, bitrateKbps, durationMs: Math.round((audioBytes * 8) / bitrateKbps), id3v2Bytes: offset };
 }
 
 function extractImageMetadata(mediaType: string, bytes: Buffer): ExtractionResult {
@@ -1098,6 +1157,8 @@ function detectMediaType(name: string, bytes: Buffer): string {
   if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "image/png";
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
   if (bytes.length >= 12 && bytes.subarray(0, 4).toString("ascii") === "RIFF" && bytes.subarray(8, 12).toString("ascii") === "WEBP") return "image/webp";
+  if (bytes.length >= 12 && bytes.subarray(0, 4).toString("ascii") === "RIFF" && bytes.subarray(8, 12).toString("ascii") === "WAVE") return "audio/wav";
+  if (bytes.length >= 3 && (bytes.subarray(0, 3).toString("ascii") === "ID3" || looksLikeMp3Frame(bytes))) return "audio/mpeg";
   if (bytes.length >= 4 && bytes.subarray(0, 4).toString("ascii") === "GIF8") return "image/gif";
   if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04) return "application/zip";
   if (ext === ".md" || ext === ".markdown") return "text/markdown";
@@ -1116,6 +1177,16 @@ function detectMediaType(name: string, bytes: Buffer): string {
   if (ext === ".mp4") return "video/mp4";
   if (ext === ".zip" || ext === ".tar" || ext === ".gz") return "application/zip";
   return bytes.subarray(0, 512).includes(0) ? "application/octet-stream" : "text/plain";
+}
+
+function looksLikeMp3Frame(bytes: Buffer): boolean {
+  if (bytes.length < 4 || bytes[0] !== 0xff || (bytes[1] & 0xe0) !== 0xe0) return false;
+  const header = bytes.readUInt32BE(0);
+  const versionBits = (header >>> 19) & 0x3;
+  const layerBits = (header >>> 17) & 0x3;
+  const bitrateIndex = (header >>> 12) & 0xf;
+  const sampleRateIndex = (header >>> 10) & 0x3;
+  return versionBits !== 1 && layerBits === 1 && bitrateIndex > 0 && bitrateIndex < 15 && sampleRateIndex < 3;
 }
 
 function extensionMediaType(name: string): string {
