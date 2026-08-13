@@ -236,7 +236,7 @@
       "name": "Capability Engine",
       "layer": "Capability",
       "productionEntryPoint": "packages/capability-engine/src/capability-engine.ts",
-      "compositionState": "composition-pending",
+      "compositionState": "certified",
       "authority": {
         "requestAuthority": "unified-control-plane",
         "executionAuthority": "execution-authority",
@@ -249,13 +249,17 @@
           "id": "capability-candidate-bundle",
           "description": "Real immutable capability candidate bundle",
           "requiresRealResource": true,
-          "proofState": "required"
+          "proofState": "certified"
         }
       ],
       "existingEvidence": [
-        "tests/capability-engine-recursive-learning-v1.test.ts"
+        "tests/capability-engine-recursive-learning-v1.test.ts",
+        "tests/governed-capability-engine-composition-v1.test.ts",
+        "evidence/milestone-5/latest/proof-report.json"
       ],
       "knownLimitations": [
+        "M5-09 certification is bounded to immutable candidate-bundle assembly from the captured real repository evidence",
+        "the M5-09 proof candidate remains candidate-only and is not promoted into the active catalog",
         "cannot load arbitrary code",
         "cannot execute unrestricted shell",
         "cannot invoke real models/public network",

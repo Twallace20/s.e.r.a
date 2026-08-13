@@ -373,7 +373,8 @@ async function main() {
 
   const {
     RuntimeCapabilityComposition,
-    createGovernedMemoryAuthorization
+    createGovernedMemoryAuthorization,
+    createGovernedCapabilityEngineAuthorization
   } = require(compositionModule);
 
   const {
@@ -431,7 +432,8 @@ async function main() {
     const composition =
       new RuntimeCapabilityComposition(
         productPlane,
-        path.join(workRoot, "memory-proof")
+        path.join(workRoot, "memory-proof"),
+        store
       );
 
     // =======================================================
@@ -1283,6 +1285,78 @@ async function main() {
     const memoryTerminal = productPlane.recoveryGet("SELECT current_state FROM attempts WHERE attempt_id = ?", [memoryCommand.attemptId]);
     check("M5-08", memoryPass && memoryTerminal?.current_state === "COMPLETED", memoryPass ? "real durable memory record bound to authoritative Runtime attempt, immutable evidence hash, pre-write authorization block, and Control Plane closeout" : "governed memory composition or evidence lifecycle incomplete", { recordHash: governedMemory.recordHash, evidenceReferenceId: governedMemory.evidenceReferenceId, invalidAuthorizationBlocked, noWriteBeforeAuthorization, stateBeforeCloseout: memoryAttemptBeforeCloseout?.current_state, terminalState: memoryTerminal?.current_state });
     artifacts.memory = { evidenceType: memoryEvidence?.evidence_type, recordHash: governedMemory.recordHash, evidenceLocation: memoryEvidence?.location };
+
+    // =======================================================
+    // M5-09 — GOVERNED CAPABILITY ENGINE COMPOSITION
+    // =======================================================
+
+    const capabilitySourcePath = path.join(root, "docs", "BUILD_VALIDATION.md");
+    requireFile(capabilitySourcePath, "M5-09 real capability evidence resource");
+    const capabilityCommand = productPlane.acceptCommand({
+      idempotencyKey: "m5-09-governed-capability-engine",
+      commandType: "assemble-real-resource-candidate",
+      payload: { source: "docs/BUILD_VALIDATION.md" },
+      capability: "capability-engine"
+    });
+    productPlane.transitionAttempt({ attemptId: capabilityCommand.attemptId, fromState: "PENDING", toState: "RUNNING", actor: "control-plane", reason: "M5-09 governed Capability Engine proof" });
+    const capabilityAuthorization = createGovernedCapabilityEngineAuthorization({
+      attemptId: capabilityCommand.attemptId,
+      sourcePath: capabilitySourcePath
+    });
+    let invalidCapabilityAuthorizationBlocked = false;
+    try {
+      composition.capabilityEngine.assembleRealResource({
+        attemptId: capabilityCommand.attemptId,
+        sourcePath: capabilitySourcePath,
+        authorization: { ...capabilityAuthorization, sourceSha256: "0".repeat(64) }
+      });
+    } catch {
+      invalidCapabilityAuthorizationBlocked = true;
+    }
+    const capabilityCandidateRoot = path.join(workRoot, "memory-proof", ".sera", "capabilities", "candidates");
+    const noCandidateWriteBeforeAuthorization = !fs.existsSync(capabilityCandidateRoot);
+    const governedCapability = composition.capabilityEngine.assembleRealResource({
+      attemptId: capabilityCommand.attemptId,
+      sourcePath: capabilitySourcePath,
+      authorization: capabilityAuthorization
+    });
+    const capabilityAttemptBeforeCloseout = productPlane.recoveryGet("SELECT current_state FROM attempts WHERE attempt_id = ?", [capabilityCommand.attemptId]);
+    const capabilityVersion = productPlane.recoveryGet("SELECT lifecycle_status, bundle_root, bundle_hash FROM capability_versions WHERE capability_id = ? AND version_digest = ?", [governedCapability.bundle.capabilityId, governedCapability.bundle.versionDigest]);
+    const capabilityActive = productPlane.recoveryGet("SELECT active_version_digest FROM capability_active_versions WHERE capability_id = ?", [governedCapability.bundle.capabilityId]);
+    const capabilityEvidence = productPlane.recoveryGet("SELECT evidence_type, location, integrity_hash, producer FROM evidence_references WHERE evidence_reference_id = ?", [governedCapability.evidenceReferenceId]);
+    const capabilityRegistryEntry = capabilities.find(capability => capability.capabilityId === "capability-engine");
+    const capabilityPass = Boolean(
+      architecture.includes("M5-09 certifies Capability Engine (`capability-engine`)") &&
+      capabilityRegistryEntry?.compositionState === "certified" &&
+      capabilityRegistryEntry?.authority.requestAuthority === "unified-control-plane" &&
+      capabilityRegistryEntry?.authority.executionAuthority === "execution-authority" &&
+      capabilityRegistryEntry?.authority.stateAuthority === "runtime-state" &&
+      capabilityRegistryEntry?.authority.evidenceAuthority === "runtime-state" &&
+      capabilityRegistryEntry?.authority.selfAuthorizationAllowed === false &&
+      capabilityRegistryEntry?.resourceTypes.some(resource => resource.id === "capability-candidate-bundle" && resource.proofState === "certified") &&
+      invalidCapabilityAuthorizationBlocked && noCandidateWriteBeforeAuthorization &&
+      capabilityAttemptBeforeCloseout?.current_state === "RUNNING" &&
+      governedCapability.attemptTerminalStateChanged === false &&
+      governedCapability.candidateOnly === true && governedCapability.promoted === false &&
+      governedCapability.modelUse === false && governedCapability.publicNetworkUse === false &&
+      governedCapability.sourceSha256 === sha256File(capabilitySourcePath) &&
+      /^[a-f0-9]{64}$/.test(governedCapability.bundle.versionDigest) &&
+      governedCapability.bundle.manifest.lifecycleStatus === "CANDIDATE" &&
+      capabilityVersion?.lifecycle_status === "CANDIDATE" &&
+      !capabilityActive &&
+      fs.existsSync(path.join(governedCapability.bundle.candidateRoot, "capability-manifest.json")) &&
+      fs.existsSync(path.join(governedCapability.bundle.candidateRoot, "integrity-manifest.json")) &&
+      fs.existsSync(governedCapability.evidencePath) &&
+      sha256File(governedCapability.evidencePath) === governedCapability.evidenceHash &&
+      capabilityEvidence?.evidence_type === "capability-candidate-bundle" &&
+      capabilityEvidence?.integrity_hash === governedCapability.evidenceHash &&
+      capabilityEvidence?.producer === "governed-capability-engine-composition"
+    );
+    productPlane.recordGateOutcome({ attemptId: capabilityCommand.attemptId, gateName: "m5-09-governed-capability-engine", required: true, outcome: capabilityPass ? "PASS" : "FAIL", evidenceReferences: [governedCapability.evidenceReferenceId], evaluator: "milestone-5-proof" });
+    if (capabilityPass) productPlane.transitionAttempt({ attemptId: capabilityCommand.attemptId, fromState: "RUNNING", toState: "COMPLETED", actor: "control-plane", reason: "M5-09 proof complete" });
+    const capabilityTerminal = productPlane.recoveryGet("SELECT current_state FROM attempts WHERE attempt_id = ?", [capabilityCommand.attemptId]);
+    check("M5-09", capabilityPass && capabilityTerminal?.current_state === "COMPLETED", capabilityPass ? "real BUILD_VALIDATION.md evidence produced an immutable candidate-only capability bundle with durable hash binding, pre-write authorization block, no promotion, and Control Plane closeout" : "governed Capability Engine composition or candidate-bundle evidence lifecycle incomplete", { sourceSha256: governedCapability.sourceSha256, candidateDigest: governedCapability.bundle.versionDigest, evidenceReferenceId: governedCapability.evidenceReferenceId, invalidAuthorizationBlocked: invalidCapabilityAuthorizationBlocked, noCandidateWriteBeforeAuthorization, lifecycleStatus: capabilityVersion?.lifecycle_status, activeVersionDigest: capabilityActive?.active_version_digest ?? null, stateBeforeCloseout: capabilityAttemptBeforeCloseout?.current_state, terminalState: capabilityTerminal?.current_state });
+    artifacts.capabilityEngine = { source: "docs/BUILD_VALIDATION.md", sourceSha256: governedCapability.sourceSha256, candidateDigest: governedCapability.bundle.versionDigest, evidenceLocation: capabilityEvidence?.location };
   }
   finally {
     store.close();
@@ -1470,7 +1544,7 @@ async function main() {
     milestone: 5,
 
     scope:
-      "M5-01-M5-08",
+      "M5-01-M5-09",
 
     passCount,
 
@@ -1482,7 +1556,6 @@ async function main() {
     artifacts,
 
     remainingMilestoneGates: [
-      "M5-09",
       "M5-10",
       "M5-11",
       "M5-12"
@@ -1503,15 +1576,15 @@ async function main() {
   );
 
   const complete =
-    checks.length === 8 &&
-    passCount === 8;
+    checks.length === 9 &&
+    passCount === 9;
 
   console.log("");
 
   console.log(
     complete
       ? "MILESTONE_5_BATCH_2_PASS"
-      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/8`
+      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/9`
   );
 
   console.log(

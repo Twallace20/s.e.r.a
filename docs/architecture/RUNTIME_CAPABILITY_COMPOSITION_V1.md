@@ -77,5 +77,11 @@ M5-08 certifies Memory Capability (`memory`) against the universal requirements
 above. A real durable memory record must be bound to an authoritative Runtime
 attempt and immutable evidence hash, invalid authorization must block before
 writing, and only the Control Plane may complete the attempt.
+M5-09 certifies Capability Engine (`capability-engine`) composition against the
+universal requirements above. The real `docs/BUILD_VALIDATION.md` resource must
+be hash-bound as proposal provenance for an immutable, content-addressed
+capability candidate bundle. Invalid authorization must block before candidate
+writes, the bundle must remain candidate-only without active-catalog promotion,
+and only the Control Plane may complete the attempt.
 Later gate meanings must be added only when their acceptance boundaries are
 made explicit.

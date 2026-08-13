@@ -18,16 +18,20 @@ import {
   GovernedWorkerComposition
 } from "./governed-worker-composition";
 import { GovernedMemoryComposition } from "./governed-memory-composition";
+import { GovernedCapabilityEngineComposition } from "./governed-capability-engine-composition";
+import type { RuntimeStateStore } from "@sera/runtime-state";
 
 export class RuntimeCapabilityComposition {
   readonly planner: GovernedPlannerComposition;
   readonly worker: GovernedWorkerComposition;
   readonly tool: GovernedToolComposition;
   readonly memory: GovernedMemoryComposition;
+  readonly capabilityEngine?: GovernedCapabilityEngineComposition;
 
   constructor(
     readonly controlPlane: ProductControlPlane,
-    projectRoot = process.cwd()
+    projectRoot = process.cwd(),
+    store?: RuntimeStateStore
   ) {
     const execution =
       new GovernedExecutionBoundary(
@@ -50,5 +54,8 @@ export class RuntimeCapabilityComposition {
       );
 
     this.memory = new GovernedMemoryComposition(controlPlane, projectRoot);
+    this.capabilityEngine = store
+      ? new GovernedCapabilityEngineComposition(controlPlane, store, projectRoot)
+      : undefined;
   }
 }
