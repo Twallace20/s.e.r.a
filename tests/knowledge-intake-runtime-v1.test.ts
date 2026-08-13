@@ -446,6 +446,73 @@ describe("Knowledge and Universal Intake Runtime v1", () => {
     });
   });
 
+  it("validates, hashes, and evidences the genuine MP4 fixture", async () => {
+    await withHarness("universal-sample.mp4", async (harness) => {
+      const source = path.join(UNIVERSAL_INGESTION_FIXTURES, "sample.mp4");
+      const result = await intake(harness, { sourceType: "local-file", sourceReference: source, allowedRoots: [UNIVERSAL_INGESTION_FIXTURES] });
+      const asset = harness.store.recoveryGet("SELECT content_hash, byte_size, media_type, preservation_path FROM intake_assets WHERE intake_id = ?", [result.intakeId]);
+      const extraction = harness.store.recoveryGet("SELECT status, extracted_text_hash, extracted_byte_count, metadata_json FROM intake_extractions WHERE intake_id = ?", [result.intakeId]);
+      const metadata = JSON.parse(String(extraction?.metadata_json));
+      expect(result.status).toBe("REVIEW_REQUIRED");
+      expect(result.chunkCount).toBe(0);
+      expect(result.modelUse).toBe(false);
+      expect(result.publicNetworkUse).toBe(false);
+      expect(asset?.media_type).toBe("video/mp4");
+      expect(asset?.content_hash).toBe(sha256File(source));
+      expect(Number(asset?.byte_size)).toBe(fs.statSync(source).size);
+      expect(sha256File(String(asset?.preservation_path))).toBe(asset?.content_hash);
+      expect(extraction?.status).toBe("extracted");
+      expect(extraction?.extracted_text_hash).toBeNull();
+      expect(Number(extraction?.extracted_byte_count)).toBe(0);
+      expect(metadata).toMatchObject({ extractor: "bounded-iso-bmff-v1", format: "mp4", width: 16, height: 12 });
+      expect(metadata.durationMs).toBe(500);
+      expect(fs.existsSync(path.join(result.evidenceRoot, "provenance.json"))).toBe(true);
+    });
+  });
+
+  it("blocks malformed MP4 before metadata promotion", async () => {
+    await withHarness("malformed-mp4", async (harness) => {
+      const source = path.join(UNIVERSAL_INGESTION_FIXTURES, "malformed.mp4");
+      const result = await intake(harness, { sourceType: "local-file", sourceReference: source, allowedRoots: [UNIVERSAL_INGESTION_FIXTURES] });
+      expect(result.status).toBe("BLOCKED");
+      expect(result.documentIds).toHaveLength(0);
+      expect(blockReason(harness.store, result.intakeId)).toContain("Malformed or unreadable video/mp4");
+    });
+  });
+
+  it("certifies the complete declared universal-ingestion matrix", async () => {
+    await withHarness("universal-matrix", async (harness) => {
+      const matrix = [
+        ["sample.txt", "text/plain", "INDEXED"], ["sample.md", "text/markdown", "INDEXED"], ["sample.pdf", "application/pdf", "INDEXED"],
+        ["sample.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "INDEXED"], ["sample.png", "image/png", "REVIEW_REQUIRED"],
+        ["sample.jpg", "image/jpeg", "REVIEW_REQUIRED"], ["sample.webp", "image/webp", "REVIEW_REQUIRED"], ["sample.mp3", "audio/mpeg", "REVIEW_REQUIRED"],
+        ["sample.wav", "audio/wav", "REVIEW_REQUIRED"], ["sample.mp4", "video/mp4", "REVIEW_REQUIRED"]
+      ] as const;
+      const declared = new Set(harness.runtime.types().deterministicExtraction);
+      const certified: Array<Record<string, unknown>> = [];
+      for (const [fixtureName, mediaType, expectedStatus] of matrix) {
+        expect(declared.has(mediaType)).toBe(true);
+        const source = path.join(UNIVERSAL_INGESTION_FIXTURES, fixtureName);
+        const result = await intake(harness, { sourceType: "local-file", sourceReference: source, allowedRoots: [UNIVERSAL_INGESTION_FIXTURES] });
+        const asset = harness.store.recoveryGet("SELECT content_hash, media_type FROM intake_assets WHERE intake_id = ?", [result.intakeId]);
+        const evidenceFiles = ["request.json", "authorization.json", "asset-manifest.json", "extraction-report.json", "provenance.json", "final-intake-report.json"];
+        expect(result.status).toBe(expectedStatus);
+        expect(asset?.media_type).toBe(mediaType);
+        expect(asset?.content_hash).toBe(sha256File(source));
+        expect(evidenceFiles.every((name) => fs.existsSync(path.join(result.evidenceRoot, name)))).toBe(true);
+        certified.push({ fixtureName, mediaType, status: result.status, contentHash: asset?.content_hash, evidenceRoot: result.evidenceRoot });
+      }
+      const proof = { schemaVersion: "sera.universal-ingestion-proof.v1", supportedEqualsTested: certified.length === matrix.length, certified, modelUse: false, publicNetworkUse: false };
+      const proofPath = path.join(harness.root, ".sera", "knowledge", "universal-ingestion-proof.json");
+      fs.writeFileSync(proofPath, `${stableJson(proof)}\n`, "utf8");
+      const durable = JSON.parse(fs.readFileSync(proofPath, "utf8"));
+      expect(durable.supportedEqualsTested).toBe(true);
+      expect(durable.certified).toHaveLength(10);
+      expect(durable.modelUse).toBe(false);
+      expect(durable.publicNetworkUse).toBe(false);
+    });
+  });
+
   it.each([
     ["WAV", "sample.wav", "audio/wav", "wav", 16000],
     ["MP3", "sample.mp3", "audio/mpeg", "mp3", 44100]
@@ -561,7 +628,6 @@ describe("Knowledge and Universal Intake Runtime v1", () => {
 
   it.each([
     ["GIF", "anim.gif", Buffer.from("GIF89a")],
-    ["MP4", "movie.mp4", Buffer.from([0, 1, 2, 3])],
     ["ZIP", "archive.zip", Buffer.from([0x50, 0x4b, 0x03, 0x04])]
   ])("preserves opaque %s without extraction", async (_label, fileName, bytes) => {
     await withHarness(`opaque-${fileName}`, async (harness) => {

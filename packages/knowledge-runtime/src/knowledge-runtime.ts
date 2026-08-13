@@ -188,7 +188,8 @@ const TEXT_TYPES = new Set(["text/plain", "text/markdown", "application/json", "
 const DOCUMENT_TYPES = new Set(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]);
 const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const AUDIO_TYPES = new Set(["audio/mpeg", "audio/wav"]);
-const OPAQUE_TYPES = new Set(["image/gif", "video/mp4", "application/zip", "application/octet-stream"]);
+const VIDEO_TYPES = new Set(["video/mp4"]);
+const OPAQUE_TYPES = new Set(["image/gif", "application/zip", "application/octet-stream"]);
 const TERMINAL_INTAKE_STATES = new Set<IntakeState>(["INDEXED", "OPAQUE_PRESERVED", "REVIEW_REQUIRED", "BLOCKED", "FAILED", "CANCELLED"]);
 
 export class KnowledgeRuntime {
@@ -216,7 +217,7 @@ export class KnowledgeRuntime {
       status: "INSPECTED",
       schemaVersion: KNOWLEDGE_RUNTIME_SCHEMA_VERSION,
       supportedSourceTypes: ["inline-text", "local-file", "local-directory", "url-reference", "predownloaded-web-snapshot", "generated-fixture"] as IntakeSourceType[],
-      deterministicExtraction: [...TEXT_TYPES, ...DOCUMENT_TYPES, ...IMAGE_TYPES, ...AUDIO_TYPES].sort(),
+      deterministicExtraction: [...TEXT_TYPES, ...DOCUMENT_TYPES, ...IMAGE_TYPES, ...AUDIO_TYPES, ...VIDEO_TYPES].sort(),
       opaquePreservation: [...OPAQUE_TYPES].sort(),
       archiveBehavior: "archives are preserved as opaque assets and never extracted in v1",
       urlBehavior: "URL references are recorded but not fetched",
@@ -789,6 +790,7 @@ async function extractBytes(asset: AssetRecord, bytes: Buffer, policy: Knowledge
   if (asset.mediaType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return extractDocx(bytes);
   if (IMAGE_TYPES.has(asset.mediaType)) return extractImageMetadata(asset.mediaType, bytes);
   if (AUDIO_TYPES.has(asset.mediaType)) return extractAudioMetadata(asset.mediaType, bytes);
+  if (VIDEO_TYPES.has(asset.mediaType)) return extractMp4Metadata(bytes);
   if (!TEXT_TYPES.has(asset.mediaType)) return { status: "opaque", text: "", reason: `Opaque ${asset.mediaType} preserved; future processor required.`, language: null, metadata: { extractor: "opaque-preserve-v1" } };
   if (asset.mediaType === "application/json") {
     try {
@@ -802,6 +804,69 @@ async function extractBytes(asset: AssetRecord, bytes: Buffer, policy: Knowledge
   const text = bytes.toString("utf8");
   if (text.includes("\uFFFD")) return { status: "opaque", text: "", reason: "Invalid UTF-8 handled as opaque content.", language: null, metadata: { extractor: "utf8-text-v1" } };
   return { status: "extracted", text: text.replace(/\r\n/g, "\n"), reason: null, language: "und", metadata: { extractor: "utf8-text-v1" } };
+}
+
+function extractMp4Metadata(bytes: Buffer): ExtractionResult {
+  try {
+    const metadata = parseMp4Metadata(bytes);
+    return { status: "extracted", text: "", reason: "Deterministic MP4 container metadata extracted; source video preserved without transcription or semantic interpretation.", language: null, metadata };
+  } catch (error) {
+    throw new KnowledgeRuntimeBlockedError(`Malformed or unreadable video/mp4 blocked extraction: ${errorMessage(error)}`, "malformed_mp4");
+  }
+}
+
+interface Mp4Box { type: string; start: number; payloadStart: number; end: number }
+
+function mp4Boxes(bytes: Buffer, start = 0, end = bytes.length): Mp4Box[] {
+  const boxes: Mp4Box[] = [];
+  let offset = start;
+  while (offset + 8 <= end) {
+    let size = bytes.readUInt32BE(offset);
+    const type = bytes.subarray(offset + 4, offset + 8).toString("ascii");
+    let headerSize = 8;
+    if (size === 1) {
+      if (offset + 16 > end) throw new Error("truncated extended MP4 box");
+      const extended = bytes.readBigUInt64BE(offset + 8);
+      if (extended > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("MP4 box too large");
+      size = Number(extended);
+      headerSize = 16;
+    } else if (size === 0) size = end - offset;
+    if (size < headerSize || offset + size > end) throw new Error(`invalid or truncated MP4 ${type} box`);
+    boxes.push({ type, start: offset, payloadStart: offset + headerSize, end: offset + size });
+    offset += size;
+  }
+  if (offset !== end) throw new Error("trailing partial MP4 box");
+  return boxes;
+}
+
+function parseMp4Metadata(bytes: Buffer): Record<string, unknown> {
+  const top = mp4Boxes(bytes);
+  const ftyp = top.find((box) => box.type === "ftyp");
+  const moov = top.find((box) => box.type === "moov");
+  const mdat = top.find((box) => box.type === "mdat");
+  if (!ftyp || !moov || !mdat || ftyp.end - ftyp.payloadStart < 8) throw new Error("required MP4 boxes missing");
+  const moovChildren = mp4Boxes(bytes, moov.payloadStart, moov.end);
+  const mvhd = moovChildren.find((box) => box.type === "mvhd");
+  const tracks = moovChildren.filter((box) => box.type === "trak");
+  if (!mvhd || tracks.length === 0) throw new Error("MP4 movie header or tracks missing");
+  const version = bytes[mvhd.payloadStart];
+  const timeOffset = mvhd.payloadStart + (version === 1 ? 20 : 12);
+  const durationOffset = timeOffset + 4;
+  if (durationOffset + (version === 1 ? 8 : 4) > mvhd.end) throw new Error("truncated MP4 movie header");
+  const timescale = bytes.readUInt32BE(timeOffset);
+  const duration = version === 1 ? Number(bytes.readBigUInt64BE(durationOffset)) : bytes.readUInt32BE(durationOffset);
+  if (!timescale || !duration) throw new Error("invalid MP4 duration");
+  let width = 0;
+  let height = 0;
+  for (const track of tracks) {
+    const tkhd = mp4Boxes(bytes, track.payloadStart, track.end).find((box) => box.type === "tkhd");
+    if (!tkhd || tkhd.end - tkhd.payloadStart < 8) continue;
+    const candidateWidth = bytes.readUInt32BE(tkhd.end - 8) / 65536;
+    const candidateHeight = bytes.readUInt32BE(tkhd.end - 4) / 65536;
+    if (candidateWidth > 0 && candidateHeight > 0) { width = candidateWidth; height = candidateHeight; break; }
+  }
+  if (!width || !height) throw new Error("MP4 video track dimensions missing");
+  return { extractor: "bounded-iso-bmff-v1", format: "mp4", majorBrand: bytes.subarray(ftyp.payloadStart, ftyp.payloadStart + 4).toString("ascii"), width, height, durationMs: Math.round((duration / timescale) * 1000), trackCount: tracks.length, mediaDataBytes: mdat.end - mdat.payloadStart };
 }
 
 function extractAudioMetadata(mediaType: string, bytes: Buffer): ExtractionResult {
