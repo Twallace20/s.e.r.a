@@ -88,5 +88,12 @@ requirements above. A real governed task request must retain its exact durable
 payload, replay idempotently, block conflicting idempotency reuse without
 creating duplicate durable state, perform no execution, retain immutable
 Runtime State evidence, and close only through Control Plane authority.
+M5-11 certifies Worker Capability (`worker`) against the universal requirements
+above. The real `docs/BUILD_VALIDATION.md` resource must traverse the governed
+Worker composition as a bounded `workspace-task`, retain exact source and
+output hashes plus authoritative execution evidence, preserve the source and
+clean its isolated workspace, and use neither a model nor public networking.
+Missing authorization must block before workspace preparation or process
+launch, and only the Control Plane may complete the authoritative attempt.
 Later gate meanings must be added only when their acceptance boundaries are
 made explicit.

@@ -1197,6 +1197,30 @@ async function main() {
         workerGoverned
       );
 
+    const workerMissingAuthRequest =
+      createRequest(
+        workerCommand.attemptId,
+        "worker-missing-auth"
+      );
+
+    const workerMissingAuthResult =
+      await engine.execute(
+        workerMissingAuthRequest
+      );
+
+    const workerAttemptBeforeCloseout =
+      productPlane.recoveryGet(
+        "SELECT current_state FROM attempts WHERE attempt_id = ?",
+        [workerCommand.attemptId]
+      );
+
+    const workerCapability =
+      capabilities.find(
+        capability =>
+          capability.capabilityId ===
+            "worker"
+      );
+
     const workerEvidenceId =
       productPlane.recordEvidenceReference({
         attemptId:
@@ -1269,6 +1293,142 @@ async function main() {
       }
     );
 
+    const workerEvidence =
+      productPlane.recoveryGet(
+        "SELECT evidence_type, location, integrity_hash, producer FROM evidence_references WHERE evidence_reference_id = ?",
+        [workerEvidenceId]
+      );
+
+    const workerCertificationPass =
+      Boolean(
+        architecture.includes(
+          "M5-11 certifies Worker Capability (`worker`)"
+        ) &&
+        workerCapability?.compositionState ===
+          "certified" &&
+        workerCapability?.authority
+          .requestAuthority ===
+          "unified-control-plane" &&
+        workerCapability?.authority
+          .executionAuthority ===
+          "execution-authority" &&
+        workerCapability?.authority
+          .stateAuthority ===
+          "runtime-state" &&
+        workerCapability?.authority
+          .evidenceAuthority ===
+          "runtime-state" &&
+        workerCapability?.authority
+          .selfAuthorizationAllowed ===
+          false &&
+        workerCapability?.resourceTypes.some(
+          resource =>
+            resource.id ===
+              "workspace-task" &&
+            resource.proofState ===
+              "certified"
+        ) &&
+        workerInspection.pass &&
+        workerGoverned.result
+          .attemptSuccessManufactured ===
+          false &&
+        workerAttemptBeforeCloseout
+          ?.current_state ===
+          "RUNNING" &&
+        workerMissingAuthResult.status ===
+          "BLOCKED" &&
+        !workerMissingAuthResult.process &&
+        workerMissingAuthResult.workspaceRoot ===
+          "" &&
+        workerEvidence?.evidence_type ===
+          "m5-worker-real-resource" &&
+        workerEvidence?.integrity_hash ===
+          workerInspection.actualHash &&
+        workerEvidence?.producer ===
+          "milestone-5-proof"
+      );
+
+    productPlane.recordGateOutcome({
+      attemptId:
+        workerCommand.attemptId,
+      gateName:
+        "m5-11-governed-worker",
+      required:
+        true,
+      outcome:
+        workerCertificationPass
+          ? "PASS"
+          : "FAIL",
+      evidenceReferences: [
+        workerEvidenceId
+      ],
+      message:
+        workerCertificationPass
+          ? "Worker capability certification passed."
+          : "Worker capability certification failed.",
+      evaluator:
+        "milestone-5-proof"
+    });
+
+    if (workerCertificationPass) {
+      productPlane.transitionAttempt({
+        attemptId:
+          workerCommand.attemptId,
+        fromState:
+          "RUNNING",
+        toState:
+          "COMPLETED",
+        actor:
+          "control-plane",
+        reason:
+          "M5-11 worker proof complete."
+      });
+    }
+
+    const workerTerminal =
+      productPlane.recoveryGet(
+        "SELECT current_state FROM attempts WHERE attempt_id = ?",
+        [workerCommand.attemptId]
+      );
+
+    check(
+      "M5-11",
+      workerCertificationPass &&
+        workerTerminal?.current_state ===
+          "COMPLETED",
+      workerCertificationPass
+        ? "real bounded workspace task retained exact hashes and authoritative evidence, blocked missing authorization before process launch, cleaned safely, and closed through Control Plane authority"
+        : "worker certification evidence, failure path, or authority lifecycle incomplete",
+      {
+        resourceType:
+          "workspace-task",
+        source:
+          realSource,
+        sourceHashBefore,
+        expectedHash,
+        actualHash:
+          workerInspection.actualHash,
+        missingAuthorization: {
+          status:
+            workerMissingAuthResult.status,
+          processLaunched:
+            Boolean(
+              workerMissingAuthResult.process
+            ),
+          workspacePrepared:
+            workerMissingAuthResult
+              .workspaceRoot !== ""
+        },
+        evidenceReferenceId:
+          workerEvidenceId,
+        stateBeforeCloseout:
+          workerAttemptBeforeCloseout
+            ?.current_state,
+        terminalState:
+          workerTerminal?.current_state
+      }
+    );
+
     artifacts.worker = {
       request:
         workerRequest,
@@ -1287,7 +1447,14 @@ async function main() {
       persistedOutput:
         workerInspection.outputRow,
       evidenceReferenceId:
-        workerEvidenceId
+        workerEvidenceId,
+      missingAuthorization:
+        workerMissingAuthResult,
+      stateBeforeCloseout:
+        workerAttemptBeforeCloseout
+          ?.current_state,
+      terminalState:
+        workerTerminal?.current_state
     };
 
     // =======================================================
@@ -1895,7 +2062,7 @@ async function main() {
     milestone: 5,
 
     scope:
-      "M5-01-M5-10",
+      "M5-01-M5-11",
 
     passCount,
 
@@ -1907,7 +2074,6 @@ async function main() {
     artifacts,
 
     remainingMilestoneGates: [
-      "M5-11",
       "M5-12"
     ]
   };
@@ -1926,15 +2092,15 @@ async function main() {
   );
 
   const complete =
-    checks.length === 10 &&
-    passCount === 10;
+    checks.length === 11 &&
+    passCount === 11;
 
   console.log("");
 
   console.log(
     complete
       ? "MILESTONE_5_BATCH_2_PASS"
-      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/10`
+      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/11`
   );
 
   console.log(

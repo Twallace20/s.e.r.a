@@ -53,7 +53,7 @@
       "name": "Worker Capability",
       "layer": "Worker",
       "productionEntryPoint": "packages/workers",
-      "compositionState": "composition-pending",
+      "compositionState": "certified",
       "authority": {
         "requestAuthority": "unified-control-plane",
         "executionAuthority": "execution-authority",
@@ -66,15 +66,16 @@
           "id": "workspace-task",
           "description": "Real bounded workspace task",
           "requiresRealResource": true,
-          "proofState": "required"
+          "proofState": "certified"
         }
       ],
       "existingEvidence": [
-        "tests/integration/developer-worker.test.ts",
-        "tests/integration/developer-worker-v2.test.ts"
+        "packages/runtime-capability-composition/src/governed-worker-composition.ts",
+        "evidence/milestone-5/latest/proof-report.json"
       ],
       "knownLimitations": [
-        "historical worker tests do not by themselves certify M5 runtime composition"
+        "certification is bounded to the governed text-normalization workspace task over docs/BUILD_VALIDATION.md",
+        "the worker cannot self-authorize execution or terminal attempt state"
       ]
     },
     {

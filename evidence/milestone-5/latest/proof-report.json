@@ -1,9 +1,9 @@
 {
   "schemaVersion": "sera.milestone-proof.v1",
   "milestone": 5,
-  "scope": "M5-01-M5-10",
-  "passCount": 10,
-  "totalCount": 10,
+  "scope": "M5-01-M5-11",
+  "passCount": 11,
+  "totalCount": 11,
   "checks": [
     {
       "id": "M5-01",
@@ -24,24 +24,24 @@
           "command": {
             "ok": true,
             "status": "ACCEPTED",
-            "commandId": "command_45a1f7b6eb4b8579",
-            "attemptId": "attempt_ce439c13d7965da6",
+            "commandId": "command_dc3b4a9f7fe23b8b",
+            "attemptId": "attempt_cc6292bef57b7774",
             "message": "Command accepted and attempt created durably."
           },
           "executionUsed": false
         },
         "persistedPlannerAttempt": {
-          "attempt_id": "attempt_ce439c13d7965da6",
-          "command_id": "command_45a1f7b6eb4b8579",
+          "attempt_id": "attempt_cc6292bef57b7774",
+          "command_id": "command_dc3b4a9f7fe23b8b",
           "capability": "planner",
           "current_state": "PENDING"
         },
         "persistedPlannerCommand": {
-          "command_id": "command_45a1f7b6eb4b8579",
-          "idempotency_key": "m5_planner_task_3b5e8fb382d0517f50b2f114",
+          "command_id": "command_dc3b4a9f7fe23b8b",
+          "idempotency_key": "m5_planner_task_865bac6f2ba3b0c6dd3528ce",
           "command_type": "planner.create-task",
           "payload_json": "{\"prompt\":\"Normalize docs/BUILD_VALIDATION.md using governed runtime composition.\",\"requestedCapability\":\"text-normalizer-v1\",\"source\":\"docs/BUILD_VALIDATION.md\"}",
-          "attempt_id": "attempt_ce439c13d7965da6",
+          "attempt_id": "attempt_cc6292bef57b7774",
           "status": "ATTEMPT_ASSIGNED"
         },
         "persistedPlannerPayload": {
@@ -51,8 +51,8 @@
         },
         "duplicatePlannerResult": {
           "command": {
-            "attemptId": "attempt_ce439c13d7965da6",
-            "commandId": "command_45a1f7b6eb4b8579",
+            "attemptId": "attempt_cc6292bef57b7774",
+            "commandId": "command_dc3b4a9f7fe23b8b",
             "message": "Duplicate idempotency key returned original durable command.",
             "ok": true,
             "status": "DUPLICATE"
@@ -75,24 +75,24 @@
         "expectedHash": "3a0658f2fc419e695d4803e39ef7a02860419e5772e31255dc052082e2286b53",
         "actualHash": "3a0658f2fc419e695d4803e39ef7a02860419e5772e31255dc052082e2286b53",
         "execution": {
-          "execution_id": "execution_worker_69287c793d9c1e7b52ace0d6",
-          "attempt_id": "attempt_b0445fca2002e5f1",
-          "authorization_id": "authorization_worker_f465c0491674a5e1894e97aa",
+          "execution_id": "execution_worker_228385c002bdc9a059d30e96",
+          "attempt_id": "attempt_f63c9f5c47b52396",
+          "authorization_id": "authorization_worker_975d0ca97c3c310f5668e7d9",
           "executable_id": "text-normalizer-v1",
           "state": "CLEANED",
           "process_exit_code": 0,
-          "evidence_root": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_worker_69287c793d9c1e7b52ace0d6"
+          "evidence_root": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_worker_228385c002bdc9a059d30e96"
         },
         "authorization": {
-          "authorization_id": "authorization_worker_f465c0491674a5e1894e97aa",
-          "execution_id": "execution_worker_69287c793d9c1e7b52ace0d6",
-          "attempt_id": "attempt_b0445fca2002e5f1",
+          "authorization_id": "authorization_worker_975d0ca97c3c310f5668e7d9",
+          "execution_id": "execution_worker_228385c002bdc9a059d30e96",
+          "attempt_id": "attempt_f63c9f5c47b52396",
           "executable_id": "text-normalizer-v1",
-          "request_hash": "dd1fc409aa5bd3b34ff100ae39188102d72a98fee554c4aa3a49ee9f41d056a9",
-          "integrity_hash": "15560ae397dc2c57d10332efda4e87623396f4bb43313870a4c37c146e42b093"
+          "request_hash": "458dae505954c819011c46d37b7701fdb36b0ff88a22f1dd0b359ff5de69a92d",
+          "integrity_hash": "1038beed88eb62b26dbdbb36064681fe5b5b4603d67f676f55b80114d73827a7"
         },
         "output": {
-          "execution_id": "execution_worker_69287c793d9c1e7b52ace0d6",
+          "execution_id": "execution_worker_228385c002bdc9a059d30e96",
           "declared_output_identity": "normalized",
           "workspace_path": "out/normalized.md",
           "hash": "3a0658f2fc419e695d4803e39ef7a02860419e5772e31255dc052082e2286b53",
@@ -100,7 +100,7 @@
           "status": "harvested",
           "evidence_reference": "outputs/out/normalized.md"
         },
-        "evidenceReferenceId": "evidence_fa3088859b8791a5"
+        "evidenceReferenceId": "evidence_a356bbb642e0d4d7"
       }
     },
     {
@@ -112,24 +112,24 @@
         "expectedHash": "3a0658f2fc419e695d4803e39ef7a02860419e5772e31255dc052082e2286b53",
         "actualHash": "3a0658f2fc419e695d4803e39ef7a02860419e5772e31255dc052082e2286b53",
         "execution": {
-          "execution_id": "execution_tool_54eb8f345e055a3840347071",
-          "attempt_id": "attempt_e205fc8f09a9ccaa",
-          "authorization_id": "authorization_tool_f3c2f5b6f41d53631cf7b940",
+          "execution_id": "execution_tool_e2b033f10ca7db47c60a25e7",
+          "attempt_id": "attempt_9cc567c263099212",
+          "authorization_id": "authorization_tool_45eb8758fa1735ae91e61b48",
           "executable_id": "text-normalizer-v1",
           "state": "CLEANED",
           "process_exit_code": 0,
-          "evidence_root": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_tool_54eb8f345e055a3840347071"
+          "evidence_root": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_tool_e2b033f10ca7db47c60a25e7"
         },
         "authorization": {
-          "authorization_id": "authorization_tool_f3c2f5b6f41d53631cf7b940",
-          "execution_id": "execution_tool_54eb8f345e055a3840347071",
-          "attempt_id": "attempt_e205fc8f09a9ccaa",
+          "authorization_id": "authorization_tool_45eb8758fa1735ae91e61b48",
+          "execution_id": "execution_tool_e2b033f10ca7db47c60a25e7",
+          "attempt_id": "attempt_9cc567c263099212",
           "executable_id": "text-normalizer-v1",
-          "request_hash": "df62f0bd1fc562c796d2c9869577ee4de2d365079e69efed78ed2edf5bb45ae7",
-          "integrity_hash": "d35d98dfcb1211ad58cde9c9bcb0da55c8d096cfedccb4c59b017345161078ea"
+          "request_hash": "610b0f12e6116883511f130eb675dc76f8260e28beefb6d3f37424743425813f",
+          "integrity_hash": "5c5f8f6978a4b1f208f2aff3e5f1ef7b4ac28752c22cab323e94bf805a1c1d74"
         },
         "output": {
-          "execution_id": "execution_tool_54eb8f345e055a3840347071",
+          "execution_id": "execution_tool_e2b033f10ca7db47c60a25e7",
           "declared_output_identity": "normalized",
           "workspace_path": "out/normalized.md",
           "hash": "3a0658f2fc419e695d4803e39ef7a02860419e5772e31255dc052082e2286b53",
@@ -155,7 +155,7 @@
             "processLaunched": false
           }
         },
-        "evidenceReferenceId": "evidence_b2539571f37757d8"
+        "evidenceReferenceId": "evidence_ab9d3fb73ab26919"
       }
     },
     {
@@ -196,8 +196,8 @@
       "pass": true,
       "detail": "real durable memory record bound to authoritative Runtime attempt, immutable evidence hash, pre-write authorization block, and Control Plane closeout",
       "data": {
-        "recordHash": "41df4d1c21365708323cbf17d3ad58ba6a438291c9c5f4f0c6e7e05d00a75b9b",
-        "evidenceReferenceId": "evidence_b41cfc48292a2e67",
+        "recordHash": "9eaf194b5089e85f9ed49caf389f9a09b6ac0dad0a9263263c7542e1bc176085",
+        "evidenceReferenceId": "evidence_529294dbf38b5422",
         "invalidAuthorizationBlocked": true,
         "noWriteBeforeAuthorization": true,
         "stateBeforeCloseout": "RUNNING",
@@ -210,8 +210,8 @@
       "detail": "real BUILD_VALIDATION.md evidence produced an immutable candidate-only capability bundle with durable hash binding, pre-write authorization block, no promotion, and Control Plane closeout",
       "data": {
         "sourceSha256": "98e90331d57134e898188513a00f29373c501d9e5bb976ae90f6aaeb7a503604",
-        "candidateDigest": "fdb845183d5d61f11024a78938ad453bfcb1c25b25a4a46572472609b38aa9ea",
-        "evidenceReferenceId": "evidence_c09581663b5ea5ce",
+        "candidateDigest": "0186e9a1b68069ce3619fb784613a8951ae8b37cc7f1a7b63230c931872038af",
+        "evidenceReferenceId": "evidence_f6c91ac57818f2dc",
         "invalidAuthorizationBlocked": true,
         "noCandidateWriteBeforeAuthorization": true,
         "lifecycleStatus": "CANDIDATE",
@@ -225,8 +225,8 @@
       "pass": true,
       "detail": "real governed task request retained exact durable payload, idempotent replay, conflicting-reuse block, zero execution, immutable evidence, and Control Plane closeout",
       "data": {
-        "plannerEvidenceHash": "c4ef0387d37be81c748019b7204f805cca8c18d827ef9435c203416b45a8f89d",
-        "plannerEvidenceId": "evidence_2b9488917e5e6a07",
+        "plannerEvidenceHash": "66b17d881ca4ce913f1d122f82365f877429766a23c6465bceb392aace119063",
+        "plannerEvidenceId": "evidence_c981a0bf8b86c4b9",
         "expectedResult": {
           "commandType": "planner.create-task",
           "capability": "planner",
@@ -245,12 +245,32 @@
         },
         "terminalState": "COMPLETED"
       }
+    },
+    {
+      "id": "M5-11",
+      "pass": true,
+      "detail": "real bounded workspace task retained exact hashes and authoritative evidence, blocked missing authorization before process launch, cleaned safely, and closed through Control Plane authority",
+      "data": {
+        "resourceType": "workspace-task",
+        "source": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\docs\\BUILD_VALIDATION.md",
+        "sourceHashBefore": "98e90331d57134e898188513a00f29373c501d9e5bb976ae90f6aaeb7a503604",
+        "expectedHash": "3a0658f2fc419e695d4803e39ef7a02860419e5772e31255dc052082e2286b53",
+        "actualHash": "3a0658f2fc419e695d4803e39ef7a02860419e5772e31255dc052082e2286b53",
+        "missingAuthorization": {
+          "status": "BLOCKED",
+          "processLaunched": false,
+          "workspacePrepared": false
+        },
+        "evidenceReferenceId": "evidence_a356bbb642e0d4d7",
+        "stateBeforeCloseout": "RUNNING",
+        "terminalState": "COMPLETED"
+      }
     }
   ],
   "artifacts": {
     "planner": {
       "input": {
-        "idempotencyKey": "m5_planner_task_3b5e8fb382d0517f50b2f114",
+        "idempotencyKey": "m5_planner_task_865bac6f2ba3b0c6dd3528ce",
         "capability": "planner",
         "prompt": "Normalize docs/BUILD_VALIDATION.md using governed runtime composition.",
         "payload": {
@@ -262,24 +282,24 @@
         "command": {
           "ok": true,
           "status": "ACCEPTED",
-          "commandId": "command_45a1f7b6eb4b8579",
-          "attemptId": "attempt_ce439c13d7965da6",
+          "commandId": "command_dc3b4a9f7fe23b8b",
+          "attemptId": "attempt_cc6292bef57b7774",
           "message": "Command accepted and attempt created durably."
         },
         "executionUsed": false
       },
       "persistedAttempt": {
-        "attempt_id": "attempt_ce439c13d7965da6",
-        "command_id": "command_45a1f7b6eb4b8579",
+        "attempt_id": "attempt_cc6292bef57b7774",
+        "command_id": "command_dc3b4a9f7fe23b8b",
         "capability": "planner",
         "current_state": "PENDING"
       },
       "persistedCommand": {
-        "command_id": "command_45a1f7b6eb4b8579",
-        "idempotency_key": "m5_planner_task_3b5e8fb382d0517f50b2f114",
+        "command_id": "command_dc3b4a9f7fe23b8b",
+        "idempotency_key": "m5_planner_task_865bac6f2ba3b0c6dd3528ce",
         "command_type": "planner.create-task",
         "payload_json": "{\"prompt\":\"Normalize docs/BUILD_VALIDATION.md using governed runtime composition.\",\"requestedCapability\":\"text-normalizer-v1\",\"source\":\"docs/BUILD_VALIDATION.md\"}",
-        "attempt_id": "attempt_ce439c13d7965da6",
+        "attempt_id": "attempt_cc6292bef57b7774",
         "status": "ATTEMPT_ASSIGNED"
       },
       "persistedPayload": {
@@ -289,8 +309,8 @@
       },
       "duplicateResult": {
         "command": {
-          "attemptId": "attempt_ce439c13d7965da6",
-          "commandId": "command_45a1f7b6eb4b8579",
+          "attemptId": "attempt_cc6292bef57b7774",
+          "commandId": "command_dc3b4a9f7fe23b8b",
           "message": "Duplicate idempotency key returned original durable command.",
           "ok": true,
           "status": "DUPLICATE"
@@ -303,14 +323,14 @@
     "plannerCertification": {
       "resourceType": "task-request",
       "evidenceLocation": "evidence/milestone-5/latest/.work/planner-proof/task-request-proof.json",
-      "evidenceHash": "c4ef0387d37be81c748019b7204f805cca8c18d827ef9435c203416b45a8f89d",
+      "evidenceHash": "66b17d881ca4ce913f1d122f82365f877429766a23c6465bceb392aace119063",
       "terminalState": "COMPLETED"
     },
     "worker": {
       "request": {
-        "executionId": "execution_worker_69287c793d9c1e7b52ace0d6",
-        "attemptId": "attempt_b0445fca2002e5f1",
-        "authorizationId": "authorization_worker_f465c0491674a5e1894e97aa",
+        "executionId": "execution_worker_228385c002bdc9a059d30e96",
+        "attemptId": "attempt_f63c9f5c47b52396",
+        "authorizationId": "authorization_worker_975d0ca97c3c310f5668e7d9",
         "executableId": "text-normalizer-v1",
         "args": [
           "input/source.md",
@@ -356,19 +376,19 @@
       "result": {
         "ok": true,
         "status": "SUCCEEDED_PROCESS",
-        "executionId": "execution_worker_69287c793d9c1e7b52ace0d6",
-        "attemptId": "attempt_b0445fca2002e5f1",
-        "authorizationId": "authorization_worker_f465c0491674a5e1894e97aa",
+        "executionId": "execution_worker_228385c002bdc9a059d30e96",
+        "attemptId": "attempt_f63c9f5c47b52396",
+        "authorizationId": "authorization_worker_975d0ca97c3c310f5668e7d9",
         "databasePath": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\runtime-state\\sera-operational.db",
-        "evidenceRoot": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_worker_69287c793d9c1e7b52ace0d6",
-        "workspaceRoot": "C:\\Users\\18123\\AppData\\Local\\Temp\\sera-execution-execution_worker_69287c793d9c1e7b52ace0d6-T8PNaU",
+        "evidenceRoot": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_worker_228385c002bdc9a059d30e96",
+        "workspaceRoot": "C:\\Users\\18123\\AppData\\Local\\Temp\\sera-execution-execution_worker_228385c002bdc9a059d30e96-PoXL6I",
         "workspaceOutsideRepository": true,
         "process": {
           "status": "exited",
           "exitCode": 0,
           "signal": null,
-          "startedAt": "2026-08-13T00:25:54.485Z",
-          "completedAt": "2026-08-13T00:25:54.617Z",
+          "startedAt": "2026-08-13T01:38:01.968Z",
+          "completedAt": "2026-08-13T01:38:02.109Z",
           "output": {
             "stdout": {
               "text": "",
@@ -404,7 +424,7 @@
         "undeclaredOutputs": [],
         "cleanup": {
           "cleaned": true,
-          "workspaceRoot": "C:\\Users\\18123\\AppData\\Local\\Temp\\sera-execution-execution_worker_69287c793d9c1e7b52ace0d6-T8PNaU",
+          "workspaceRoot": "C:\\Users\\18123\\AppData\\Local\\Temp\\sera-execution-execution_worker_228385c002bdc9a059d30e96-PoXL6I",
           "message": "Workspace cleanup completed."
         },
         "sourceNotMutated": true,
@@ -413,24 +433,24 @@
         "networkUse": false
       },
       "persistedExecution": {
-        "execution_id": "execution_worker_69287c793d9c1e7b52ace0d6",
-        "attempt_id": "attempt_b0445fca2002e5f1",
-        "authorization_id": "authorization_worker_f465c0491674a5e1894e97aa",
+        "execution_id": "execution_worker_228385c002bdc9a059d30e96",
+        "attempt_id": "attempt_f63c9f5c47b52396",
+        "authorization_id": "authorization_worker_975d0ca97c3c310f5668e7d9",
         "executable_id": "text-normalizer-v1",
         "state": "CLEANED",
         "process_exit_code": 0,
-        "evidence_root": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_worker_69287c793d9c1e7b52ace0d6"
+        "evidence_root": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_worker_228385c002bdc9a059d30e96"
       },
       "persistedAuthorization": {
-        "authorization_id": "authorization_worker_f465c0491674a5e1894e97aa",
-        "execution_id": "execution_worker_69287c793d9c1e7b52ace0d6",
-        "attempt_id": "attempt_b0445fca2002e5f1",
+        "authorization_id": "authorization_worker_975d0ca97c3c310f5668e7d9",
+        "execution_id": "execution_worker_228385c002bdc9a059d30e96",
+        "attempt_id": "attempt_f63c9f5c47b52396",
         "executable_id": "text-normalizer-v1",
-        "request_hash": "dd1fc409aa5bd3b34ff100ae39188102d72a98fee554c4aa3a49ee9f41d056a9",
-        "integrity_hash": "15560ae397dc2c57d10332efda4e87623396f4bb43313870a4c37c146e42b093"
+        "request_hash": "458dae505954c819011c46d37b7701fdb36b0ff88a22f1dd0b359ff5de69a92d",
+        "integrity_hash": "1038beed88eb62b26dbdbb36064681fe5b5b4603d67f676f55b80114d73827a7"
       },
       "persistedOutput": {
-        "execution_id": "execution_worker_69287c793d9c1e7b52ace0d6",
+        "execution_id": "execution_worker_228385c002bdc9a059d30e96",
         "declared_output_identity": "normalized",
         "workspace_path": "out/normalized.md",
         "hash": "3a0658f2fc419e695d4803e39ef7a02860419e5772e31255dc052082e2286b53",
@@ -438,13 +458,37 @@
         "status": "harvested",
         "evidence_reference": "outputs/out/normalized.md"
       },
-      "evidenceReferenceId": "evidence_fa3088859b8791a5"
+      "evidenceReferenceId": "evidence_a356bbb642e0d4d7",
+      "missingAuthorization": {
+        "ok": false,
+        "status": "BLOCKED",
+        "executionId": "execution_worker-missing-auth_4fb414bf44cf80becd20c45d",
+        "attemptId": "attempt_f63c9f5c47b52396",
+        "authorizationId": "authorization_worker-missing-auth_94d6093d8a1ab3f63299725a",
+        "databasePath": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\runtime-state\\sera-operational.db",
+        "evidenceRoot": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_worker-missing-auth_4fb414bf44cf80becd20c45d",
+        "workspaceRoot": "",
+        "workspaceOutsideRepository": true,
+        "outputs": [],
+        "undeclaredOutputs": [],
+        "cleanup": {
+          "cleaned": false,
+          "workspaceRoot": "",
+          "message": "not started"
+        },
+        "sourceNotMutated": true,
+        "attemptSuccessManufactured": false,
+        "modelUse": false,
+        "networkUse": false
+      },
+      "stateBeforeCloseout": "RUNNING",
+      "terminalState": "COMPLETED"
     },
     "tool": {
       "request": {
-        "executionId": "execution_tool_54eb8f345e055a3840347071",
-        "attemptId": "attempt_e205fc8f09a9ccaa",
-        "authorizationId": "authorization_tool_f3c2f5b6f41d53631cf7b940",
+        "executionId": "execution_tool_e2b033f10ca7db47c60a25e7",
+        "attemptId": "attempt_9cc567c263099212",
+        "authorizationId": "authorization_tool_45eb8758fa1735ae91e61b48",
         "executableId": "text-normalizer-v1",
         "args": [
           "input/source.md",
@@ -489,19 +533,19 @@
       "result": {
         "ok": true,
         "status": "SUCCEEDED_PROCESS",
-        "executionId": "execution_tool_54eb8f345e055a3840347071",
-        "attemptId": "attempt_e205fc8f09a9ccaa",
-        "authorizationId": "authorization_tool_f3c2f5b6f41d53631cf7b940",
+        "executionId": "execution_tool_e2b033f10ca7db47c60a25e7",
+        "attemptId": "attempt_9cc567c263099212",
+        "authorizationId": "authorization_tool_45eb8758fa1735ae91e61b48",
         "databasePath": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\runtime-state\\sera-operational.db",
-        "evidenceRoot": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_tool_54eb8f345e055a3840347071",
-        "workspaceRoot": "C:\\Users\\18123\\AppData\\Local\\Temp\\sera-execution-execution_tool_54eb8f345e055a3840347071-w3msuS",
+        "evidenceRoot": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_tool_e2b033f10ca7db47c60a25e7",
+        "workspaceRoot": "C:\\Users\\18123\\AppData\\Local\\Temp\\sera-execution-execution_tool_e2b033f10ca7db47c60a25e7-Qlch8X",
         "workspaceOutsideRepository": true,
         "process": {
           "status": "exited",
           "exitCode": 0,
           "signal": null,
-          "startedAt": "2026-08-13T00:25:54.716Z",
-          "completedAt": "2026-08-13T00:25:54.852Z",
+          "startedAt": "2026-08-13T01:38:02.261Z",
+          "completedAt": "2026-08-13T01:38:02.388Z",
           "output": {
             "stdout": {
               "text": "",
@@ -537,7 +581,7 @@
         "undeclaredOutputs": [],
         "cleanup": {
           "cleaned": true,
-          "workspaceRoot": "C:\\Users\\18123\\AppData\\Local\\Temp\\sera-execution-execution_tool_54eb8f345e055a3840347071-w3msuS",
+          "workspaceRoot": "C:\\Users\\18123\\AppData\\Local\\Temp\\sera-execution-execution_tool_e2b033f10ca7db47c60a25e7-Qlch8X",
           "message": "Workspace cleanup completed."
         },
         "sourceNotMutated": true,
@@ -546,24 +590,24 @@
         "networkUse": false
       },
       "persistedExecution": {
-        "execution_id": "execution_tool_54eb8f345e055a3840347071",
-        "attempt_id": "attempt_e205fc8f09a9ccaa",
-        "authorization_id": "authorization_tool_f3c2f5b6f41d53631cf7b940",
+        "execution_id": "execution_tool_e2b033f10ca7db47c60a25e7",
+        "attempt_id": "attempt_9cc567c263099212",
+        "authorization_id": "authorization_tool_45eb8758fa1735ae91e61b48",
         "executable_id": "text-normalizer-v1",
         "state": "CLEANED",
         "process_exit_code": 0,
-        "evidence_root": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_tool_54eb8f345e055a3840347071"
+        "evidence_root": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\execution-evidence\\execution_tool_e2b033f10ca7db47c60a25e7"
       },
       "persistedAuthorization": {
-        "authorization_id": "authorization_tool_f3c2f5b6f41d53631cf7b940",
-        "execution_id": "execution_tool_54eb8f345e055a3840347071",
-        "attempt_id": "attempt_e205fc8f09a9ccaa",
+        "authorization_id": "authorization_tool_45eb8758fa1735ae91e61b48",
+        "execution_id": "execution_tool_e2b033f10ca7db47c60a25e7",
+        "attempt_id": "attempt_9cc567c263099212",
         "executable_id": "text-normalizer-v1",
-        "request_hash": "df62f0bd1fc562c796d2c9869577ee4de2d365079e69efed78ed2edf5bb45ae7",
-        "integrity_hash": "d35d98dfcb1211ad58cde9c9bcb0da55c8d096cfedccb4c59b017345161078ea"
+        "request_hash": "610b0f12e6116883511f130eb675dc76f8260e28beefb6d3f37424743425813f",
+        "integrity_hash": "5c5f8f6978a4b1f208f2aff3e5f1ef7b4ac28752c22cab323e94bf805a1c1d74"
       },
       "persistedOutput": {
-        "execution_id": "execution_tool_54eb8f345e055a3840347071",
+        "execution_id": "execution_tool_e2b033f10ca7db47c60a25e7",
         "declared_output_identity": "normalized",
         "workspace_path": "out/normalized.md",
         "hash": "3a0658f2fc419e695d4803e39ef7a02860419e5772e31255dc052082e2286b53",
@@ -589,37 +633,37 @@
           "processLaunched": false
         }
       },
-      "evidenceReferenceId": "evidence_b2539571f37757d8"
+      "evidenceReferenceId": "evidence_ab9d3fb73ab26919"
     },
     "runtimeState": {
       "databasePath": "C:\\Users\\18123\\Documents\\SERA-Core\\s.e.r.a\\evidence\\milestone-5\\latest\\.work\\runtime-state\\sera-operational.db",
       "plannerAttempt": {
-        "attempt_id": "attempt_ce439c13d7965da6",
-        "command_id": "command_45a1f7b6eb4b8579",
+        "attempt_id": "attempt_cc6292bef57b7774",
+        "command_id": "command_dc3b4a9f7fe23b8b",
         "capability": "planner",
         "current_state": "PENDING"
       },
       "workerAttempt": {
-        "attempt_id": "attempt_b0445fca2002e5f1",
+        "attempt_id": "attempt_f63c9f5c47b52396",
         "capability": "worker",
-        "current_state": "RUNNING"
+        "current_state": "COMPLETED"
       },
       "toolAttempt": {
-        "attempt_id": "attempt_e205fc8f09a9ccaa",
+        "attempt_id": "attempt_9cc567c263099212",
         "capability": "tool",
         "current_state": "RUNNING"
       }
     },
     "memory": {
       "evidenceType": "durable-memory-record",
-      "recordHash": "41df4d1c21365708323cbf17d3ad58ba6a438291c9c5f4f0c6e7e05d00a75b9b",
-      "evidenceLocation": ".sera/memory-composition/attempt_3deabd7b45119e27/memory-record.json"
+      "recordHash": "9eaf194b5089e85f9ed49caf389f9a09b6ac0dad0a9263263c7542e1bc176085",
+      "evidenceLocation": ".sera/memory-composition/attempt_f7f9d17bf7f6171a/memory-record.json"
     },
     "capabilityEngine": {
       "source": "docs/BUILD_VALIDATION.md",
       "sourceSha256": "98e90331d57134e898188513a00f29373c501d9e5bb976ae90f6aaeb7a503604",
-      "candidateDigest": "fdb845183d5d61f11024a78938ad453bfcb1c25b25a4a46572472609b38aa9ea",
-      "evidenceLocation": ".sera/capability-engine-composition/attempt_b1d7fb2f86d1c5f4/candidate-bundle-proof.json"
+      "candidateDigest": "0186e9a1b68069ce3619fb784613a8951ae8b37cc7f1a7b63230c931872038af",
+      "evidenceLocation": ".sera/capability-engine-composition/attempt_60c9649b2e791562/candidate-bundle-proof.json"
     },
     "localModel": {
       "groundedQuery": "evidence\\milestone-5\\grounded-query-canonical.json",
@@ -631,7 +675,6 @@
     }
   },
   "remainingMilestoneGates": [
-    "M5-11",
     "M5-12"
   ]
 }
