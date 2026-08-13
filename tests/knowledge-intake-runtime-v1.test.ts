@@ -322,7 +322,7 @@ describe("Knowledge and Universal Intake Runtime v1", () => {
   it("detects extension/content mismatch for media", async () => {
     await withHarness("extension-mismatch", async (harness) => {
       const file = path.join(harness.root, "image.txt");
-      fs.writeFileSync(file, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 1]));
+      fs.copyFileSync(path.join(UNIVERSAL_INGESTION_FIXTURES, "sample.png"), file);
       const result = await intake(harness, { sourceType: "local-file", sourceReference: file, allowedRoots: [harness.root] });
       const asset = harness.store.recoveryGet("SELECT extension_mismatch, media_type FROM intake_assets WHERE intake_id = ?", [result.intakeId]);
       expect(asset?.media_type).toBe("image/png");
@@ -396,6 +396,56 @@ describe("Knowledge and Universal Intake Runtime v1", () => {
     });
   });
 
+  it.each([
+    ["PNG", "sample.png", "image/png", "png"],
+    ["JPEG", "sample.jpg", "image/jpeg", "jpeg"],
+    ["WEBP", "sample.webp", "image/webp", "webp"]
+  ])("validates, hashes, and evidences the genuine %s fixture", async (_label, fixtureName, mediaType, format) => {
+    await withHarness(`universal-${fixtureName}`, async (harness) => {
+      const source = path.join(UNIVERSAL_INGESTION_FIXTURES, fixtureName);
+      const result = await intake(harness, { sourceType: "local-file", sourceReference: source, allowedRoots: [UNIVERSAL_INGESTION_FIXTURES] });
+      const asset = harness.store.recoveryGet("SELECT content_hash, byte_size, media_type, preservation_path FROM intake_assets WHERE intake_id = ?", [result.intakeId]);
+      const extraction = harness.store.recoveryGet("SELECT status, extracted_text_hash, extracted_byte_count, metadata_json FROM intake_extractions WHERE intake_id = ?", [result.intakeId]);
+      const metadata = JSON.parse(String(extraction?.metadata_json));
+      const report = JSON.parse(fs.readFileSync(path.join(result.evidenceRoot, "extraction-report.json"), "utf8"));
+      const finalReport = JSON.parse(fs.readFileSync(path.join(result.evidenceRoot, "final-intake-report.json"), "utf8"));
+
+      expect(result.status).toBe("REVIEW_REQUIRED");
+      expect(result.chunkCount).toBe(0);
+      expect(result.modelUse).toBe(false);
+      expect(result.publicNetworkUse).toBe(false);
+      expect(asset?.media_type).toBe(mediaType);
+      expect(asset?.content_hash).toBe(sha256File(source));
+      expect(Number(asset?.byte_size)).toBe(fs.statSync(source).size);
+      expect(sha256File(String(asset?.preservation_path))).toBe(asset?.content_hash);
+      expect(extraction?.status).toBe("extracted");
+      expect(extraction?.extracted_text_hash).toBeNull();
+      expect(Number(extraction?.extracted_byte_count)).toBe(0);
+      expect(metadata).toMatchObject({ extractor: "bounded-image-header-v1", format, width: 3, height: 2 });
+      expect(report[0].metadata).toMatchObject({ format, width: 3, height: 2 });
+      expect(finalReport.status).toBe("REVIEW_REQUIRED");
+      expect(fs.existsSync(path.join(result.evidenceRoot, "provenance.json"))).toBe(true);
+    });
+  });
+
+  it.each([
+    ["PNG", "malformed.png", "Malformed or unreadable image/png"],
+    ["JPEG", "malformed.jpg", "Malformed or unreadable image/jpeg"],
+    ["WEBP", "malformed.webp", "Malformed or unreadable image/webp"]
+  ])("blocks malformed %s before metadata promotion", async (_label, fixtureName, expectedReason) => {
+    await withHarness(`malformed-${fixtureName}`, async (harness) => {
+      const source = path.join(UNIVERSAL_INGESTION_FIXTURES, fixtureName);
+      const result = await intake(harness, { sourceType: "local-file", sourceReference: source, allowedRoots: [UNIVERSAL_INGESTION_FIXTURES] });
+      const report = JSON.parse(fs.readFileSync(path.join(result.evidenceRoot, "final-intake-report.json"), "utf8"));
+      expect(result.status).toBe("BLOCKED");
+      expect(result.documentIds).toHaveLength(0);
+      expect(blockReason(harness.store, result.intakeId)).toContain(expectedReason);
+      expect(report.status).toBe("BLOCKED");
+      expect(report.modelUse).toBe(false);
+      expect(report.publicNetworkUse).toBe(false);
+    });
+  });
+
   it("invalid UTF-8 is handled honestly as opaque", async () => {
     await withHarness("invalid-utf8", async (harness) => {
       const file = path.join(harness.root, "bad.txt");
@@ -462,8 +512,6 @@ describe("Knowledge and Universal Intake Runtime v1", () => {
   });
 
   it.each([
-    ["PNG", "image.png", Buffer.from([0x89, 0x50, 0x4e, 0x47])],
-    ["JPEG", "photo.jpg", Buffer.from([0xff, 0xd8, 0xff, 0x00])],
     ["GIF", "anim.gif", Buffer.from("GIF89a")],
     ["MP3", "sound.mp3", Buffer.from([0, 1, 2, 3])],
     ["WAV", "sound.wav", Buffer.from([0, 1, 2, 3])],

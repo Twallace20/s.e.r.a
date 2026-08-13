@@ -186,7 +186,8 @@ export const DEFAULT_KNOWLEDGE_POLICY: KnowledgeRuntimePolicy = {
 
 const TEXT_TYPES = new Set(["text/plain", "text/markdown", "application/json", "text/csv", "text/html"]);
 const DOCUMENT_TYPES = new Set(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]);
-const OPAQUE_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "audio/mpeg", "audio/wav", "video/mp4", "application/zip", "application/octet-stream"]);
+const IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const OPAQUE_TYPES = new Set(["image/gif", "audio/mpeg", "audio/wav", "video/mp4", "application/zip", "application/octet-stream"]);
 const TERMINAL_INTAKE_STATES = new Set<IntakeState>(["INDEXED", "OPAQUE_PRESERVED", "REVIEW_REQUIRED", "BLOCKED", "FAILED", "CANCELLED"]);
 
 export class KnowledgeRuntime {
@@ -214,7 +215,7 @@ export class KnowledgeRuntime {
       status: "INSPECTED",
       schemaVersion: KNOWLEDGE_RUNTIME_SCHEMA_VERSION,
       supportedSourceTypes: ["inline-text", "local-file", "local-directory", "url-reference", "predownloaded-web-snapshot", "generated-fixture"] as IntakeSourceType[],
-      deterministicExtraction: [...TEXT_TYPES, ...DOCUMENT_TYPES].sort(),
+      deterministicExtraction: [...TEXT_TYPES, ...DOCUMENT_TYPES, ...IMAGE_TYPES].sort(),
       opaquePreservation: [...OPAQUE_TYPES].sort(),
       archiveBehavior: "archives are preserved as opaque assets and never extracted in v1",
       urlBehavior: "URL references are recorded but not fetched",
@@ -240,8 +241,9 @@ export class KnowledgeRuntime {
       const sources = this.acquireSources(request, authorization!);
       const assets = sources.map((source) => this.preserveSource(request, source));
       const extraction = await this.extractAssets(request, assets);
+      const completedState = completionState(extraction);
       this.persistIntake(request, authorization!, idempotencyKey, assets, extraction, evidenceRoot);
-      this.writeEvidence(request, authorization!, assets, extraction, evidenceRoot, "INDEXED");
+      this.writeEvidence(request, authorization!, assets, extraction, evidenceRoot, completedState);
       return this.resultFromDurableIntake(request.intakeId);
     } catch (error) {
       const state: IntakeState = error instanceof KnowledgeRuntimeBlockedError ? "BLOCKED" : "FAILED";
@@ -531,7 +533,7 @@ export class KnowledgeRuntime {
         authorization.authorizationId, authorization.attemptId, authorization.sourceType, authorization.sourceReferenceHash, stableJson(authorization.allowedRoots), stableJson(authorization.permittedMediaTypes), stableJson({ maximumFileCount: authorization.maximumFileCount, maximumIndividualFileSize: authorization.maximumIndividualFileSize, maximumTotalBytes: authorization.maximumTotalBytes, maximumDirectoryDepth: authorization.maximumDirectoryDepth }), authorization.extractionPolicy, authorization.retentionPolicy, authorization.trustPolicy, authorization.networkPolicy, authorization.policyVersion, authorization.issuedAt, authorization.expiresAt, authorization.integrityHash, "{}"
       ]);
       this.store.recoveryRun("INSERT INTO intake_requests (intake_id, attempt_id, authorization_id, idempotency_key, request_hash, source_type, source_reference, display_name, declared_media_type, detected_media_type, expected_hash, retention_policy, extraction_profile, trust_declaration, state, created_at, updated_at, completed_at, failure_or_block_reason, evidence_root, optimistic_version, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, 1, ?)", [
-        request.intakeId, request.attemptId, request.authorizationId, idempotencyKey, request.requestHash, request.sourceType, request.sourceReference, request.displayName, request.declaredMediaType, request.detectedMediaType, request.expectedHash ?? null, request.retentionPolicy, request.extractionProfile, request.trustDeclaration, bundle.chunks.length > 0 ? "INDEXED" : "OPAQUE_PRESERVED", now(), now(), now(), evidenceRoot, stableJson(request.correlation)
+        request.intakeId, request.attemptId, request.authorizationId, idempotencyKey, request.requestHash, request.sourceType, request.sourceReference, request.displayName, request.declaredMediaType, request.detectedMediaType, request.expectedHash ?? null, request.retentionPolicy, request.extractionProfile, request.trustDeclaration, completionState(bundle), now(), now(), now(), evidenceRoot, stableJson(request.correlation)
       ]);
       for (const asset of assets) {
         this.store.recoveryRun("INSERT OR IGNORE INTO intake_assets (asset_id, intake_id, source_type, original_reference, display_name, content_hash, byte_size, media_type, declared_media_type, detected_media_type, preservation_path, immutable, extension_mismatch, preserved_at, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)", [
@@ -560,7 +562,7 @@ export class KnowledgeRuntime {
           stableId("provenance", `${chunk.chunkId}:chunk`), chunk.documentId, chunk.chunkId, chunk.intakeId, chunk.assetId, assets.find((a) => a.assetId === chunk.assetId)?.originalReference ?? "", stableId("extraction", `${chunk.documentId}:${bundle.documents.find((doc) => doc.documentId === chunk.documentId)?.contentVersion}`), chunk.chunkHash, request.extractionProfile, this.store.currentRuntimeInstanceId(), now(), "[]", "{}"
         ]);
       }
-      this.event(request.intakeId, bundle.chunks.length > 0 ? "INDEXED" : "OPAQUE_PRESERVED", "Intake completed.");
+      this.event(request.intakeId, completionState(bundle), "Intake completed.");
     });
   }
 
@@ -713,6 +715,12 @@ interface ExtractionBundle {
   chunks: ChunkRecord[];
 }
 
+function completionState(bundle: ExtractionBundle): IntakeState {
+  if (bundle.chunks.length > 0) return "INDEXED";
+  if (bundle.documents.some((document) => document.extractionStatus === "extracted")) return "REVIEW_REQUIRED";
+  return "OPAQUE_PRESERVED";
+}
+
 export function normalizeIntakeRequest(input: IntakeRequestInput, policy: KnowledgeRuntimePolicy = DEFAULT_KNOWLEDGE_POLICY): NormalizedIntakeRequest {
   if (!input.intakeId || !input.attemptId || !input.authorizationId) throw new KnowledgeRuntimeBlockedError("Intake, attempt, and authorization IDs are required.", "invalid_request");
   const detectedMediaType = input.declaredMediaType ?? detectMediaType(input.displayName ?? input.sourceReference, Buffer.from(input.sourceReference, "utf8"));
@@ -778,6 +786,7 @@ interface ExtractionResult {
 async function extractBytes(asset: AssetRecord, bytes: Buffer, policy: KnowledgeRuntimePolicy): Promise<ExtractionResult> {
   if (asset.mediaType === "application/pdf") return extractPdf(bytes);
   if (asset.mediaType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return extractDocx(bytes);
+  if (IMAGE_TYPES.has(asset.mediaType)) return extractImageMetadata(asset.mediaType, bytes);
   if (!TEXT_TYPES.has(asset.mediaType)) return { status: "opaque", text: "", reason: `Opaque ${asset.mediaType} preserved; future processor required.`, language: null, metadata: { extractor: "opaque-preserve-v1" } };
   if (asset.mediaType === "application/json") {
     try {
@@ -791,6 +800,73 @@ async function extractBytes(asset: AssetRecord, bytes: Buffer, policy: Knowledge
   const text = bytes.toString("utf8");
   if (text.includes("\uFFFD")) return { status: "opaque", text: "", reason: "Invalid UTF-8 handled as opaque content.", language: null, metadata: { extractor: "utf8-text-v1" } };
   return { status: "extracted", text: text.replace(/\r\n/g, "\n"), reason: null, language: "und", metadata: { extractor: "utf8-text-v1" } };
+}
+
+function extractImageMetadata(mediaType: string, bytes: Buffer): ExtractionResult {
+  let metadata: Record<string, unknown>;
+  try {
+    if (mediaType === "image/png") metadata = parsePngMetadata(bytes);
+    else if (mediaType === "image/jpeg") metadata = parseJpegMetadata(bytes);
+    else metadata = parseWebpMetadata(bytes);
+  } catch (error) {
+    throw new KnowledgeRuntimeBlockedError(`Malformed or unreadable ${mediaType} blocked extraction: ${errorMessage(error)}`, `malformed_${mediaType.split("/")[1]}`);
+  }
+  return { status: "extracted", text: "", reason: "Deterministic image metadata extracted; source pixels preserved without semantic interpretation.", language: null, metadata };
+}
+
+function parsePngMetadata(bytes: Buffer): Record<string, unknown> {
+  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  if (bytes.length < 33 || !bytes.subarray(0, 8).equals(signature) || bytes.subarray(12, 16).toString("ascii") !== "IHDR") throw new Error("invalid PNG signature or IHDR");
+  const width = bytes.readUInt32BE(16);
+  const height = bytes.readUInt32BE(20);
+  if (width === 0 || height === 0 || !bytes.includes(Buffer.from("IEND"))) throw new Error("invalid PNG dimensions or missing IEND");
+  return { extractor: "bounded-image-header-v1", format: "png", width, height, bitDepth: bytes[24], colorType: bytes[25] };
+}
+
+function parseJpegMetadata(bytes: Buffer): Record<string, unknown> {
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[bytes.length - 2] !== 0xff || bytes[bytes.length - 1] !== 0xd9) throw new Error("invalid JPEG SOI or EOI");
+  let offset = 2;
+  while (offset + 4 <= bytes.length) {
+    if (bytes[offset] !== 0xff) throw new Error("invalid JPEG marker");
+    const marker = bytes[offset + 1];
+    offset += 2;
+    if (marker === 0xd9 || marker === 0xda) break;
+    const length = bytes.readUInt16BE(offset);
+    if (length < 2 || offset + length > bytes.length) throw new Error("invalid JPEG segment length");
+    if ([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf].includes(marker)) {
+      if (length < 8) throw new Error("invalid JPEG frame header");
+      const height = bytes.readUInt16BE(offset + 3);
+      const width = bytes.readUInt16BE(offset + 5);
+      if (width === 0 || height === 0) throw new Error("invalid JPEG dimensions");
+      return { extractor: "bounded-image-header-v1", format: "jpeg", width, height, precision: bytes[offset + 2], components: bytes[offset + 7] };
+    }
+    offset += length;
+  }
+  throw new Error("JPEG frame header not found");
+}
+
+function parseWebpMetadata(bytes: Buffer): Record<string, unknown> {
+  if (bytes.length < 30 || bytes.subarray(0, 4).toString("ascii") !== "RIFF" || bytes.subarray(8, 12).toString("ascii") !== "WEBP") throw new Error("invalid WEBP RIFF header");
+  const declaredSize = bytes.readUInt32LE(4) + 8;
+  if (declaredSize > bytes.length) throw new Error("truncated WEBP payload");
+  const chunk = bytes.subarray(12, 16).toString("ascii");
+  let width: number;
+  let height: number;
+  if (chunk === "VP8X") {
+    width = 1 + bytes.readUIntLE(24, 3);
+    height = 1 + bytes.readUIntLE(27, 3);
+  } else if (chunk === "VP8L") {
+    if (bytes[20] !== 0x2f) throw new Error("invalid lossless WEBP signature");
+    const bits = bytes.readUInt32LE(21);
+    width = (bits & 0x3fff) + 1;
+    height = ((bits >>> 14) & 0x3fff) + 1;
+  } else if (chunk === "VP8 ") {
+    if (bytes.length < 30 || bytes[23] !== 0x9d || bytes[24] !== 0x01 || bytes[25] !== 0x2a) throw new Error("invalid lossy WEBP frame header");
+    width = bytes.readUInt16LE(26) & 0x3fff;
+    height = bytes.readUInt16LE(28) & 0x3fff;
+  } else throw new Error("unsupported WEBP chunk");
+  if (width === 0 || height === 0) throw new Error("invalid WEBP dimensions");
+  return { extractor: "bounded-image-header-v1", format: "webp", width, height, encoding: chunk.trim() };
 }
 
 async function extractPdf(bytes: Buffer): Promise<ExtractionResult> {
@@ -936,8 +1012,8 @@ export async function runKnowledgeIntakeProof(input: RuntimeStateConfigInput = {
     fs.writeFileSync(path.join(dataRoot, "a.md"), "# Alpha\nlocal beta markdown\n", "utf8");
     fs.writeFileSync(path.join(dataRoot, "b.csv"), "name,value\nalpha,1\nbeta,2\n", "utf8");
     const dir = await proofIntake(runtime, attemptId, { sourceType: "local-directory", sourceReference: dataRoot, displayName: "sources", allowedRoots: [dataRoot] }, "dir-proof");
-    fs.writeFileSync(path.join(dataRoot, "opaque.png"), Buffer.from([137, 80, 78, 71, 0, 1, 2]));
-    const opaque = await proofIntake(runtime, attemptId, { sourceType: "local-file", sourceReference: path.join(dataRoot, "opaque.png"), displayName: "opaque.png", allowedRoots: [dataRoot] }, "opaque-proof");
+    fs.writeFileSync(path.join(dataRoot, "opaque.gif"), Buffer.from("GIF89a"));
+    const opaque = await proofIntake(runtime, attemptId, { sourceType: "local-file", sourceReference: path.join(dataRoot, "opaque.gif"), displayName: "opaque.gif", allowedRoots: [dataRoot] }, "opaque-proof");
     const duplicate = await proofIntake(runtime, attemptId, { sourceType: "inline-text", sourceReference: "alpha beta local knowledge\nsecond line", displayName: "duplicate.txt" }, "duplicate-proof");
     const changed = await proofIntake(runtime, attemptId, { sourceType: "inline-text", sourceReference: "alpha beta changed version", displayName: "changed.txt" }, "changed-proof");
     const searchA = runtime.search("alpha beta");
@@ -1021,6 +1097,7 @@ function detectMediaType(name: string, bytes: Buffer): string {
   if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) return "application/pdf";
   if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "image/png";
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (bytes.length >= 12 && bytes.subarray(0, 4).toString("ascii") === "RIFF" && bytes.subarray(8, 12).toString("ascii") === "WEBP") return "image/webp";
   if (bytes.length >= 4 && bytes.subarray(0, 4).toString("ascii") === "GIF8") return "image/gif";
   if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04) return "application/zip";
   if (ext === ".md" || ext === ".markdown") return "text/markdown";
@@ -1032,6 +1109,7 @@ function detectMediaType(name: string, bytes: Buffer): string {
   if (ext === ".docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   if (ext === ".png") return "image/png";
   if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+  if (ext === ".webp") return "image/webp";
   if (ext === ".gif") return "image/gif";
   if (ext === ".mp3") return "audio/mpeg";
   if (ext === ".wav") return "audio/wav";
