@@ -11,7 +11,9 @@
   "dependencies": {
     "@sera/runtime-host": "0.1.0",
     "@sera/runtime-recovery": "0.1.0",
-    "@sera/runtime-state": "0.1.0"
+    "@sera/runtime-state": "0.1.0",
+    "mammoth": "1.12.1",
+    "pdf-parse": "2.4.5"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

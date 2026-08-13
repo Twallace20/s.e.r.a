@@ -2,6 +2,8 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import mammoth from "mammoth";
+import { PDFParse } from "pdf-parse";
 import { createControlPlaneRuntimeService, RuntimeHost, createRuntimeConfig, type RuntimeService, type RuntimeServiceContext } from "@sera/runtime-host";
 import { createPersistentRuntimeRecoveryService } from "@sera/runtime-recovery";
 import { createRuntimeStateService, openRuntimeState, type RuntimeStateConfigInput, type RuntimeStateStore } from "@sera/runtime-state";
@@ -183,7 +185,8 @@ export const DEFAULT_KNOWLEDGE_POLICY: KnowledgeRuntimePolicy = {
 };
 
 const TEXT_TYPES = new Set(["text/plain", "text/markdown", "application/json", "text/csv", "text/html"]);
-const OPAQUE_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/gif", "audio/mpeg", "audio/wav", "video/mp4", "application/zip", "application/octet-stream"]);
+const DOCUMENT_TYPES = new Set(["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]);
+const OPAQUE_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "audio/mpeg", "audio/wav", "video/mp4", "application/zip", "application/octet-stream"]);
 const TERMINAL_INTAKE_STATES = new Set<IntakeState>(["INDEXED", "OPAQUE_PRESERVED", "REVIEW_REQUIRED", "BLOCKED", "FAILED", "CANCELLED"]);
 
 export class KnowledgeRuntime {
@@ -211,7 +214,7 @@ export class KnowledgeRuntime {
       status: "INSPECTED",
       schemaVersion: KNOWLEDGE_RUNTIME_SCHEMA_VERSION,
       supportedSourceTypes: ["inline-text", "local-file", "local-directory", "url-reference", "predownloaded-web-snapshot", "generated-fixture"] as IntakeSourceType[],
-      deterministicExtraction: ["text/plain", "text/markdown", "application/json", "text/csv", "text/html"],
+      deterministicExtraction: [...TEXT_TYPES, ...DOCUMENT_TYPES].sort(),
       opaquePreservation: [...OPAQUE_TYPES].sort(),
       archiveBehavior: "archives are preserved as opaque assets and never extracted in v1",
       urlBehavior: "URL references are recorded but not fetched",
@@ -236,7 +239,7 @@ export class KnowledgeRuntime {
       this.validateAuthorization(request, authorization);
       const sources = this.acquireSources(request, authorization!);
       const assets = sources.map((source) => this.preserveSource(request, source));
-      const extraction = this.extractAssets(request, assets);
+      const extraction = await this.extractAssets(request, assets);
       this.persistIntake(request, authorization!, idempotencyKey, assets, extraction, evidenceRoot);
       this.writeEvidence(request, authorization!, assets, extraction, evidenceRoot, "INDEXED");
       return this.resultFromDurableIntake(request.intakeId);
@@ -490,12 +493,12 @@ export class KnowledgeRuntime {
     return { assetId, intakeId: request.intakeId, sourceType: source.sourceType, originalReference: source.reference, displayName: source.displayName, contentHash, byteSize: source.bytes.length, mediaType: source.mediaType, preservationPath: contentPath, extensionMismatch, metadata };
   }
 
-  private extractAssets(request: NormalizedIntakeRequest, assets: AssetRecord[]): ExtractionBundle {
+  private async extractAssets(request: NormalizedIntakeRequest, assets: AssetRecord[]): Promise<ExtractionBundle> {
     const documents: DocumentRecord[] = [];
     const chunks: ChunkRecord[] = [];
     for (const asset of assets) {
       const bytes = fs.readFileSync(asset.preservationPath);
-      const extraction = extractBytes(asset, bytes, this.policy);
+      const extraction = await extractBytes(asset, bytes, this.policy);
       const documentId = stableId("knowledge_document", `${asset.assetId}:${asset.contentHash}:${request.intakeId}`);
       const versionId = stableId("knowledge_version", `${documentId}:${asset.contentHash}`);
       const doc: DocumentRecord = {
@@ -509,6 +512,7 @@ export class KnowledgeRuntime {
         extractionStatus: extraction.status,
         extractionText: extraction.text,
         extractionReason: extraction.reason,
+        extractionMetadata: extraction.metadata,
         trustState: request.trustDeclaration,
         candidateStatus: "candidate",
         contentVersion: asset.contentHash
@@ -536,13 +540,13 @@ export class KnowledgeRuntime {
       }
       for (const doc of bundle.documents) {
         this.store.recoveryRun("INSERT INTO knowledge_documents (document_id, source_asset_id, intake_id, content_version, title, media_type, language, extraction_status, trust_state, provenance_status, candidate_status, created_at, superseded_at, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'complete', ?, ?, NULL, ?)", [
-          doc.documentId, doc.assetId, doc.intakeId, doc.contentVersion, doc.title, doc.mediaType, doc.language, doc.extractionStatus, doc.trustState, doc.candidateStatus, now(), stableJson({ extractionReason: doc.extractionReason })
+          doc.documentId, doc.assetId, doc.intakeId, doc.contentVersion, doc.title, doc.mediaType, doc.language, doc.extractionStatus, doc.trustState, doc.candidateStatus, now(), stableJson({ extractionReason: doc.extractionReason, extractionMetadata: doc.extractionMetadata })
         ]);
         this.store.recoveryRun("INSERT INTO knowledge_versions (version_id, document_id, source_asset_id, intake_id, content_hash, version_sequence, created_at, superseded_at, metadata_json) VALUES (?, ?, ?, ?, ?, 1, ?, NULL, ?)", [
           doc.versionId, doc.documentId, doc.assetId, doc.intakeId, doc.contentVersion, now(), "{}"
         ]);
         this.store.recoveryRun("INSERT INTO intake_extractions (extraction_id, intake_id, asset_id, document_id, extraction_profile, extractor_version, status, started_at, completed_at, extracted_text_hash, extracted_byte_count, failure_or_block_reason, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-          stableId("extraction", `${doc.documentId}:${doc.contentVersion}`), doc.intakeId, doc.assetId, doc.documentId, request.extractionProfile, KNOWLEDGE_RUNTIME_VERSION, doc.extractionStatus, now(), now(), doc.extractionText ? sha256(doc.extractionText) : null, Buffer.byteLength(doc.extractionText, "utf8"), doc.extractionReason, "{}"
+          stableId("extraction", `${doc.documentId}:${doc.contentVersion}`), doc.intakeId, doc.assetId, doc.documentId, request.extractionProfile, KNOWLEDGE_RUNTIME_VERSION, doc.extractionStatus, now(), now(), doc.extractionText ? sha256(doc.extractionText) : null, Buffer.byteLength(doc.extractionText, "utf8"), doc.extractionReason, stableJson(doc.extractionMetadata)
         ]);
         this.store.recoveryRun("INSERT INTO knowledge_provenance (provenance_id, document_id, chunk_id, intake_id, asset_id, source_reference, extraction_id, content_hash, extraction_profile, runtime_instance_id, created_at, derived_from_json, metadata_json) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
           stableId("provenance", `${doc.documentId}:document`), doc.documentId, doc.intakeId, doc.assetId, assets.find((a) => a.assetId === doc.assetId)?.originalReference ?? "", stableId("extraction", `${doc.documentId}:${doc.contentVersion}`), doc.contentVersion, request.extractionProfile, this.store.currentRuntimeInstanceId(), now(), "[]", "{}"
@@ -624,7 +628,7 @@ export class KnowledgeRuntime {
       "authorization.json": redactAuthorization(authorization),
       "source-manifest.json": assets.map((asset) => ({ sourceType: asset.sourceType, originalReference: asset.originalReference, displayName: asset.displayName, byteSize: asset.byteSize })),
       "asset-manifest.json": assets.map((asset) => ({ assetId: asset.assetId, contentHash: asset.contentHash, byteSize: asset.byteSize, mediaType: asset.mediaType, extensionMismatch: asset.extensionMismatch, preservationPath: asset.preservationPath })),
-      "extraction-report.json": bundle.documents.map((doc) => ({ documentId: doc.documentId, status: doc.extractionStatus, mediaType: doc.mediaType, reason: doc.extractionReason })),
+      "extraction-report.json": bundle.documents.map((doc) => ({ documentId: doc.documentId, status: doc.extractionStatus, mediaType: doc.mediaType, reason: doc.extractionReason, metadata: doc.extractionMetadata })),
       "chunk-manifest.json": bundle.chunks.map((chunk) => ({ chunkId: chunk.chunkId, documentId: chunk.documentId, sequence: chunk.sequence, chunkHash: chunk.chunkHash, byteStart: chunk.byteStart, byteEnd: chunk.byteEnd, lineStart: chunk.lineStart, lineEnd: chunk.lineEnd })),
       "provenance.json": bundle.documents.map((doc) => ({ documentId: doc.documentId, intakeId: doc.intakeId, assetId: doc.assetId, contentVersion: doc.contentVersion, trustState: doc.trustState, candidateStatus: doc.candidateStatus })),
       "indexing-report.json": { indexed: bundle.chunks.length > 0, chunkCount: bundle.chunks.length, fallbackRetrieval: "bounded deterministic LIKE scan" },
@@ -684,6 +688,7 @@ interface DocumentRecord {
   extractionStatus: string;
   extractionText: string;
   extractionReason: string | null;
+  extractionMetadata: Record<string, unknown>;
   trustState: TrustState;
   candidateStatus: CandidateStatus;
   contentVersion: string;
@@ -762,23 +767,61 @@ export function authorizationHash(authorization: IntakeAuthorization): string {
   return stableHash({ ...authorization, integrityHash: "" });
 }
 
-function extractBytes(asset: AssetRecord, bytes: Buffer, policy: KnowledgeRuntimePolicy): { status: "extracted" | "opaque"; text: string; reason: string | null; language: string | null } {
-  if (!TEXT_TYPES.has(asset.mediaType)) return { status: "opaque", text: "", reason: `Opaque ${asset.mediaType} preserved; future processor required.`, language: null };
+interface ExtractionResult {
+  status: "extracted" | "opaque";
+  text: string;
+  reason: string | null;
+  language: string | null;
+  metadata: Record<string, unknown>;
+}
+
+async function extractBytes(asset: AssetRecord, bytes: Buffer, policy: KnowledgeRuntimePolicy): Promise<ExtractionResult> {
+  if (asset.mediaType === "application/pdf") return extractPdf(bytes);
+  if (asset.mediaType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return extractDocx(bytes);
+  if (!TEXT_TYPES.has(asset.mediaType)) return { status: "opaque", text: "", reason: `Opaque ${asset.mediaType} preserved; future processor required.`, language: null, metadata: { extractor: "opaque-preserve-v1" } };
   if (asset.mediaType === "application/json") {
     try {
-      return { status: "extracted", text: stableJson(JSON.parse(bytes.toString("utf8"))), reason: null, language: null };
+      return { status: "extracted", text: stableJson(JSON.parse(bytes.toString("utf8"))), reason: null, language: null, metadata: { extractor: "json-parse-v1" } };
     } catch {
       throw new KnowledgeRuntimeBlockedError("Malformed JSON blocked extraction.", "malformed_json");
     }
   }
   if (asset.mediaType === "text/csv") return extractCsv(bytes.toString("utf8"), policy);
-  if (asset.mediaType === "text/html") return { status: "extracted", text: htmlToText(bytes.toString("utf8")), reason: "HTML scripts and external resources were not executed or loaded.", language: null };
+  if (asset.mediaType === "text/html") return { status: "extracted", text: htmlToText(bytes.toString("utf8")), reason: "HTML scripts and external resources were not executed or loaded.", language: null, metadata: { extractor: "inert-html-text-v1" } };
   const text = bytes.toString("utf8");
-  if (text.includes("\uFFFD")) return { status: "opaque", text: "", reason: "Invalid UTF-8 handled as opaque content.", language: null };
-  return { status: "extracted", text: text.replace(/\r\n/g, "\n"), reason: null, language: "und" };
+  if (text.includes("\uFFFD")) return { status: "opaque", text: "", reason: "Invalid UTF-8 handled as opaque content.", language: null, metadata: { extractor: "utf8-text-v1" } };
+  return { status: "extracted", text: text.replace(/\r\n/g, "\n"), reason: null, language: "und", metadata: { extractor: "utf8-text-v1" } };
 }
 
-function extractCsv(text: string, policy: KnowledgeRuntimePolicy): { status: "extracted"; text: string; reason: string | null; language: null } {
+async function extractPdf(bytes: Buffer): Promise<ExtractionResult> {
+  const parser = new PDFParse({ data: bytes });
+  try {
+    const textResult = await parser.getText();
+    const infoResult = await parser.getInfo();
+    const text = textResult.text.replace(/\r\n/g, "\n").trim();
+    if (!text) throw new KnowledgeRuntimeBlockedError("PDF contains no extractable text.", "pdf_no_extractable_text");
+    return { status: "extracted", text, reason: null, language: "und", metadata: { extractor: "pdf-parse@2.4.5", pageCount: textResult.total, info: infoResult.info ?? {} } };
+  } catch (error) {
+    if (error instanceof KnowledgeRuntimeBlockedError) throw error;
+    throw new KnowledgeRuntimeBlockedError(`Malformed or unreadable PDF blocked extraction: ${errorMessage(error)}`, "malformed_pdf");
+  } finally {
+    await parser.destroy();
+  }
+}
+
+async function extractDocx(bytes: Buffer): Promise<ExtractionResult> {
+  try {
+    const result = await mammoth.extractRawText({ buffer: bytes });
+    const text = result.value.replace(/\r\n/g, "\n").trim();
+    if (!text) throw new KnowledgeRuntimeBlockedError("DOCX contains no extractable text.", "docx_no_extractable_text");
+    return { status: "extracted", text, reason: result.messages.length ? "DOCX extraction completed with parser messages." : null, language: "und", metadata: { extractor: "mammoth@1.12.1", messages: result.messages.map((message) => ({ type: message.type, message: message.message })) } };
+  } catch (error) {
+    if (error instanceof KnowledgeRuntimeBlockedError) throw error;
+    throw new KnowledgeRuntimeBlockedError(`Malformed or unreadable DOCX blocked extraction: ${errorMessage(error)}`, "malformed_docx");
+  }
+}
+
+function extractCsv(text: string, policy: KnowledgeRuntimePolicy): ExtractionResult {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
@@ -808,7 +851,7 @@ function extractCsv(text: string, policy: KnowledgeRuntimePolicy): { status: "ex
   if (row.some((value) => value.length > 0)) rows.push(row);
   if (rows.length > policy.limits.maxCsvRows) throw new KnowledgeRuntimeBlockedError("CSV row limit exceeded.", "csv_row_limit");
   if (rows.some((r) => r.length > policy.limits.maxCsvColumns)) throw new KnowledgeRuntimeBlockedError("CSV column limit exceeded.", "csv_column_limit");
-  return { status: "extracted", text: rows.map((r) => r.join(" | ")).join("\n"), reason: null, language: null };
+  return { status: "extracted", text: rows.map((r) => r.join(" | ")).join("\n"), reason: null, language: null, metadata: { extractor: "bounded-csv-v1", rowCount: rows.length } };
 }
 
 function chunkText(doc: DocumentRecord, policy: KnowledgeRuntimePolicy): ChunkRecord[] {
@@ -973,18 +1016,20 @@ function displayNameFor(reference: string, sourceType: IntakeSourceType): string
 }
 
 function detectMediaType(name: string, bytes: Buffer): string {
+  const ext = path.extname(name).toLowerCase();
+  if (ext === ".docx" && bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) return "application/pdf";
   if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "image/png";
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
   if (bytes.length >= 4 && bytes.subarray(0, 4).toString("ascii") === "GIF8") return "image/gif";
   if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04) return "application/zip";
-  const ext = path.extname(name).toLowerCase();
   if (ext === ".md" || ext === ".markdown") return "text/markdown";
   if (ext === ".json") return "application/json";
   if (ext === ".csv" || ext === ".tsv") return "text/csv";
   if (ext === ".html" || ext === ".htm") return "text/html";
   if (ext === ".txt" || ext === "") return "text/plain";
   if (ext === ".pdf") return "application/pdf";
+  if (ext === ".docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   if (ext === ".png") return "image/png";
   if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
   if (ext === ".gif") return "image/gif";

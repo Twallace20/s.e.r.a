@@ -21,6 +21,7 @@ import {
 import { DEFAULT_RUNTIME_STATE_MIGRATIONS, openRuntimeState, type RuntimeStateStore } from "@sera/runtime-state";
 
 let sequence = 0;
+const UNIVERSAL_INGESTION_FIXTURES = path.resolve(__dirname, "fixtures", "universal-ingestion-v1");
 
 describe("Knowledge and Universal Intake Runtime v1", () => {
   let firstIntakeProof: Awaited<ReturnType<typeof runKnowledgeIntakeProof>>;
@@ -345,6 +346,56 @@ describe("Knowledge and Universal Intake Runtime v1", () => {
     });
   });
 
+  it.each([
+    ["TXT", "sample.txt", "text/plain", "SERA universal ingestion plain text fixture."],
+    ["Markdown", "sample.md", "text/markdown", "Deterministic markdown ingestion works."],
+    ["PDF", "sample.pdf", "application/pdf", "SERA PDF ingestion fixture"],
+    ["DOCX", "sample.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "SERA DOCX ingestion fixture"]
+  ])("extracts, hashes, and evidences the genuine %s fixture", async (_label, fixtureName, mediaType, expectedText) => {
+    await withHarness(`universal-${fixtureName}`, async (harness) => {
+      const source = path.join(UNIVERSAL_INGESTION_FIXTURES, fixtureName);
+      const result = await intake(harness, { sourceType: "local-file", sourceReference: source, allowedRoots: [UNIVERSAL_INGESTION_FIXTURES] });
+      const asset = harness.store.recoveryGet("SELECT content_hash, byte_size, media_type, preservation_path FROM intake_assets WHERE intake_id = ?", [result.intakeId]);
+      const extraction = harness.store.recoveryGet("SELECT status, extracted_text_hash, extracted_byte_count, metadata_json FROM intake_extractions WHERE intake_id = ?", [result.intakeId]);
+      const chunks = harness.store.recoveryAll("SELECT chunk_text FROM knowledge_chunks WHERE intake_id = ? ORDER BY sequence", [result.intakeId]);
+      const extractedText = chunks.map((chunk) => String(chunk.chunk_text)).join("");
+      const report = JSON.parse(fs.readFileSync(path.join(result.evidenceRoot, "extraction-report.json"), "utf8"));
+
+      expect(result.status).toBe("INDEXED");
+      expect(result.modelUse).toBe(false);
+      expect(result.publicNetworkUse).toBe(false);
+      expect(asset?.media_type).toBe(mediaType);
+      expect(asset?.content_hash).toBe(sha256File(source));
+      expect(Number(asset?.byte_size)).toBe(fs.statSync(source).size);
+      expect(sha256File(String(asset?.preservation_path))).toBe(asset?.content_hash);
+      expect(extraction?.status).toBe("extracted");
+      expect(Number(extraction?.extracted_byte_count)).toBeGreaterThan(0);
+      expect(String(extraction?.extracted_text_hash)).toMatch(/^[a-f0-9]{64}$/);
+      expect(extractedText).toContain(expectedText);
+      expect(JSON.parse(String(extraction?.metadata_json)).extractor).toBeTruthy();
+      expect(report[0].metadata.extractor).toBeTruthy();
+      expect(fs.existsSync(path.join(result.evidenceRoot, "provenance.json"))).toBe(true);
+      expect(fs.existsSync(path.join(result.evidenceRoot, "final-intake-report.json"))).toBe(true);
+    });
+  });
+
+  it.each([
+    ["PDF", "malformed.pdf", "Malformed or unreadable PDF"],
+    ["DOCX", "malformed.docx", "Malformed or unreadable DOCX"]
+  ])("blocks malformed %s with durable failure evidence", async (_label, fixtureName, expectedReason) => {
+    await withHarness(`malformed-${fixtureName}`, async (harness) => {
+      const source = path.join(UNIVERSAL_INGESTION_FIXTURES, fixtureName);
+      const result = await intake(harness, { sourceType: "local-file", sourceReference: source, allowedRoots: [UNIVERSAL_INGESTION_FIXTURES] });
+      const report = JSON.parse(fs.readFileSync(path.join(result.evidenceRoot, "final-intake-report.json"), "utf8"));
+      expect(result.status).toBe("BLOCKED");
+      expect(blockReason(harness.store, result.intakeId)).toContain(expectedReason);
+      expect(report.status).toBe("BLOCKED");
+      expect(report.reason).toContain(expectedReason);
+      expect(report.modelUse).toBe(false);
+      expect(report.publicNetworkUse).toBe(false);
+    });
+  });
+
   it("invalid UTF-8 is handled honestly as opaque", async () => {
     await withHarness("invalid-utf8", async (harness) => {
       const file = path.join(harness.root, "bad.txt");
@@ -411,7 +462,6 @@ describe("Knowledge and Universal Intake Runtime v1", () => {
   });
 
   it.each([
-    ["PDF", "doc.pdf", Buffer.from("%PDF-1.4")],
     ["PNG", "image.png", Buffer.from([0x89, 0x50, 0x4e, 0x47])],
     ["JPEG", "photo.jpg", Buffer.from([0xff, 0xd8, 0xff, 0x00])],
     ["GIF", "anim.gif", Buffer.from("GIF89a")],
