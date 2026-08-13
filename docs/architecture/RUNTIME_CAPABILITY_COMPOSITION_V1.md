@@ -83,5 +83,10 @@ be hash-bound as proposal provenance for an immutable, content-addressed
 capability candidate bundle. Invalid authorization must block before candidate
 writes, the bundle must remain candidate-only without active-catalog promotion,
 and only the Control Plane may complete the attempt.
+M5-10 certifies Planner / Task Capability (`planner`) against the universal
+requirements above. A real governed task request must retain its exact durable
+payload, replay idempotently, block conflicting idempotency reuse without
+creating duplicate durable state, perform no execution, retain immutable
+Runtime State evidence, and close only through Control Plane authority.
 Later gate meanings must be added only when their acceptance boundaries are
 made explicit.

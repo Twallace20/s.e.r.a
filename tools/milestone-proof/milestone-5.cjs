@@ -463,6 +463,26 @@ async function main() {
         plannerInput
       );
 
+    const duplicatePlannerResult =
+      composition.planner.createTask(
+        plannerInput
+      );
+
+    let conflictingPlannerIdempotencyBlocked =
+      false;
+
+    try {
+      composition.planner.createTask({
+        ...plannerInput,
+        prompt:
+          "Conflicting planner request must block."
+      });
+    }
+    catch {
+      conflictingPlannerIdempotencyBlocked =
+        true;
+    }
+
     const plannerAttemptId =
       plannerResult.command.attemptId;
 
@@ -477,7 +497,7 @@ async function main() {
     const persistedPlannerCommand =
       plannerResult.command.commandId
         ? productPlane.recoveryGet(
-            "SELECT command_id, command_type, attempt_id, status FROM commands WHERE command_id = ?",
+            "SELECT command_id, idempotency_key, command_type, payload_json, attempt_id, status FROM commands WHERE command_id = ?",
             [
               plannerResult.command
                 .commandId
@@ -493,6 +513,28 @@ async function main() {
           )
         : undefined;
 
+    const plannerCommandCount =
+      productPlane.recoveryGet(
+        "SELECT COUNT(*) AS count FROM commands WHERE idempotency_key = ?",
+        [plannerInput.idempotencyKey]
+      );
+
+    const plannerAttemptCount =
+      plannerAttemptId
+        ? productPlane.recoveryGet(
+            "SELECT COUNT(*) AS count FROM attempts WHERE attempt_id = ?",
+            [plannerAttemptId]
+          )
+        : undefined;
+
+    const persistedPlannerPayload =
+      persistedPlannerCommand?.payload_json
+        ? JSON.parse(
+            persistedPlannerCommand
+              .payload_json
+          )
+        : undefined;
+
     const plannerPass =
       Boolean(
         plannerResult.command.ok &&
@@ -504,6 +546,30 @@ async function main() {
         persistedPlannerCommand
           .command_type ===
           "planner.create-task" &&
+        persistedPlannerPayload
+          ?.prompt ===
+          plannerInput.prompt &&
+        persistedPlannerPayload
+          ?.source ===
+          plannerInput.payload.source &&
+        persistedPlannerPayload
+          ?.requestedCapability ===
+          plannerInput.payload
+            .requestedCapability &&
+        duplicatePlannerResult.command
+          .status === "DUPLICATE" &&
+        duplicatePlannerResult.command
+          .commandId ===
+          plannerResult.command.commandId &&
+        duplicatePlannerResult.command
+          .attemptId === plannerAttemptId &&
+        conflictingPlannerIdempotencyBlocked &&
+        Number(
+          plannerCommandCount?.count ?? -1
+        ) === 1 &&
+        Number(
+          plannerAttemptCount?.count ?? -1
+        ) === 1 &&
         plannerResult.executionUsed ===
           false &&
         Number(
@@ -521,6 +587,17 @@ async function main() {
         plannerResult,
         persistedPlannerAttempt,
         persistedPlannerCommand,
+        persistedPlannerPayload,
+        duplicatePlannerResult,
+        conflictingPlannerIdempotencyBlocked,
+        commandCount:
+          Number(
+            plannerCommandCount?.count ?? -1
+          ),
+        attemptCount:
+          Number(
+            plannerAttemptCount?.count ?? -1
+          ),
         executionCount:
           Number(
             plannerExecutions?.count ?? -1
@@ -537,10 +614,284 @@ async function main() {
         persistedPlannerAttempt,
       persistedCommand:
         persistedPlannerCommand,
+      persistedPayload:
+        persistedPlannerPayload,
+      duplicateResult:
+        duplicatePlannerResult,
+      conflictingIdempotencyBlocked:
+        conflictingPlannerIdempotencyBlocked,
       executionCount:
         Number(
           plannerExecutions?.count ?? -1
-        )
+          )
+    };
+
+    // =======================================================
+    // M5-10 — PLANNER CERTIFICATION CLOSEOUT
+    // =======================================================
+
+    const plannerEvidencePath =
+      path.join(
+        workRoot,
+        "planner-proof",
+        "task-request-proof.json"
+      );
+
+    fs.mkdirSync(
+      path.dirname(plannerEvidencePath),
+      { recursive: true }
+    );
+
+    const plannerExpectedResult = {
+      commandType: "planner.create-task",
+      capability: "planner",
+      stateBeforeCloseout: "PENDING",
+      executionCount: 0,
+      duplicateStatus: "DUPLICATE",
+      conflictingIdempotencyBlocked:
+        true
+    };
+
+    const plannerActualResult = {
+      commandType:
+        persistedPlannerCommand
+          ?.command_type,
+      capability:
+        persistedPlannerAttempt
+          ?.capability,
+      stateBeforeCloseout:
+        persistedPlannerAttempt
+          ?.current_state,
+      executionCount:
+        Number(
+          plannerExecutions?.count ?? -1
+        ),
+      duplicateStatus:
+        duplicatePlannerResult.command
+          .status,
+      conflictingIdempotencyBlocked:
+        conflictingPlannerIdempotencyBlocked
+    };
+
+    fs.writeFileSync(
+      plannerEvidencePath,
+      JSON.stringify(
+        {
+          schemaVersion:
+            "sera.m5-10-planner-proof.v1",
+          resourceType: "task-request",
+          input: plannerInput,
+          persistedPayload:
+            persistedPlannerPayload,
+          expectedResult:
+            plannerExpectedResult,
+          actualResult:
+            plannerActualResult,
+          commandId:
+            plannerResult.command.commandId,
+          attemptId: plannerAttemptId,
+          validationAssertions: {
+            exactPayloadPersisted:
+              Boolean(
+                persistedPlannerPayload &&
+                persistedPlannerPayload
+                  .prompt ===
+                  plannerInput.prompt &&
+                persistedPlannerPayload
+                  .source ===
+                  plannerInput.payload.source &&
+                persistedPlannerPayload
+                  .requestedCapability ===
+                  plannerInput.payload
+                    .requestedCapability
+              ),
+            idempotentReplay:
+              duplicatePlannerResult.command
+                .status === "DUPLICATE" &&
+              duplicatePlannerResult.command
+                .commandId ===
+                plannerResult.command
+                  .commandId,
+            conflictingReuseBlocked:
+              conflictingPlannerIdempotencyBlocked,
+            noDuplicateDurableState:
+              Number(
+                plannerCommandCount?.count ??
+                  -1
+              ) === 1 &&
+              Number(
+                plannerAttemptCount?.count ??
+                  -1
+              ) === 1,
+            executionNotUsed:
+              plannerResult.executionUsed ===
+                false &&
+              Number(
+                plannerExecutions?.count ?? -1
+              ) === 0
+          },
+          modelUse: false,
+          publicNetworkUse: false
+        },
+        null,
+        2
+      ) + "\n",
+      "utf8"
+    );
+
+    const plannerEvidenceHash =
+      sha256File(plannerEvidencePath);
+
+    const plannerEvidenceId =
+      productPlane.recordEvidenceReference({
+        attemptId: plannerAttemptId,
+        evidenceType:
+          "governed-task-request",
+        location:
+          path
+            .relative(
+              root,
+              plannerEvidencePath
+            )
+            .replace(/\\/g, "/"),
+        integrityHash:
+          plannerEvidenceHash,
+        producer:
+          "governed-planner-composition",
+        metadata: {
+          commandId:
+            plannerResult.command.commandId,
+          idempotent: true,
+          executionUsed: false
+        }
+      });
+
+    const plannerCapability =
+      capabilities.find(
+        capability =>
+          capability.capabilityId ===
+          "planner"
+      );
+
+    const plannerEvidence =
+      productPlane.recoveryGet(
+        "SELECT evidence_type, location, integrity_hash, producer FROM evidence_references WHERE evidence_reference_id = ?",
+        [plannerEvidenceId]
+      );
+
+    const plannerCertificationPass =
+      Boolean(
+        plannerPass &&
+        architecture.includes(
+          "M5-10 certifies Planner / Task Capability (`planner`)"
+        ) &&
+        plannerCapability
+          ?.compositionState ===
+          "certified" &&
+        plannerCapability
+          ?.authority.requestAuthority ===
+          "unified-control-plane" &&
+        plannerCapability
+          ?.authority.stateAuthority ===
+          "runtime-state" &&
+        plannerCapability
+          ?.authority.evidenceAuthority ===
+          "runtime-state" &&
+        plannerCapability
+          ?.authority
+          .selfAuthorizationAllowed ===
+          false &&
+        plannerCapability
+          ?.resourceTypes.some(
+            resource =>
+              resource.id ===
+                "task-request" &&
+              resource.proofState ===
+                "certified"
+          ) &&
+        persistedPlannerAttempt
+          ?.current_state === "PENDING" &&
+        fs.existsSync(plannerEvidencePath) &&
+        sha256File(plannerEvidencePath) ===
+          plannerEvidenceHash &&
+        plannerEvidence?.evidence_type ===
+          "governed-task-request" &&
+        plannerEvidence?.integrity_hash ===
+          plannerEvidenceHash &&
+        plannerEvidence?.producer ===
+          "governed-planner-composition"
+      );
+
+    productPlane.transitionAttempt({
+      attemptId: plannerAttemptId,
+      fromState: "PENDING",
+      toState: "RUNNING",
+      actor: "control-plane",
+      reason:
+        "M5-10 planner certification review."
+    });
+
+    productPlane.recordGateOutcome({
+      attemptId: plannerAttemptId,
+      gateName:
+        "m5-10-governed-planner",
+      required: true,
+      outcome:
+        plannerCertificationPass
+          ? "PASS"
+          : "FAIL",
+      evidenceReferences: [
+        plannerEvidenceId
+      ],
+      evaluator:
+        "milestone-5-proof"
+    });
+
+    if (plannerCertificationPass) {
+      productPlane.transitionAttempt({
+        attemptId: plannerAttemptId,
+        fromState: "RUNNING",
+        toState: "COMPLETED",
+        actor: "control-plane",
+        reason:
+          "M5-10 planner proof complete."
+      });
+    }
+
+    const plannerTerminal =
+      productPlane.recoveryGet(
+        "SELECT current_state FROM attempts WHERE attempt_id = ?",
+        [plannerAttemptId]
+      );
+
+    check(
+      "M5-10",
+      plannerCertificationPass &&
+        plannerTerminal?.current_state ===
+          "COMPLETED",
+      plannerCertificationPass
+        ? "real governed task request retained exact durable payload, idempotent replay, conflicting-reuse block, zero execution, immutable evidence, and Control Plane closeout"
+        : "planner certification evidence or authority lifecycle incomplete",
+      {
+        plannerEvidenceHash,
+        plannerEvidenceId,
+        expectedResult:
+          plannerExpectedResult,
+        actualResult:
+          plannerActualResult,
+        terminalState:
+          plannerTerminal?.current_state
+      }
+    );
+
+    artifacts.plannerCertification = {
+      resourceType: "task-request",
+      evidenceLocation:
+        plannerEvidence?.location,
+      evidenceHash:
+        plannerEvidenceHash,
+      terminalState:
+        plannerTerminal?.current_state
     };
 
     // =======================================================
@@ -1544,7 +1895,7 @@ async function main() {
     milestone: 5,
 
     scope:
-      "M5-01-M5-09",
+      "M5-01-M5-10",
 
     passCount,
 
@@ -1556,7 +1907,6 @@ async function main() {
     artifacts,
 
     remainingMilestoneGates: [
-      "M5-10",
       "M5-11",
       "M5-12"
     ]
@@ -1576,15 +1926,15 @@ async function main() {
   );
 
   const complete =
-    checks.length === 9 &&
-    passCount === 9;
+    checks.length === 10 &&
+    passCount === 10;
 
   console.log("");
 
   console.log(
     complete
       ? "MILESTONE_5_BATCH_2_PASS"
-      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/9`
+      : `MILESTONE_5_BATCH_2_FAIL ${passCount}/10`
   );
 
   console.log(

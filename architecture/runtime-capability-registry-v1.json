@@ -23,7 +23,7 @@
       "name": "Planner / Task Capability",
       "layer": "Capability",
       "productionEntryPoint": "packages/planner",
-      "compositionState": "composition-pending",
+      "compositionState": "certified",
       "authority": {
         "requestAuthority": "unified-control-plane",
         "executionAuthority": "execution-authority",
@@ -36,12 +36,16 @@
           "id": "task-request",
           "description": "Real governed task request",
           "requiresRealResource": true,
-          "proofState": "required"
+          "proofState": "certified"
         }
       ],
-      "existingEvidence": [],
+      "existingEvidence": [
+        "packages/runtime-capability-composition/src/governed-planner-composition.ts",
+        "evidence/milestone-5/latest/proof-report.json"
+      ],
       "knownLimitations": [
-        "M5 composition not yet certified"
+        "certification is bounded to governed task-request persistence and planning-only behavior",
+        "planner requests do not execute work or self-authorize terminal state"
       ]
     },
     {
