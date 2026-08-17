@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "sera.milestone-checkpoint.v1",
+  "checkpointId": "M16-RECONCILIATION-AUDIT",
+  "productBoundary": "S.E.R.A. Base MVP",
+  "milestone": 16,
+  "subGate": "reconciliation-audit",
+  "status": "LOCALLY_VALIDATED",
+  "purpose": "Reconcile canonical repository truth before Milestone 16 implementation without reopening certified architecture.",
+  "auditConclusion": "LOCALLY_VALIDATED",
+  "repositoryCheckpoint": "created-by-m16-a1-change",
+  "acceptanceContract": [
+    "canonical Base MVP manifest remains at Milestone 16 with one remaining milestone",
+    "M16-A production integration gap identified at propose-capability dispatch",
+    "GovernedCapabilityEngineComposition preserved as Capability Engine authority boundary",
+    "portable/restricted-user implementation exists but M16-B is not certified",
+    "M16-A, M16-B, M16-C remain incomplete"
+  ],
+  "completedRequirements": [
+    "read-only repository reconciliation",
+    "complete Operator Gateway production dispatch inspection",
+    "complete Capability Engine production API inspection",
+    "GovernedCapabilityEngineComposition ownership confirmation",
+    "runtime capability registry truth inspection",
+    "M16 evidence convention check"
+  ],
+  "remainingRequirements": [
+    "M16-A1 authentic gap to tested inactive candidate",
+    "M16-A2 evaluation to operator certification decision",
+    "M16-A3 explicit promotion to real task reattempt",
+    "M16-A4 regression rollback restart persistence",
+    "M16-B1 release candidate and offline dependency closure",
+    "M16-B2 release-only restricted-user proof",
+    "M16-B3 packaged offline restart state acquisition persistence",
+    "M16-B4 clean-machine offline installation proof",
+    "M16-C1 evidence reconciliation",
+    "M16-C2 final release validation",
+    "M16-C3 Base MVP certification and closeout"
+  ],
+  "knownLimitations": [
+    "remote alignment was historically confirmed at 84606fb and was not freshly re-proven by the reconciliation capture",
+    "same-host restricted-user evidence cannot substitute for clean-machine offline installation proof",
+    "M16-A1 is not certified by this checkpoint"
+  ],
+  "unresolvedBlockers": [],
+  "branch": "sera/runtime-capability-composition-v1",
+  "lastKnownCommit": "84606fbf346e7b74cd858414bc686928915974fc",
+  "remoteState": "historically-confirmed-at-84606fb-not-freshly-verified",
+  "m16A1": "IN_PROGRESS",
+  "m16A": "NOT_YET_CERTIFIED",
+  "m16B": "NOT_YET_CERTIFIED",
+  "m16C": "NOT_YET_CERTIFIED",
+  "milestone16": "NOT_YET_CERTIFIED",
+  "unrelatedWorktreeFilesPreserved": [
+    "evidence/milestone-5/knowledge-intake-snapshot-proof.json",
+    "evidence/milestone-5/latest/.work/",
+    "m5-07-capture.cjs",
+    "m5-07-final-capture.cjs",
+    "m5-07-snapshot-capture.cjs"
+  ],
+  "nextAuthorizedGate": "M16-A1",
+  "timestamp": "2026-08-13T09:05:00-07:00"
+}

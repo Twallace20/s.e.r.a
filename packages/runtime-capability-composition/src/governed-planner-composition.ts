@@ -1,6 +1,6 @@
-import type {
-  ProductControlPlane
-} from "@sera/operator-gateway";
+﻿import type {
+  RuntimeCapabilityControlPlanePort
+} from "./control-plane-port";
 
 export interface GovernedPlannerInput {
   idempotencyKey: string;
@@ -10,13 +10,13 @@ export interface GovernedPlannerInput {
 }
 
 export interface GovernedPlannerResult {
-  command: ReturnType<ProductControlPlane["acceptCommand"]>;
+  command: ReturnType<RuntimeCapabilityControlPlanePort["acceptCommand"]>;
   executionUsed: false;
 }
 
 export class GovernedPlannerComposition {
   constructor(
-    private readonly controlPlane: ProductControlPlane
+    private readonly controlPlane: RuntimeCapabilityControlPlanePort
   ) {}
 
   createTask(

@@ -1,7 +1,6 @@
-import type {
-  ProductControlPlane
-} from "@sera/operator-gateway";
-
+﻿import type {
+  RuntimeCapabilityControlPlanePort
+} from "./control-plane-port";
 import {
   GovernedExecutionBoundary
 } from "./governed-execution-boundary";
@@ -29,7 +28,7 @@ export class RuntimeCapabilityComposition {
   readonly capabilityEngine?: GovernedCapabilityEngineComposition;
 
   constructor(
-    readonly controlPlane: ProductControlPlane,
+    readonly controlPlane: RuntimeCapabilityControlPlanePort,
     projectRoot = process.cwd(),
     store?: RuntimeStateStore
   ) {

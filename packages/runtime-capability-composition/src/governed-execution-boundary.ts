@@ -1,12 +1,12 @@
-import {
+﻿import {
   createExecutionAuthorization,
   type ExecutionAuthorization,
   type ExecutionRequest
 } from "@sera/execution-engine";
 
 import type {
-  ProductControlPlane
-} from "@sera/operator-gateway";
+  RuntimeCapabilityControlPlanePort
+} from "./control-plane-port";
 
 export interface GovernedExecutionResult {
   request: ExecutionRequest;
@@ -14,7 +14,7 @@ export interface GovernedExecutionResult {
   result: Awaited<
     ReturnType<
       ReturnType<
-        ProductControlPlane["requireExecutionAuthority"]
+        RuntimeCapabilityControlPlanePort["requireExecutionAuthority"]
       >["execute"]
     >
   >;
@@ -22,7 +22,7 @@ export interface GovernedExecutionResult {
 
 export class GovernedExecutionBoundary {
   constructor(
-    private readonly controlPlane: ProductControlPlane
+    private readonly controlPlane: RuntimeCapabilityControlPlanePort
   ) {}
 
   async execute(

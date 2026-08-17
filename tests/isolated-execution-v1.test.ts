@@ -1,4 +1,4 @@
-import fs from "node:fs";
+﻿import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -255,7 +255,7 @@ describe("Isolated Execution Engine v1", () => {
   });
 
   it("lists only registered executable adapters", () => {
-    expect(createDefaultExecutableRegistry().list().map((item) => item.id)).toEqual(["missing-fixture", "network-fixture", "node-fixture"]);
+    expect(createDefaultExecutableRegistry().list().map((item) => item.id)).toEqual(["deterministic-text-transform-v1", "missing-fixture", "network-fixture", "node-fixture", "text-normalizer-v1"]);
   });
 });
 

@@ -1,8 +1,8 @@
-import crypto from "node:crypto";
+﻿import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { MemoryStore, type RecordRunInput } from "@sera/memory";
-import { ProductControlPlane } from "@sera/operator-gateway";
+import type { RuntimeCapabilityControlPlanePort } from "./control-plane-port";
 
 export interface GovernedMemoryAuthorization {
   attemptId: string;
@@ -34,7 +34,7 @@ export function createGovernedMemoryAuthorization(attemptId: string, now = new D
 }
 
 export class GovernedMemoryComposition {
-  constructor(private readonly controlPlane: ProductControlPlane, private readonly projectRoot: string) {}
+  constructor(private readonly controlPlane: RuntimeCapabilityControlPlanePort, private readonly projectRoot: string) {}
 
   record(input: GovernedMemoryInput) {
     const { integrityHash, ...unsigned } = input.authorization;

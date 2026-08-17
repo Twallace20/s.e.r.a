@@ -15,6 +15,7 @@ import { RuntimeService } from "@sera/runtime-host";
 import { RuntimeStateStore, createRuntimeStateConfig, openRuntimeState } from "@sera/runtime-state";
 import { StudioRuntime, runStudioRuntimeProof } from "@sera/studio-runtime";
 import { LearningGovernanceRuntime } from "@sera/learning-governance-runtime";
+import { GovernedCapabilityEngineComposition, M16_A1_PROFILE_ID, type BoundedCapabilityAcquisitionRequest } from "@sera/runtime-capability-composition";
 import { ProductControlPlane } from "./product-control-plane.js";
 
 export const DESKTOP_OPERATOR_VERSION = "desktop-operator-v1";
@@ -87,6 +88,12 @@ export interface OperatorDispatchResult {
   safeMessage?: string;
   modelUse: false;
   networkUse: false;
+  offline?: true;
+  publicNetworkUse?: false;
+  cloudProviderUse?: false;
+  externalPackageAcquisition?: false;
+  repositoryMutation?: false;
+  acquisition?: Record<string, unknown>;
 }
 
 export interface OperatorProofResult {
@@ -102,6 +109,12 @@ export interface OperatorProofResult {
   approvalId: string;
   modelUse: false;
   networkUse: false;
+  offline?: true;
+  publicNetworkUse?: false;
+  cloudProviderUse?: false;
+  externalPackageAcquisition?: false;
+  repositoryMutation?: false;
+  acquisition?: Record<string, unknown>;
 }
 
 interface StoredSession {
@@ -136,6 +149,7 @@ export class OperatorGateway {
   private readonly executionAuthority?: ExecutionAuthority;
   private readonly studioRuntime: StudioRuntime;
   private readonly learningGovernanceRuntime: LearningGovernanceRuntime;
+  private readonly governedCapabilityEngineComposition: GovernedCapabilityEngineComposition;
   private readonly assets = getDesktopAssets();
   private server?: http.Server;
   private sequence = 0;
@@ -183,6 +197,7 @@ export class OperatorGateway {
     );
     this.studioRuntime = new StudioRuntime({ projectRoot: this.projectRoot, stateRoot: this.stateRoot, databasePath: this.databasePath, outputRoot: path.join(this.projectRoot, ".sera", "studios"), installationId: config.installationId, runtimeInstanceId: config.runtimeInstanceId });
     this.learningGovernanceRuntime = new LearningGovernanceRuntime(this.store, { projectRoot: this.projectRoot });
+    this.governedCapabilityEngineComposition = new GovernedCapabilityEngineComposition(this.productControlPlane, this.store, this.projectRoot);
     fs.mkdirSync(this.evidenceRoot, { recursive: true });
   }
 
@@ -287,18 +302,18 @@ export class OperatorGateway {
     return true;
   }
 
-  composeRequest(input: { sessionId: string; category: OperatorRequestCategory; text: string; idempotencyKey: string }): { ok: true; requestId: string; requestHash: string; normalizedText: string; category: OperatorRequestCategory; status: "QUEUED" } {
+  composeRequest(input: { sessionId: string; category: OperatorRequestCategory; text: string; idempotencyKey: string; acquisitionRequest?: BoundedCapabilityAcquisitionRequest }): { ok: true; requestId: string; requestHash: string; normalizedText: string; category: OperatorRequestCategory; status: "QUEUED"; acquisitionRequest?: BoundedCapabilityAcquisitionRequest } {
     if (!SUPPORTED_CATEGORIES.has(input.category)) throw new OperatorGatewayBlockedError("Unsupported request category.", "unsupported_request_category");
     const normalizedText = sanitizeText(input.text);
     if (Buffer.byteLength(normalizedText, "utf8") > 4000) throw new OperatorGatewayBlockedError("Request is too large.", "request_too_large");
-    const requestHash = stableHash({ category: input.category, normalizedText });
+    const requestHash = stableHash({ category: input.category, normalizedText, acquisitionRequest: input.acquisitionRequest ?? null });
     const existing = this.get("SELECT request_hash, response_json FROM operator_requests WHERE idempotency_key = ?", [input.idempotencyKey]);
     if (existing) {
       if (String(existing.request_hash) !== requestHash) throw new OperatorGatewayBlockedError("Conflicting request idempotency reuse.", "conflicting_idempotency");
       return JSON.parse(String(existing.response_json));
     }
     const requestId = `operator_request_${randomId()}`;
-    const response = { ok: true as const, requestId, requestHash, normalizedText, category: input.category, status: "QUEUED" as const };
+    const response = { ok: true as const, requestId, requestHash, normalizedText, category: input.category, status: "QUEUED" as const, acquisitionRequest: input.acquisitionRequest };
     this.run("INSERT INTO operator_requests (request_id, session_id, category, normalized_text, request_hash, status, idempotency_key, created_at, response_json, governed_reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [requestId, input.sessionId, input.category, normalizedText, requestHash, "QUEUED", input.idempotencyKey, this.nowIso(), JSON.stringify(response), `control-plane:request:${requestId}`]);
     this.event("request_queued", { requestId });
     return response;
@@ -686,13 +701,108 @@ export class OperatorGateway {
     }
   }
 
+  private async dispatchCapabilityAcquisition(input: {
+    requestId: string;
+    requestHash: string;
+    normalizedText: string;
+    category: OperatorRequestCategory;
+    status: "QUEUED";
+    acquisitionRequest?: BoundedCapabilityAcquisitionRequest;
+  }): Promise<OperatorDispatchResult> {
+    const acquisitionRequest = input.acquisitionRequest ?? { profileId: M16_A1_PROFILE_ID };
+    const command = this.productControlPlane.acceptCommand({
+      idempotencyKey: `operator-capability-acquisition:${input.requestId}`,
+      commandType: "propose-capability",
+      payload: { operatorRequestId: input.requestId, requestHash: input.requestHash, acquisitionRequest },
+      capability: "capability-engine"
+    });
+    if (!command.attemptId) throw new OperatorGatewayBlockedError("Runtime State did not create a capability acquisition attempt.", "capability_acquisition_attempt_not_created");
+    const attemptId = command.attemptId;
+    this.productControlPlane.transitionAttempt({
+      attemptId,
+      fromState: "PENDING",
+      toState: "RUNNING",
+      actor: "control-plane",
+      reason: "Authenticated Operator request opened governed capability acquisition.",
+      correlation: { operatorRequestId: input.requestId, requestHash: input.requestHash }
+    });
+    try {
+      const acquired = await this.governedCapabilityEngineComposition.acquireBoundedCandidate({
+        attemptId,
+        operatorRequest: { requestId: input.requestId, requestHash: input.requestHash, normalizedObjective: input.normalizedText },
+        acquisitionRequest
+      });
+      this.productControlPlane.recordGateOutcome({
+        attemptId,
+        gateName: "m16-a1-authentic-gap",
+        required: true,
+        outcome: "PASS",
+        evidenceReferences: acquired.evidenceReferenceIds,
+        evaluator: "governed-capability-engine-composition",
+        message: `Capability gap determination completed with ${acquired.gap.gapStatus}.`
+      });
+      if (acquired.gap.gapStatus === "SATISFIED") {
+        this.productControlPlane.transitionAttempt({ attemptId, fromState: "RUNNING", toState: "COMPLETED", actor: "control-plane", reason: "Existing certified capability satisfies the requested contract; acquisition not created." });
+        const response: OperatorDispatchResult = {
+          ok: true, requestId: input.requestId, requestHash: input.requestHash, normalizedText: input.normalizedText, status: "BLOCKED", attemptId,
+          failureCode: "capability_gap_already_satisfied", safeMessage: "An existing certified capability satisfies the complete requested contract; no candidate was created.",
+          modelUse: false, networkUse: false, offline: true, publicNetworkUse: false, cloudProviderUse: false, externalPackageAcquisition: false, repositoryMutation: false,
+          acquisition: { gapStatus: "SATISFIED", candidateCreated: false, satisfyingCapabilityId: acquired.gap.satisfyingCapabilityId, registrySha256: acquired.registry.sha256 }
+        };
+        this.run("UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?", ["BLOCKED", this.nowIso(), JSON.stringify(response), `control-plane:attempt:${attemptId}`, input.requestId]);
+        return response;
+      }
+      if (!acquired.candidateCreated || !acquired.candidateTestsPass) throw new Error("Governed capability acquisition did not produce a tested inactive candidate.");
+      this.productControlPlane.recordGateOutcome({
+        attemptId,
+        gateName: "m16-a1-tested-inactive-candidate",
+        required: true,
+        outcome: "PASS",
+        evidenceReferences: acquired.evidenceReferenceIds,
+        evaluator: "governed-capability-engine-composition",
+        message: "Inactive candidate behavior passed deterministic candidate-local tests without certification or promotion."
+      });
+      this.productControlPlane.transitionAttempt({ attemptId, fromState: "RUNNING", toState: "COMPLETED", actor: "control-plane", reason: "M16-A1 tested inactive candidate acquisition completed with immutable evidence." });
+      const response: OperatorDispatchResult = {
+        ok: true, requestId: input.requestId, requestHash: input.requestHash, normalizedText: input.normalizedText, status: "COMPLETED", attemptId,
+        modelUse: false, networkUse: false, offline: true, publicNetworkUse: false, cloudProviderUse: false, externalPackageAcquisition: false, repositoryMutation: false,
+        acquisition: {
+          gapStatus: acquired.gap.gapStatus, candidateCreated: true, proposalId: acquired.proposal.proposalId, sessionId: acquired.proposal.sessionId,
+          capabilityId: acquired.bundle.capabilityId, candidateDigest: acquired.bundle.versionDigest, lifecycleStatus: acquired.bundle.manifest.lifecycleStatus,
+          candidateTestsPass: acquired.candidateTestsPass, deterministicReplay: acquired.deterministicReplay, executableId: acquired.executable.id, executableFingerprint: acquired.executable.fingerprint,
+          certified: acquired.certified, promoted: acquired.promoted, activePointerChanged: acquired.activePointerChanged, selectableForOrdinaryExecution: acquired.selectableForOrdinaryExecution,
+          registrySha256: acquired.registry.sha256, registrySchemaVersion: acquired.registry.schemaVersion, evidencePath: acquired.evidencePath, evidenceHash: acquired.evidenceHash,
+          permissions: acquired.gap.requirement.permissions, limitations: acquired.gap.requirement.limitations
+        }
+      };
+      this.run("UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?", ["COMPLETED", this.nowIso(), JSON.stringify(response), `control-plane:attempt:${attemptId}`, input.requestId]);
+      this.event("request_completed", { requestId: input.requestId, attemptId, candidateDigest: acquired.bundle.versionDigest, candidateOnly: true });
+      return response;
+    } catch (error) {
+      const state = this.productControlPlane.recoveryGet("SELECT current_state FROM attempts WHERE attempt_id = ?", [attemptId]);
+      if (String(state?.current_state ?? "") === "RUNNING") this.productControlPlane.transitionAttempt({ attemptId, fromState: "RUNNING", toState: "BLOCKED", actor: "control-plane", reason: error instanceof Error ? error.message : "Capability acquisition failed." });
+      const response: OperatorDispatchResult = {
+        ok: true, requestId: input.requestId, requestHash: input.requestHash, normalizedText: input.normalizedText, status: "BLOCKED", attemptId,
+        failureCode: "capability_acquisition_blocked", safeMessage: error instanceof Error ? error.message : "Capability acquisition failed.",
+        modelUse: false, networkUse: false, offline: true, publicNetworkUse: false, cloudProviderUse: false, externalPackageAcquisition: false, repositoryMutation: false
+      };
+      this.run("UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?", ["BLOCKED", this.nowIso(), JSON.stringify(response), `control-plane:attempt:${attemptId}`, input.requestId]);
+      this.event("request_blocked", { requestId: input.requestId, attemptId, failureCode: response.failureCode });
+      return response;
+    }
+  }
+
   private async dispatchOperatorRequest(input: {
     requestId: string;
     requestHash: string;
     normalizedText: string;
     category: OperatorRequestCategory;
     status: "QUEUED";
+    acquisitionRequest?: BoundedCapabilityAcquisitionRequest;
   }): Promise<OperatorDispatchResult> {
+    if (input.category === "propose-capability") {
+      return this.dispatchCapabilityAcquisition(input);
+    }
     if (input.category === "run-certified-capability") {
       return this.dispatchCertifiedTextNormalizer(input);
     }
@@ -1124,7 +1234,11 @@ export class OperatorGateway {
 
                 body.idempotencyKey ?? `request:${randomId()}`
 
-              )
+              ),
+
+              acquisitionRequest: body.acquisitionRequest && typeof body.acquisitionRequest === "object"
+                ? body.acquisitionRequest as BoundedCapabilityAcquisitionRequest
+                : undefined
 
             });
 

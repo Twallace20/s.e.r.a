@@ -12,7 +12,6 @@
     "@sera/capability-engine": "0.1.0",
     "@sera/execution-engine": "0.1.0",
     "@sera/memory": "0.1.0",
-    "@sera/operator-gateway": "0.1.0",
     "@sera/runtime-state": "0.1.0",
     "@sera/safety": "0.1.0",
     "@sera/tools": "0.1.0",

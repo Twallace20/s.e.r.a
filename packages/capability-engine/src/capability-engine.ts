@@ -87,8 +87,11 @@ export interface CapabilityManifest {
   securityRelevantUnknowns?: Record<string, unknown>;
 }
 
+export const CAPABILITY_ENGINE_EXECUTABLE_IDS = ["node-fixture", "deterministic-text-transform-v1"] as const;
+export type CapabilityEngineExecutableId = (typeof CAPABILITY_ENGINE_EXECUTABLE_IDS)[number];
+
 export interface ExecutionRecipe {
-  executableId: "node-fixture";
+  executableId: CapabilityEngineExecutableId;
   args: string[];
   profileId: "offline-minimal";
   shell: false;
@@ -173,7 +176,7 @@ export interface CapabilityAuthorization {
   allowedCapabilityTypes: CapabilityType[];
   allowedDependencies: string[];
   allowedProviders: string[];
-  approvedExecutableIds: string[];
+  approvedExecutableIds: CapabilityEngineExecutableId[];
   approvedEvaluatorProfile: string;
   sideEffectPolicy: "none";
   modelPolicy: "fixture-candidate-only" | "none";
@@ -514,6 +517,7 @@ export class CapabilityEngine {
     };
     const manifest = { ...manifestBase, ...overrides };
     this.validateManifest(manifest);
+    if (!authorization.approvedExecutableIds.includes(manifest.approvedExecutionRecipe.executableId)) throw new CapabilityEngineBlockedError("Candidate executable is not explicitly authorized.", "execution_profile_mismatch");
     const digest = stableHash({ ...manifest, versionDigest: "", integrityHash: "" });
     const finalManifest = { ...manifest, versionDigest: digest, integrityHash: stableHash({ ...manifest, versionDigest: digest, integrityHash: "" }) };
     const root = path.join(this.candidateRoot, proposal.capabilityId, digest);
@@ -644,7 +648,7 @@ export class CapabilityEngine {
     if (!this.policy.allowedCapabilityTypes.includes(manifest.type!)) throw new CapabilityEngineBlockedError("Unsupported capability type.", "unsupported_capability_type");
     if (!this.policy.allowedRiskClasses.includes(manifest.riskClass!)) throw new CapabilityEngineBlockedError("Risk class is not allowed by policy.", "risk_not_allowed");
     if (manifest.networkPolicy !== "offline-strict") throw new CapabilityEngineBlockedError("Public network policy blocks capability.", "network_policy_blocked");
-    if (manifest.approvedExecutionRecipe?.shell !== false || manifest.approvedExecutionRecipe?.executableId !== "node-fixture") throw new CapabilityEngineBlockedError("Arbitrary shell recipes or unapproved executable IDs block.", "execution_recipe_blocked");
+    if (manifest.approvedExecutionRecipe?.shell !== false || !CAPABILITY_ENGINE_EXECUTABLE_IDS.includes(manifest.approvedExecutionRecipe?.executableId as CapabilityEngineExecutableId)) throw new CapabilityEngineBlockedError("Arbitrary shell recipes or unapproved executable IDs block.", "execution_recipe_blocked");
     if (manifest.sideEffects !== "none") throw new CapabilityEngineBlockedError("Undeclared or non-v1 side effects block.", "side_effects_blocked");
     if (manifest.providerRequirements?.modelRequired !== false) throw new CapabilityEngineBlockedError("No real model is required or allowed for v1 certification.", "model_required_blocked");
     if (!manifest.inputSchema || stableHash(manifest.inputSchema).length !== 64) throw new CapabilityEngineBlockedError("Input schema integrity is invalid.", "input_schema_invalid");
@@ -679,7 +683,7 @@ export class CapabilityEngine {
     if (authorization.iterationBudget > this.policy.maximumIterations || authorization.executionBudget > this.policy.maximumExperimentExecutions || authorization.evaluationBudget > this.policy.maximumEvaluations) throw new CapabilityEngineBlockedError("Authorization limits exceed policy.", "authorization_limits_exceed_policy");
     if (authorization.networkPolicy !== "offline-strict") throw new CapabilityEngineBlockedError("Network policy mismatch.", "network_policy_mismatch");
     if (authorization.approvedEvaluatorProfile !== "deterministic-default") throw new CapabilityEngineBlockedError("Evaluation profile mismatch.", "evaluation_profile_mismatch");
-    if (!authorization.approvedExecutableIds.includes("node-fixture")) throw new CapabilityEngineBlockedError("Execution profile or executable mismatch.", "execution_profile_mismatch");
+    if (authorization.approvedExecutableIds.length === 0 || authorization.approvedExecutableIds.some((id) => !CAPABILITY_ENGINE_EXECUTABLE_IDS.includes(id))) throw new CapabilityEngineBlockedError("Execution profile or executable mismatch.", "execution_profile_mismatch");
   }
 
   private enforceLearningBudget(sessionId: string, increment: { candidates?: number; executions?: number; evaluations?: number }): void {
@@ -744,6 +748,7 @@ export function createCapabilityAuthorization(input: {
   iterationBudget?: number;
   executionBudget?: number;
   evaluationBudget?: number;
+  approvedExecutableIds?: CapabilityEngineExecutableId[];
 }): CapabilityAuthorization {
   const issued = input.issuedAt ?? new Date();
   const base: Omit<CapabilityAuthorization, "integrityHash"> = {
@@ -760,7 +765,7 @@ export function createCapabilityAuthorization(input: {
     allowedCapabilityTypes: [...DEFAULT_CAPABILITY_POLICY.allowedCapabilityTypes],
     allowedDependencies: [],
     allowedProviders: ["fixture-candidate-only", "none"],
-    approvedExecutableIds: ["node-fixture"],
+    approvedExecutableIds: input.approvedExecutableIds ?? ["node-fixture"],
     approvedEvaluatorProfile: "deterministic-default",
     sideEffectPolicy: "none",
     modelPolicy: "fixture-candidate-only",

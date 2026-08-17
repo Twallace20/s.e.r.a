@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "sera.milestone-checkpoint.v1",
+  "checkpointId": "M16-A1-GOVERNED-INACTIVE-CANDIDATE",
+  "productBoundary": "S.E.R.A. Base MVP",
+  "milestone": 16,
+  "subGate": "M16-A1",
+  "status": "LOCALLY_VALIDATED",
+  "purpose": "Prove authentic offline capability gap detection and construction/testing of an inactive governed candidate through the production operator authority path.",
+  "acceptanceContract": [
+    "authenticated operator request",
+    "Product Control Plane-owned capability-engine attempt",
+    "GovernedCapabilityEngineComposition authority",
+    "structured bounded capability requirement",
+    "hash-bound release-relative runtime registry inspection",
+    "computed UNSATISFIED gap",
+    "authorized proposal and experiment",
+    "request-specific bounded candidate behavior",
+    "governed Execution Authority candidate-local tests",
+    "immutable evidence",
+    "offline/public-network/cloud/package/model-free operation",
+    "no certification promotion activation or active-pointer mutation",
+    "Control Plane closeout",
+    "restart persistence"
+  ],
+  "statusRule": "Remain IN_PROGRESS until the focused local proof passes; move to LOCALLY_VALIDATED only after local proof. CERTIFIED requires committed evidence, clean staged integrity, and push verification.",
+  "m16A": "NOT_YET_CERTIFIED",
+  "m16B": "NOT_YET_CERTIFIED",
+  "m16C": "NOT_YET_CERTIFIED",
+  "milestone16": "NOT_YET_CERTIFIED",
+  "branch": "sera/runtime-capability-composition-v1",
+  "baselineCommit": "84606fbf346e7b74cd858414bc686928915974fc",
+  "remoteState": "m16-a1-not-yet-committed-or-pushed",
+  "nextAuthorizedAction": "Commit the LOCALLY_VALIDATED M16-A1 implementation/evidence set, push it, and verify remote alignment before certification.",
+  "timestamp": "2026-08-17T11:37:21.2156817-07:00",
+  "completedRequirements": [
+    "authenticated operator request",
+    "Product Control Plane-owned capability-engine attempt",
+    "GovernedCapabilityEngineComposition authority",
+    "structured bounded capability requirement",
+    "hash-bound release-relative runtime registry inspection",
+    "computed authentic UNSATISFIED gap",
+    "authorized proposal and experiment",
+    "real bounded deterministic candidate execution",
+    "governed candidate-local tests",
+    "candidate remains CANDIDATE and inactive",
+    "no certification promotion activation or active-pointer mutation",
+    "Control Plane closeout locally proven",
+    "restart persistence locally proven",
+    "offline/public-network/cloud/package/model-free execution",
+    "focused regression validation"
+  ],
+  "remainingRequirements": [
+    "clean staged integrity",
+    "commit M16-A1 implementation and evidence",
+    "push branch",
+    "verify remote alignment",
+    "then change status to CERTIFIED"
+  ],
+  "testsExecuted": [
+    "M16-A1 13/13 PASS",
+    "Governed Capability Engine Composition 1/1 PASS",
+    "Capability Engine and Recursive Learning 143/143 PASS",
+    "Isolated Execution Engine 54/54 PASS",
+    "Desktop Operator 236/236 PASS with scoped --hookTimeout=60000",
+    "Total focused assertions: 447 PASS / 0 FAIL",
+    "Final certification hygiene build PASS",
+    "Final affected proof rerun 14/14 PASS",
+    "Runtime acquisition evidence binds executable artifactSha256",
+    "Detailed candidate-test failure payload removed from thrown product error"
+  ],
+  "evidencePaths": [
+    "evidence/milestone-16/checkpoints/M16-A1-LOCAL-VALIDATION.json",
+    "evidence/milestone-16/checkpoints/M16-A1-LOCAL-VALIDATION.sha256",
+    "architecture/runtime-capability-registry-v1.sha256",
+    "docs/architecture/M16_A1_GOVERNED_INACTIVE_CANDIDATE.md"
+  ],
+  "evidenceHashes": {
+    "localValidationProofSha256": "F17F740C96121AAC7DAE87772794BB29A19E512F34D6C1160AB47D04459A91E1",
+    "deterministicExecutableSha256": "F4626346B29C59F46ED2AD8D2BC86D602EA3BCCDE3354F03F4C9F69081747AD2"
+  },
+  "knownLimitations": [
+    "Initial acquisition profile is intentionally bounded.",
+    "Desktop Operator beforeAll requires a scoped timeout above the default 10 seconds on this host."
+  ],
+  "unresolvedBlockers": [],
+  "commitHash": null
+}

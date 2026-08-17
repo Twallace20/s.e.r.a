@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "sera.m16-a1-local-validation.v1",
+  "checkpointId": "M16-A1-GOVERNED-INACTIVE-CANDIDATE",
+  "productBoundary": "S.E.R.A. Base MVP",
+  "milestone": 16,
+  "subGate": "M16-A1",
+  "status": "LOCALLY_VALIDATED",
+  "timestamp": "2026-08-17T08:23:57.9264133-07:00",
+  "branch": "sera/runtime-capability-composition-v1",
+  "baselineCommit": "84606fbf346e7b74cd858414bc686928915974fc",
+  "workingTreeState": "uncommitted-m16-a1-implementation",
+  "authorityPath": [
+    "authenticated operator request",
+    "Operator Gateway dispatch",
+    "Product Control Plane capability-engine attempt",
+    "GovernedCapabilityEngineComposition",
+    "CapabilityEngine",
+    "Execution Authority / Execution Engine",
+    "immutable runtime evidence",
+    "Product Control Plane closeout"
+  ],
+  "executable": {
+    "id": "deterministic-text-transform-v1",
+    "builtPath": "packages/execution-engine/dist/deterministic-text-transform-tool.js",
+    "sha256": "F4626346B29C59F46ED2AD8D2BC86D602EA3BCCDE3354F03F4C9F69081747AD2",
+    "offlineCompatible": true,
+    "publicNetworkUse": false,
+    "shellUse": false,
+    "modelUse": false,
+    "cloudProviderUse": false,
+    "externalPackageAcquisition": false
+  },
+  "validation": {
+    "typescriptBuild": {
+      "command": "npm run build",
+      "result": "PASS"
+    },
+    "diffIntegrity": {
+      "command": "git --no-pager diff --check",
+      "result": "PASS",
+      "note": "LF-to-CRLF notices are warnings only; command exited successfully."
+    },
+    "focusedProofs": [
+      {
+        "file": "tests/m16-usable-governed-capability-acquisition-v1.test.ts",
+        "result": "PASS",
+        "passed": 13,
+        "failed": 0,
+        "proves": [
+          "authenticated governed acquisition",
+          "structured requirement",
+          "hash-bound registry inspection",
+          "authentic UNSATISFIED gap",
+          "tested inactive candidate",
+          "restart persistence",
+          "negative policy boundaries"
+        ]
+      },
+      {
+        "file": "tests/governed-capability-engine-composition-v1.test.ts",
+        "result": "PASS",
+        "passed": 1,
+        "failed": 0
+      },
+      {
+        "file": "tests/capability-engine-recursive-learning-v1.test.ts",
+        "result": "PASS",
+        "passed": 143,
+        "failed": 0
+      },
+      {
+        "file": "tests/isolated-execution-v1.test.ts",
+        "result": "PASS",
+        "passed": 54,
+        "failed": 0
+      },
+      {
+        "file": "tests/desktop-operator-v1.test.ts",
+        "commandQualifier": "--hookTimeout=60000",
+        "result": "PASS",
+        "passed": 236,
+        "failed": 0,
+        "note": "Default 10-second beforeAll budget was insufficient on this host; all 236 assertions passed with a scoped 60-second hook allowance."
+      }
+    ],
+    "totalFocusedAssertionsPassed": 447,
+    "totalFocusedAssertionsFailed": 0
+  },
+  "candidateState": {
+    "lifecycle": "CANDIDATE",
+    "certified": false,
+    "promoted": false,
+    "active": false,
+    "automaticActivation": false,
+    "automaticPromotion": false
+  },
+  "controlPlaneCloseout": {
+    "result": "LOCALLY_PROVEN",
+    "proof": "M16-A1 integration test verifies the governed request completes through the Product Control Plane and survives restart.",
+    "runtimeEvidenceLocation": "test-owned isolated temporary root",
+    "repositoryNote": "Runtime evidence is validated by the integration proof; this checkpoint is the durable repository local-validation record."
+  },
+  "offline": {
+    "offline": true,
+    "publicNetworkUse": false,
+    "cloudProviderUse": false,
+    "modelUse": false,
+    "externalPackageAcquisition": false,
+    "repositoryMutationByCandidate": false
+  },
+  "knownLimitations": [
+    "Initial acquisition profile is intentionally bounded to deterministic stable unique-line sorting.",
+    "Desktop Operator proof requires a scoped hook timeout larger than Vitest default on this host.",
+    "M16-A1 does not certify, promote, activate, or make the candidate ordinarily usable; those belong to later M16-A checkpoints."
+  ],
+  "unresolvedBlockers": [],
+  "remainingForCertification": [
+    "stage only intended M16-A1 files",
+    "pass git diff --cached --check",
+    "commit local-validation evidence and implementation",
+    "push branch",
+    "verify remote branch alignment",
+    "then mark M16-A1 CERTIFIED"
+  ],
+  "finalCertificationHygiene": {
+    "timestamp": "2026-08-17T11:37:20.6468479-07:00",
+    "failureMessageSanitized": true,
+    "runtimeExecutableArtifactHashBound": true,
+    "executableEvidenceField": "artifactSha256",
+    "buildResult": "PASS",
+    "affectedProofs": [
+      {
+        "file": "tests/m16-usable-governed-capability-acquisition-v1.test.ts",
+        "passed": 13,
+        "failed": 0
+      },
+      {
+        "file": "tests/governed-capability-engine-composition-v1.test.ts",
+        "passed": 1,
+        "failed": 0
+      }
+    ],
+    "affectedAssertionsPassed": 14,
+    "affectedAssertionsFailed": 0,
+    "stagedIntegrity": "PASS"
+  }
+}

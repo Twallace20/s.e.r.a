@@ -2,6 +2,7 @@ export * from "./execution-request";
 export * from "./execution-policy";
 export * from "./execution-authorization";
 export * from "./approved-executable-registry";
+export * from "./deterministic-text-transform-tool";
 export * from "./execution-workspace";
 export * from "./output-capture";
 export * from "./process-runner";
