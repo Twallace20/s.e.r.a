@@ -63,3 +63,17 @@ M16-A, M16-B, M16-C, and Milestone 16 remain **NOT YET CERTIFIED**.
 - Updated local-validation proof SHA-256: `F17F740C96121AAC7DAE87772794BB29A19E512F34D6C1160AB47D04459A91E1`
 
 The checkpoint remains **LOCALLY_VALIDATED** pending commit, push, and remote-alignment verification.
+
+## Certification
+
+- **Result:** PASS
+- **Certified implementation/evidence commit:** `fbf6336e2569a37c47d92a625243d4a7f6c742de`
+- **Remote alignment:** verified
+- **Certification timestamp:** `2026-08-17T11:40:05.5742564-07:00`
+- **Next authorized gate:** M16-A2 — Governed Evaluation + Operator Certification Decision
+
+M16-A1 is certified as proving:
+
+`authenticated operator request → Product Control Plane attempt → governed capability composition → authentic capability gap → authorized bounded candidate → real deterministic candidate execution/tests → immutable evidence → inactive candidate → Control Plane closeout → restart persistence`
+
+This certification does **not** certify M16-A as a whole, does not promote or activate the candidate, and does not certify M16-B, M16-C, or Milestone 16.

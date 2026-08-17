@@ -4,7 +4,7 @@
   "productBoundary": "S.E.R.A. Base MVP",
   "milestone": 16,
   "subGate": "M16-A1",
-  "status": "LOCALLY_VALIDATED",
+  "status": "CERTIFIED",
   "purpose": "Prove authentic offline capability gap detection and construction/testing of an inactive governed candidate through the production operator authority path.",
   "acceptanceContract": [
     "authenticated operator request",
@@ -29,9 +29,9 @@
   "milestone16": "NOT_YET_CERTIFIED",
   "branch": "sera/runtime-capability-composition-v1",
   "baselineCommit": "84606fbf346e7b74cd858414bc686928915974fc",
-  "remoteState": "m16-a1-not-yet-committed-or-pushed",
-  "nextAuthorizedAction": "Commit the LOCALLY_VALIDATED M16-A1 implementation/evidence set, push it, and verify remote alignment before certification.",
-  "timestamp": "2026-08-17T11:37:21.2156817-07:00",
+  "remoteState": "verified-aligned-at-fbf6336e2569a37c47d92a625243d4a7f6c742de",
+  "nextAuthorizedAction": "Begin M16-A2 governed evaluation and operator certification decision.",
+  "timestamp": "2026-08-17T11:40:05.5742564-07:00",
   "completedRequirements": [
     "authenticated operator request",
     "Product Control Plane-owned capability-engine attempt",
@@ -49,13 +49,7 @@
     "offline/public-network/cloud/package/model-free execution",
     "focused regression validation"
   ],
-  "remainingRequirements": [
-    "clean staged integrity",
-    "commit M16-A1 implementation and evidence",
-    "push branch",
-    "verify remote alignment",
-    "then change status to CERTIFIED"
-  ],
+  "remainingRequirements": [],
   "testsExecuted": [
     "M16-A1 13/13 PASS",
     "Governed Capability Engine Composition 1/1 PASS",
@@ -83,5 +77,22 @@
     "Desktop Operator beforeAll requires a scoped timeout above the default 10 seconds on this host."
   ],
   "unresolvedBlockers": [],
-  "commitHash": null
+  "commitHash": "fbf6336e2569a37c47d92a625243d4a7f6c742de",
+  "certification": {
+    "result": "PASS",
+    "certifiedCheckpoint": "M16-A1",
+    "implementationEvidenceCommit": "fbf6336e2569a37c47d92a625243d4a7f6c742de",
+    "implementationEvidenceRemoteAligned": true,
+    "certificationBasis": [
+      "focused local validation passed",
+      "final certification hygiene passed",
+      "runtime evidence binds executable artifact SHA-256",
+      "staged integrity passed",
+      "implementation/evidence commit created",
+      "implementation/evidence commit pushed",
+      "local and remote commit SHAs verified equal"
+    ],
+    "certifiedAt": "2026-08-17T11:40:05.5742564-07:00",
+    "nextAuthorizedGate": "M16-A2"
+  }
 }
