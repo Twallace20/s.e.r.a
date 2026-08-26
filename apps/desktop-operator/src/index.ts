@@ -276,6 +276,10 @@ h1 { margin: 0; font-size: 1.45rem; letter-spacing: 0; }
 .composer { display: grid; gap: 8px; max-width: 920px; padding-bottom: 16px; border-bottom: 1px solid #32414c; }
 textarea { min-height: 92px; resize: vertical; }
 select, textarea, .composer button, #refresh-status { border-radius: 6px; border: 1px solid #526675; background: #101820; color: #f3f6f8; padding: 8px 10px; }
+.operator-approval-card { border: 1px solid #31414d; border-radius: 6px; padding: 10px; margin: 8px 0; }
+.operator-approval-card pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.operator-approval-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.operator-approval-actions button { min-height: 38px; border-radius: 6px; border: 1px solid #526675; padding: 8px 10px; }
 .operator-view { max-width: 1100px; }
 .view-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 article { border: 1px solid #31414d; border-radius: 6px; padding: 12px; background: #151d24; }
@@ -416,10 +420,213 @@ export const DESKTOP_OPERATOR_JS = `
       target.textContent = binding.blockedState;
     }
   }
+  async function submitApprovalDecision(approval, decision) {
+    const confirmed = window.confirm(
+      decision === "APPROVED"
+        ? "Approve certification of this exact reviewed candidate? This does not activate or promote it."
+        : "Reject this exact reviewed candidate? Rejection is terminal."
+    );
+
+    if (!confirmed) {
+      status.textContent = "Operator decision cancelled.";
+      return;
+    }
+
+    try {
+      await ensureSession();
+
+      status.textContent =
+        "Submitting explicit " +
+        decision +
+        " decision...";
+
+      const response = await fetch(
+        "/api/v1/operator/approvals/" +
+          encodeURIComponent(approval.approval_id) +
+          "/decision",
+        {
+          method: "POST",
+          headers: {
+            ...authHeaders(true),
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            decision,
+            integrityHash:
+              approval.integrity_hash,
+            secondConfirmation: true,
+            idempotencyKey:
+              idempotencyKey(
+                "desktop-m16-a2-" +
+                decision.toLowerCase()
+              )
+          })
+        }
+      );
+
+      const payload = await response.json();
+
+      if (
+        !response.ok ||
+        !payload.ok ||
+        !payload.data
+      ) {
+        throw new Error(
+          payload.safeMessage ||
+          payload.errorCode ||
+          "Operator decision failed."
+        );
+      }
+
+      status.textContent =
+        "Decision completed: " +
+        decision +
+        ". Candidate lifecycle: " +
+        (
+          payload.data.finalization
+            ?.lifecycleStatus ||
+          "unknown"
+        ) +
+        ". Promotion performed: no.";
+
+      await refreshApprovals();
+    } catch (error) {
+      status.textContent =
+        error instanceof Error
+          ? error.message
+          : "Approval decision failed.";
+    }
+  }
+
+  async function refreshApprovals() {
+    const target =
+      document.querySelector(
+        '[data-role="approvals-learning-governance"]'
+      );
+
+    if (!target) {
+      return;
+    }
+
+    target.replaceChildren();
+
+    try {
+      await ensureSession();
+
+      const response = await fetch(
+        "/api/v1/operator/approvals",
+        {
+          headers: authHeaders()
+        }
+      );
+
+      const payload = await response.json();
+
+      if (!response.ok || !payload.ok) {
+        target.textContent =
+          payload.safeMessage ||
+          payload.errorCode ||
+          "Approvals unavailable.";
+        return;
+      }
+
+      const approvals =
+        Array.isArray(payload.data?.approvals)
+          ? payload.data.approvals
+          : [];
+
+      if (approvals.length === 0) {
+        target.textContent =
+          "No operator approvals are pending or recorded.";
+        return;
+      }
+
+      for (const approval of approvals) {
+        const block =
+          document.createElement("div");
+
+        block.className =
+          "operator-approval-card";
+
+        const details =
+          document.createElement("pre");
+
+        details.textContent = [
+          "Approval: " +
+            approval.approval_id,
+          "Status: " +
+            approval.status,
+          "Risk: " +
+            approval.risk_class,
+          "Request: " +
+            approval.request_id,
+          "Summary: " +
+            approval.summary
+        ].join("\\n");
+
+        block.appendChild(details);
+
+        if (
+          approval.status === "PENDING"
+        ) {
+          const actions =
+            document.createElement("div");
+
+          actions.className =
+            "operator-approval-actions";
+
+          const approve =
+            document.createElement("button");
+
+          approve.type = "button";
+          approve.textContent =
+            "Approve certification";
+
+          approve.addEventListener(
+            "click",
+            () =>
+              submitApprovalDecision(
+                approval,
+                "APPROVED"
+              )
+          );
+
+          const reject =
+            document.createElement("button");
+
+          reject.type = "button";
+          reject.textContent =
+            "Reject candidate";
+
+          reject.addEventListener(
+            "click",
+            () =>
+              submitApprovalDecision(
+                approval,
+                "REJECTED"
+              )
+          );
+
+          actions.appendChild(approve);
+          actions.appendChild(reject);
+          block.appendChild(actions);
+        }
+
+        target.appendChild(block);
+      }
+    } catch {
+      target.textContent =
+        "Approvals are blocked or unavailable.";
+    }
+  }
   function show(view) {
     for (const section of document.querySelectorAll(".operator-view")) section.hidden = section.dataset.view !== view;
     for (const button of document.querySelectorAll(".nav-button")) button.setAttribute("aria-current", button.dataset.view === view ? "page" : "false");
-    refreshLearningGovernance(view);
+    if (view === "approvals") {
+      refreshApprovals();
+    } else {
+      refreshLearningGovernance(view);
+    }
   }
   async function refresh() {
     try {

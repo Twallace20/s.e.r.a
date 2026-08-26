@@ -15,7 +15,7 @@ import { RuntimeService } from "@sera/runtime-host";
 import { RuntimeStateStore, createRuntimeStateConfig, openRuntimeState } from "@sera/runtime-state";
 import { StudioRuntime, runStudioRuntimeProof } from "@sera/studio-runtime";
 import { LearningGovernanceRuntime } from "@sera/learning-governance-runtime";
-import { GovernedCapabilityEngineComposition, M16_A1_PROFILE_ID, type BoundedCapabilityAcquisitionRequest } from "@sera/runtime-capability-composition";
+import { GovernedCapabilityEngineComposition, M16_A1_PROFILE_ID, createM16A2CertificationReviewSummary, type BoundedCapabilityAcquisitionRequest } from "@sera/runtime-capability-composition";
 import { ProductControlPlane } from "./product-control-plane.js";
 
 export const DESKTOP_OPERATOR_VERSION = "desktop-operator-v1";
@@ -1071,6 +1071,568 @@ export class OperatorGateway {
     }
   }
 
+  async queueBoundedCandidateReview(input: {
+    sessionId: string;
+    sourceProposalId: string;
+    sourceSessionId: string;
+    capabilityId: string;
+    candidateDigest: string;
+    idempotencyKey: string;
+  }) {
+    const request = this.composeRequest({
+      sessionId: input.sessionId,
+      category: "review-approval",
+      text: `Review M16-A2 candidate ${input.candidateDigest} for certification or rejection.`,
+      idempotencyKey: input.idempotencyKey
+    });
+
+    const existing = this.get(
+      "SELECT status, response_json FROM operator_requests WHERE request_id = ?",
+      [request.requestId]
+    );
+
+    if (
+      existing &&
+      String(existing.status) !== "QUEUED"
+    ) {
+      return JSON.parse(
+        String(existing.response_json)
+      );
+    }
+
+    const command =
+      this.productControlPlane.acceptCommand({
+        idempotencyKey:
+          `operator-capability-review:${request.requestId}`,
+        commandType:
+          "m16-a2-governed-evaluation-review",
+        payload: {
+          operatorRequestId:
+            request.requestId,
+          sourceProposalId:
+            input.sourceProposalId,
+          sourceSessionId:
+            input.sourceSessionId,
+          capabilityId:
+            input.capabilityId,
+          candidateDigest:
+            input.candidateDigest
+        },
+        capability: "capability-engine"
+      });
+
+    if (!command.attemptId) {
+      throw new OperatorGatewayBlockedError(
+        "Runtime State did not create the M16-A2 review attempt.",
+        "a2_review_attempt_missing"
+      );
+    }
+
+    const attemptId = command.attemptId;
+
+    const attempt =
+      this.productControlPlane.recoveryGet(
+        "SELECT current_state FROM attempts WHERE attempt_id = ?",
+        [attemptId]
+      );
+
+    if (
+      String(attempt?.current_state ?? "") ===
+      "PENDING"
+    ) {
+      this.productControlPlane.transitionAttempt({
+        attemptId,
+        fromState: "PENDING",
+        toState: "RUNNING",
+        actor: "control-plane",
+        reason:
+          "M16-A2 governed evaluation and operator certification review opened.",
+        correlation: {
+          operatorRequestId:
+            request.requestId,
+          candidateDigest:
+            input.candidateDigest
+        }
+      });
+    } else if (
+      String(attempt?.current_state ?? "") !==
+      "RUNNING"
+    ) {
+      throw new OperatorGatewayBlockedError(
+        "M16-A2 review attempt is not available for evaluation.",
+        "a2_review_attempt_not_running"
+      );
+    }
+
+    try {
+      const review =
+        await this.governedCapabilityEngineComposition
+          .evaluateBoundedCandidate({
+            attemptId,
+            operatorRequestId:
+              request.requestId,
+            sourceProposalId:
+              input.sourceProposalId,
+            sourceSessionId:
+              input.sourceSessionId,
+            capabilityId:
+              input.capabilityId,
+            candidateDigest:
+              input.candidateDigest
+          });
+
+      this.productControlPlane.recordGateOutcome({
+        attemptId,
+        gateName:
+          "m16-a2-governed-evaluation",
+        required: true,
+        outcome: "PASS",
+        evidenceReferences: [
+          review.evidenceReferenceId
+        ],
+        evaluator:
+          "governed-capability-engine-composition",
+        message:
+          "Exact inactive candidate passed two independent governed evaluations and is ready for operator certification review."
+      });
+
+      const summary =
+        createM16A2CertificationReviewSummary({
+          candidateDigest:
+            input.candidateDigest,
+          reviewPacketHash:
+            review.reviewPacketHash
+        });
+
+      const approval = this.createApproval({
+        requestId:
+          request.requestId,
+        riskClass: "HIGH",
+        summary,
+        idempotencyKey:
+          `${request.requestId}:m16-a2-certification-approval`
+      });
+
+      const response = {
+        ok: true as const,
+        requestId:
+          request.requestId,
+        requestHash:
+          request.requestHash,
+        normalizedText:
+          request.normalizedText,
+        category:
+          "review-approval" as const,
+        status:
+          "AWAITING_APPROVAL" as const,
+        attemptId,
+        approvalId:
+          approval.approvalId,
+        approvalIntegrityHash:
+          approval.integrityHash,
+        riskClass:
+          "HIGH" as const,
+        review: {
+          sourceProposalId:
+            input.sourceProposalId,
+          sourceSessionId:
+            input.sourceSessionId,
+          capabilityId:
+            input.capabilityId,
+          candidateDigest:
+            input.candidateDigest,
+          reviewPacketPath:
+            review.reviewPacketPath,
+          reviewPacketHash:
+            review.reviewPacketHash,
+          comparisonHash:
+            review.comparisonHash,
+          experimentIds:
+            review.experimentIds,
+          evaluationIds:
+            review.evaluationIds,
+          reproducibilityRuns:
+            review.reproducibilityRuns,
+          reproducible:
+            review.reproducible,
+          rollbackReady:
+            review.rollbackReady,
+          permissions:
+            review.permissions,
+          limitations:
+            review.limitations,
+          lifecycleStatus:
+            review.lifecycleStatus,
+          certificationPerformed:
+            false,
+          promotionPerformed:
+            false,
+          activePointerChanged:
+            false
+        },
+        operatorDecision: null,
+        certified: false,
+        rejected: false,
+        promoted: false,
+        selectableForOrdinaryExecution:
+          false,
+        offline: true,
+        publicNetworkUse: false,
+        cloudProviderUse: false,
+        modelUse: false
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+        [
+          "AWAITING_APPROVAL",
+          JSON.stringify(response),
+          `control-plane:attempt:${attemptId}`,
+          request.requestId
+        ]
+      );
+
+      this.event(
+        "m16_a2_review_awaiting_operator",
+        {
+          requestId:
+            request.requestId,
+          attemptId,
+          approvalId:
+            approval.approvalId,
+          candidateDigest:
+            input.candidateDigest,
+          reviewPacketHash:
+            review.reviewPacketHash
+        }
+      );
+
+      return response;
+    } catch (error) {
+      const current =
+        this.productControlPlane.recoveryGet(
+          "SELECT current_state FROM attempts WHERE attempt_id = ?",
+          [attemptId]
+        );
+
+      if (
+        String(
+          current?.current_state ??
+            ""
+        ) === "RUNNING"
+      ) {
+        this.productControlPlane.transitionAttempt({
+          attemptId,
+          fromState: "RUNNING",
+          toState: "BLOCKED",
+          actor: "control-plane",
+          reason:
+            error instanceof Error
+              ? error.message
+              : "M16-A2 candidate evaluation failed."
+        });
+      }
+
+      const blocked = {
+        ok: true as const,
+        requestId:
+          request.requestId,
+        requestHash:
+          request.requestHash,
+        normalizedText:
+          request.normalizedText,
+        category:
+          "review-approval" as const,
+        status: "BLOCKED" as const,
+        attemptId,
+        failureCode:
+          "m16_a2_evaluation_blocked",
+        safeMessage:
+          error instanceof Error
+            ? error.message
+            : "M16-A2 candidate evaluation failed.",
+        offline: true,
+        publicNetworkUse: false,
+        cloudProviderUse: false,
+        modelUse: false
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+        [
+          "BLOCKED",
+          this.nowIso(),
+          JSON.stringify(blocked),
+          `control-plane:attempt:${attemptId}`,
+          request.requestId
+        ]
+      );
+
+      return blocked;
+    }
+  }
+
+  async finalizeBoundedCandidateApproval(input: {
+    approvalId: string;
+    decision: "APPROVED" | "REJECTED";
+    integrityHash: string;
+    idempotencyKey: string;
+    secondConfirmation: boolean;
+  }) {
+    const approval = this.get(
+      "SELECT * FROM operator_approvals WHERE approval_id = ?",
+      [input.approvalId]
+    );
+
+    if (!approval) {
+      throw new OperatorGatewayBlockedError(
+        "Approval not found.",
+        "approval_not_found"
+      );
+    }
+
+    const request = this.get(
+      "SELECT * FROM operator_requests WHERE request_id = ?",
+      [String(approval.request_id)]
+    );
+
+    if (!request) {
+      throw new OperatorGatewayBlockedError(
+        "Approval request not found.",
+        "approval_request_not_found"
+      );
+    }
+
+    const priorResponse =
+      JSON.parse(
+        String(request.response_json)
+      );
+
+    if (
+      priorResponse?.finalization &&
+      priorResponse.operatorDecision ===
+        input.decision
+    ) {
+      return priorResponse;
+    }
+
+    if (
+      priorResponse?.status !==
+        "AWAITING_APPROVAL" ||
+      !priorResponse?.review ||
+      priorResponse.approvalId !==
+        input.approvalId
+    ) {
+      throw new OperatorGatewayBlockedError(
+        "Approval is not a pending M16-A2 certification review.",
+        "a2_review_not_pending"
+      );
+    }
+
+    const expectedSummary =
+      createM16A2CertificationReviewSummary({
+        candidateDigest:
+          String(
+            priorResponse.review
+              .candidateDigest
+          ),
+        reviewPacketHash:
+          String(
+            priorResponse.review
+              .reviewPacketHash
+          )
+      });
+
+    if (
+      String(approval.summary) !==
+        expectedSummary
+    ) {
+      throw new OperatorGatewayBlockedError(
+        "Approval binding does not match the exact M16-A2 candidate review.",
+        "a2_approval_binding_mismatch"
+      );
+    }
+
+    if (
+      String(approval.integrity_hash) !==
+        input.integrityHash
+    ) {
+      throw new OperatorGatewayBlockedError(
+        "Approval integrity changed.",
+        "approval_integrity_mismatch"
+      );
+    }
+
+    if (
+      String(approval.status) === "PENDING"
+    ) {
+      this.decideApproval({
+        approvalId:
+          input.approvalId,
+        decision:
+          input.decision,
+        integrityHash:
+          input.integrityHash,
+        idempotencyKey:
+          input.idempotencyKey,
+        secondConfirmation:
+          input.secondConfirmation
+      });
+    } else if (
+      String(approval.status) !==
+        input.decision
+    ) {
+      throw new OperatorGatewayBlockedError(
+        "Approval already has a conflicting terminal decision.",
+        "approval_terminal"
+      );
+    }
+
+    const attemptId =
+      String(
+        priorResponse.attemptId ??
+          ""
+      );
+
+    const finalized =
+      await this.governedCapabilityEngineComposition
+        .finalizeBoundedCandidateReview({
+          attemptId,
+          approvalId:
+            input.approvalId,
+          operatorRequestId:
+            String(request.request_id),
+          capabilityId:
+            String(
+              priorResponse.review
+                .capabilityId
+            ),
+          candidateDigest:
+            String(
+              priorResponse.review
+                .candidateDigest
+            ),
+          sourceProposalId:
+            String(
+              priorResponse.review
+                .sourceProposalId
+            ),
+          sourceSessionId:
+            String(
+              priorResponse.review
+                .sourceSessionId
+            ),
+          reviewPacketPath:
+            String(
+              priorResponse.review
+                .reviewPacketPath
+            ),
+          reviewPacketHash:
+            String(
+              priorResponse.review
+                .reviewPacketHash
+            )
+        });
+
+    this.productControlPlane.recordGateOutcome({
+      attemptId,
+      gateName:
+        "m16-a2-operator-certification-decision",
+      required: true,
+      outcome: "PASS",
+      evidenceReferences: [
+        finalized.evidenceReferenceId
+      ],
+      evaluator:
+        "governed-capability-engine-composition",
+      message:
+        input.decision === "APPROVED"
+          ? "Operator approved the exact reviewed digest; candidate was certified without promotion."
+          : "Operator rejected the exact reviewed digest; candidate became terminal REJECTED without promotion."
+    });
+
+    this.productControlPlane.transitionAttempt({
+      attemptId,
+      fromState: "RUNNING",
+      toState: "COMPLETED",
+      actor: "control-plane",
+      reason:
+        input.decision === "APPROVED"
+          ? "M16-A2 operator certification decision completed."
+          : "M16-A2 operator rejection decision completed.",
+      correlation: {
+        approvalId:
+          input.approvalId,
+        operatorDecision:
+          input.decision,
+        candidateDigest:
+          finalized.candidateDigest
+      }
+    });
+
+    const response = {
+      ...priorResponse,
+      status: "COMPLETED" as const,
+      operatorDecision:
+        input.decision,
+      certified:
+        finalized.certified,
+      rejected:
+        finalized.rejected,
+      promoted: false,
+      selectableForOrdinaryExecution:
+        false,
+      finalization: {
+        lifecycleStatus:
+          finalized.lifecycleStatus,
+        decisionEvidencePath:
+          finalized.decisionEvidencePath,
+        decisionEvidenceHash:
+          finalized.decisionEvidenceHash,
+        reviewPacketHash:
+          finalized.reviewPacketHash,
+        evidenceReferenceId:
+          finalized.evidenceReferenceId,
+        activePointerChanged:
+          false,
+        promotionPerformed:
+          false
+      }
+    };
+
+    this.run(
+      "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+      [
+        "COMPLETED",
+        this.nowIso(),
+        JSON.stringify(response),
+        `control-plane:attempt:${attemptId}`,
+        String(request.request_id)
+      ]
+    );
+
+    this.event(
+      "m16_a2_operator_decision_completed",
+      {
+        requestId:
+          String(request.request_id),
+        attemptId,
+        approvalId:
+          input.approvalId,
+        operatorDecision:
+          input.decision,
+        candidateDigest:
+          finalized.candidateDigest,
+        lifecycleStatus:
+          finalized.lifecycleStatus,
+        promoted: false,
+        activePointerChanged:
+          false
+      }
+    );
+
+    return response;
+  }
   createApproval(input: { requestId: string; riskClass: "LOW" | "HIGH" | "DESTRUCTIVE" | "EXTERNAL"; summary: string; idempotencyKey: string }): { approvalId: string; integrityHash: string; status: "PENDING" } {
     const requestHash = stableHash(input);
     const existing = this.get("SELECT request_hash, response_json FROM operator_approvals WHERE idempotency_key = ?", [input.idempotencyKey]);
@@ -1162,6 +1724,13 @@ export class OperatorGateway {
           return sendJson(
             response,
             envelope(true, { requests: this.requests() })
+          );
+        }
+        if (url.pathname === "/api/v1/operator/approvals") {
+          this.validateSession(headersObject(request.headers));
+          return sendJson(
+            response,
+            envelope(true, { approvals: this.approvals() })
           );
         }
         if (isLearningGovernancePath(url.pathname)) {
@@ -1263,6 +1832,143 @@ export class OperatorGateway {
       }
 
 
+      if (
+        request.method === "POST" &&
+        url.pathname === "/api/v1/operator/capability-reviews"
+      ) {
+        requireExactOrigin(
+          request.headers.origin,
+          this.boundPort()
+        );
+
+        const session =
+          this.validateSession(
+            headersObject(request.headers),
+            true
+          );
+
+        void readJson(request)
+          .then(async (body) => {
+            const candidateDigest =
+              String(body.candidateDigest ?? "");
+
+            if (!/^[a-f0-9]{64}$/.test(candidateDigest)) {
+              throw new OperatorGatewayBlockedError(
+                "A valid exact candidate digest is required.",
+                "invalid_candidate_digest"
+              );
+            }
+
+            const sourceProposalId =
+              String(body.sourceProposalId ?? "");
+
+            const sourceSessionId =
+              String(body.sourceSessionId ?? "");
+
+            const capabilityId =
+              String(body.capabilityId ?? "");
+
+            if (
+              !sourceProposalId ||
+              !sourceSessionId ||
+              !capabilityId
+            ) {
+              throw new OperatorGatewayBlockedError(
+                "Exact A1 proposal, session and capability provenance are required.",
+                "missing_candidate_provenance"
+              );
+            }
+
+            const result =
+              await this.queueBoundedCandidateReview({
+                sessionId: session.sessionId,
+                sourceProposalId,
+                sourceSessionId,
+                capabilityId,
+                candidateDigest,
+                idempotencyKey:
+                  String(
+                    body.idempotencyKey ??
+                    `m16-a2-review:${candidateDigest}`
+                  )
+              });
+
+            sendJson(
+              response,
+              envelope(true, result)
+            );
+          })
+          .catch((error) =>
+            this.error(response, error)
+          );
+
+        return;
+      }
+
+      const approvalDecisionMatch =
+        request.method === "POST"
+          ? url.pathname.match(
+              /^\/api\/v1\/operator\/approvals\/([^/]+)\/decision$/
+            )
+          : null;
+
+      if (approvalDecisionMatch) {
+        requireExactOrigin(
+          request.headers.origin,
+          this.boundPort()
+        );
+
+        this.validateSession(
+          headersObject(request.headers),
+          true
+        );
+
+        const approvalId =
+          decodeURIComponent(
+            approvalDecisionMatch[1]
+          );
+
+        void readJson(request)
+          .then(async (body) => {
+            const decision =
+              String(body.decision ?? "");
+
+            if (
+              decision !== "APPROVED" &&
+              decision !== "REJECTED"
+            ) {
+              throw new OperatorGatewayBlockedError(
+                "M16-A2 decision must be APPROVED or REJECTED.",
+                "invalid_approval_decision"
+              );
+            }
+
+            const result =
+              await this.finalizeBoundedCandidateApproval({
+                approvalId,
+                decision,
+                integrityHash:
+                  String(body.integrityHash ?? ""),
+                idempotencyKey:
+                  String(
+                    body.idempotencyKey ??
+                    `m16-a2-decision:${approvalId}:${decision}`
+                  ),
+                secondConfirmation:
+                  body.secondConfirmation === true
+              });
+
+            sendJson(
+              response,
+              envelope(true, result)
+            );
+          })
+          .catch((error) =>
+            this.error(response, error)
+          );
+
+        return;
+      }
       if (request.method === "POST" && url.pathname === "/api/v1/operator/logout") {
         const session = this.validateSession(headersObject(request.headers), true);
         this.revokeSession(session.sessionId);

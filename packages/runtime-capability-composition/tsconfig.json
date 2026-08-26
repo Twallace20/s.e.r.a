@@ -11,6 +11,7 @@
     { "path": "../artifacts" },
     { "path": "../capability-engine" },
     { "path": "../execution-engine" },
+    { "path": "../evaluation-engine" },
     { "path": "../memory" },
     { "path": "../runtime-state" },
     { "path": "../safety" },

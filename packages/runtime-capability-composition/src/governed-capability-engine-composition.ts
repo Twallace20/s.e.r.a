@@ -5,9 +5,16 @@ import {
   CAPABILITY_POLICY_VERSION,
   CapabilityEngine,
   createCapabilityAuthorization,
+  type CandidateBundle,
   type CapabilityAuthorization,
   type CapabilityProposal
 } from "@sera/capability-engine";
+import {
+  EvaluationEngine,
+  EVALUATION_POLICY_VERSION,
+  EVALUATION_PROFILE_VERSION,
+  withSpecificationHash
+} from "@sera/evaluation-engine";
 import {
   createDefaultExecutableRegistry,
   createExecutionAuthorization,
@@ -75,6 +82,76 @@ function fileSha256(filePath: string): string {
   return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
 }
 
+function hashDirectoryTree(root: string): Record<string, string> {
+  if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
+    throw new Error("Candidate bundle root is unavailable.");
+  }
+
+  const files: string[] = [];
+
+  const walk = (current: string) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const full = path.join(current, entry.name);
+
+      if (entry.isSymbolicLink()) {
+        throw new Error("Candidate bundle symbolic links are prohibited.");
+      }
+
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (entry.isFile()) {
+        files.push(full);
+      }
+    }
+  };
+
+  walk(root);
+
+  return Object.fromEntries(
+    files
+      .sort((a, b) => a.localeCompare(b))
+      .map((file) => [
+        path.relative(root, file).replace(/\\/g, "/"),
+        fileSha256(file)
+      ])
+  );
+}
+
+function directoryBytes(root: string): number {
+  let total = 0;
+
+  const walk = (current: string) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const full = path.join(current, entry.name);
+
+      if (entry.isSymbolicLink()) {
+        throw new Error("Candidate bundle symbolic links are prohibited.");
+      }
+
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (entry.isFile()) {
+        total += fs.statSync(full).size;
+      }
+    }
+  };
+
+  walk(root);
+
+  return total;
+}
+
+export function createM16A2CertificationReviewSummary(input: {
+  candidateDigest: string;
+  reviewPacketHash: string;
+}): string {
+  return [
+    "M16-A2 certification review",
+    `candidate=${input.candidateDigest}`,
+    `review=${input.reviewPacketHash}`,
+    "action=CERTIFY_OR_REJECT"
+  ].join(" | ");
+}
 function randomId(prefix: string): string {
   return `${prefix}_${crypto.randomBytes(12).toString("hex")}`;
 }
@@ -473,6 +550,1339 @@ export class GovernedCapabilityEngineComposition {
     };
   }
 
+  async evaluateBoundedCandidate(input: {
+    attemptId: string;
+    operatorRequestId: string;
+    sourceProposalId: string;
+    sourceSessionId: string;
+    capabilityId: string;
+    candidateDigest: string;
+  }) {
+    this.requireRunningAttempt(input.attemptId);
+
+    const proposal = this.store.recoveryGet(
+      "SELECT proposal_id, session_id, capability_id, request_hash FROM capability_proposals WHERE proposal_id = ? AND session_id = ? AND capability_id = ?",
+      [
+        input.sourceProposalId,
+        input.sourceSessionId,
+        input.capabilityId
+      ]
+    );
+
+    if (
+      !proposal ||
+      String(proposal.proposal_id) !== input.sourceProposalId ||
+      String(proposal.session_id) !== input.sourceSessionId ||
+      String(proposal.capability_id) !== input.capabilityId
+    ) {
+      throw new Error(
+        "M16-A2 evaluation requires exact durable A1 proposal/session provenance."
+      );
+    }
+
+    const version = this.store.recoveryGet(
+      "SELECT * FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+      [
+        input.capabilityId,
+        input.candidateDigest
+      ]
+    );
+
+    if (!version) {
+      throw new Error(
+        "M16-A2 candidate digest does not exist."
+      );
+    }
+
+    if (
+      String(version.lifecycle_status) !== "CANDIDATE"
+    ) {
+      throw new Error(
+        "M16-A2 evaluation requires an exact inactive CANDIDATE digest."
+      );
+    }
+
+    const manifest =
+      JSON.parse(String(version.manifest_json));
+
+    if (
+      manifest.capabilityId !== input.capabilityId ||
+      manifest.versionDigest !== input.candidateDigest ||
+      manifest.approvedExecutionRecipe?.executableId !== M16_A1_EXECUTABLE_ID ||
+      manifest.networkPolicy !== "offline-strict" ||
+      manifest.sideEffects !== "none" ||
+      manifest.modelUsePolicy !== "none"
+    ) {
+      throw new Error(
+        "M16-A2 candidate manifest does not match the bounded evaluation contract."
+      );
+    }
+
+    const certificationBefore =
+      this.store.recoveryGet(
+        "SELECT certification_id FROM capability_certifications WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    const promotionBefore =
+      this.store.recoveryGet(
+        "SELECT promotion_id FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    const activeBefore =
+      this.store.recoveryGet(
+        "SELECT active_version_digest FROM capability_active_versions WHERE capability_id = ?",
+        [input.capabilityId]
+      );
+
+    if (certificationBefore || promotionBefore) {
+      throw new Error(
+        "M16-A2 requires an uncertified and unpromoted candidate."
+      );
+    }
+
+    const executable =
+      createDefaultExecutableRegistry().get(
+        M16_A1_EXECUTABLE_ID
+      );
+
+    if (
+      !executable.offlineCompatible ||
+      executable.networkCapable
+    ) {
+      throw new Error(
+        "M16-A2 candidate executable is not offline-safe."
+      );
+    }
+
+    executable.validateArgs(
+      manifest.approvedExecutionRecipe.args
+    );
+
+    const executionAuthority =
+      this.controlPlane.requireExecutionAuthority();
+
+    const evaluationEngine =
+      new EvaluationEngine(
+        this.store,
+        {
+          projectRoot: this.projectRoot
+        }
+      );
+
+    const evaluationInput =
+      "beta\nalpha\nbeta\n";
+
+    const expectedOutput =
+      "alpha\nbeta";
+
+    const expectedOutputHash =
+      crypto
+        .createHash("sha256")
+        .update(expectedOutput)
+        .digest("hex");
+
+    const runs: Array<Record<string, any>> = [];
+
+    for (const runId of ["a", "b"] as const) {
+
+      const executionId =
+        randomId(`m16_a2_exec_${runId}`);
+
+      const request: ExecutionRequest = {
+        executionId,
+        attemptId: input.attemptId,
+        authorizationId:
+          randomId("m16_a2_exec_auth"),
+        executableId:
+          M16_A1_EXECUTABLE_ID,
+        args: [
+          ...manifest.approvedExecutionRecipe.args
+        ],
+        inputs: [
+          {
+            id: "source",
+            sourceType: "inline-text",
+            workspacePath:
+              "input/source.txt",
+            content: evaluationInput
+          }
+        ],
+        outputs: [
+          {
+            id: "result",
+            workspacePath:
+              "out/result.txt",
+            required: true
+          }
+        ],
+        workingDirectory: ".",
+        environmentProfile:
+          "offline-minimal",
+        timeoutMs: 5000,
+        gracefulCancellationMs: 100,
+        maxStdoutBytes: 16384,
+        maxStderrBytes: 16384,
+        maxCombinedOutputBytes: 32768,
+        expectedExitCodes: [0],
+        networkPolicy: "offline-strict",
+        cleanupPolicy: "delete-workspace",
+        correlation: {
+          operatorRequestId:
+            input.operatorRequestId,
+          sourceProposalId:
+            input.sourceProposalId,
+          sourceSessionId:
+            input.sourceSessionId,
+          capabilityId:
+            input.capabilityId,
+          candidateDigest:
+            input.candidateDigest,
+          m16Checkpoint: "M16-A2",
+          runId
+        }
+      };
+
+      const executionAuthorization =
+        createExecutionAuthorization({
+          request,
+          requiredGateRefs: [
+            "m16-a2-evaluation-authority"
+          ],
+          completedGateRefs: [
+            "m16-a2-evaluation-authority"
+          ]
+        });
+
+      const execution =
+        await executionAuthority.execute(
+          request,
+          executionAuthorization
+        );
+
+      const output =
+        execution.outputs.find(
+          (candidate) =>
+            candidate.id === "result"
+        );
+
+      const actualOutput =
+        output?.evidenceReference
+          ? fs.readFileSync(
+              path.join(
+                execution.evidenceRoot,
+                output.evidenceReference
+              ),
+              "utf8"
+            )
+          : null;
+
+      const specification =
+        withSpecificationHash({
+          specificationId:
+            randomId(
+              `m16_a2_spec_${runId}`
+            ),
+          specificationVersion:
+            "evaluation-spec-v1",
+          attemptId:
+            input.attemptId,
+          executionId,
+          profileId:
+            "deterministic-default",
+          profileVersion:
+            EVALUATION_PROFILE_VERSION,
+          policyVersion:
+            EVALUATION_POLICY_VERSION,
+
+          requiredAssertions: [
+            {
+              assertionId:
+                `m16-a2-${runId}-state`,
+              evaluatorId:
+                "execution_state_equals",
+              evaluatorVersion: "v1",
+              kind: "required",
+              input: {},
+              expected: "CLEANED",
+              message:
+                "Candidate execution must reach CLEANED state."
+            },
+            {
+              assertionId:
+                `m16-a2-${runId}-exit`,
+              evaluatorId:
+                "process_exit_code_in",
+              evaluatorVersion: "v1",
+              kind: "required",
+              input: {},
+              expected: [0],
+              message:
+                "Candidate execution must exit successfully."
+            },
+            {
+              assertionId:
+                `m16-a2-${runId}-output-exists`,
+              evaluatorId:
+                "output_exists",
+              evaluatorVersion: "v1",
+              kind: "required",
+              input: {
+                outputId: "result"
+              },
+              expected: "harvested",
+              message:
+                "Candidate must produce the declared result output."
+            },
+            {
+              assertionId:
+                `m16-a2-${runId}-output-hash`,
+              evaluatorId:
+                "output_hash_equals",
+              evaluatorVersion: "v1",
+              kind: "required",
+              input: {
+                outputId: "result"
+              },
+              expected:
+                expectedOutputHash,
+              message:
+                "Candidate output must match the exact expected SHA-256."
+            },
+            {
+              assertionId:
+                `m16-a2-${runId}-source`,
+              evaluatorId:
+                "source_unchanged",
+              evaluatorVersion: "v1",
+              kind: "required",
+              input: {},
+              expected: true,
+              message:
+                "Candidate evaluation must not mutate source material."
+            }
+          ],
+
+          optionalAssertions: [
+            {
+              assertionId:
+                `m16-a2-${runId}-stderr`,
+              evaluatorId:
+                "stderr_empty",
+              evaluatorVersion: "v1",
+              kind: "optional",
+              input: {},
+              expected: "",
+              message:
+                "Candidate evaluation should emit no stderr."
+            }
+          ],
+
+          evidenceReferences: [],
+
+          aggregationPolicy: {
+            emptyRequiredAllowed: false,
+            optionalFailureOutcome:
+              "warning"
+          },
+
+          createdAt:
+            new Date().toISOString(),
+
+          approvalReference:
+            "control-plane:m16-a2-evaluation",
+
+          correlation: {
+            operatorRequestId:
+              input.operatorRequestId,
+            sourceProposalId:
+              input.sourceProposalId,
+            sourceSessionId:
+              input.sourceSessionId,
+            capabilityId:
+              input.capabilityId,
+            candidateDigest:
+              input.candidateDigest,
+            runId
+          }
+        });
+
+      const evaluation =
+        evaluationEngine.evaluate(
+          specification,
+          `m16-a2-evaluation:${input.candidateDigest}:${runId}`
+        );
+
+      if (
+        execution.status !==
+          "SUCCEEDED_PROCESS" ||
+        evaluation.ok !== true ||
+        actualOutput !== expectedOutput
+      ) {
+        throw new Error(
+          "M16-A2 governed candidate evaluation did not satisfy the deterministic contract."
+        );
+      }
+
+      runs.push({
+        runId,
+        executionId,
+        executionStatus:
+          execution.status,
+        workspaceRoot:
+          execution.workspaceRoot,
+
+        evaluationId:
+          evaluation.evaluationId,
+        evaluationStatus:
+          evaluation.status,
+
+        expectedOutput,
+        actualOutput,
+
+        expectedOutputHash,
+        actualOutputHash:
+          output?.hash ?? null,
+
+        sourceNotMutated:
+          execution.sourceNotMutated,
+
+        workspaceOutsideRepository:
+          execution.workspaceOutsideRepository,
+
+        cleanupCleaned:
+          execution.cleanup.cleaned,
+
+        undeclaredOutputCount:
+          execution.undeclaredOutputs.length
+      });
+    }
+
+    const reproducible =
+      runs.length === 2 &&
+      runs[0].executionId !==
+        runs[1].executionId &&
+      runs[0].evaluationId !==
+        runs[1].evaluationId &&
+      runs[0].workspaceRoot !==
+        runs[1].workspaceRoot &&
+      runs[0].actualOutput ===
+        runs[1].actualOutput &&
+      runs[0].actualOutputHash ===
+        runs[1].actualOutputHash &&
+      runs.every(
+        (run) =>
+          run.evaluationStatus ===
+            "PASSED" ||
+          run.evaluationStatus ===
+            "PASSED_WITH_WARNINGS"
+      );
+
+    if (!reproducible) {
+      throw new Error(
+        "M16-A2 independent reproducibility requirement failed."
+      );
+    }
+
+    const comparisonHash =
+      hashBoundedValue({
+        capabilityId:
+          input.capabilityId,
+
+        candidateDigest:
+          input.candidateDigest,
+
+        expectedOutputHash,
+
+        runs: runs.map((run) => ({
+          evaluationStatus:
+            run.evaluationStatus,
+          actualOutputHash:
+            run.actualOutputHash,
+          sourceNotMutated:
+            run.sourceNotMutated,
+          workspaceOutsideRepository:
+            run.workspaceOutsideRepository,
+          cleanupCleaned:
+            run.cleanupCleaned,
+          undeclaredOutputCount:
+            run.undeclaredOutputCount
+        }))
+      });
+
+    const candidateAfter =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    const certificationAfter =
+      this.store.recoveryGet(
+        "SELECT certification_id FROM capability_certifications WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    const promotionAfter =
+      this.store.recoveryGet(
+        "SELECT promotion_id FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    const activeAfter =
+      this.store.recoveryGet(
+        "SELECT active_version_digest FROM capability_active_versions WHERE capability_id = ?",
+        [input.capabilityId]
+      );
+
+    const activePointerChanged =
+      (activeBefore?.active_version_digest ??
+        null) !==
+      (activeAfter?.active_version_digest ??
+        null);
+
+    const candidateLifecycleStatus =
+      String(
+        candidateAfter?.lifecycle_status ??
+          ""
+      );
+
+    if (
+      candidateLifecycleStatus !== "CANDIDATE" ||
+      certificationAfter ||
+      promotionAfter ||
+      activePointerChanged
+    ) {
+      throw new Error(
+        "M16-A2 pre-review candidate-state invariant failed."
+      );
+    }
+
+    const permissions = [
+      "read isolated input",
+      "write declared isolated output",
+      "emit immutable evaluation evidence"
+    ];
+
+    const limitations = [
+      "bounded deterministic text transform only",
+      "stable unique line sort only",
+      "no shell",
+      "no public network",
+      "no external package acquisition",
+      "no model or provider dependency",
+      "candidate remains unusable for ordinary execution until explicit later promotion"
+    ];
+
+    const evidenceRoot =
+      path.join(
+        this.projectRoot,
+        ".sera",
+        "capability-engine-composition",
+        input.attemptId
+      );
+
+    const reviewPacketPath =
+      writeJson(
+        path.join(
+          evidenceRoot,
+          "m16-a2-evaluation-review-packet.json"
+        ),
+        {
+          schemaVersion:
+            "sera.m16-a2-evaluation-review-packet.v1",
+
+          attemptId:
+            input.attemptId,
+
+          operatorRequestId:
+            input.operatorRequestId,
+
+          sourceProvenance: {
+            proposalId:
+              input.sourceProposalId,
+            sessionId:
+              input.sourceSessionId
+          },
+
+          candidate: {
+            capabilityId:
+              input.capabilityId,
+            versionDigest:
+              input.candidateDigest,
+            lifecycleStatus:
+              candidateLifecycleStatus,
+            riskClass:
+              version.risk_class,
+            bundleRoot:
+              version.bundle_root,
+            bundleHash:
+              version.bundle_hash
+          },
+
+          evaluationProfile: {
+            profileId:
+              "deterministic-default",
+            profileVersion:
+              EVALUATION_PROFILE_VERSION,
+            policyVersion:
+              EVALUATION_POLICY_VERSION
+          },
+
+          expectedBehavior: {
+            input:
+              evaluationInput,
+            output:
+              expectedOutput,
+            outputSha256:
+              expectedOutputHash
+          },
+
+          runs,
+
+          reproducibility: {
+            requiredRuns: 2,
+            completedRuns:
+              runs.length,
+            reproducible,
+            comparisonHash
+          },
+
+          permissions,
+          limitations,
+
+          operatorReviewRequired: true,
+          operatorDecision: null,
+
+          certificationPerformed: false,
+          promotionPerformed: false,
+
+          activePointerChanged,
+
+          selectableForOrdinaryExecution:
+            false,
+
+          offline: true,
+          publicNetworkUse: false,
+          cloudProviderUse: false,
+          modelUse: false,
+          externalPackageAcquisition:
+            false
+        }
+      );
+
+    const reviewPacketHash =
+      fileSha256(reviewPacketPath);
+
+    const evidenceReferenceId =
+      this.controlPlane.recordEvidenceReference({
+        attemptId:
+          input.attemptId,
+
+        evidenceType:
+          "m16-a2-candidate-evaluation-review-packet",
+
+        location:
+          path
+            .relative(
+              this.projectRoot,
+              reviewPacketPath
+            )
+            .replace(/\\/g, "/"),
+
+        integrityHash:
+          reviewPacketHash,
+
+        producer:
+          "governed-capability-engine-composition",
+
+        metadata: {
+          capabilityId:
+            input.capabilityId,
+          candidateDigest:
+            input.candidateDigest,
+          proposalId:
+            input.sourceProposalId,
+          sessionId:
+            input.sourceSessionId,
+          reproducible,
+          comparisonHash,
+          evaluationRuns: 2,
+          certificationPerformed:
+            false,
+          promotionPerformed: false,
+          activePointerChanged
+        }
+      });
+
+    return {
+      capabilityId:
+        input.capabilityId,
+
+      candidateDigest:
+        input.candidateDigest,
+
+      sourceProposalId:
+        input.sourceProposalId,
+
+      sourceSessionId:
+        input.sourceSessionId,
+
+      experimentIds:
+        runs.map(
+          (run) => run.executionId
+        ),
+
+      evaluationIds:
+        runs.map(
+          (run) => run.evaluationId
+        ),
+
+      runs,
+
+      comparisonHash,
+
+      reproducibilityRuns: 2,
+
+      reproducible,
+
+      rollbackReady:
+        manifest.rollbackCompatibility
+          ?.reversible === true,
+
+      permissions,
+      limitations,
+
+      riskClass:
+        String(version.risk_class),
+
+      reviewPacketPath,
+      reviewPacketHash,
+      evidenceReferenceId,
+
+      lifecycleStatus:
+        candidateLifecycleStatus,
+
+      certificationPerformed:
+        false as const,
+
+      promotionPerformed:
+        false as const,
+
+      activePointerChanged:
+        false as const,
+
+      selectableForOrdinaryExecution:
+        false as const,
+
+      offline: true as const,
+      publicNetworkUse:
+        false as const,
+      cloudProviderUse:
+        false as const,
+      modelUse:
+        false as const
+    };
+  }
+  async finalizeBoundedCandidateReview(input: {
+    attemptId: string;
+    approvalId: string;
+    operatorRequestId: string;
+    capabilityId: string;
+    candidateDigest: string;
+    sourceProposalId: string;
+    sourceSessionId: string;
+    reviewPacketPath: string;
+    reviewPacketHash: string;
+  }) {
+    this.requireRunningAttempt(input.attemptId);
+
+    const approval = this.store.recoveryGet(
+      "SELECT * FROM operator_approvals WHERE approval_id = ?",
+      [input.approvalId]
+    );
+
+    if (!approval) {
+      throw new Error("M16-A2 operator approval does not exist.");
+    }
+
+    if (
+      String(approval.request_id) !== input.operatorRequestId ||
+      String(approval.risk_class) !== "HIGH"
+    ) {
+      throw new Error(
+        "M16-A2 operator approval is not bound to the expected governed review request."
+      );
+    }
+
+    const expectedSummary =
+      createM16A2CertificationReviewSummary({
+        candidateDigest: input.candidateDigest,
+        reviewPacketHash: input.reviewPacketHash
+      });
+
+    if (String(approval.summary) !== expectedSummary) {
+      throw new Error(
+        "M16-A2 operator approval is not bound to the exact candidate digest and review packet."
+      );
+    }
+
+    const decision = this.store.recoveryGet(
+      "SELECT decision, decided_at FROM operator_approval_decisions WHERE approval_id = ? ORDER BY decided_at DESC LIMIT 1",
+      [input.approvalId]
+    );
+
+    if (
+      !decision ||
+      !["APPROVED", "REJECTED"].includes(
+        String(decision.decision)
+      ) ||
+      String(approval.status) !==
+        String(decision.decision)
+    ) {
+      throw new Error(
+        "M16-A2 requires a durable APPROVED or REJECTED operator decision."
+      );
+    }
+
+    const reviewPacketPath =
+      path.resolve(input.reviewPacketPath);
+
+    const allowedReviewRoot =
+      path.resolve(
+        this.projectRoot,
+        ".sera",
+        "capability-engine-composition"
+      );
+
+    const relativeReviewPath =
+      path.relative(
+        allowedReviewRoot,
+        reviewPacketPath
+      );
+
+    if (
+      relativeReviewPath.startsWith("..") ||
+      path.isAbsolute(relativeReviewPath)
+    ) {
+      throw new Error(
+        "M16-A2 review packet escapes the governed evidence root."
+      );
+    }
+
+    if (
+      !fs.existsSync(reviewPacketPath) ||
+      !fs.statSync(reviewPacketPath).isFile()
+    ) {
+      throw new Error(
+        "M16-A2 review packet is unavailable."
+      );
+    }
+
+    const actualReviewPacketHash =
+      fileSha256(reviewPacketPath);
+
+    if (
+      actualReviewPacketHash !==
+      input.reviewPacketHash
+    ) {
+      throw new Error(
+        "M16-A2 review packet hash does not match the operator-approved evidence."
+      );
+    }
+
+    const reviewPacket =
+      JSON.parse(
+        fs.readFileSync(
+          reviewPacketPath,
+          "utf8"
+        )
+      );
+
+    if (
+      reviewPacket.schemaVersion !==
+        "sera.m16-a2-evaluation-review-packet.v1" ||
+      reviewPacket.candidate?.capabilityId !==
+        input.capabilityId ||
+      reviewPacket.candidate?.versionDigest !==
+        input.candidateDigest ||
+      reviewPacket.sourceProvenance?.proposalId !==
+        input.sourceProposalId ||
+      reviewPacket.sourceProvenance?.sessionId !==
+        input.sourceSessionId ||
+      reviewPacket.reproducibility?.reproducible !==
+        true ||
+      reviewPacket.reproducibility?.completedRuns !==
+        2 ||
+      reviewPacket.operatorReviewRequired !==
+        true ||
+      reviewPacket.certificationPerformed !==
+        false ||
+      reviewPacket.promotionPerformed !==
+        false
+    ) {
+      throw new Error(
+        "M16-A2 review packet is incomplete, mismatched, or ineligible for operator decision."
+      );
+    }
+
+    const version =
+      this.store.recoveryGet(
+        "SELECT * FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    if (
+      !version ||
+      String(version.lifecycle_status) !==
+        "CANDIDATE" ||
+      Number(version.terminal) !== 0
+    ) {
+      throw new Error(
+        "M16-A2 finalization requires the exact nonterminal CANDIDATE digest."
+      );
+    }
+
+    const candidateRoot =
+      path.resolve(String(version.bundle_root));
+
+    const manifestPath =
+      path.join(
+        candidateRoot,
+        "capability-manifest.json"
+      );
+
+    const integrityManifestPath =
+      path.join(
+        candidateRoot,
+        "integrity-manifest.json"
+      );
+
+    if (
+      !fs.existsSync(manifestPath) ||
+      !fs.existsSync(integrityManifestPath)
+    ) {
+      throw new Error(
+        "M16-A2 durable candidate bundle is incomplete."
+      );
+    }
+
+    const manifest =
+      JSON.parse(
+        fs.readFileSync(
+          manifestPath,
+          "utf8"
+        )
+      );
+
+    const durableManifest =
+      JSON.parse(
+        String(version.manifest_json)
+      );
+
+    if (
+      digest(manifest) !==
+        digest(durableManifest) ||
+      manifest.capabilityId !==
+        input.capabilityId ||
+      manifest.versionDigest !==
+        input.candidateDigest
+    ) {
+      throw new Error(
+        "M16-A2 candidate manifest does not match durable Runtime State."
+      );
+    }
+
+    const integrityManifest =
+      JSON.parse(
+        fs.readFileSync(
+          integrityManifestPath,
+          "utf8"
+        )
+      ) as Record<string, string>;
+
+    const finalIntegrity =
+      hashDirectoryTree(candidateRoot);
+
+    if (
+      digest(finalIntegrity) !==
+        String(version.bundle_hash) ||
+      directoryBytes(candidateRoot) !==
+        Number(version.candidate_bytes)
+    ) {
+      throw new Error(
+        "M16-A2 candidate bundle integrity does not match the durable version record."
+      );
+    }
+
+    const bundle: CandidateBundle = {
+      capabilityId:
+        input.capabilityId,
+      version:
+        String(version.version),
+      versionDigest:
+        input.candidateDigest,
+      candidateRoot,
+      manifest,
+      integrityManifest,
+      bytes:
+        Number(version.candidate_bytes)
+    };
+
+    const activeBefore =
+      this.store.recoveryGet(
+        "SELECT active_version_digest FROM capability_active_versions WHERE capability_id = ?",
+        [input.capabilityId]
+      );
+
+    const promotionBefore =
+      this.store.recoveryGet(
+        "SELECT promotion_id FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    if (promotionBefore) {
+      throw new Error(
+        "M16-A2 candidate was already promoted."
+      );
+    }
+
+    const engine =
+      new CapabilityEngine(
+        this.store,
+        {
+          projectRoot:
+            this.projectRoot
+        }
+      );
+
+    const decisionValue =
+      String(decision.decision) as
+        | "APPROVED"
+        | "REJECTED";
+
+    let certification:
+      | Record<string, unknown>
+      | null = null;
+
+    if (decisionValue === "APPROVED") {
+      const runs =
+        Array.isArray(reviewPacket.runs)
+          ? reviewPacket.runs
+          : [];
+
+      const experimentIds =
+        runs.map(
+          (run: any) =>
+            String(run.executionId)
+        );
+
+      const evaluationIds =
+        runs.map(
+          (run: any) =>
+            String(run.evaluationId)
+        );
+
+      if (
+        new Set(experimentIds).size !== 2 ||
+        new Set(evaluationIds).size !== 2
+      ) {
+        throw new Error(
+          "M16-A2 certification requires two independent execution and evaluation records."
+        );
+      }
+
+      for (
+        let index = 0;
+        index < 2;
+        index += 1
+      ) {
+        const evaluation =
+          this.store.recoveryGet(
+            "SELECT state, aggregate_outcome, execution_id FROM evaluations WHERE evaluation_id = ?",
+            [evaluationIds[index]]
+          );
+
+        if (
+          !evaluation ||
+          ![
+            "PASSED",
+            "PASSED_WITH_WARNINGS"
+          ].includes(
+            String(
+              evaluation.aggregate_outcome
+            )
+          ) ||
+          String(
+            evaluation.execution_id
+          ) !== experimentIds[index]
+        ) {
+          throw new Error(
+            "M16-A2 certification evidence does not match durable passing evaluations."
+          );
+        }
+      }
+
+      certification =
+        engine.certifyCandidate(
+          input.sourceSessionId,
+          bundle,
+          {
+            experimentIds,
+            evaluationIds,
+            comparisonHash:
+              String(
+                reviewPacket
+                  .reproducibility
+                  .comparisonHash
+              ),
+            reproducibilityRuns: 2,
+            rollbackReady:
+              manifest
+                .rollbackCompatibility
+                ?.reversible === true
+          }
+        );
+    } else {
+      engine.transitionVersion(
+        input.capabilityId,
+        input.candidateDigest,
+        "REJECTED"
+      );
+    }
+
+    const versionAfter =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status, terminal FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    const certificationAfter =
+      this.store.recoveryGet(
+        "SELECT certification_id FROM capability_certifications WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    const promotionAfter =
+      this.store.recoveryGet(
+        "SELECT promotion_id FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    const activeAfter =
+      this.store.recoveryGet(
+        "SELECT active_version_digest FROM capability_active_versions WHERE capability_id = ?",
+        [input.capabilityId]
+      );
+
+    const activePointerChanged =
+      (
+        activeBefore?.active_version_digest ??
+        null
+      ) !==
+      (
+        activeAfter?.active_version_digest ??
+        null
+      );
+
+    const expectedLifecycle =
+      decisionValue === "APPROVED"
+        ? "CERTIFIED"
+        : "REJECTED";
+
+    if (
+      String(
+        versionAfter?.lifecycle_status ??
+          ""
+      ) !== expectedLifecycle ||
+      Number(
+        versionAfter?.terminal ?? 0
+      ) !== 1 ||
+      Boolean(certificationAfter) !==
+        (decisionValue ===
+          "APPROVED") ||
+      promotionAfter ||
+      activePointerChanged
+    ) {
+      throw new Error(
+        "M16-A2 post-decision certification/rejection invariant failed."
+      );
+    }
+
+    const evidenceRoot =
+      path.join(
+        this.projectRoot,
+        ".sera",
+        "capability-engine-composition",
+        input.attemptId
+      );
+
+    const decisionEvidencePath =
+      writeJson(
+        path.join(
+          evidenceRoot,
+          "m16-a2-certification-decision.json"
+        ),
+        {
+          schemaVersion:
+            "sera.m16-a2-certification-decision.v1",
+          attemptId:
+            input.attemptId,
+          operatorRequestId:
+            input.operatorRequestId,
+          approvalId:
+            input.approvalId,
+          operatorDecision:
+            decisionValue,
+          reviewPacket: {
+            path:
+              reviewPacketPath,
+            sha256:
+              actualReviewPacketHash
+          },
+          sourceProvenance: {
+            proposalId:
+              input.sourceProposalId,
+            sessionId:
+              input.sourceSessionId
+          },
+          candidate: {
+            capabilityId:
+              input.capabilityId,
+            versionDigest:
+              input.candidateDigest,
+            finalLifecycleStatus:
+              expectedLifecycle
+          },
+          certification,
+          certificationExists:
+            Boolean(
+              certificationAfter
+            ),
+          promotionExists: false,
+          activePointerChanged: false,
+          selectableForOrdinaryExecution:
+            false,
+          offline: true,
+          publicNetworkUse: false,
+          cloudProviderUse: false,
+          modelUse: false
+        }
+      );
+
+    const decisionEvidenceHash =
+      fileSha256(
+        decisionEvidencePath
+      );
+
+    const evidenceReferenceId =
+      this.controlPlane
+        .recordEvidenceReference({
+          attemptId:
+            input.attemptId,
+          evidenceType:
+            "m16-a2-operator-certification-decision",
+          location:
+            path
+              .relative(
+                this.projectRoot,
+                decisionEvidencePath
+              )
+              .replace(/\\/g, "/"),
+          integrityHash:
+            decisionEvidenceHash,
+          producer:
+            "governed-capability-engine-composition",
+          metadata: {
+            approvalId:
+              input.approvalId,
+            operatorDecision:
+              decisionValue,
+            capabilityId:
+              input.capabilityId,
+            candidateDigest:
+              input.candidateDigest,
+            reviewPacketHash:
+              input.reviewPacketHash,
+            lifecycleStatus:
+              expectedLifecycle,
+            certificationExists:
+              Boolean(
+                certificationAfter
+              ),
+            promotionExists: false,
+            activePointerChanged:
+              false
+          }
+        });
+
+    return {
+      approvalId:
+        input.approvalId,
+      operatorDecision:
+        decisionValue,
+      capabilityId:
+        input.capabilityId,
+      candidateDigest:
+        input.candidateDigest,
+      lifecycleStatus:
+        expectedLifecycle,
+      certified:
+        decisionValue ===
+          "APPROVED",
+      rejected:
+        decisionValue ===
+          "REJECTED",
+      promoted:
+        false as const,
+      activePointerChanged:
+        false as const,
+      selectableForOrdinaryExecution:
+        false as const,
+      reviewPacketHash:
+        input.reviewPacketHash,
+      decisionEvidencePath,
+      decisionEvidenceHash,
+      evidenceReferenceId,
+      offline: true as const,
+      publicNetworkUse:
+        false as const,
+      cloudProviderUse:
+        false as const,
+      modelUse:
+        false as const
+    };
+  }
   assembleRealResource(input: {
     attemptId: string;
     sourcePath: string;

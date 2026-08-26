@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "sera.m16-a2-local-validation.v1",
+  "checkpointId": "M16-A2-GOVERNED-EVALUATION-CERTIFICATION-DECISION",
+  "productBoundary": "S.E.R.A. Base MVP",
+  "milestone": 16,
+  "subGate": "M16-A2",
+  "status": "LOCALLY_VALIDATED",
+  "baselineCommit": "c172f5c8a66790b8790d9b592c416ed364acee5c",
+  "branch": "sera/runtime-capability-composition-v1",
+  "timestamp": "2026-08-17T16:06:26.9924339-07:00",
+  "validationSummary": {
+    "build": "PASS",
+    "directTestFiles": 5,
+    "directTestsPassed": 460,
+    "directTestsFailed": 0,
+    "latestDesktopPostCleanupRegression": "236/236 PASS"
+  },
+  "validationSets": [
+    {
+      "name": "M16-A2 focused product path",
+      "command": "vitest run tests/m16-usable-governed-capability-acquisition-v1.test.ts",
+      "testsPassed": 16,
+      "testsFailed": 0,
+      "result": "PASS",
+      "proves": [
+        "A1 inactive candidate remains governed",
+        "two independent A2 evaluations",
+        "reproducibility review packet",
+        "HIGH operator review",
+        "second confirmation requirement",
+        "Gateway restart before operator decision",
+        "APPROVED exact digest becomes CERTIFIED",
+        "REJECTED exact digest becomes terminal REJECTED",
+        "no promotion",
+        "no active-pointer mutation",
+        "decision and lifecycle persist after Runtime State reopen"
+      ]
+    },
+    {
+      "name": "Desktop Operator regression",
+      "command": "vitest run tests/desktop-operator-v1.test.ts --hookTimeout=60000",
+      "testsPassed": 236,
+      "testsFailed": 0,
+      "result": "PASS",
+      "proves": [
+        "Desktop asset integrity",
+        "local-only graphical surface",
+        "authenticated Operator session",
+        "CSRF enforcement",
+        "approval queue contract",
+        "second-confirmation governance",
+        "approval decision governance",
+        "Approvals view remains present"
+      ]
+    },
+    {
+      "name": "Capability Engine regression",
+      "command": "vitest run tests/capability-engine-recursive-learning-v1.test.ts",
+      "testsPassed": 143,
+      "testsFailed": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Evaluation Engine regression",
+      "command": "vitest run tests/evaluation-engine-v1.test.ts",
+      "testsPassed": 64,
+      "testsFailed": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Governed Capability composition regression",
+      "command": "vitest run tests/governed-capability-engine-composition-v1.test.ts",
+      "testsPassed": 1,
+      "testsFailed": 0,
+      "result": "PASS"
+    }
+  ],
+  "acceptance": {
+    "exactInactiveCandidateDigestSelected": true,
+    "realGovernedEvaluation": true,
+    "expectedVersusActualEvidence": true,
+    "independentReproducibility": true,
+    "permissionsLimitationsAndRiskSurfaced": true,
+    "operatorApprovedPath": true,
+    "operatorRejectedPath": true,
+    "controlPlaneOwnedDecision": true,
+    "certificationDistinctFromPromotion": true,
+    "rejectedCandidateCannotActivate": true,
+    "activePointerUnchanged": true,
+    "restartPersistence": true,
+    "desktopOperatorSurface": true,
+    "offlineOperation": true
+  },
+  "governanceInvariants": {
+    "approvedResult": "CERTIFIED",
+    "rejectedResult": "REJECTED",
+    "certificationAutomaticallyPromotes": false,
+    "promotionPerformed": false,
+    "activePointerChanged": false,
+    "selectableForOrdinaryExecution": false,
+    "publicNetworkUse": false,
+    "cloudProviderUse": false,
+    "modelUse": false
+  },
+  "implementationFiles": {
+    "apps/desktop-operator/src/index.ts": "75be0c6a68c741fba9f167afeb483a3cbd168c0c199c4030690e4026df5a0f8c",
+    "packages/operator-gateway/src/operator-gateway.ts": "aa0d3cd9b1efa47dc396440fd755d3123028d8b6d1c53fc55e0a9d4a95239383",
+    "packages/runtime-capability-composition/package.json": "b546373248ffdbb4c713e1713629499008e961350d6069747593db695240fbb7",
+    "packages/runtime-capability-composition/src/governed-capability-engine-composition.ts": "4d1ab61b37a9c3cd0a92cc65e685e335199a0ce00ad144168ae8c57be3c44ebe",
+    "packages/runtime-capability-composition/tsconfig.json": "bf997b287449b267d6158d2c9d835e56128cbf88dad6fe0fd13a2bd84944501b",
+    "tests/m16-usable-governed-capability-acquisition-v1.test.ts": "508c8514f1d2b10f02bc938ca8d563fddf35b24c14eb070d8adb43c21325eb87",
+    "package-lock.json": "acfe2e6783726324a87a0b71c9537fb67b76d8c5e9a9c1cbf8211104b69aedc4"
+  },
+  "implementationReferences": [
+    "GovernedCapabilityEngineComposition.evaluateBoundedCandidate",
+    "GovernedCapabilityEngineComposition.finalizeBoundedCandidateReview",
+    "OperatorGateway.queueBoundedCandidateReview",
+    "OperatorGateway.finalizeBoundedCandidateApproval",
+    "POST /api/v1/operator/capability-reviews",
+    "GET /api/v1/operator/approvals",
+    "POST /api/v1/operator/approvals/:approvalId/decision",
+    "Desktop Operator refreshApprovals",
+    "Desktop Operator submitApprovalDecision"
+  ],
+  "certificationState": {
+    "m16A2": "NOT_YET_CERTIFIED",
+    "m16A": "NOT_YET_CERTIFIED",
+    "m16B": "NOT_YET_CERTIFIED",
+    "m16C": "NOT_YET_CERTIFIED",
+    "milestone16": "NOT_YET_CERTIFIED"
+  },
+  "remoteState": "aligned-through-certified-M16-A1-baseline; A2 changes local and uncommitted",
+  "unresolvedBlockers": [],
+  "nextAuthorizedAction": "Create the M16-A2 implementation/evidence commit, push and verify its exact SHA, then create a separate certification record bound to that implementation commit."
+}
