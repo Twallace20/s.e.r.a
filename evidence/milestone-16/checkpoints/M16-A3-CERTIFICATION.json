@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "sera.m16-a3-certification.v1",
+  "checkpoint": "M16-A3",
+  "title": "Explicit promotion and real task reattempt",
+  "status": "CERTIFIED",
+  "milestone": "M16",
+  "subGate": "M16-A3",
+  "certifiedAt": "2026-08-26T19:57:17.2301830Z",
+  "source": {
+    "branch": "sera/runtime-capability-composition-v1",
+    "implementationCommit": "82e1a5ef196bcb00eaafc08e4de2fa2bc21c0c6d",
+    "implementationRemoteAligned": true,
+    "localValidationRecord": "evidence/milestone-16/checkpoints/M16-A3-LOCAL-VALIDATION.json",
+    "localValidationSha256": "4dda447a26b62cfaee8a3aa7bee40ea20b5aa4a47fca2083b30fd299d460bc24",
+    "certificationCommit": null
+  },
+  "prerequisiteCertification": {
+    "m16A1": {
+      "status": "CERTIFIED",
+      "certificationCommit": "c172f5c8a66790b8790d9b592c416ed364acee5c"
+    },
+    "m16A2": {
+      "status": "CERTIFIED",
+      "certificationCommit": "3f71d9f69f939178f11c05f75c6544f73ebb63b7"
+    }
+  },
+  "acceptance": {
+    "exactCandidateDigestSelected": "PASS",
+    "explicitControlPlanePromotionAuthority": "PASS",
+    "promotionAuthorizationExactDigestBinding": "PASS",
+    "certifiedLifecycleRequiredBeforePromotion": "PASS",
+    "atomicActivePointerChange": "PASS",
+    "promotedLifecycleRecorded": "PASS",
+    "originalPreviouslyUnsatisfiedObjectiveReattempted": "PASS",
+    "reattemptGapStatusSatisfied": "PASS",
+    "noReplacementCandidateCreated": "PASS",
+    "promotedCapabilityUsedInOrdinaryExecution": "PASS",
+    "exactActiveDigestVerifiedBeforeExecution": "PASS",
+    "deterministicExpectedOutputProduced": "PASS",
+    "sourceInputPreserved": "PASS",
+    "immutablePromotionEvidence": "PASS",
+    "immutableReattemptEvidence": "PASS",
+    "desktopOperatorPromotionControl": "PASS",
+    "offlineExecution": "PASS",
+    "publicNetworkUse": "NONE",
+    "cloudProviderUse": "NONE",
+    "modelUse": "NONE",
+    "rollback": "NOT_IN_SCOPE_M16_A4"
+  },
+  "validation": {
+    "build": "PASS",
+    "focusedM16Tests": {
+      "passed": 17,
+      "failed": 0
+    },
+    "capabilityEngineTests": {
+      "passed": 143,
+      "failed": 0
+    },
+    "governedCompositionTests": {
+      "passed": 1,
+      "failed": 0
+    },
+    "desktopOperatorTests": {
+      "passed": 236,
+      "failed": 0
+    },
+    "directTests": {
+      "passed": 397,
+      "failed": 0
+    },
+    "diffCheck": "PASS",
+    "worktreeBoundary": "PASS",
+    "implementationRemoteAlignment": "PASS"
+  },
+  "certifiedClaims": [
+    "Exact A2-certified candidate digest can be promoted only through governed Control Plane authority.",
+    "Promotion atomically changes the Runtime State active capability pointer.",
+    "The previously-unsatisfied stable unique line sort objective becomes SATISFIED after promotion.",
+    "The promoted capability executes the bounded deterministic task through the governed ordinary execution path.",
+    "Promotion and reattempt behavior are visible through the Desktop Operator path.",
+    "M16-A3 performs no rollback; rollback remains M16-A4 scope."
+  ],
+  "prohibitedClaims": [
+    "M16-A is fully certified.",
+    "M16 is certified.",
+    "Rollback is certified.",
+    "Portable Base MVP is certified.",
+    "Clean-machine portability is proven."
+  ],
+  "scope": {
+    "m16A1": "CERTIFIED",
+    "m16A2": "CERTIFIED",
+    "m16A3": "CERTIFIED",
+    "m16A4": "NOT_STARTED",
+    "m16A": "NOT_YET_CERTIFIED",
+    "m16B": "NOT_STARTED",
+    "m16C": "NOT_STARTED",
+    "m16": "NOT_YET_CERTIFIED"
+  },
+  "unresolvedBlockers": [],
+  "nextAuthorizedGate": "M16-A4 Regression -> rollback -> restart persistence"
+}
