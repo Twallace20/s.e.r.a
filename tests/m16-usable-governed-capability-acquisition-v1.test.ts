@@ -941,6 +941,326 @@ describe("M16-A1 usable governed capability acquisition", () => {
       );
     }
   }, 60_000);
+  it("promotes the exact A2-certified digest, reattempts the original gap, and executes the active capability without rollback", async () => {
+    await withGateway(
+      "a3-promotion-reattempt",
+      async ({
+        port,
+        executionStore
+      }) => {
+        const originalObjective =
+          "Acquire a deterministic offline capability that returns unique non-empty lines in lexicographic order while preserving each exact retained line.";
+
+        const acquisitionEnvelope =
+          await authenticatedRequest(
+            port,
+            {
+              profileId:
+                M16_A1_PROFILE_ID
+            },
+            originalObjective
+          );
+
+        expect(
+          acquisitionEnvelope.ok
+        ).toBe(true);
+
+        expect(
+          acquisitionEnvelope
+            .data.status
+        ).toBe("COMPLETED");
+
+        const acquisition =
+          acquisitionEnvelope
+            .data.acquisition;
+
+        const sessionEnvelope =
+          await post(
+            port,
+            "/api/v1/operator/session",
+            {
+              idempotencyKey:
+                "m16-a3-session"
+            }
+          );
+
+        const session =
+          sessionEnvelope.data;
+
+        const headers = {
+          authorization:
+            `Bearer ${session.token}`,
+          "x-sera-csrf":
+            session.csrfToken,
+          origin:
+            `http://127.0.0.1:${port}`
+        };
+
+        const reviewEnvelope =
+          await post(
+            port,
+            "/api/v1/operator/capability-reviews",
+            {
+              sourceProposalId:
+                acquisition.proposalId,
+              sourceSessionId:
+                acquisition.sessionId,
+              capabilityId:
+                acquisition.capabilityId,
+              candidateDigest:
+                acquisition.candidateDigest,
+              idempotencyKey:
+                "m16-a3-source-review"
+            },
+            headers
+          );
+
+        expect(
+          reviewEnvelope.ok
+        ).toBe(true);
+
+        const review =
+          reviewEnvelope.data;
+
+        expect(
+          review.status
+        ).toBe(
+          "AWAITING_APPROVAL"
+        );
+
+        const decisionEnvelope =
+          await post(
+            port,
+            `/api/v1/operator/approvals/${review.approvalId}/decision`,
+            {
+              decision:
+                "APPROVED",
+              integrityHash:
+                review
+                  .approvalIntegrityHash,
+              idempotencyKey:
+                "m16-a3-source-certification",
+              secondConfirmation:
+                true
+            },
+            headers
+          );
+
+        expect(
+          decisionEnvelope.ok
+        ).toBe(true);
+
+        expect(
+          decisionEnvelope
+            .data.finalization
+            .lifecycleStatus
+        ).toBe("CERTIFIED");
+
+        expect(
+          executionStore
+            .recoveryGet(
+              "SELECT active_version_digest FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+              [
+                acquisition.capabilityId,
+                "catalog"
+              ]
+            )
+        ).toBeUndefined();
+
+        const promotionEnvelope =
+          await post(
+            port,
+            "/api/v1/operator/capability-promotions",
+            {
+              approvalId:
+                review.approvalId,
+              approvalIntegrityHash:
+                review
+                  .approvalIntegrityHash,
+              idempotencyKey:
+                "m16-a3-exact-promotion"
+            },
+            headers
+          );
+
+        expect(
+          promotionEnvelope.ok
+        ).toBe(true);
+
+        const promotion =
+          promotionEnvelope.data;
+
+        expect(
+          promotion.status
+        ).toBe("COMPLETED");
+        expect(
+          promotion.promoted
+        ).toBe(true);
+        expect(
+          promotion.candidateDigest
+        ).toBe(
+          acquisition
+            .candidateDigest
+        );
+        expect(
+          promotion
+            .activeVersionDigest
+        ).toBe(
+          acquisition
+            .candidateDigest
+        );
+        expect(
+          promotion
+            .rollbackPerformed
+        ).toBe(false);
+
+        expect(
+          executionStore
+            .recoveryGet(
+              "SELECT lifecycle_status FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+              [
+                acquisition.capabilityId,
+                acquisition
+                  .candidateDigest
+              ]
+            )
+            ?.lifecycle_status
+        ).toBe("PROMOTED");
+
+        expect(
+          executionStore
+            .recoveryGet(
+              "SELECT active_version_digest, authority_identity FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+              [
+                acquisition.capabilityId,
+                "catalog"
+              ]
+            )
+        ).toMatchObject({
+          active_version_digest:
+            acquisition
+              .candidateDigest,
+          authority_identity:
+            "control-plane"
+        });
+
+        expect(
+          executionStore
+            .recoveryGet(
+              "SELECT promotion_id FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+              [
+                acquisition.capabilityId,
+                acquisition
+                  .candidateDigest
+              ]
+            )
+        ).toBeTruthy();
+
+        const reattemptEnvelope =
+          await authenticatedRequest(
+            port,
+            {
+              profileId:
+                M16_A1_PROFILE_ID
+            },
+            originalObjective
+          );
+
+        expect(
+          reattemptEnvelope.ok
+        ).toBe(true);
+
+        expect(
+          reattemptEnvelope
+            .data.status
+        ).toBe("COMPLETED");
+
+        expect(
+          reattemptEnvelope
+            .data.acquisition
+            .gapStatus
+        ).toBe("SATISFIED");
+
+        expect(
+          reattemptEnvelope
+            .data.acquisition
+            .candidateCreated
+        ).toBe(false);
+
+        expect(
+          reattemptEnvelope
+            .data.acquisition
+            .satisfyingCapabilityId
+        ).toBe(
+          acquisition
+            .capabilityId
+        );
+
+        const executionEnvelope =
+          await post(
+            port,
+            "/api/v1/operator/requests",
+            {
+              category:
+                "run-certified-capability",
+              text:
+                "Run active stable-unique-line-sort-v1.",
+              executionInput:
+                "beta\nalpha\nbeta\n",
+              idempotencyKey:
+                "m16-a3-real-task-reattempt"
+            },
+            headers
+          );
+
+        expect(
+          executionEnvelope.ok
+        ).toBe(true);
+
+        expect(
+          executionEnvelope
+            .data.status
+        ).toBe("COMPLETED");
+
+        expect(
+          executionEnvelope
+            .data.output
+        ).toBe(
+          "alpha\nbeta"
+        );
+
+        expect(
+          executionEnvelope
+            .data.offline
+        ).toBe(true);
+
+        expect(
+          executionEnvelope
+            .data.publicNetworkUse
+        ).toBe(false);
+
+        expect(
+          executionEnvelope
+            .data.cloudProviderUse
+        ).toBe(false);
+
+        expect(
+          executionEnvelope
+            .data.modelUse
+        ).toBe(false);
+
+        expect(
+          executionStore
+            .recoveryGet(
+              "SELECT rollback_id FROM capability_rollbacks WHERE capability_id = ?",
+              [
+                acquisition.capabilityId
+              ]
+            )
+        ).toBeUndefined();
+      }
+    );
+  }, 90_000);
   it("computes a SATISFIED gap from registry fields without creating a candidate", () => {
     const root = tempRelease("satisfied");
     try {

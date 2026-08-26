@@ -302,18 +302,18 @@ export class OperatorGateway {
     return true;
   }
 
-  composeRequest(input: { sessionId: string; category: OperatorRequestCategory; text: string; idempotencyKey: string; acquisitionRequest?: BoundedCapabilityAcquisitionRequest }): { ok: true; requestId: string; requestHash: string; normalizedText: string; category: OperatorRequestCategory; status: "QUEUED"; acquisitionRequest?: BoundedCapabilityAcquisitionRequest } {
+  composeRequest(input: { sessionId: string; category: OperatorRequestCategory; text: string; idempotencyKey: string; acquisitionRequest?: BoundedCapabilityAcquisitionRequest; executionInput?: string }): { ok: true; requestId: string; requestHash: string; normalizedText: string; category: OperatorRequestCategory; status: "QUEUED"; acquisitionRequest?: BoundedCapabilityAcquisitionRequest; executionInput?: string } {
     if (!SUPPORTED_CATEGORIES.has(input.category)) throw new OperatorGatewayBlockedError("Unsupported request category.", "unsupported_request_category");
     const normalizedText = sanitizeText(input.text);
     if (Buffer.byteLength(normalizedText, "utf8") > 4000) throw new OperatorGatewayBlockedError("Request is too large.", "request_too_large");
-    const requestHash = stableHash({ category: input.category, normalizedText, acquisitionRequest: input.acquisitionRequest ?? null });
+    const requestHash = stableHash({ category: input.category, normalizedText, acquisitionRequest: input.acquisitionRequest ?? null, executionInput: input.executionInput ?? null });
     const existing = this.get("SELECT request_hash, response_json FROM operator_requests WHERE idempotency_key = ?", [input.idempotencyKey]);
     if (existing) {
       if (String(existing.request_hash) !== requestHash) throw new OperatorGatewayBlockedError("Conflicting request idempotency reuse.", "conflicting_idempotency");
       return JSON.parse(String(existing.response_json));
     }
     const requestId = `operator_request_${randomId()}`;
-    const response = { ok: true as const, requestId, requestHash, normalizedText, category: input.category, status: "QUEUED" as const, acquisitionRequest: input.acquisitionRequest };
+    const response = { ok: true as const, requestId, requestHash, normalizedText, category: input.category, status: "QUEUED" as const, acquisitionRequest: input.acquisitionRequest, executionInput: input.executionInput };
     this.run("INSERT INTO operator_requests (request_id, session_id, category, normalized_text, request_hash, status, idempotency_key, created_at, response_json, governed_reference) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [requestId, input.sessionId, input.category, normalizedText, requestHash, "QUEUED", input.idempotencyKey, this.nowIso(), JSON.stringify(response), `control-plane:request:${requestId}`]);
     this.event("request_queued", { requestId });
     return response;
@@ -325,7 +325,17 @@ export class OperatorGateway {
     normalizedText: string;
     category: OperatorRequestCategory;
     status: "QUEUED";
+    executionInput?: string;
   }): Promise<OperatorDispatchResult> {
+    if (
+      input.normalizedText ===
+      "Run active stable-unique-line-sort-v1."
+    ) {
+      return this.dispatchPromotedStableUniqueLineSort(
+        input
+      );
+    }
+
     const expectedRequest =
       "Normalize docs/BUILD_VALIDATION.md with text-normalizer-v1.";
 
@@ -701,6 +711,300 @@ export class OperatorGateway {
     }
   }
 
+  private async dispatchPromotedStableUniqueLineSort(input: {
+    requestId: string;
+    requestHash: string;
+    normalizedText: string;
+    category: OperatorRequestCategory;
+    status: "QUEUED";
+    executionInput?: string;
+  }): Promise<OperatorDispatchResult> {
+    if (
+      typeof input.executionInput !==
+      "string"
+    ) {
+      const blocked: OperatorDispatchResult = {
+        ok: true,
+        requestId:
+          input.requestId,
+        requestHash:
+          input.requestHash,
+        normalizedText:
+          input.normalizedText,
+        status: "BLOCKED",
+        failureCode:
+          "promoted_capability_input_required",
+        safeMessage:
+          "The promoted stable-unique-line-sort-v1 execution path requires bounded text input.",
+        modelUse: false,
+        networkUse: false,
+        offline: true,
+        publicNetworkUse: false,
+        cloudProviderUse: false,
+        externalPackageAcquisition:
+          false,
+        repositoryMutation:
+          false
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ? WHERE request_id = ?",
+        [
+          "BLOCKED",
+          this.nowIso(),
+          JSON.stringify(blocked),
+          input.requestId
+        ]
+      );
+
+      return blocked;
+    }
+
+    const capabilityId =
+      "stable-unique-line-sort-v1";
+
+    const command =
+      this.productControlPlane
+        .acceptCommand({
+          idempotencyKey:
+            `m16-a3-execution:${input.requestId}`,
+          commandType:
+            "run-promoted-capability",
+          payload: {
+            operatorRequestId:
+              input.requestId,
+            requestHash:
+              input.requestHash,
+            capabilityId
+          },
+          capability:
+            capabilityId
+        });
+
+    if (!command.attemptId) {
+      throw new OperatorGatewayBlockedError(
+        "Runtime State did not create the M16-A3 promoted execution attempt.",
+        "m16_a3_execution_attempt_missing"
+      );
+    }
+
+    const attemptId =
+      command.attemptId;
+
+    this.productControlPlane
+      .transitionAttempt({
+        attemptId,
+        fromState:
+          "PENDING",
+        toState:
+          "RUNNING",
+        actor:
+          "control-plane",
+        reason:
+          "Authenticated Operator request authorized execution of the exact active promoted capability.",
+        correlation: {
+          operatorRequestId:
+            input.requestId,
+          requestHash:
+            input.requestHash,
+          capabilityId
+        }
+      });
+
+    try {
+      const result =
+        await this
+          .governedCapabilityEngineComposition
+          .executePromotedBoundedCapability({
+            attemptId,
+            operatorRequestId:
+              input.requestId,
+            capabilityId,
+            sourceText:
+              input.executionInput
+          });
+
+      this.productControlPlane
+        .recordGateOutcome({
+          attemptId,
+          gateName:
+            "m16-a3-promoted-capability-execution",
+          required:
+            true,
+          outcome:
+            "PASS",
+          evidenceReferences: [
+            result.evidenceReferenceId
+          ],
+          evaluator:
+            "governed-capability-engine-composition",
+          message:
+            "Exact active promoted digest completed the bounded operator task through governed Execution Authority."
+        });
+
+      this.productControlPlane
+        .transitionAttempt({
+          attemptId,
+          fromState:
+            "RUNNING",
+          toState:
+            "COMPLETED",
+          actor:
+            "control-plane",
+          reason:
+            "M16-A3 promoted capability reattempt completed with immutable evidence.",
+          correlation: {
+            operatorRequestId:
+              input.requestId,
+            capabilityId,
+            activeVersionDigest:
+              result
+                .activeVersionDigest,
+            executionId:
+              result.executionId,
+            outputHash:
+              result.outputHash
+          }
+        });
+
+      const response: OperatorDispatchResult = {
+        ok: true,
+        requestId:
+          input.requestId,
+        requestHash:
+          input.requestHash,
+        normalizedText:
+          input.normalizedText,
+        status:
+          "COMPLETED",
+        attemptId,
+        attemptPath:
+          result.evidencePath,
+        terminalDecision:
+          "SUCCEEDED_PROCESS",
+        output:
+          result.output,
+        modelUse:
+          false,
+        networkUse:
+          false,
+        offline:
+          true,
+        publicNetworkUse:
+          false,
+        cloudProviderUse:
+          false,
+        externalPackageAcquisition:
+          false,
+        repositoryMutation:
+          false
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+        [
+          "COMPLETED",
+          this.nowIso(),
+          JSON.stringify(response),
+          `control-plane:attempt:${attemptId}`,
+          input.requestId
+        ]
+      );
+
+      this.event(
+        "m16_a3_promoted_capability_execution_completed",
+        {
+          requestId:
+            input.requestId,
+          attemptId,
+          capabilityId,
+          activeVersionDigest:
+            result.activeVersionDigest,
+          executionId:
+            result.executionId,
+          outputHash:
+            result.outputHash
+        }
+      );
+
+      return response;
+    } catch (error) {
+      const state =
+        this.productControlPlane
+          .recoveryGet(
+            "SELECT current_state FROM attempts WHERE attempt_id = ?",
+            [attemptId]
+          );
+
+      if (
+        String(
+          state?.current_state ??
+            ""
+        ) === "RUNNING"
+      ) {
+        this.productControlPlane
+          .transitionAttempt({
+            attemptId,
+            fromState:
+              "RUNNING",
+            toState:
+              "BLOCKED",
+            actor:
+              "control-plane",
+            reason:
+              error instanceof Error
+                ? error.message
+                : "M16-A3 promoted capability execution failed."
+          });
+      }
+
+      const blocked: OperatorDispatchResult = {
+        ok: true,
+        requestId:
+          input.requestId,
+        requestHash:
+          input.requestHash,
+        normalizedText:
+          input.normalizedText,
+        status:
+          "BLOCKED",
+        attemptId,
+        failureCode:
+          "m16_a3_promoted_execution_blocked",
+        safeMessage:
+          error instanceof Error
+            ? error.message
+            : "M16-A3 promoted capability execution failed.",
+        modelUse:
+          false,
+        networkUse:
+          false,
+        offline:
+          true,
+        publicNetworkUse:
+          false,
+        cloudProviderUse:
+          false,
+        externalPackageAcquisition:
+          false,
+        repositoryMutation:
+          false
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+        [
+          "BLOCKED",
+          this.nowIso(),
+          JSON.stringify(blocked),
+          `control-plane:attempt:${attemptId}`,
+          input.requestId
+        ]
+      );
+
+      return blocked;
+    }
+  }
   private async dispatchCapabilityAcquisition(input: {
     requestId: string;
     requestHash: string;
@@ -742,14 +1046,62 @@ export class OperatorGateway {
         message: `Capability gap determination completed with ${acquired.gap.gapStatus}.`
       });
       if (acquired.gap.gapStatus === "SATISFIED") {
-        this.productControlPlane.transitionAttempt({ attemptId, fromState: "RUNNING", toState: "COMPLETED", actor: "control-plane", reason: "Existing certified capability satisfies the requested contract; acquisition not created." });
+        this.productControlPlane.transitionAttempt({
+          attemptId,
+          fromState: "RUNNING",
+          toState: "COMPLETED",
+          actor: "control-plane",
+          reason:
+            "An existing active governed capability satisfies the requested contract; acquisition not created."
+        });
+
         const response: OperatorDispatchResult = {
-          ok: true, requestId: input.requestId, requestHash: input.requestHash, normalizedText: input.normalizedText, status: "BLOCKED", attemptId,
-          failureCode: "capability_gap_already_satisfied", safeMessage: "An existing certified capability satisfies the complete requested contract; no candidate was created.",
-          modelUse: false, networkUse: false, offline: true, publicNetworkUse: false, cloudProviderUse: false, externalPackageAcquisition: false, repositoryMutation: false,
-          acquisition: { gapStatus: "SATISFIED", candidateCreated: false, satisfyingCapabilityId: acquired.gap.satisfyingCapabilityId, registrySha256: acquired.registry.sha256 }
+          ok: true,
+          requestId: input.requestId,
+          requestHash: input.requestHash,
+          normalizedText: input.normalizedText,
+          status: "COMPLETED",
+          attemptId,
+          safeMessage:
+            "An existing active governed capability satisfies the complete requested contract; no candidate was created.",
+          modelUse: false,
+          networkUse: false,
+          offline: true,
+          publicNetworkUse: false,
+          cloudProviderUse: false,
+          externalPackageAcquisition: false,
+          repositoryMutation: false,
+          acquisition: {
+            gapStatus: "SATISFIED",
+            candidateCreated: false,
+            satisfyingCapabilityId:
+              acquired.gap.satisfyingCapabilityId,
+            registrySha256:
+              acquired.registry.sha256
+          }
         };
-        this.run("UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?", ["BLOCKED", this.nowIso(), JSON.stringify(response), `control-plane:attempt:${attemptId}`, input.requestId]);
+
+        this.run(
+          "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+          [
+            "COMPLETED",
+            this.nowIso(),
+            JSON.stringify(response),
+            `control-plane:attempt:${attemptId}`,
+            input.requestId
+          ]
+        );
+
+        this.event(
+          "m16_a3_original_objective_satisfied",
+          {
+            requestId: input.requestId,
+            attemptId,
+            satisfyingCapabilityId:
+              acquired.gap.satisfyingCapabilityId
+          }
+        );
+
         return response;
       }
       if (!acquired.candidateCreated || !acquired.candidateTestsPass) throw new Error("Governed capability acquisition did not produce a tested inactive candidate.");
@@ -799,6 +1151,7 @@ export class OperatorGateway {
     category: OperatorRequestCategory;
     status: "QUEUED";
     acquisitionRequest?: BoundedCapabilityAcquisitionRequest;
+    executionInput?: string;
   }): Promise<OperatorDispatchResult> {
     if (input.category === "propose-capability") {
       return this.dispatchCapabilityAcquisition(input);
@@ -1071,6 +1424,396 @@ export class OperatorGateway {
     }
   }
 
+  async promoteBoundedCertifiedCandidate(input: {
+    sessionId: string;
+    approvalId: string;
+    approvalIntegrityHash: string;
+    idempotencyKey: string;
+  }) {
+    const approval =
+      this.get(
+        "SELECT * FROM operator_approvals WHERE approval_id = ?",
+        [input.approvalId]
+      );
+
+    if (
+      !approval ||
+      String(
+        approval.status
+      ) !== "APPROVED" ||
+      String(
+        approval.risk_class
+      ) !== "HIGH" ||
+      String(
+        approval.integrity_hash
+      ) !==
+        input.approvalIntegrityHash ||
+      !String(
+        approval.summary ??
+          ""
+      ).startsWith(
+        "M16-A2 certification review"
+      )
+    ) {
+      throw new OperatorGatewayBlockedError(
+        "M16-A3 promotion requires the exact approved M16-A2 review record.",
+        "m16_a3_approved_review_required"
+      );
+    }
+
+    const reviewRequest =
+      this.get(
+        "SELECT request_id, response_json FROM operator_requests WHERE request_id = ?",
+        [
+          String(
+            approval.request_id
+          )
+        ]
+      );
+
+    if (!reviewRequest) {
+      throw new OperatorGatewayBlockedError(
+        "M16-A3 source certification request is unavailable.",
+        "m16_a3_source_review_missing"
+      );
+    }
+
+    const reviewed =
+      JSON.parse(
+        String(
+          reviewRequest
+            .response_json
+        )
+      );
+
+    if (
+      reviewed.status !==
+        "COMPLETED" ||
+      reviewed.operatorDecision !==
+        "APPROVED" ||
+      reviewed.certified !==
+        true ||
+      reviewed.promoted !==
+        false ||
+      reviewed.finalization
+        ?.lifecycleStatus !==
+        "CERTIFIED" ||
+      reviewed.finalization
+        ?.promotionPerformed !==
+        false ||
+      !reviewed.review
+        ?.sourceProposalId ||
+      !reviewed.review
+        ?.sourceSessionId ||
+      !reviewed.review
+        ?.capabilityId ||
+      !/^[a-f0-9]{64}$/.test(
+        String(
+          reviewed.review
+            ?.candidateDigest ??
+            ""
+        )
+      )
+    ) {
+      throw new OperatorGatewayBlockedError(
+        "M16-A3 source review is not an approved certified inactive candidate.",
+        "m16_a3_source_review_ineligible"
+      );
+    }
+
+    const request =
+      this.composeRequest({
+        sessionId:
+          input.sessionId,
+        category:
+          "review-approval",
+        text:
+          `Promote M16-A3 certified candidate ${reviewed.review.candidateDigest}.`,
+        idempotencyKey:
+          input.idempotencyKey
+      });
+
+    const existing =
+      this.get(
+        "SELECT status, response_json FROM operator_requests WHERE request_id = ?",
+        [request.requestId]
+      );
+
+    if (
+      existing &&
+      String(
+        existing.status
+      ) !== "QUEUED"
+    ) {
+      return JSON.parse(
+        String(
+          existing.response_json
+        )
+      );
+    }
+
+    const command =
+      this.productControlPlane
+        .acceptCommand({
+          idempotencyKey:
+            `operator-capability-promotion:${request.requestId}`,
+          commandType:
+            "m16-a3-governed-promotion",
+          payload: {
+            operatorRequestId:
+              request.requestId,
+            sourceApprovalId:
+              input.approvalId,
+            sourceProposalId:
+              reviewed.review
+                .sourceProposalId,
+            sourceSessionId:
+              reviewed.review
+                .sourceSessionId,
+            capabilityId:
+              reviewed.review
+                .capabilityId,
+            candidateDigest:
+              reviewed.review
+                .candidateDigest
+          },
+          capability:
+            "capability-engine"
+        });
+
+    if (!command.attemptId) {
+      throw new OperatorGatewayBlockedError(
+        "Runtime State did not create the M16-A3 promotion attempt.",
+        "m16_a3_promotion_attempt_missing"
+      );
+    }
+
+    const attemptId =
+      command.attemptId;
+
+    this.productControlPlane
+      .transitionAttempt({
+        attemptId,
+        fromState:
+          "PENDING",
+        toState:
+          "RUNNING",
+        actor:
+          "control-plane",
+        reason:
+          "M16-A3 explicit operator promotion request opened.",
+        correlation: {
+          operatorRequestId:
+            request.requestId,
+          sourceApprovalId:
+            input.approvalId,
+          candidateDigest:
+            reviewed.review
+              .candidateDigest
+        }
+      });
+
+    try {
+      const promotion =
+        await this
+          .governedCapabilityEngineComposition
+          .promoteBoundedCertifiedCandidate({
+            attemptId,
+            operatorRequestId:
+              request.requestId,
+            sourceProposalId:
+              String(
+                reviewed.review
+                  .sourceProposalId
+              ),
+            sourceSessionId:
+              String(
+                reviewed.review
+                  .sourceSessionId
+              ),
+            capabilityId:
+              String(
+                reviewed.review
+                  .capabilityId
+              ),
+            candidateDigest:
+              String(
+                reviewed.review
+                  .candidateDigest
+              )
+          });
+
+      this.productControlPlane
+        .recordGateOutcome({
+          attemptId,
+          gateName:
+            "m16-a3-explicit-exact-digest-promotion",
+          required:
+            true,
+          outcome:
+            "PASS",
+          evidenceReferences:
+            promotion
+              .evidenceReferenceIds,
+          evaluator:
+            "governed-capability-engine-composition",
+          message:
+            "Explicit Product Control Plane promotion selected the exact A2-certified digest and updated the active pointer."
+        });
+
+      this.productControlPlane
+        .transitionAttempt({
+          attemptId,
+          fromState:
+            "RUNNING",
+          toState:
+            "COMPLETED",
+          actor:
+            "control-plane",
+          reason:
+            "M16-A3 explicit exact-digest promotion completed.",
+          correlation: {
+            sourceApprovalId:
+              input.approvalId,
+            candidateDigest:
+              promotion
+                .candidateDigest,
+            activeVersionDigest:
+              promotion
+                .activeVersionDigest
+          }
+        });
+
+      const response = {
+        ...request,
+        status:
+          "COMPLETED" as const,
+        attemptId,
+        sourceApprovalId:
+          input.approvalId,
+        capabilityId:
+          promotion.capabilityId,
+        candidateDigest:
+          promotion.candidateDigest,
+        lifecycleStatus:
+          promotion.lifecycleStatus,
+        promoted:
+          true as const,
+        activeVersionDigest:
+          promotion.activeVersionDigest,
+        activePointerChanged:
+          promotion.activePointerChanged,
+        promotionEvidencePath:
+          "evidencePath" in promotion
+            ? promotion.evidencePath
+            : null,
+        promotionEvidenceHash:
+          "evidenceHash" in promotion
+            ? promotion.evidenceHash
+            : null,
+        rollbackPerformed:
+          false as const,
+        offline:
+          true as const,
+        publicNetworkUse:
+          false as const,
+        cloudProviderUse:
+          false as const,
+        modelUse:
+          false as const
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+        [
+          "COMPLETED",
+          this.nowIso(),
+          JSON.stringify(response),
+          `control-plane:attempt:${attemptId}`,
+          request.requestId
+        ]
+      );
+
+      this.event(
+        "m16_a3_promotion_completed",
+        {
+          requestId:
+            request.requestId,
+          attemptId,
+          sourceApprovalId:
+            input.approvalId,
+          capabilityId:
+            promotion.capabilityId,
+          candidateDigest:
+            promotion.candidateDigest,
+          activeVersionDigest:
+            promotion
+              .activeVersionDigest
+        }
+      );
+
+      return response;
+    } catch (error) {
+      const state =
+        this.productControlPlane
+          .recoveryGet(
+            "SELECT current_state FROM attempts WHERE attempt_id = ?",
+            [attemptId]
+          );
+
+      if (
+        String(
+          state?.current_state ??
+            ""
+        ) === "RUNNING"
+      ) {
+        this.productControlPlane
+          .transitionAttempt({
+            attemptId,
+            fromState:
+              "RUNNING",
+            toState:
+              "BLOCKED",
+            actor:
+              "control-plane",
+            reason:
+              error instanceof Error
+                ? error.message
+                : "M16-A3 promotion failed."
+          });
+      }
+
+      const blocked = {
+        ...request,
+        status:
+          "BLOCKED" as const,
+        attemptId,
+        failureCode:
+          "m16_a3_promotion_blocked",
+        safeMessage:
+          error instanceof Error
+            ? error.message
+            : "M16-A3 promotion failed.",
+        promoted:
+          false as const,
+        rollbackPerformed:
+          false as const
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+        [
+          "BLOCKED",
+          this.nowIso(),
+          JSON.stringify(blocked),
+          `control-plane:attempt:${attemptId}`,
+          request.requestId
+        ]
+      );
+
+      return blocked;
+    }
+  }
   async queueBoundedCandidateReview(input: {
     sessionId: string;
     sourceProposalId: string;
@@ -1803,11 +2546,13 @@ export class OperatorGateway {
 
                 body.idempotencyKey ?? `request:${randomId()}`
 
-              ),
-
-              acquisitionRequest: body.acquisitionRequest && typeof body.acquisitionRequest === "object"
+              ),              acquisitionRequest: body.acquisitionRequest && typeof body.acquisitionRequest === "object"
                 ? body.acquisitionRequest as BoundedCapabilityAcquisitionRequest
-                : undefined
+                : undefined,
+              executionInput:
+                typeof body.executionInput === "string"
+                  ? body.executionInput
+                  : undefined
 
             });
 
@@ -1831,6 +2576,82 @@ export class OperatorGateway {
 
       }
 
+
+      if (
+        request.method === "POST" &&
+        url.pathname === "/api/v1/operator/capability-promotions"
+      ) {
+        requireExactOrigin(
+          request.headers.origin,
+          this.boundPort()
+        );
+
+        const session =
+          this.validateSession(
+            headersObject(
+              request.headers
+            ),
+            true
+          );
+
+        void readJson(request)
+          .then(async (body) => {
+            const approvalId =
+              String(
+                body.approvalId ??
+                  ""
+              );
+
+            const approvalIntegrityHash =
+              String(
+                body.approvalIntegrityHash ??
+                  ""
+              );
+
+            if (
+              !approvalId ||
+              !/^[a-f0-9]{64}$/.test(
+                approvalIntegrityHash
+              )
+            ) {
+              throw new OperatorGatewayBlockedError(
+                "Exact approved M16-A2 review identity is required for promotion.",
+                "m16_a3_promotion_binding_required"
+              );
+            }
+
+            const result =
+              await this
+                .promoteBoundedCertifiedCandidate({
+                  sessionId:
+                    session.sessionId,
+                  approvalId,
+                  approvalIntegrityHash,
+                  idempotencyKey:
+                    String(
+                      body.idempotencyKey ??
+                        `m16-a3-promotion:${approvalId}`
+                    )
+                });
+
+            sendJson(
+              response,
+              envelope(
+                true,
+                result
+              )
+            );
+          })
+          .catch(
+            (error) =>
+              this.error(
+                response,
+                error
+              )
+          );
+
+        return;
+      }
 
       if (
         request.method === "POST" &&

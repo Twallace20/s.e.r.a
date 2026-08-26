@@ -237,13 +237,23 @@ export class GovernedCapabilityEngineComposition {
     this.registryReader = input.registryReader ?? new ReleaseRelativeRuntimeCapabilityRegistryReader(projectRoot);
   }
 
-  private requireRunningAttempt(attemptId: string): void {
+  private requireRunningAttempt(
+    attemptId: string,
+    expectedCapability = "capability-engine"
+  ): void {
     const attempt = this.controlPlane.recoveryGet(
       "SELECT capability, current_state FROM attempts WHERE attempt_id = ?",
       [attemptId]
     );
-    if (!attempt || attempt.capability !== "capability-engine" || attempt.current_state !== "RUNNING") {
-      throw new Error("Governed Capability Engine requires an authoritative RUNNING capability-engine attempt.");
+
+    if (
+      !attempt ||
+      String(attempt.capability) !== expectedCapability ||
+      String(attempt.current_state) !== "RUNNING"
+    ) {
+      throw new Error(
+        `Governed Capability Engine requires an authoritative RUNNING ${expectedCapability} attempt.`
+      );
     }
   }
 
@@ -257,7 +267,148 @@ export class GovernedCapabilityEngineComposition {
     const snapshot = this.registryReader.read();
     const activeRows = this.store.recoveryAll("SELECT capability_id, active_version_digest FROM capability_active_versions ORDER BY capability_id");
     const activeByCapability = Object.fromEntries(activeRows.map((row: any) => [String(row.capability_id), String(row.active_version_digest)]));
-    const gap = determineCapabilityGap(snapshot, requirement, activeByCapability);
+    let gap = determineCapabilityGap(
+      snapshot,
+      requirement,
+      activeByCapability
+    );
+
+    if (gap.gapStatus === "UNSATISFIED") {
+      const runtimeActive =
+        this.store.recoveryGet(
+          `SELECT
+             av.active_version_digest,
+             av.authority_identity,
+             v.lifecycle_status,
+             v.manifest_json
+           FROM capability_active_versions av
+           JOIN capability_versions v
+             ON v.capability_id = av.capability_id
+            AND v.version_digest = av.active_version_digest
+           WHERE av.capability_id = ?
+             AND av.activation_scope = ?`,
+          [requirement.capabilityId, "catalog"]
+        );
+
+      if (runtimeActive) {
+        const runtimeManifest =
+          JSON.parse(
+            String(runtimeActive.manifest_json)
+          );
+
+        const recipe =
+          runtimeManifest
+            .approvedExecutionRecipe;
+
+        const runtimeContractMatches =
+          String(
+            runtimeActive.lifecycle_status
+          ) === "PROMOTED" &&
+          String(
+            runtimeActive.authority_identity
+          ) === "control-plane" &&
+          runtimeManifest.capabilityId ===
+            requirement.capabilityId &&
+          runtimeManifest.networkPolicy ===
+            requirement.networkPolicy &&
+          runtimeManifest.sideEffects ===
+            requirement.sideEffectPolicy &&
+          runtimeManifest.modelUsePolicy ===
+            requirement.modelPolicy &&
+          recipe?.executableId ===
+            requirement.executableId &&
+          recipe?.shell === false &&
+          Array.isArray(recipe?.args) &&
+          recipe.args[0] ===
+            requirement.operation;
+
+        if (!runtimeContractMatches) {
+          throw new Error(
+            "Active runtime capability exists but does not match the bounded requested contract."
+          );
+        }
+
+        const dynamicComparison = {
+          capabilityId:
+            requirement.capabilityId,
+          compositionState:
+            "promoted-runtime",
+          activeStatus:
+            "ACTIVE" as const,
+          certifiedContract: {
+            capabilityId:
+              requirement.capabilityId,
+            lifecycleStatus:
+              "PROMOTED",
+            operation:
+              requirement.operation,
+            executableId:
+              requirement.executableId,
+            networkPolicy:
+              requirement.networkPolicy,
+            sideEffects:
+              requirement.sideEffectPolicy,
+            modelUsePolicy:
+              requirement.modelPolicy,
+            selfAuthorizationAllowed:
+              false,
+            activeVersion:
+              String(
+                runtimeActive
+                  .active_version_digest
+              ),
+            authorityIdentity:
+              "control-plane"
+          },
+          comparedFields: [
+            "lifecycleStatus",
+            "operation",
+            "executableId",
+            "networkPolicy",
+            "sideEffects",
+            "modelUsePolicy",
+            "authorityIdentity"
+          ],
+          unsatisfiedFields: [],
+          sufficient: true
+        };
+
+        const unsignedRuntimeGap = {
+          schemaVersion:
+            gap.schemaVersion,
+          profileId:
+            gap.profileId,
+          profileVersion:
+            gap.profileVersion,
+          profileHash:
+            gap.profileHash,
+          requirement:
+            gap.requirement,
+          registrySchemaVersion:
+            gap.registrySchemaVersion,
+          registrySha256:
+            gap.registrySha256,
+          registryRelativePath:
+            gap.registryRelativePath,
+          considered: [
+            ...gap.considered,
+            dynamicComparison
+          ],
+          gapStatus:
+            "SATISFIED" as const,
+          satisfyingCapabilityId:
+            requirement.capabilityId
+        };
+
+        gap = {
+          ...unsignedRuntimeGap,
+          determinationHash:
+            hashBoundedValue(
+              unsignedRuntimeGap
+            )
+        };
+      }
+    }
     const evidenceRoot = path.join(this.projectRoot, ".sera", "capability-engine-composition", input.attemptId);
     const registryEvidencePath = writeJson(path.join(evidenceRoot, "registry-snapshot.json"), {
       schemaVersion: snapshot.schemaVersion,
@@ -1875,6 +2026,878 @@ export class GovernedCapabilityEngineComposition {
       decisionEvidenceHash,
       evidenceReferenceId,
       offline: true as const,
+      publicNetworkUse:
+        false as const,
+      cloudProviderUse:
+        false as const,
+      modelUse:
+        false as const
+    };
+  }
+  async promoteBoundedCertifiedCandidate(input: {
+    attemptId: string;
+    operatorRequestId: string;
+    sourceProposalId: string;
+    sourceSessionId: string;
+    capabilityId: string;
+    candidateDigest: string;
+  }) {
+    this.requireRunningAttempt(
+      input.attemptId
+    );
+
+    if (
+      input.capabilityId !==
+      "stable-unique-line-sort-v1"
+    ) {
+      throw new Error(
+        "M16-A3 promotion is bounded to stable-unique-line-sort-v1."
+      );
+    }
+
+    const proposal =
+      this.store.recoveryGet(
+        "SELECT proposal_id, session_id, capability_id FROM capability_proposals WHERE proposal_id = ? AND session_id = ? AND capability_id = ?",
+        [
+          input.sourceProposalId,
+          input.sourceSessionId,
+          input.capabilityId
+        ]
+      );
+
+    if (!proposal) {
+      throw new Error(
+        "M16-A3 promotion requires exact A1 proposal and session provenance."
+      );
+    }
+
+    const version =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status, terminal, manifest_json FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    if (
+      !version ||
+      String(
+        version.lifecycle_status
+      ) !== "CERTIFIED" ||
+      Number(version.terminal) !== 1
+    ) {
+      throw new Error(
+        "M16-A3 promotion requires the exact certified candidate digest."
+      );
+    }
+
+    const certification =
+      this.store.recoveryGet(
+        "SELECT certification_id, rollback_ready FROM capability_certifications WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    if (
+      !certification ||
+      Number(
+        certification.rollback_ready
+      ) !== 1
+    ) {
+      throw new Error(
+        "M16-A3 promotion requires durable certification and rollback-readiness evidence."
+      );
+    }
+
+    const existingPromotion =
+      this.store.recoveryGet(
+        "SELECT promotion_id FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    if (existingPromotion) {
+      const active =
+        this.store.recoveryGet(
+          "SELECT active_version_digest, authority_identity FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+          [
+            input.capabilityId,
+            "catalog"
+          ]
+        );
+
+      if (
+        String(
+          active?.active_version_digest ??
+            ""
+        ) !== input.candidateDigest ||
+        String(
+          active?.authority_identity ??
+            ""
+        ) !== "control-plane"
+      ) {
+        throw new Error(
+          "M16-A3 existing promotion does not match the authoritative active pointer."
+        );
+      }
+
+      return {
+        capabilityId:
+          input.capabilityId,
+        candidateDigest:
+          input.candidateDigest,
+        lifecycleStatus:
+          "PROMOTED" as const,
+        promoted:
+          true as const,
+        activeVersionDigest:
+          input.candidateDigest,
+        activePointerChanged:
+          false as const,
+        idempotent:
+          true as const,
+        evidenceReferenceIds:
+          [] as string[],
+        offline:
+          true as const,
+        publicNetworkUse:
+          false as const,
+        cloudProviderUse:
+          false as const,
+        modelUse:
+          false as const
+      };
+    }
+
+    const manifest =
+      JSON.parse(
+        String(version.manifest_json)
+      );
+
+    const recipe =
+      manifest
+        .approvedExecutionRecipe;
+
+    if (
+      manifest.capabilityId !==
+        input.capabilityId ||
+      manifest.versionDigest !==
+        input.candidateDigest ||
+      manifest.networkPolicy !==
+        "offline-strict" ||
+      manifest.sideEffects !==
+        "none" ||
+      manifest.modelUsePolicy !==
+        "none" ||
+      recipe?.executableId !==
+        M16_A1_EXECUTABLE_ID ||
+      recipe?.shell !== false ||
+      !Array.isArray(recipe?.args) ||
+      recipe.args[0] !==
+        M16_A1_OPERATION
+    ) {
+      throw new Error(
+        "M16-A3 certified candidate manifest does not match the bounded promotion contract."
+      );
+    }
+
+    const activeBefore =
+      this.store.recoveryGet(
+        "SELECT active_version_digest FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+        [
+          input.capabilityId,
+          "catalog"
+        ]
+      );
+
+    const authorization =
+      createCapabilityAuthorization({
+        authorizationType:
+          "promotion",
+        attemptId:
+          input.attemptId,
+        sessionId:
+          input.sourceSessionId,
+        proposalId:
+          input.sourceProposalId,
+        capabilityId:
+          input.capabilityId,
+        candidateRequestHash:
+          input.candidateDigest,
+        learningLane:
+          "acquisition",
+        riskClass:
+          "low",
+        approvedExecutableIds: [
+          M16_A1_EXECUTABLE_ID
+        ],
+        baselineVersionDigest:
+          activeBefore
+            ?.active_version_digest
+            ? String(
+                activeBefore
+                  .active_version_digest
+              )
+            : undefined
+      });
+
+    const engine =
+      new CapabilityEngine(
+        this.store,
+        {
+          projectRoot:
+            this.projectRoot
+        }
+      );
+
+    const promotion =
+      engine.promote(
+        input.sourceSessionId,
+        input.capabilityId,
+        input.candidateDigest,
+        authorization,
+        `m16-a3-promotion:${input.operatorRequestId}:${input.candidateDigest}`
+      );
+
+    const activeAfter =
+      this.store.recoveryGet(
+        "SELECT active_version_digest, authority_identity FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+        [
+          input.capabilityId,
+          "catalog"
+        ]
+      );
+
+    const versionAfter =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    const promotionAfter =
+      this.store.recoveryGet(
+        "SELECT promotion_id, authorization_id, certification_id FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.candidateDigest
+        ]
+      );
+
+    const activePointerChanged =
+      String(
+        activeBefore
+          ?.active_version_digest ??
+          ""
+      ) !==
+      String(
+        activeAfter
+          ?.active_version_digest ??
+          ""
+      );
+
+    if (
+      String(
+        versionAfter
+          ?.lifecycle_status ??
+          ""
+      ) !== "PROMOTED" ||
+      String(
+        activeAfter
+          ?.active_version_digest ??
+          ""
+      ) !== input.candidateDigest ||
+      String(
+        activeAfter
+          ?.authority_identity ??
+          ""
+      ) !== "control-plane" ||
+      !promotionAfter
+    ) {
+      throw new Error(
+        "M16-A3 post-promotion active-pointer invariant failed."
+      );
+    }
+
+    const evidenceRoot =
+      path.join(
+        this.projectRoot,
+        ".sera",
+        "capability-engine-composition",
+        input.attemptId
+      );
+
+    const evidencePath =
+      writeJson(
+        path.join(
+          evidenceRoot,
+          "m16-a3-promotion.json"
+        ),
+        {
+          schemaVersion:
+            "sera.m16-a3-promotion.v1",
+          attemptId:
+            input.attemptId,
+          operatorRequestId:
+            input.operatorRequestId,
+          sourceProvenance: {
+            proposalId:
+              input.sourceProposalId,
+            sessionId:
+              input.sourceSessionId
+          },
+          capabilityId:
+            input.capabilityId,
+          candidateDigest:
+            input.candidateDigest,
+          certificationId:
+            String(
+              certification
+                .certification_id
+            ),
+          authorizationId:
+            authorization
+              .authorizationId,
+          promotion,
+          before: {
+            activeVersionDigest:
+              activeBefore
+                ?.active_version_digest ??
+              null
+          },
+          after: {
+            lifecycleStatus:
+              "PROMOTED",
+            activeVersionDigest:
+              input.candidateDigest,
+            authorityIdentity:
+              "control-plane"
+          },
+          activePointerChanged,
+          promotionPerformed:
+            true,
+          rollbackPerformed:
+            false,
+          offline:
+            true,
+          publicNetworkUse:
+            false,
+          cloudProviderUse:
+            false,
+          modelUse:
+            false
+        }
+      );
+
+    const evidenceHash =
+      fileSha256(evidencePath);
+
+    const evidenceReferenceId =
+      this.controlPlane
+        .recordEvidenceReference({
+          attemptId:
+            input.attemptId,
+          evidenceType:
+            "m16-a3-explicit-promotion",
+          location:
+            path
+              .relative(
+                this.projectRoot,
+                evidencePath
+              )
+              .replace(/\\/g, "/"),
+          integrityHash:
+            evidenceHash,
+          producer:
+            "governed-capability-engine-composition",
+          metadata: {
+            capabilityId:
+              input.capabilityId,
+            candidateDigest:
+              input.candidateDigest,
+            activeVersionDigest:
+              input.candidateDigest,
+            activePointerChanged,
+            authorizationId:
+              authorization
+                .authorizationId,
+            promotionPerformed:
+              true,
+            rollbackPerformed:
+              false
+          }
+        });
+
+    return {
+      capabilityId:
+        input.capabilityId,
+      candidateDigest:
+        input.candidateDigest,
+      lifecycleStatus:
+        "PROMOTED" as const,
+      promoted:
+        true as const,
+      activeVersionDigest:
+        input.candidateDigest,
+      activePointerChanged,
+      idempotent:
+        false as const,
+      authorizationId:
+        authorization
+          .authorizationId,
+      evidencePath,
+      evidenceHash,
+      evidenceReferenceIds: [
+        evidenceReferenceId
+      ],
+      offline:
+        true as const,
+      publicNetworkUse:
+        false as const,
+      cloudProviderUse:
+        false as const,
+      modelUse:
+        false as const
+    };
+  }
+
+  async executePromotedBoundedCapability(input: {
+    attemptId: string;
+    operatorRequestId: string;
+    capabilityId: string;
+    sourceText: string;
+  }) {
+    this.requireRunningAttempt(
+      input.attemptId,
+      input.capabilityId
+    );
+
+    if (
+      input.capabilityId !==
+      "stable-unique-line-sort-v1"
+    ) {
+      throw new Error(
+        "M16-A3 promoted execution is bounded to stable-unique-line-sort-v1."
+      );
+    }
+
+    const inputBytes =
+      Buffer.byteLength(
+        input.sourceText,
+        "utf8"
+      );
+
+    if (
+      inputBytes >
+      M16_A1_MAX_INPUT_BYTES
+    ) {
+      throw new Error(
+        "M16-A3 promoted execution input exceeds the certified bound."
+      );
+    }
+
+    const active =
+      this.store.recoveryGet(
+        "SELECT active_version_digest, authority_identity FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+        [
+          input.capabilityId,
+          "catalog"
+        ]
+      );
+
+    if (
+      !active ||
+      String(
+        active.authority_identity
+      ) !== "control-plane"
+    ) {
+      throw new Error(
+        "M16-A3 ordinary execution requires a Control Plane-owned active pointer."
+      );
+    }
+
+    const activeDigest =
+      String(
+        active.active_version_digest
+      );
+
+    const version =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status, manifest_json FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          activeDigest
+        ]
+      );
+
+    const certification =
+      this.store.recoveryGet(
+        "SELECT certification_id FROM capability_certifications WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          activeDigest
+        ]
+      );
+
+    const promotion =
+      this.store.recoveryGet(
+        "SELECT promotion_id FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          activeDigest
+        ]
+      );
+
+    if (
+      !version ||
+      String(
+        version.lifecycle_status
+      ) !== "PROMOTED" ||
+      !certification ||
+      !promotion
+    ) {
+      throw new Error(
+        "M16-A3 ordinary execution requires the exact active promoted and certified digest."
+      );
+    }
+
+    const manifest =
+      JSON.parse(
+        String(version.manifest_json)
+      );
+
+    const recipe =
+      manifest
+        .approvedExecutionRecipe;
+
+    const expectedArgs = [
+      M16_A1_OPERATION,
+      "input/source.txt",
+      "out/result.txt",
+      String(
+        M16_A1_MAX_INPUT_BYTES
+      )
+    ];
+
+    if (
+      manifest.capabilityId !==
+        input.capabilityId ||
+      manifest.versionDigest !==
+        activeDigest ||
+      manifest.networkPolicy !==
+        "offline-strict" ||
+      manifest.sideEffects !==
+        "none" ||
+      manifest.modelUsePolicy !==
+        "none" ||
+      recipe?.executableId !==
+        M16_A1_EXECUTABLE_ID ||
+      recipe?.shell !== false ||
+      JSON.stringify(
+        recipe?.args
+      ) !==
+        JSON.stringify(
+          expectedArgs
+        )
+    ) {
+      throw new Error(
+        "M16-A3 active promoted manifest does not match the certified bounded execution recipe."
+      );
+    }
+
+    const executable =
+      createDefaultExecutableRegistry()
+        .get(
+          M16_A1_EXECUTABLE_ID
+        );
+
+    if (
+      !executable.offlineCompatible ||
+      executable.networkCapable
+    ) {
+      throw new Error(
+        "M16-A3 promoted executable is not offline-safe."
+      );
+    }
+
+    executable.validateArgs(
+      expectedArgs
+    );
+
+    const request: ExecutionRequest = {
+      executionId:
+        randomId(
+          "m16_a3_reattempt_exec"
+        ),
+      attemptId:
+        input.attemptId,
+      authorizationId:
+        randomId(
+          "m16_a3_reattempt_auth"
+        ),
+      executableId:
+        M16_A1_EXECUTABLE_ID,
+      args:
+        expectedArgs,
+      inputs: [
+        {
+          id: "source",
+          sourceType:
+            "inline-text",
+          workspacePath:
+            "input/source.txt",
+          content:
+            input.sourceText
+        }
+      ],
+      outputs: [
+        {
+          id: "result",
+          workspacePath:
+            "out/result.txt",
+          required:
+            true
+        }
+      ],
+      workingDirectory:
+        ".",
+      environmentProfile:
+        "offline-minimal",
+      timeoutMs:
+        5000,
+      gracefulCancellationMs:
+        100,
+      maxStdoutBytes:
+        16384,
+      maxStderrBytes:
+        16384,
+      maxCombinedOutputBytes:
+        32768,
+      expectedExitCodes:
+        [0],
+      networkPolicy:
+        "offline-strict",
+      cleanupPolicy:
+        "delete-workspace",
+      correlation: {
+        operatorRequestId:
+          input.operatorRequestId,
+        capabilityId:
+          input.capabilityId,
+        activeVersionDigest:
+          activeDigest,
+        m16Checkpoint:
+          "M16-A3"
+      }
+    };
+
+    const executionAuthority =
+      this.controlPlane
+        .requireExecutionAuthority();
+
+    const execution =
+      await executionAuthority
+        .execute(
+          request,
+          createExecutionAuthorization({
+            request,
+            requiredGateRefs: [
+              "m16-a3-active-promoted-capability-gate"
+            ],
+            completedGateRefs: [
+              "m16-a3-active-promoted-capability-gate"
+            ]
+          })
+        );
+
+    const output =
+      execution.outputs.find(
+        (candidate) =>
+          candidate.id ===
+          "result"
+      );
+
+    if (
+      execution.ok !== true ||
+      execution.status !==
+        "SUCCEEDED_PROCESS" ||
+      execution
+        .workspaceOutsideRepository !==
+        true ||
+      execution.cleanup.cleaned !==
+        true ||
+      execution.sourceNotMutated !==
+        true ||
+      execution
+        .attemptSuccessManufactured !==
+        false ||
+      execution
+        .undeclaredOutputs.length !==
+        0 ||
+      output?.status !==
+        "harvested" ||
+      !output.evidenceReference
+    ) {
+      throw new Error(
+        "M16-A3 promoted capability execution did not satisfy required evidence conditions."
+      );
+    }
+
+    const outputPath =
+      path.join(
+        execution.evidenceRoot,
+        output.evidenceReference
+      );
+
+    const actualOutput =
+      fs.readFileSync(
+        outputPath,
+        "utf8"
+      );
+
+    const evidenceRoot =
+      path.join(
+        this.projectRoot,
+        ".sera",
+        "capability-engine-composition",
+        input.attemptId
+      );
+
+    const evidencePath =
+      writeJson(
+        path.join(
+          evidenceRoot,
+          "m16-a3-promoted-task-reattempt.json"
+        ),
+        {
+          schemaVersion:
+            "sera.m16-a3-promoted-task-reattempt.v1",
+          attemptId:
+            input.attemptId,
+          operatorRequestId:
+            input.operatorRequestId,
+          capabilityId:
+            input.capabilityId,
+          activeVersionDigest:
+            activeDigest,
+          lifecycleStatus:
+            "PROMOTED",
+          certificationId:
+            String(
+              certification
+                .certification_id
+            ),
+          promotionId:
+            String(
+              promotion
+                .promotion_id
+            ),
+          executable: {
+            id:
+              executable.id,
+            fingerprint:
+              executable.fingerprint
+          },
+          input: {
+            bytes:
+              inputBytes,
+            sha256:
+              digest(
+                input.sourceText
+              )
+          },
+          output: {
+            value:
+              actualOutput,
+            sha256:
+              output.hash
+          },
+          executionId:
+            execution.executionId,
+          workspaceOutsideRepository:
+            execution
+              .workspaceOutsideRepository,
+          cleanupCleaned:
+            execution.cleanup.cleaned,
+          sourceNotMutated:
+            execution.sourceNotMutated,
+          attemptSuccessManufactured:
+            execution
+              .attemptSuccessManufactured,
+          undeclaredOutputCount:
+            execution
+              .undeclaredOutputs.length,
+          rollbackPerformed:
+            false,
+          offline:
+            true,
+          publicNetworkUse:
+            false,
+          cloudProviderUse:
+            false,
+          modelUse:
+            false
+        }
+      );
+
+    const evidenceHash =
+      fileSha256(evidencePath);
+
+    const evidenceReferenceId =
+      this.controlPlane
+        .recordEvidenceReference({
+          attemptId:
+            input.attemptId,
+          evidenceType:
+            "m16-a3-promoted-task-reattempt",
+          location:
+            path
+              .relative(
+                this.projectRoot,
+                evidencePath
+              )
+              .replace(/\\/g, "/"),
+          integrityHash:
+            evidenceHash,
+          producer:
+            "governed-capability-engine-composition",
+          metadata: {
+            capabilityId:
+              input.capabilityId,
+            activeVersionDigest:
+              activeDigest,
+            executionId:
+              execution.executionId,
+            outputHash:
+              output.hash
+          }
+        });
+
+    return {
+      capabilityId:
+        input.capabilityId,
+      activeVersionDigest:
+        activeDigest,
+      lifecycleStatus:
+        "PROMOTED" as const,
+      executionId:
+        execution.executionId,
+      output:
+        actualOutput,
+      outputHash:
+        output.hash,
+      evidencePath,
+      evidenceHash,
+      evidenceReferenceId,
+      offline:
+        true as const,
       publicNetworkUse:
         false as const,
       cloudProviderUse:

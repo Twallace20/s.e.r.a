@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "sera.m16-a3-local-validation.v1",
+  "checkpoint": "M16-A3",
+  "title": "Explicit promotion and real task reattempt",
+  "status": "LOCALLY_VALIDATED",
+  "milestone": "M16",
+  "subGate": "M16-A3",
+  "recordedAt": "2026-08-26T19:47:52.3798858Z",
+  "source": {
+    "branch": "sera/runtime-capability-composition-v1",
+    "baselineCommit": "3f71d9f69f939178f11c05f75c6544f73ebb63b7",
+    "remoteAlignmentAtBaseline": true,
+    "implementationCommit": null,
+    "certificationCommit": null
+  },
+  "scope": {
+    "m16A1": "CERTIFIED",
+    "m16A2": "CERTIFIED",
+    "m16A3": "LOCALLY_VALIDATED",
+    "m16A4": "NOT_STARTED",
+    "m16A": "NOT_YET_CERTIFIED",
+    "m16B": "NOT_STARTED",
+    "m16C": "NOT_STARTED",
+    "m16": "NOT_YET_CERTIFIED"
+  },
+  "acceptance": {
+    "exactCertifiedCandidateDigestSelected": true,
+    "explicitPromotionAuthorityRequired": true,
+    "promotionAuthorizationMintedInsideGovernedComposition": true,
+    "productControlPlaneAttemptRequired": true,
+    "atomicActivePointerChange": true,
+    "activePointerOwnedByControlPlane": true,
+    "promotedLifecycleReached": true,
+    "originalPreviouslyUnsatisfiedObjectiveReattempted": true,
+    "originalObjectiveNowSatisfied": true,
+    "noSecondCandidateCreatedOnSatisfiedReattempt": true,
+    "promotedCapabilityExecutedThroughExecutionAuthority": true,
+    "exactActiveDigestVerifiedBeforeExecution": true,
+    "deterministicTaskOutputVerified": true,
+    "desktopOperatorPromotionControlPresent": true,
+    "immutablePromotionEvidenceProduced": true,
+    "immutableReattemptEvidenceProduced": true,
+    "rollbackPerformed": false,
+    "rollbackDeferredToM16A4": true,
+    "publicNetworkUse": false,
+    "cloudProviderUse": false,
+    "modelUse": false,
+    "externalPackageAcquisition": false
+  },
+  "validation": {
+    "build": {
+      "command": "npm run build",
+      "result": "PASS"
+    },
+    "focusedM16": {
+      "command": "npm exec --offline -- vitest run tests/m16-usable-governed-capability-acquisition-v1.test.ts",
+      "testFilesPassed": 1,
+      "testsPassed": 17,
+      "testsFailed": 0,
+      "result": "PASS"
+    },
+    "capabilityEngine": {
+      "command": "npm exec --offline -- vitest run tests/capability-engine-recursive-learning-v1.test.ts",
+      "testFilesPassed": 1,
+      "testsPassed": 143,
+      "testsFailed": 0,
+      "result": "PASS"
+    },
+    "governedComposition": {
+      "command": "npm exec --offline -- vitest run tests/governed-capability-engine-composition-v1.test.ts",
+      "testFilesPassed": 1,
+      "testsPassed": 1,
+      "testsFailed": 0,
+      "result": "PASS"
+    },
+    "desktopOperator": {
+      "command": "npm exec --offline -- vitest run tests/desktop-operator-v1.test.ts --hookTimeout=60000",
+      "testFilesPassed": 1,
+      "testsPassed": 236,
+      "testsFailed": 0,
+      "result": "PASS"
+    },
+    "directTestTotals": {
+      "testsPassed": 397,
+      "testsFailed": 0,
+      "result": "PASS"
+    },
+    "diffCheck": "PASS",
+    "cachedDiffCheck": "PASS",
+    "worktreeBoundary": "PASS"
+  },
+  "implementationBoundary": {
+    "modifiedTrackedFiles": [
+      "apps/desktop-operator/src/index.ts",
+      "packages/operator-gateway/src/operator-gateway.ts",
+      "packages/runtime-capability-composition/src/governed-capability-engine-composition.ts",
+      "tests/m16-usable-governed-capability-acquisition-v1.test.ts"
+    ],
+    "protectedUntrackedArtifactsPreserved": [
+      "evidence/milestone-5/knowledge-intake-snapshot-proof.json",
+      "evidence/milestone-5/latest/.work/",
+      "m5-07-capture.cjs",
+      "m5-07-final-capture.cjs",
+      "m5-07-snapshot-capture.cjs"
+    ],
+    "stagedFilesAtValidation": []
+  },
+  "productBehavior": {
+    "capabilityId": "stable-unique-line-sort-v1",
+    "requestedOperation": "stable-unique-line-sort",
+    "originalGapBeforeAcquisition": "UNSATISFIED",
+    "lifecycleAfterA2": "CERTIFIED",
+    "lifecycleAfterPromotion": "PROMOTED",
+    "reattemptGapStatus": "SATISFIED",
+    "reattemptCandidateCreated": false,
+    "executionInput": "beta\nalpha\nbeta\n",
+    "expectedOutput": "alpha\nbeta",
+    "actualOutput": "alpha\nbeta",
+    "promotionPerformed": true,
+    "rollbackPerformed": false
+  },
+  "governance": {
+    "operatorGatewayDirectCapabilityEnginePromotion": false,
+    "operatorGatewayDirectPromotionAuthorizationMinting": false,
+    "governedCompositionOwnsCapabilityEnginePromotionCall": true,
+    "controlPlaneAuthorityRetained": true,
+    "exactDigestBindingRetained": true,
+    "certificationDistinctFromPromotion": true,
+    "rollbackOutsideCheckpoint": true
+  },
+  "unresolvedBlockers": [],
+  "nextAuthorizedGate": "M16-A3 implementation/evidence commit, push, exact remote verification, then separate certification record"
+}

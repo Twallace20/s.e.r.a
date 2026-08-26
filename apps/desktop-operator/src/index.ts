@@ -420,6 +420,81 @@ export const DESKTOP_OPERATOR_JS = `
       target.textContent = binding.blockedState;
     }
   }
+  async function submitCapabilityPromotion(approval) {
+    const confirmed =
+      window.confirm(
+        "Promote this exact certified candidate? Promotion changes the active capability pointer. Rollback remains a separate governed action."
+      );
+
+    if (!confirmed) {
+      status.textContent =
+        "Promotion cancelled.";
+      return;
+    }
+
+    try {
+      await ensureSession();
+
+      status.textContent =
+        "Promoting exact certified candidate...";
+
+      const response =
+        await fetch(
+          "/api/v1/operator/capability-promotions",
+          {
+            method: "POST",
+            headers: {
+              ...authHeaders(true),
+              "Content-Type":
+                "application/json"
+            },
+            body:
+              JSON.stringify({
+                approvalId:
+                  approval.approval_id,
+                approvalIntegrityHash:
+                  approval.integrity_hash,
+                idempotencyKey:
+                  "desktop-m16-a3-promotion:" +
+                  approval.approval_id
+              })
+          }
+        );
+
+      const payload =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !payload.ok ||
+        payload.data?.status ===
+          "BLOCKED"
+      ) {
+        throw new Error(
+          payload.safeMessage ||
+          payload.data
+            ?.safeMessage ||
+          "Promotion failed."
+        );
+      }
+
+      status.textContent =
+        "Promotion completed. Active digest: " +
+        (
+          payload.data
+            .activeVersionDigest ||
+          "unknown"
+        ) +
+        ". Use the governed request path to run the promoted capability.";
+
+      await refreshApprovals();
+    } catch (error) {
+      status.textContent =
+        error instanceof Error
+          ? error.message
+          : "Promotion failed.";
+    }
+  }
   async function submitApprovalDecision(approval, decision) {
     const confirmed = window.confirm(
       decision === "APPROVED"
@@ -612,6 +687,49 @@ export const DESKTOP_OPERATOR_JS = `
           block.appendChild(actions);
         }
 
+        if (
+          approval.status === "APPROVED" &&
+          String(
+            approval.summary || ""
+          ).startsWith(
+            "M16-A2 certification review"
+          )
+        ) {
+          const promotionActions =
+            document.createElement(
+              "div"
+            );
+
+          promotionActions.className =
+            "operator-approval-actions";
+
+          const promote =
+            document.createElement(
+              "button"
+            );
+
+          promote.type =
+            "button";
+          promote.textContent =
+            "Promote certified candidate";
+
+          promote.addEventListener(
+            "click",
+            () =>
+              submitCapabilityPromotion(
+                approval
+              )
+          );
+
+          promotionActions
+            .appendChild(
+              promote
+            );
+
+          block.appendChild(
+            promotionActions
+          );
+        }
         target.appendChild(block);
       }
     } catch {
