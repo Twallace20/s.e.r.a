@@ -4,7 +4,7 @@
   "productBoundary": "S.E.R.A. Base MVP",
   "milestone": 16,
   "subGate": "M16-A2",
-  "status": "LOCALLY_VALIDATED",
+  "status": "CERTIFIED",
   "purpose": "Prove governed evaluation, reproducibility, operator review, and explicit certification or rejection of the exact inactive M16-A1 candidate without promotion or active-pointer mutation.",
   "acceptanceContract": [
     "exact inactive candidate digest selected",
@@ -22,8 +22,8 @@
   ],
   "baselineCommit": "c172f5c8a66790b8790d9b592c416ed364acee5c",
   "branch": "sera/runtime-capability-composition-v1",
-  "remoteState": "aligned-through-certified-M16-A1-baseline; A2 implementation/evidence not yet committed or pushed",
-  "m16A2": "LOCALLY_VALIDATED",
+  "remoteState": "implementation/evidence remotely aligned at 7ccac6be46c8747b61279a6bffa9b3340e0e55b7; certification record pending certification commit",
+  "m16A2": "CERTIFIED",
   "m16A": "NOT_YET_CERTIFIED",
   "m16B": "NOT_YET_CERTIFIED",
   "m16C": "NOT_YET_CERTIFIED",
@@ -49,14 +49,7 @@
     "offline no-public-network no-cloud no-model decision path",
     "build plus 460 direct tests passing"
   ],
-  "remainingRequirements": [
-    "create implementation and local-evidence commit",
-    "push implementation/evidence commit",
-    "verify remote exact implementation/evidence SHA",
-    "create separate certification record bound to actual implementation/evidence commit SHA",
-    "commit and push certification record",
-    "verify remote exact certification SHA"
-  ],
+  "remainingRequirements": [],
   "validationRecord": "evidence/milestone-16/checkpoints/M16-A2-LOCAL-VALIDATION.json",
   "validationRecordSha256": "c357e49f5bc314d6973226711a62ba8faf7f1ecc4da1bdde9852d11b8e67bf19",
   "validation": {
@@ -69,6 +62,11 @@
     "directTestsTotal": "460/460 PASS"
   },
   "unresolvedBlockers": [],
-  "nextAuthorizedAction": "Create the M16-A2 implementation/evidence commit without including protected unrelated M5-07 artifacts; push and verify the exact commit SHA before writing the certification record.",
-  "timestamp": "2026-08-17T16:06:26.9924339-07:00"
+  "nextAuthorizedAction": "Advance to M16-A3: explicit exact-digest promotion through Product Control Plane authority followed by real reattempt of the original previously-unsatisfied task.",
+  "timestamp": "2026-08-26T10:08:30.6986648-07:00",
+  "implementationEvidenceCommit": "7ccac6be46c8747b61279a6bffa9b3340e0e55b7",
+  "remoteImplementationEvidenceCommit": "7ccac6be46c8747b61279a6bffa9b3340e0e55b7",
+  "implementationRemoteAligned": true,
+  "certificationRecord": "evidence/milestone-16/checkpoints/M16-A2-CERTIFICATION.json",
+  "certificationRecordSha256": "64d1b3ad5f1acf05b5100a41bc9225e503cb168519a82a5c22eff9cec2377600"
 }

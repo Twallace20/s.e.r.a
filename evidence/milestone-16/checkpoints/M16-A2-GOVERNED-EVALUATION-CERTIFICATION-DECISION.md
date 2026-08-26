@@ -2,57 +2,36 @@
 
 - **Checkpoint ID:** M16-A2-GOVERNED-EVALUATION-CERTIFICATION-DECISION
 - **Milestone:** 16
-- **Status:** LOCALLY_VALIDATED
-- **Baseline:** c172f5c8a66790b8790d9b592c416ed364acee5c
-- **Branch:** sera/runtime-capability-composition-v1
-- **Remote state:** aligned through certified M16-A1 baseline; A2 remains local/uncommitted
+- **Status:** CERTIFIED
+- **Implementation/evidence commit:** `7ccac6be46c8747b61279a6bffa9b3340e0e55b7`
+- **Remote implementation/evidence commit:** `7ccac6be46c8747b61279a6bffa9b3340e0e55b7`
+- **Implementation remote aligned:** YES
+- **Local-validation SHA-256:** `c357e49f5bc314d6973226711a62ba8faf7f1ecc4da1bdde9852d11b8e67bf19`
+- **Certification-record SHA-256:** `64d1b3ad5f1acf05b5100a41bc9225e503cb168519a82a5c22eff9cec2377600`
 
-## Acceptance result
+## Certified acceptance result
 
-A1 inactive candidate → governed evaluation → two independent executions/evaluations → reproducibility → permissions/limitations/risk surfaced → HIGH operator review → explicit APPROVE or REJECT → Control Plane-owned finalization → CERTIFIED or REJECTED → no promotion → active pointer unchanged → restart persistence.
+`A1 inactive candidate → governed evaluation → two independent executions/evaluations → reproducibility → permissions/limitations/risk surfaced → HIGH operator review → explicit APPROVE or REJECT → Control Plane-owned finalization → CERTIFIED or REJECTED → no promotion → active pointer unchanged → restart persistence`
 
-All M16-A2 acceptance requirements are locally demonstrated.
+M16-A2 is **CERTIFIED**.
 
-## Locally validated behavior
+## Certification basis
 
-### Evaluation and review
+The certification is bound to the actual implementation/evidence commit:
 
-- The exact inactive A1 candidate digest is selected.
-- Two independent governed executions and evaluations are performed.
-- Expected-versus-actual evidence is persisted.
-- Reproducibility is calculated and bound into the review packet.
-- Candidate permissions, limitations, risk, executable identity, and review evidence are surfaced.
-- Candidate remains inactive while awaiting the operator.
+`7ccac6be46c8747b61279a6bffa9b3340e0e55b7`
 
-### Operator governance
+The remote branch matched that exact SHA before this certification record was created.
 
-- Review is represented as a durable HIGH-risk approval.
-- Approval is bound to the exact candidate digest and exact review-packet SHA-256.
-- HIGH-risk second confirmation is required.
-- Approval/rejection is performed through the authenticated local Operator Gateway.
-- The Desktop Operator contains the real approval queue plus explicit Approve certification and Reject candidate controls.
+The immutable local-validation record is:
 
-### Approval result
+`evidence/milestone-16/checkpoints/M16-A2-LOCAL-VALIDATION.json`
 
-APPROVED transitions only the exact reviewed digest from CANDIDATE to CERTIFIED.
+SHA-256:
 
-Certification does not call promotion, does not mutate the active pointer, and does not make the candidate selectable for ordinary execution.
+`c357e49f5bc314d6973226711a62ba8faf7f1ecc4da1bdde9852d11b8e67bf19`
 
-### Rejection result
-
-REJECTED transitions only the exact reviewed digest to terminal REJECTED.
-
-The rejected digest has no certification, no promotion, and no active pointer.
-
-### Restart persistence
-
-The focused proof intentionally restarts the Operator Gateway after review creation but before the operator decision.
-
-Both APPROVED and REJECTED decisions complete after restart from durable Runtime State and persisted review binding.
-
-A subsequent Runtime State reopen preserves the resulting lifecycle and operator decision.
-
-## Validation
+Validation:
 
 - TypeScript build: PASS
 - Focused M16-A2 product path: 16/16 PASS
@@ -61,32 +40,72 @@ A subsequent Runtime State reopen preserves the resulting lifecycle and operator
 - Evaluation Engine: 64/64 PASS
 - Governed Capability composition: 1/1 PASS
 - Direct validation total: 460/460 PASS
-- Latest post-cleanup Desktop regression: 236/236 PASS
 
-Validation record:
+## Certified behavior
 
-evidence/milestone-16/checkpoints/M16-A2-LOCAL-VALIDATION.json
+### Evaluation
 
-SHA-256:
+- Exact inactive candidate digest selected.
+- Two independent governed execution/evaluation runs.
+- Expected-versus-actual evidence persisted.
+- Deterministic reproducibility established.
+- Permissions, limitations, risk, executable identity, and evidence surfaced.
 
-c357e49f5bc314d6973226711a62ba8faf7f1ecc4da1bdde9852d11b8e67bf19
+### Operator decision
 
-## Certification boundary
+- Review is represented by a durable HIGH-risk approval.
+- Approval is bound to the exact candidate digest and review-packet SHA-256.
+- Second confirmation is mandatory.
+- Decision occurs through the authenticated local Operator Gateway and Desktop Operator.
 
-M16-A2 is LOCALLY_VALIDATED, not yet CERTIFIED.
+### Approved path
 
-M16-A, M16-B, M16-C, and Milestone 16 remain NOT YET CERTIFIED.
+APPROVED transitions the exact reviewed digest to `CERTIFIED`.
 
-No claim of A2 remote alignment is made yet.
+It does not promote the capability.
 
-The next authorized sequence is:
+It does not change the active pointer.
 
-1. create the implementation/evidence commit;
-2. push it;
-3. verify the exact remote SHA;
-4. create a separate M16-A2 certification record bound to that real implementation/evidence SHA;
-5. commit/push the certification record and verify remote alignment.
+It does not make the candidate selectable for ordinary execution.
+
+### Rejected path
+
+REJECTED transitions the exact reviewed digest to terminal `REJECTED`.
+
+No certification, promotion, or active pointer exists for that rejected digest.
+
+### Persistence
+
+A Gateway restart between evaluation and decision is certified.
+
+Decision and resulting lifecycle survive subsequent Runtime State reopen.
+
+## Scope boundary
+
+- **M16-A2:** CERTIFIED
+- **M16-A:** NOT YET CERTIFIED
+- **M16-A3:** NOT STARTED
+- **M16-A4:** NOT STARTED
+- **M16-B:** NOT YET CERTIFIED
+- **M16-C:** NOT YET CERTIFIED
+- **Milestone 16:** NOT YET CERTIFIED
+
+Certification of A2 does not authorize implicit activation.
+
+## Next authorized gate
+
+**M16-A3 — Explicit Promotion + Real Task Reattempt**
+
+The next implementation must prove:
+
+1. exact certified candidate digest selected;
+2. promotion requires explicit Product Control Plane authority;
+3. active pointer changes atomically;
+4. the original previously-unsatisfied operator task is reattempted;
+5. the promoted capability actually satisfies that task;
+6. promotion/use lifecycle is visible through Desktop Operator;
+7. rollback remains M16-A4 scope.
 
 ## Protected unrelated worktree artifacts
 
-The pre-existing M5-07 artifacts remain outside this checkpoint and must not be staged, deleted, or modified as part of M16-A2.
+The pre-existing M5-07 artifacts remain unrelated and are excluded from M16-A2 certification.
