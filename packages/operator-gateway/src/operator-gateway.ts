@@ -1814,6 +1814,333 @@ export class OperatorGateway {
       return blocked;
     }
   }
+  async rollbackPromotedBoundedCapability(input: {
+    sessionId: string;
+    sourceProposalId: string;
+    sourceSessionId: string;
+    capabilityId: string;
+    currentDigest: string;
+    targetDigest: string;
+    reason: string;
+    regressionEvidencePath: string;
+    regressionEvidenceHash: string;
+    idempotencyKey: string;
+  }) {
+    const request =
+      this.composeRequest({
+        sessionId:
+          input.sessionId,
+        category:
+          "review-approval",
+        text:
+          `Rollback M16-A4 promoted repair ${input.currentDigest} to certified baseline ${input.targetDigest}.`,
+        idempotencyKey:
+          input.idempotencyKey
+      });
+
+    const existing =
+      this.get(
+        "SELECT status, response_json FROM operator_requests WHERE request_id = ?",
+        [
+          request.requestId
+        ]
+      );
+
+    if (
+      existing &&
+      String(
+        existing.status
+      ) !== "QUEUED"
+    ) {
+      return JSON.parse(
+        String(
+          existing.response_json
+        )
+      );
+    }
+
+    const command =
+      this.productControlPlane
+        .acceptCommand({
+          idempotencyKey:
+            `operator-capability-rollback:${request.requestId}`,
+          commandType:
+            "m16-a4-governed-rollback",
+          payload: {
+            operatorRequestId:
+              request.requestId,
+            sourceProposalId:
+              input.sourceProposalId,
+            sourceSessionId:
+              input.sourceSessionId,
+            capabilityId:
+              input.capabilityId,
+            currentDigest:
+              input.currentDigest,
+            targetDigest:
+              input.targetDigest,
+            reason:
+              input.reason,
+            regressionEvidencePath:
+              input.regressionEvidencePath,
+            regressionEvidenceHash:
+              input.regressionEvidenceHash
+          },
+          capability:
+            input.capabilityId
+        });
+
+    if (!command.attemptId) {
+      throw new OperatorGatewayBlockedError(
+        "Runtime State did not create the M16-A4 rollback attempt.",
+        "m16_a4_rollback_attempt_missing"
+      );
+    }
+
+    const attemptId =
+      command.attemptId;
+
+    this.productControlPlane
+      .transitionAttempt({
+        attemptId,
+        fromState:
+          "PENDING",
+        toState:
+          "RUNNING",
+        actor:
+          "control-plane",
+        reason:
+          "M16-A4 explicit operator rollback request opened.",
+        correlation: {
+          operatorRequestId:
+            request.requestId,
+          capabilityId:
+            input.capabilityId,
+          currentDigest:
+            input.currentDigest,
+          targetDigest:
+            input.targetDigest,
+          regressionEvidenceHash:
+            input.regressionEvidenceHash
+        }
+      });
+
+    try {
+      const rollback =
+        await this
+          .governedCapabilityEngineComposition
+          .rollbackPromotedBoundedCapability({
+            attemptId,
+            operatorRequestId:
+              request.requestId,
+            sourceProposalId:
+              input.sourceProposalId,
+            sourceSessionId:
+              input.sourceSessionId,
+            capabilityId:
+              input.capabilityId,
+            currentDigest:
+              input.currentDigest,
+            targetDigest:
+              input.targetDigest,
+            reason:
+              input.reason,
+            regressionEvidencePath:
+              input.regressionEvidencePath,
+            regressionEvidenceHash:
+              input.regressionEvidenceHash
+          });
+
+      this.productControlPlane
+        .recordGateOutcome({
+          attemptId,
+          gateName:
+            "m16-a4-explicit-exact-digest-rollback",
+          required:
+            true,
+          outcome:
+            "PASS",
+          evidenceReferences:
+            rollback
+              .evidenceReferenceIds,
+          evaluator:
+            "governed-capability-engine-composition",
+          message:
+            "Explicit Product Control Plane rollback restored the exact prior certified digest using bound deterministic regression evidence."
+        });
+
+      this.productControlPlane
+        .transitionAttempt({
+          attemptId,
+          fromState:
+            "RUNNING",
+          toState:
+            "COMPLETED",
+          actor:
+            "control-plane",
+          reason:
+            "M16-A4 explicit governed rollback completed.",
+          correlation: {
+            capabilityId:
+              input.capabilityId,
+            currentDigest:
+              rollback.currentDigest,
+            targetDigest:
+              rollback.targetDigest,
+            activeVersionDigest:
+              rollback.activeVersionDigest,
+            rollbackId:
+              rollback.rollbackId
+          }
+        });
+
+      const response = {
+        ...request,
+        status:
+          "COMPLETED" as const,
+        attemptId,
+        capabilityId:
+          rollback.capabilityId,
+        currentDigest:
+          rollback.currentDigest,
+        targetDigest:
+          rollback.targetDigest,
+        activeVersionDigest:
+          rollback.activeVersionDigest,
+        targetLifecycleStatus:
+          rollback.targetLifecycleStatus,
+        currentLifecycleStatus:
+          rollback.currentLifecycleStatus,
+        authorizationId:
+          rollback.authorizationId,
+        rollbackId:
+          rollback.rollbackId,
+        regressionEvidencePath:
+          rollback.regressionEvidencePath,
+        regressionEvidenceHash:
+          rollback.regressionEvidenceHash,
+        rollbackEvidencePath:
+          rollback.evidencePath,
+        rollbackEvidenceHash:
+          rollback.evidenceHash,
+        rollbackPerformed:
+          rollback.rollbackPerformed,
+        exactRollbackRecord:
+          rollback.exactRollbackRecord,
+        pointerAuthorityPreserved:
+          rollback.pointerAuthorityPreserved,
+        catalogRestoredPromoted:
+          rollback.catalogRestoredPromoted,
+        offline:
+          true as const,
+        publicNetworkUse:
+          false as const,
+        cloudProviderUse:
+          false as const,
+        modelUse:
+          false as const
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+        [
+          "COMPLETED",
+          this.nowIso(),
+          JSON.stringify(response),
+          `control-plane:attempt:${attemptId}`,
+          request.requestId
+        ]
+      );
+
+      this.event(
+        "m16_a4_rollback_completed",
+        {
+          requestId:
+            request.requestId,
+          attemptId,
+          capabilityId:
+            rollback.capabilityId,
+          currentDigest:
+            rollback.currentDigest,
+          targetDigest:
+            rollback.targetDigest,
+          activeVersionDigest:
+            rollback.activeVersionDigest,
+          rollbackId:
+            rollback.rollbackId
+        }
+      );
+
+      return response;
+    } catch (error) {
+      const state =
+        this.productControlPlane
+          .recoveryGet(
+            "SELECT current_state FROM attempts WHERE attempt_id = ?",
+            [
+              attemptId
+            ]
+          );
+
+      if (
+        String(
+          state?.current_state ??
+          ""
+        ) === "RUNNING"
+      ) {
+        this.productControlPlane
+          .transitionAttempt({
+            attemptId,
+            fromState:
+              "RUNNING",
+            toState:
+              "BLOCKED",
+            actor:
+              "control-plane",
+            reason:
+              error instanceof Error
+                ? error.message
+                : "M16-A4 rollback failed."
+          });
+      }
+
+      const blocked = {
+        ...request,
+        status:
+          "BLOCKED" as const,
+        attemptId,
+        failureCode:
+          "m16_a4_rollback_blocked",
+        safeMessage:
+          error instanceof Error
+            ? error.message
+            : "M16-A4 rollback failed.",
+        rollbackPerformed:
+          false as const,
+        offline:
+          true as const,
+        publicNetworkUse:
+          false as const,
+        cloudProviderUse:
+          false as const,
+        modelUse:
+          false as const
+      };
+
+      this.run(
+        "UPDATE operator_requests SET status = ?, completed_at = ?, response_json = ?, governed_reference = ? WHERE request_id = ?",
+        [
+          "BLOCKED",
+          this.nowIso(),
+          JSON.stringify(blocked),
+          `control-plane:attempt:${attemptId}`,
+          request.requestId
+        ]
+      );
+
+      return blocked;
+    }
+  }
   async queueBoundedCandidateReview(input: {
     sessionId: string;
     sourceProposalId: string;
@@ -2431,6 +2758,96 @@ export class OperatorGateway {
   approvals() { return this.all("SELECT approval_id, request_id, status, risk_class, summary, integrity_hash, created_at, decided_at FROM operator_approvals ORDER BY created_at"); }
   notifications() { return this.all("SELECT notification_id, notification_type, severity, message, status, created_at FROM operator_notifications ORDER BY created_at"); }
   events() { return this.all("SELECT event_id, sequence, event_type, created_at, payload_json FROM operator_events ORDER BY sequence"); }
+  capabilityLifecycleHistory(
+    capabilityId:
+      string =
+        "stable-unique-line-sort-v1"
+  ) {
+    if (
+      capabilityId !==
+      "stable-unique-line-sort-v1"
+    ) {
+      throw new OperatorGatewayBlockedError(
+        "Capability lifecycle inspection is bounded to stable-unique-line-sort-v1.",
+        "unsupported_capability_lifecycle_inspection"
+      );
+    }
+
+    const active =
+      this.get(
+        "SELECT * FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+        [
+          capabilityId,
+          "catalog"
+        ]
+      );
+
+    const catalog =
+      this.get(
+        "SELECT * FROM capability_catalog WHERE capability_id = ?",
+        [
+          capabilityId
+        ]
+      );
+
+    const versions =
+      this.all(
+        "SELECT * FROM capability_versions WHERE capability_id = ?",
+        [
+          capabilityId
+        ]
+      );
+
+    const certifications =
+      this.all(
+        "SELECT * FROM capability_certifications WHERE capability_id = ?",
+        [
+          capabilityId
+        ]
+      );
+
+    const promotions =
+      this.all(
+        "SELECT * FROM capability_promotions WHERE capability_id = ?",
+        [
+          capabilityId
+        ]
+      );
+
+    const rollbacks =
+      this.all(
+        "SELECT * FROM capability_rollbacks WHERE capability_id = ?",
+        [
+          capabilityId
+        ]
+      );
+
+    return {
+      schemaVersion:
+        "sera.desktop-capability-lifecycle.v1" as const,
+      capabilityId,
+      active,
+      catalog,
+      versions,
+      certifications,
+      promotions,
+      rollbacks,
+      lifecycleVisible:
+        true as const,
+      historyVisible:
+        true as const,
+      readOnly:
+        true as const,
+      mutationAuthority:
+        "none" as const,
+      authority:
+        "control-plane" as const,
+      modelUse:
+        false as const,
+      publicNetworkUse:
+        false as const
+    };
+  }
   studioCatalog() { return this.studioRuntime.catalog(); }
   studioPolicy() { return this.studioRuntime.policy(); }
   studioSessions() { return this.studioRuntime.sessions(); }
@@ -2467,6 +2884,26 @@ export class OperatorGateway {
           return sendJson(
             response,
             envelope(true, { requests: this.requests() })
+          );
+        }
+        if (
+          url.pathname ===
+          "/api/v1/operator/capabilities/stable-unique-line-sort-v1/lifecycle"
+        ) {
+          this.validateSession(
+            headersObject(
+              request.headers
+            )
+          );
+
+          return sendJson(
+            response,
+            envelope(
+              true,
+              this.capabilityLifecycleHistory(
+                "stable-unique-line-sort-v1"
+              )
+            )
           );
         }
         if (url.pathname === "/api/v1/operator/approvals") {
@@ -2631,6 +3068,137 @@ export class OperatorGateway {
                     String(
                       body.idempotencyKey ??
                         `m16-a3-promotion:${approvalId}`
+                    )
+                });
+
+            sendJson(
+              response,
+              envelope(
+                true,
+                result
+              )
+            );
+          })
+          .catch(
+            (error) =>
+              this.error(
+                response,
+                error
+              )
+          );
+
+        return;
+      }
+
+      if (
+        request.method === "POST" &&
+        url.pathname === "/api/v1/operator/capability-rollbacks"
+      ) {
+        requireExactOrigin(
+          request.headers.origin,
+          this.boundPort()
+        );
+
+        const session =
+          this.validateSession(
+            headersObject(
+              request.headers
+            ),
+            true
+          );
+
+        void readJson(request)
+          .then(async (body) => {
+            const sourceProposalId =
+              String(
+                body.sourceProposalId ??
+                  ""
+              );
+
+            const sourceSessionId =
+              String(
+                body.sourceSessionId ??
+                  ""
+              );
+
+            const capabilityId =
+              String(
+                body.capabilityId ??
+                  ""
+              );
+
+            const currentDigest =
+              String(
+                body.currentDigest ??
+                  ""
+              );
+
+            const targetDigest =
+              String(
+                body.targetDigest ??
+                  ""
+              );
+
+            const reason =
+              String(
+                body.reason ??
+                  ""
+              ).trim();
+
+            const regressionEvidencePath =
+              String(
+                body.regressionEvidencePath ??
+                  ""
+              );
+
+            const regressionEvidenceHash =
+              String(
+                body.regressionEvidenceHash ??
+                  ""
+              );
+
+            if (
+              !sourceProposalId ||
+              !sourceSessionId ||
+              capabilityId !==
+                "stable-unique-line-sort-v1" ||
+              !/^[a-f0-9]{64}$/.test(
+                currentDigest
+              ) ||
+              !/^[a-f0-9]{64}$/.test(
+                targetDigest
+              ) ||
+              currentDigest ===
+                targetDigest ||
+              !reason ||
+              !regressionEvidencePath ||
+              !/^[a-f0-9]{64}$/.test(
+                regressionEvidenceHash
+              )
+            ) {
+              throw new OperatorGatewayBlockedError(
+                "Exact M16-A4 rollback provenance, distinct current/target digests, reason, and regression evidence binding are required.",
+                "m16_a4_rollback_binding_required"
+              );
+            }
+
+            const result =
+              await this
+                .rollbackPromotedBoundedCapability({
+                  sessionId:
+                    session.sessionId,
+                  sourceProposalId,
+                  sourceSessionId,
+                  capabilityId,
+                  currentDigest,
+                  targetDigest,
+                  reason,
+                  regressionEvidencePath,
+                  regressionEvidenceHash,
+                  idempotencyKey:
+                    String(
+                      body.idempotencyKey ??
+                        `m16-a4-rollback:${currentDigest}:${targetDigest}`
                     )
                 });
 

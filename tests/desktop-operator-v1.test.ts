@@ -211,6 +211,37 @@ describe("Desktop Operator v1", () => {
     }
   });
 
+  it("desktop capabilities view exposes governed promotion and rollback lifecycle history read-only", () => {
+    expect(
+      REQUIRED_DESKTOP_VIEWS
+    ).toContain(
+      "capabilities"
+    );
+
+    expect(
+      DESKTOP_OPERATOR_JS
+    ).toContain(
+      "/api/v1/operator/capabilities/stable-unique-line-sort-v1/lifecycle"
+    );
+
+    expect(
+      DESKTOP_OPERATOR_JS
+    ).toContain(
+      "promotions"
+    );
+
+    expect(
+      DESKTOP_OPERATOR_JS
+    ).toContain(
+      "rollbacks"
+    );
+
+    expect(
+      DESKTOP_OPERATOR_JS
+    ).not.toContain(
+      "openRuntimeState"
+    );
+  });
   it("desktop learning-governance surfaces are read-only gateway surfaces", () => {
     expect(REQUIRED_DESKTOP_VIEWS).toContain("learning-governance-sessions");
     expect(REQUIRED_DESKTOP_VIEWS).toContain("learning-governance-innovations");

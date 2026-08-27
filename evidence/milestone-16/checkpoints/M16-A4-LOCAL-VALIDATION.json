@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "sera.m16-a4-local-validation.v1",
+  "checkpoint": "M16-A4",
+  "title": "Regression, exact-digest rollback, restart persistence",
+  "status": "LOCALLY_VALIDATED",
+  "productBoundary": "S.E.R.A. Base MVP",
+  "milestone": "M16",
+  "subGate": "M16-A4",
+  "recordedAt": "2026-08-27T14:33:43.5191472-07:00",
+  "source": {
+    "branch": "sera/runtime-capability-composition-v1",
+    "baselineCommit": "8ce84fd942a1ee67073d951719dda8f19cb5f118",
+    "baselineRemoteAligned": true,
+    "implementationCommit": null,
+    "certificationCommit": null
+  },
+  "prerequisites": {
+    "m16A1": {
+      "status": "CERTIFIED",
+      "certificationCommit": "c172f5c8a66790b8790d9b592c416ed364acee5c"
+    },
+    "m16A2": {
+      "status": "CERTIFIED",
+      "certificationCommit": "3f71d9f69f939178f11c05f75c6544f73ebb63b7"
+    },
+    "m16A3": {
+      "status": "CERTIFIED",
+      "certificationCommit": "8ce84fd942a1ee67073d951719dda8f19cb5f118"
+    }
+  },
+  "acceptance": {
+    "deterministicRegressionR1Observed": "PASS",
+    "regressionR1BoundToExactPromotedV1Digest": "PASS",
+    "repairCandidateConstructedFromR1": "PASS",
+    "repairCandidateUsesDistinctV2Executable": "PASS",
+    "repairCandidateRemainsInactiveUntilCertification": "PASS",
+    "twoRunEvaluationAndReproducibility": "PASS",
+    "explicitOperatorCertificationRequired": "PASS",
+    "exactCertifiedV2Promotion": "PASS",
+    "promotedV2ExecutesOrdinaryTask": "PASS",
+    "deterministicRegressionR2Observed": "PASS",
+    "regressionR2DistinctFromR1": "PASS",
+    "noAutomaticRollback": "PASS",
+    "explicitAuthenticatedRollback": "PASS",
+    "rollbackBindsExactV2CurrentDigest": "PASS",
+    "rollbackBindsExactV1TargetDigest": "PASS",
+    "rollbackRestoresV1Promoted": "PASS",
+    "rollbackMarksV2RolledBack": "PASS",
+    "controlPlanePointerAuthorityPreserved": "PASS",
+    "capabilityCatalogRestoredPromoted": "PASS",
+    "exactRollbackRecordPersisted": "PASS",
+    "restartPersistence": "PASS",
+    "restoredV1ExecutesAfterRestart": "PASS",
+    "equivalentRequestRemainsSatisfied": "PASS",
+    "desktopLifecycleVisibility": "PASS",
+    "desktopLifecycleReadOnly": "PASS",
+    "offline": "PASS",
+    "noPublicNetwork": "PASS",
+    "noCloudProvider": "PASS",
+    "noModelUse": "PASS",
+    "noExternalPackageAcquisition": "PASS",
+    "noRepositoryMutation": "PASS"
+  },
+  "validationSets": [
+    {
+      "name": "M16 governed capability acquisition focused suite",
+      "command": "npm exec --offline -- vitest run tests/m16-usable-governed-capability-acquisition-v1.test.ts",
+      "testsPassed": 17,
+      "testsFailed": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Desktop Operator",
+      "command": "npm exec --offline -- vitest run tests/desktop-operator-v1.test.ts",
+      "testsPassed": 237,
+      "testsFailed": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Capability Engine recursive learning",
+      "command": "npm exec --offline -- vitest run tests/capability-engine-recursive-learning-v1.test.ts",
+      "testsPassed": 148,
+      "testsFailed": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Governed Capability Engine Composition",
+      "command": "npm exec --offline -- vitest run tests/governed-capability-engine-composition-v1.test.ts",
+      "testsPassed": 1,
+      "testsFailed": 0,
+      "result": "PASS"
+    },
+    {
+      "name": "Isolated Execution",
+      "command": "npm exec --offline -- vitest run tests/isolated-execution-v1.test.ts",
+      "testsPassed": 54,
+      "testsFailed": 0,
+      "result": "PASS"
+    }
+  ],
+  "validationSummary": {
+    "build": "PASS",
+    "diffCheck": "PASS",
+    "focusedM16": "17/17 PASS",
+    "desktopOperator": "237/237 PASS",
+    "capabilityEngine": "148/148 PASS",
+    "governedCapabilityComposition": "1/1 PASS",
+    "isolatedExecution": "54/54 PASS",
+    "directTestsTotal": "457/457 PASS"
+  },
+  "implementationScope": [
+    "apps/desktop-operator/src/index.ts",
+    "packages/capability-engine/src/capability-engine.ts",
+    "packages/execution-engine/src/approved-executable-registry.ts",
+    "packages/execution-engine/src/deterministic-text-transform-tool-v2.ts",
+    "packages/operator-gateway/src/operator-gateway.ts",
+    "packages/runtime-capability-composition/src/governed-capability-engine-composition.ts",
+    "tests/capability-engine-recursive-learning-v1.test.ts",
+    "tests/desktop-operator-v1.test.ts",
+    "tests/isolated-execution-v1.test.ts",
+    "tests/m16-usable-governed-capability-acquisition-v1.test.ts"
+  ],
+  "governanceInvariants": {
+    "operatorGatewayOwnsCapabilityAuthority": false,
+    "productControlPlaneOwnsRollbackAttempt": true,
+    "capabilityEngineOwnsLifecycleMutation": true,
+    "exactDigestRollbackRequired": true,
+    "regressionEvidenceRequired": true,
+    "regressionDoesNotAutoRollback": true,
+    "certificationDistinctFromPromotion": true,
+    "rollbackDistinctFromRegressionObservation": true,
+    "desktopLifecycleInspectionReadOnly": true
+  },
+  "scope": {
+    "m16A1": "CERTIFIED",
+    "m16A2": "CERTIFIED",
+    "m16A3": "CERTIFIED",
+    "m16A4": "LOCALLY_VALIDATED",
+    "m16A": "NOT_YET_CERTIFIED",
+    "m16B": "NOT_STARTED",
+    "m16C": "NOT_STARTED",
+    "m16": "NOT_YET_CERTIFIED"
+  },
+  "unresolvedBlockers": [],
+  "protectedUnrelatedWorktreeArtifacts": [
+    "evidence/milestone-5/knowledge-intake-snapshot-proof.json",
+    "evidence/milestone-5/latest/.work/",
+    "m5-07-capture.cjs",
+    "m5-07-final-capture.cjs",
+    "m5-07-snapshot-capture.cjs"
+  ],
+  "remoteState": "baseline remotely aligned at certified M16-A3 commit; A4 implementation/evidence changes local and uncommitted",
+  "nextAuthorizedAction": "Create the M16-A4 implementation/evidence commit, push it, verify exact remote SHA, then create a separate certification record bound to that remotely aligned implementation commit."
+}

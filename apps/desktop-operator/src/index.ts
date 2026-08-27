@@ -124,6 +124,26 @@ export interface LearningGovernanceViewBinding {
 
 const LEARNING_GOVERNANCE_ROUTE_BASE = "/api/v1/operator/learning-governance";
 export const LEARNING_GOVERNANCE_VIEW_BINDINGS: LearningGovernanceViewBinding[] = [
+  {
+    view:
+      "capabilities",
+    route:
+      "/api/v1/operator/capabilities/stable-unique-line-sort-v1/lifecycle",
+    dataRole:
+      "capabilities-governed-lifecycle",
+    emptyState:
+      "No governed capability lifecycle history is present.",
+    blockedState:
+      "Capability lifecycle history is blocked or unavailable.",
+    renders: [
+      "capabilityId",
+      "active",
+      "versions",
+      "certifications",
+      "promotions",
+      "rollbacks"
+    ]
+  },
   { view: "learning", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/status`, dataRole: "learning-learning-governance", emptyState: "No Learning Governance status is available.", blockedState: "Learning Governance status is blocked or unavailable.", renders: ["boundedStatus", "modelUse", "publicNetworkUse"] },
   { view: "learning-governance-sessions", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/sessions`, dataRole: "learning-governance-sessions-learning-governance", emptyState: "No learning sessions are present.", blockedState: "Learning sessions are blocked or unavailable.", renders: ["sessionId", "lifecycleState", "lane", "evidenceReference"] },
   { view: "learning-governance-failures", route: `${LEARNING_GOVERNANCE_ROUTE_BASE}/failures`, dataRole: "learning-governance-failures-learning-governance", emptyState: "No failure records are present.", blockedState: "Failure records are blocked or unavailable.", renders: ["failureId", "classification", "severity", "evidenceReference"] },

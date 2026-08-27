@@ -87,7 +87,7 @@ export interface CapabilityManifest {
   securityRelevantUnknowns?: Record<string, unknown>;
 }
 
-export const CAPABILITY_ENGINE_EXECUTABLE_IDS = ["node-fixture", "deterministic-text-transform-v1"] as const;
+export const CAPABILITY_ENGINE_EXECUTABLE_IDS = ["node-fixture", "deterministic-text-transform-v1", "deterministic-text-transform-v2"] as const;
 export type CapabilityEngineExecutableId = (typeof CAPABILITY_ENGINE_EXECUTABLE_IDS)[number];
 
 export interface ExecutionRecipe {
@@ -254,6 +254,11 @@ export interface CapabilityProofResult {
   noRealModelRequired: boolean;
   noPublicNetwork: boolean;
   fixturePromotionAndRollbackProven: boolean;
+  rollbackRestoredTargetPromoted: boolean;
+  rollbackMarkedCurrentRolledBack: boolean;
+  rollbackPointerAuthorityPreserved: boolean;
+  rollbackCatalogRestoredPromoted: boolean;
+  rollbackRecordExact: boolean;
   modelUse: false;
   publicNetworkUse: false;
 }
@@ -631,7 +636,8 @@ export class CapabilityEngine {
     const response = { ok: true, status: "ROLLED_BACK", capabilityId: input.capabilityId, activeVersionDigest: input.targetDigest, rolledBackAt: now };
     this.store.recoveryTransaction((db) => {
       db.prepare("INSERT OR REPLACE INTO capability_active_versions (capability_id, activation_scope, active_version_digest, updated_at, authority_identity, integrity_hash) VALUES (?, ?, ?, ?, ?, ?)").run(input.capabilityId, "catalog", input.targetDigest, now, "control-plane", stableHash(response));
-      db.prepare("UPDATE capability_catalog SET active_version_digest = ?, status = ?, integrity_digest = ? WHERE capability_id = ?").run(input.targetDigest, "ROLLED_BACK", stableHash(response), input.capabilityId);
+      db.prepare("UPDATE capability_versions SET lifecycle_status = 'PROMOTED', promoted_at = COALESCE(promoted_at, ?), terminal = 1 WHERE capability_id = ? AND version_digest = ?").run(now, input.capabilityId, input.targetDigest);
+      db.prepare("UPDATE capability_catalog SET active_version_digest = ?, status = ?, integrity_digest = ? WHERE capability_id = ?").run(input.targetDigest, "PROMOTED", stableHash(response), input.capabilityId);
       db.prepare("UPDATE capability_versions SET lifecycle_status = 'ROLLED_BACK', terminal = 1 WHERE capability_id = ? AND version_digest = ?").run(input.capabilityId, input.currentDigest);
       db.prepare("INSERT INTO capability_rollbacks (rollback_id, capability_id, current_version_digest, target_version_digest, authorization_id, reason, regression_evidence_json, rolled_back_at, idempotency_key, request_hash, integrity_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(id("rollback"), input.capabilityId, input.currentDigest, input.targetDigest, input.authorization.authorizationId, input.reason, stableJson(input.regressionEvidence), now, key, requestHashValue, stableHash(response));
       db.prepare("INSERT INTO capability_idempotency (idempotency_key, request_hash, response_type, proposal_id, created_at, response_json) VALUES (?, ?, ?, ?, ?, ?)").run(key, requestHashValue, "rollback", null, now, stableJson(response));
@@ -894,7 +900,30 @@ export async function runCapabilityEngineProof(input: RuntimeStateConfigInput = 
     const started = await host.start();
     const health = await host.health();
     await host.shutdown("Capability proof complete.");
-    const active = store.recoveryGet("SELECT active_version_digest FROM capability_active_versions WHERE capability_id = ?", [bundle.capabilityId]);
+    const active = store.recoveryGet(
+      "SELECT active_version_digest, authority_identity FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+      [bundle.capabilityId, "catalog"]
+    );
+    const restoredTarget = store.recoveryGet(
+      "SELECT lifecycle_status FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+      [bundle.capabilityId, bundle.versionDigest]
+    );
+    const rolledBackCurrent = store.recoveryGet(
+      "SELECT lifecycle_status FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+      [bundle.capabilityId, repairBundle.versionDigest]
+    );
+    const catalogAfterRollback = store.recoveryGet(
+      "SELECT active_version_digest, status FROM capability_catalog WHERE capability_id = ?",
+      [bundle.capabilityId]
+    );
+    const rollbackRecord = store.recoveryGet(
+      "SELECT current_version_digest, target_version_digest FROM capability_rollbacks WHERE capability_id = ? AND current_version_digest = ? AND target_version_digest = ?",
+      [
+        bundle.capabilityId,
+        repairBundle.versionDigest,
+        bundle.versionDigest
+      ]
+    );
     const proof: CapabilityProofResult = {
       ok: true,
       status: "healthy",
@@ -944,7 +973,21 @@ export async function runCapabilityEngineProof(input: RuntimeStateConfigInput = 
       offline: true,
       noRealModelRequired: true,
       noPublicNetwork: true,
-      fixturePromotionAndRollbackProven: rollback.activeVersionDigest === bundle.versionDigest,
+      fixturePromotionAndRollbackProven:
+        rollback.activeVersionDigest === bundle.versionDigest,
+      rollbackRestoredTargetPromoted:
+        restoredTarget?.lifecycle_status === "PROMOTED",
+      rollbackMarkedCurrentRolledBack:
+        rolledBackCurrent?.lifecycle_status === "ROLLED_BACK",
+      rollbackPointerAuthorityPreserved:
+        active?.active_version_digest === bundle.versionDigest &&
+        active?.authority_identity === "control-plane",
+      rollbackCatalogRestoredPromoted:
+        catalogAfterRollback?.active_version_digest === bundle.versionDigest &&
+        catalogAfterRollback?.status === "PROMOTED",
+      rollbackRecordExact:
+        rollbackRecord?.current_version_digest === repairBundle.versionDigest &&
+        rollbackRecord?.target_version_digest === bundle.versionDigest,
       modelUse: false,
       publicNetworkUse: false
     };

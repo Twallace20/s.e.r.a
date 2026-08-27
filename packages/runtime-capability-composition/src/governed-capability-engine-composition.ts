@@ -300,6 +300,30 @@ export class GovernedCapabilityEngineComposition {
           runtimeManifest
             .approvedExecutionRecipe;
 
+
+        const runtimeExecutableContractMatches =
+          recipe?.executableId ===
+            requirement.executableId ||
+          (
+            requirement.capabilityId ===
+              "stable-unique-line-sort-v1" &&
+            requirement.executableId ===
+              M16_A1_EXECUTABLE_ID &&
+            requirement.operation ===
+              M16_A1_OPERATION &&
+            recipe?.executableId ===
+              "deterministic-text-transform-v2"
+          );
+
+        const runtimeExpectedArgs = [
+          requirement.operation,
+          "input/source.txt",
+          "out/result.txt",
+          String(
+            M16_A1_MAX_INPUT_BYTES
+          )
+        ];
+
         const runtimeContractMatches =
           String(
             runtimeActive.lifecycle_status
@@ -315,12 +339,17 @@ export class GovernedCapabilityEngineComposition {
             requirement.sideEffectPolicy &&
           runtimeManifest.modelUsePolicy ===
             requirement.modelPolicy &&
-          recipe?.executableId ===
-            requirement.executableId &&
+          runtimeExecutableContractMatches &&
+          recipe?.profileId ===
+            "offline-minimal" &&
           recipe?.shell === false &&
           Array.isArray(recipe?.args) &&
-          recipe.args[0] ===
-            requirement.operation;
+          JSON.stringify(
+            recipe.args
+          ) ===
+            JSON.stringify(
+              runtimeExpectedArgs
+            );
 
         if (!runtimeContractMatches) {
           throw new Error(
@@ -343,7 +372,7 @@ export class GovernedCapabilityEngineComposition {
             operation:
               requirement.operation,
             executableId:
-              requirement.executableId,
+              String(recipe.executableId),
             networkPolicy:
               requirement.networkPolicy,
             sideEffects:
@@ -756,10 +785,25 @@ export class GovernedCapabilityEngineComposition {
     const manifest =
       JSON.parse(String(version.manifest_json));
 
+    const candidateExecutableId =
+      String(
+        manifest
+          .approvedExecutionRecipe
+          ?.executableId ??
+        ""
+      );
+
+    const boundedEvaluationExecutableIds =
+      new Set<string>([
+        M16_A1_EXECUTABLE_ID,
+        "deterministic-text-transform-v2"
+      ]);
     if (
       manifest.capabilityId !== input.capabilityId ||
       manifest.versionDigest !== input.candidateDigest ||
-      manifest.approvedExecutionRecipe?.executableId !== M16_A1_EXECUTABLE_ID ||
+      !boundedEvaluationExecutableIds.has(
+        candidateExecutableId
+      ) ||
       manifest.networkPolicy !== "offline-strict" ||
       manifest.sideEffects !== "none" ||
       manifest.modelUsePolicy !== "none"
@@ -801,7 +845,7 @@ export class GovernedCapabilityEngineComposition {
 
     const executable =
       createDefaultExecutableRegistry().get(
-        M16_A1_EXECUTABLE_ID
+        candidateExecutableId
       );
 
     if (
@@ -853,7 +897,7 @@ export class GovernedCapabilityEngineComposition {
         authorizationId:
           randomId("m16_a2_exec_auth"),
         executableId:
-          M16_A1_EXECUTABLE_ID,
+          candidateExecutableId,
         args: [
           ...manifest.approvedExecutionRecipe.args
         ],
@@ -2057,7 +2101,7 @@ export class GovernedCapabilityEngineComposition {
 
     const proposal =
       this.store.recoveryGet(
-        "SELECT proposal_id, session_id, capability_id FROM capability_proposals WHERE proposal_id = ? AND session_id = ? AND capability_id = ?",
+        "SELECT proposal_id, session_id, capability_id, learning_lane, risk_class FROM capability_proposals WHERE proposal_id = ? AND session_id = ? AND capability_id = ?",
         [
           input.sourceProposalId,
           input.sourceSessionId,
@@ -2067,13 +2111,40 @@ export class GovernedCapabilityEngineComposition {
 
     if (!proposal) {
       throw new Error(
-        "M16-A3 promotion requires exact A1 proposal and session provenance."
+        "M16 governed promotion requires exact proposal and session provenance."
+      );
+    }
+
+    const proposalLearningLane =
+      String(
+        proposal.learning_lane ??
+        ""
+      );
+
+    const proposalRiskClass =
+      String(
+        proposal.risk_class ??
+        ""
+      );
+
+    if (
+      ![
+        "acquisition",
+        "repair"
+      ].includes(
+        proposalLearningLane
+      ) ||
+      proposalRiskClass !==
+        "low"
+    ) {
+      throw new Error(
+        "M16 governed promotion requires an authorized acquisition or repair proposal with low bounded risk."
       );
     }
 
     const version =
       this.store.recoveryGet(
-        "SELECT lifecycle_status, terminal, manifest_json FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        "SELECT lifecycle_status, terminal, manifest_json, learning_lane, risk_class, baseline_version_digest FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
         [
           input.capabilityId,
           input.candidateDigest
@@ -2089,6 +2160,21 @@ export class GovernedCapabilityEngineComposition {
     ) {
       throw new Error(
         "M16-A3 promotion requires the exact certified candidate digest."
+      );
+    }
+
+    if (
+      String(
+        version.learning_lane ??
+        ""
+      ) !== proposalLearningLane ||
+      String(
+        version.risk_class ??
+        ""
+      ) !== proposalRiskClass
+    ) {
+      throw new Error(
+        "M16 governed promotion proposal provenance does not match the exact candidate version."
       );
     }
 
@@ -2183,7 +2269,30 @@ export class GovernedCapabilityEngineComposition {
       manifest
         .approvedExecutionRecipe;
 
-    if (
+
+    const candidateExecutableId =
+      String(
+        recipe?.executableId ??
+        ""
+      ) as
+        | typeof M16_A1_EXECUTABLE_ID
+        | "deterministic-text-transform-v2";
+
+    const boundedPromotionExecutableIds =
+      new Set<string>([
+        M16_A1_EXECUTABLE_ID,
+        "deterministic-text-transform-v2"
+      ]);
+
+    const expectedPromotionArgs = [
+      M16_A1_OPERATION,
+      "input/source.txt",
+      "out/result.txt",
+      String(
+        M16_A1_MAX_INPUT_BYTES
+      )
+    ];
+if (
       manifest.capabilityId !==
         input.capabilityId ||
       manifest.versionDigest !==
@@ -2194,12 +2303,19 @@ export class GovernedCapabilityEngineComposition {
         "none" ||
       manifest.modelUsePolicy !==
         "none" ||
-      recipe?.executableId !==
-        M16_A1_EXECUTABLE_ID ||
+      !boundedPromotionExecutableIds.has(
+        candidateExecutableId
+      ) ||
+      recipe?.profileId !==
+        "offline-minimal" ||
       recipe?.shell !== false ||
       !Array.isArray(recipe?.args) ||
-      recipe.args[0] !==
-        M16_A1_OPERATION
+      JSON.stringify(
+        recipe.args
+      ) !==
+        JSON.stringify(
+          expectedPromotionArgs
+        )
     ) {
       throw new Error(
         "M16-A3 certified candidate manifest does not match the bounded promotion contract."
@@ -2214,6 +2330,49 @@ export class GovernedCapabilityEngineComposition {
           "catalog"
         ]
       );
+
+    const activeBeforeDigest =
+      activeBefore
+        ?.active_version_digest
+        ? String(
+            activeBefore
+              .active_version_digest
+          )
+        : undefined;
+
+    const candidateBaselineDigest =
+      version
+        .baseline_version_digest
+        ? String(
+            version
+              .baseline_version_digest
+          )
+        : undefined;
+
+    if (
+      proposalLearningLane ===
+        "repair" &&
+      (
+        !activeBeforeDigest ||
+        !candidateBaselineDigest ||
+        candidateBaselineDigest !==
+          activeBeforeDigest
+      )
+    ) {
+      throw new Error(
+        "M16-A4 repair promotion requires the candidate baseline digest to equal the exact currently active version."
+      );
+    }
+
+    if (
+      proposalLearningLane ===
+        "acquisition" &&
+      candidateBaselineDigest
+    ) {
+      throw new Error(
+        "M16-A3 acquisition promotion cannot claim repair baseline provenance."
+      );
+    }
 
     const authorization =
       createCapabilityAuthorization({
@@ -2230,19 +2389,19 @@ export class GovernedCapabilityEngineComposition {
         candidateRequestHash:
           input.candidateDigest,
         learningLane:
-          "acquisition",
+          proposalLearningLane as
+            "acquisition" |
+            "repair",
         riskClass:
-          "low",
+          proposalRiskClass as
+            "low",
         approvedExecutableIds: [
-          M16_A1_EXECUTABLE_ID
+          candidateExecutableId
         ],
         baselineVersionDigest:
-          activeBefore
-            ?.active_version_digest
-            ? String(
-                activeBefore
-                  .active_version_digest
-              )
+          proposalLearningLane ===
+            "repair"
+            ? activeBeforeDigest
             : undefined
       });
 
@@ -2468,6 +2627,2006 @@ export class GovernedCapabilityEngineComposition {
     };
   }
 
+  async createBoundedRepairCandidate(input: {
+    attemptId: string;
+    operatorRequestId: string;
+    capabilityId: string;
+    baselineDigest: string;
+    regressionEvidencePath: string;
+    regressionEvidenceHash: string;
+  }) {
+    this.requireRunningAttempt(
+      input.attemptId,
+      input.capabilityId
+    );
+
+    if (
+      input.capabilityId !==
+      "stable-unique-line-sort-v1"
+    ) {
+      throw new Error(
+        "M16-A4 repair construction is bounded to stable-unique-line-sort-v1."
+      );
+    }
+
+    if (
+      !/^[a-f0-9]{64}$/.test(
+        input.baselineDigest
+      ) ||
+      !/^[a-f0-9]{64}$/.test(
+        input.regressionEvidenceHash
+      )
+    ) {
+      throw new Error(
+        "M16-A4 repair construction requires exact lowercase SHA-256 digests."
+      );
+    }
+
+    const activeBefore =
+      this.store.recoveryGet(
+        "SELECT active_version_digest, authority_identity FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+        [
+          input.capabilityId,
+          "catalog"
+        ]
+      );
+
+    if (
+      !activeBefore ||
+      String(
+        activeBefore
+          .active_version_digest ??
+        ""
+      ) !== input.baselineDigest ||
+      String(
+        activeBefore
+          .authority_identity ??
+        ""
+      ) !== "control-plane"
+    ) {
+      throw new Error(
+        "M16-A4 repair requires the exact Control Plane-owned active baseline digest."
+      );
+    }
+
+    const baseline =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status, manifest_json, risk_class FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.baselineDigest
+        ]
+      );
+
+    if (
+      !baseline ||
+      String(
+        baseline.lifecycle_status ??
+        ""
+      ) !== "PROMOTED" ||
+      String(
+        baseline.risk_class ??
+        ""
+      ) !== "low"
+    ) {
+      throw new Error(
+        "M16-A4 repair baseline must be the exact active low-risk promoted version."
+      );
+    }
+
+    const baselineCertification =
+      this.store.recoveryGet(
+        "SELECT certification_id, rollback_ready FROM capability_certifications WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.baselineDigest
+        ]
+      );
+
+    const baselinePromotion =
+      this.store.recoveryGet(
+        "SELECT promotion_id FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.baselineDigest
+        ]
+      );
+
+    if (
+      !baselineCertification ||
+      Number(
+        baselineCertification
+          .rollback_ready
+      ) !== 1 ||
+      !baselinePromotion
+    ) {
+      throw new Error(
+        "M16-A4 repair requires a certified rollback-ready promoted baseline."
+      );
+    }
+
+    const baselineManifest =
+      JSON.parse(
+        String(
+          baseline.manifest_json
+        )
+      );
+
+    if (
+      baselineManifest.capabilityId !==
+        input.capabilityId ||
+      baselineManifest.versionDigest !==
+        input.baselineDigest ||
+      baselineManifest.networkPolicy !==
+        "offline-strict" ||
+      baselineManifest.sideEffects !==
+        "none" ||
+      baselineManifest.modelUsePolicy !==
+        "none" ||
+      baselineManifest
+        .approvedExecutionRecipe
+        ?.executableId !==
+        M16_A1_EXECUTABLE_ID ||
+      baselineManifest
+        .approvedExecutionRecipe
+        ?.args?.[0] !==
+        M16_A1_OPERATION ||
+      baselineManifest
+        .approvedExecutionRecipe
+        ?.shell !== false
+    ) {
+      throw new Error(
+        "M16-A4 repair baseline manifest violates the bounded certified contract."
+      );
+    }
+
+    const regressionEvidencePath =
+      path.resolve(
+        input.regressionEvidencePath
+      );
+
+    const relativeRegressionPath =
+      path.relative(
+        this.projectRoot,
+        regressionEvidencePath
+      );
+
+    if (
+      relativeRegressionPath ===
+        ".." ||
+      relativeRegressionPath.startsWith(
+        `..${path.sep}`
+      ) ||
+      path.isAbsolute(
+        relativeRegressionPath
+      )
+    ) {
+      throw new Error(
+        "M16-A4 repair regression evidence must remain inside the governed release root."
+      );
+    }
+
+    if (
+      !fs.existsSync(
+        regressionEvidencePath
+      ) ||
+      !fs.statSync(
+        regressionEvidencePath
+      ).isFile()
+    ) {
+      throw new Error(
+        "M16-A4 repair requires an existing deterministic regression evidence file."
+      );
+    }
+
+    const actualRegressionHash =
+      fileSha256(
+        regressionEvidencePath
+      );
+
+    if (
+      actualRegressionHash !==
+        input.regressionEvidenceHash
+    ) {
+      throw new Error(
+        "M16-A4 repair regression evidence hash mismatch."
+      );
+    }
+
+    const regressionRecord =
+      JSON.parse(
+        fs.readFileSync(
+          regressionEvidencePath,
+          "utf8"
+        )
+      );
+
+    if (
+      regressionRecord.schemaVersion !==
+        "sera.m16-a4-deterministic-regression.v1" ||
+      regressionRecord.capabilityId !==
+        input.capabilityId ||
+      regressionRecord.activeVersionDigest !==
+        input.baselineDigest ||
+      regressionRecord.deterministic !==
+        true ||
+      regressionRecord.regressionObserved !==
+        true ||
+      typeof regressionRecord
+        .observedDeficiency !==
+        "string" ||
+      regressionRecord
+        .observedDeficiency
+        .trim().length === 0
+    ) {
+      throw new Error(
+        "M16-A4 repair requires deterministic regression evidence bound to the exact active baseline."
+      );
+    }
+
+    const repairExecutableId =
+      "deterministic-text-transform-v2" as const;
+
+    const regressionEvidence = {
+      id:
+        randomId(
+          "m16_a4_regression"
+        ),
+      uri:
+        regressionEvidencePath,
+      sha256:
+        actualRegressionHash,
+      kind:
+        "m16-a4-deterministic-regression"
+    };
+
+    const engine =
+      new CapabilityEngine(
+        this.store,
+        {
+          projectRoot:
+            this.projectRoot
+        }
+      );
+
+    const learningSignal =
+      engine.createLearningSignal({
+        signalId:
+          randomId(
+            "m16_a4_learning_signal"
+          ),
+        signalType:
+          "regression",
+        capabilityId:
+          input.capabilityId,
+        baselineVersionDigest:
+          input.baselineDigest,
+        evidenceReferences: [
+          regressionEvidence
+        ],
+        observedDeficiency:
+          regressionRecord
+            .observedDeficiency,
+        desiredOutcome:
+          "Repair the bounded stable unique line sort capability while preserving offline governance and rollback compatibility.",
+        severity:
+          "low",
+        confidenceSource:
+          "deterministic-fixture",
+        trustStatus:
+          "evidence-backed",
+        candidateStatus:
+          "candidate",
+        createdAt:
+          new Date()
+            .toISOString(),
+        policyVersion:
+          CAPABILITY_POLICY_VERSION
+      });
+
+    const sessionId =
+      randomId(
+        "m16_a4_repair_session"
+      );
+
+    const proposalId =
+      randomId(
+        "m16_a4_repair_proposal"
+      );
+
+    const candidateRequestHash =
+      hashBoundedValue({
+        operatorRequestId:
+          input.operatorRequestId,
+        capabilityId:
+          input.capabilityId,
+        baselineDigest:
+          input.baselineDigest,
+        regressionEvidenceHash:
+          actualRegressionHash,
+        learningSignalId:
+          learningSignal.signalId,
+        requestedAction:
+          "repair"
+      });
+
+    const proposalBase:
+      Omit<
+        CapabilityProposal,
+        "integrityHash"
+      > = {
+        proposalId,
+        sessionId,
+        capabilityId:
+          input.capabilityId,
+        displayName:
+          "Stable Unique Line Sort v1 Repair",
+        source:
+          "regression",
+        sourceEvidence: [
+          regressionEvidence
+        ],
+        learningLane:
+          "repair",
+        riskClass:
+          "low",
+        requestedType:
+          "deterministic-transform",
+        desiredOutcome:
+          "Repair the evidence-backed deterministic regression while retaining the bounded offline stable unique line sort contract.",
+        candidateRequestHash,
+        modelGenerated:
+          false,
+        candidateIntelligence:
+          false,
+        requestHash:
+          hashBoundedValue({
+            operatorRequestId:
+              input.operatorRequestId,
+            regressionEvidenceHash:
+              actualRegressionHash
+          }),
+        createdAt:
+          new Date()
+            .toISOString(),
+        policyVersion:
+          CAPABILITY_POLICY_VERSION
+      };
+
+    const common = {
+      attemptId:
+        input.attemptId,
+      sessionId,
+      proposalId,
+      capabilityId:
+        input.capabilityId,
+      candidateRequestHash,
+      learningLane:
+        "repair" as const,
+      riskClass:
+        "low" as const,
+      approvedExecutableIds: [
+        repairExecutableId
+      ] as [
+        typeof repairExecutableId
+      ],
+      baselineVersionDigest:
+        input.baselineDigest
+    };
+
+    const proposalAuthorization =
+      createCapabilityAuthorization({
+        authorizationType:
+          "proposal",
+        ...common
+      });
+
+    const experimentAuthorization =
+      createCapabilityAuthorization({
+        authorizationType:
+          "experiment",
+        ...common
+      });
+
+    const proposal =
+      engine.createProposal(
+        proposalBase,
+        proposalAuthorization,
+        `m16-a4-repair-proposal:${input.operatorRequestId}:${input.baselineDigest}:${actualRegressionHash}`
+      );
+
+    const bundle =
+      engine.assembleCandidate(
+        proposal,
+        experimentAuthorization,
+        {
+          version:
+            "1.0.1",
+          inputSchema: {
+            type:
+              "object",
+            required: [
+              "input"
+            ],
+            properties: {
+              input: {
+                type:
+                  "string",
+                maxLength:
+                  M16_A1_MAX_INPUT_BYTES
+              }
+            }
+          },
+          outputSchema: {
+            type:
+              "object",
+            required: [
+              "result"
+            ],
+            properties: {
+              result: {
+                type:
+                  "string"
+              }
+            }
+          },
+          allowedInvocationModes: [
+            "fixture"
+          ],
+          approvedExecutionRecipe: {
+            executableId:
+              repairExecutableId,
+            args: [
+              M16_A1_OPERATION,
+              "input/source.txt",
+              "out/result.txt",
+              String(
+                M16_A1_MAX_INPUT_BYTES
+              )
+            ],
+            profileId:
+              "offline-minimal",
+            shell:
+              false,
+            timeoutMs:
+              5000
+          },
+          evaluationProfile: {
+            profileId:
+              "deterministic-default",
+            requiredAssertions: [
+              "expected_output_hash_matches",
+              "source_unchanged",
+              "deterministic_replay"
+            ],
+            optionalAssertions: [
+              "stderr_empty"
+            ]
+          },
+          providerRequirements: {
+            modelRequired:
+              false,
+            allowedProviderProfiles: [
+              "none"
+            ],
+            candidateIntelligenceRefs: []
+          },
+          knowledgeRequirements: {
+            required:
+              false,
+            provenanceRefs:
+              proposal.sourceEvidence,
+            trustInferred:
+              false
+          },
+          sideEffects:
+            "none",
+          networkPolicy:
+            "offline-strict",
+          modelUsePolicy:
+            "none",
+          resourceLimits: {
+            timeoutMs:
+              5000,
+            maxCandidateBytes:
+              512 * 1024
+          },
+          rollbackCompatibility: {
+            compatibleWith: [
+              input.baselineDigest
+            ],
+            reversible:
+              true
+          }
+        }
+      );
+
+    const candidateRow =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status, learning_lane, risk_class, baseline_version_digest FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          bundle.versionDigest
+        ]
+      );
+
+    if (
+      !candidateRow ||
+      String(
+        candidateRow
+          .lifecycle_status ??
+        ""
+      ) !== "CANDIDATE" ||
+      String(
+        candidateRow
+          .learning_lane ??
+        ""
+      ) !== "repair" ||
+      String(
+        candidateRow
+          .risk_class ??
+        ""
+      ) !== "low" ||
+      String(
+        candidateRow
+          .baseline_version_digest ??
+        ""
+      ) !== input.baselineDigest
+    ) {
+      throw new Error(
+        "M16-A4 repair candidate provenance invariant failed."
+      );
+    }
+
+    const executable =
+      createDefaultExecutableRegistry()
+        .get(
+          repairExecutableId
+        );
+
+    if (
+      !executable.offlineCompatible ||
+      executable.networkCapable
+    ) {
+      throw new Error(
+        "M16-A4 repair candidate executable is not offline-safe."
+      );
+    }
+
+    executable.validateArgs(
+      bundle.manifest
+        .approvedExecutionRecipe
+        .args
+    );
+
+    const executionAuthority =
+      this.controlPlane
+        .requireExecutionAuthority();
+
+    const testResults:
+      any[] = [];
+
+    for (
+      const test of
+      M16_A1_CANDIDATE_TESTS
+    ) {
+      const executionId =
+        randomId(
+          `m16_a4_repair_exec_${test.id.replace(/[^a-z0-9]+/gi, "_")}`
+        );
+
+      const request:
+        ExecutionRequest = {
+          executionId,
+          attemptId:
+            input.attemptId,
+          authorizationId:
+            randomId(
+              "m16_a4_exec_auth"
+            ),
+          executableId:
+            repairExecutableId,
+          args: [
+            ...bundle.manifest
+              .approvedExecutionRecipe
+              .args
+          ],
+          inputs: [
+            {
+              id:
+                "source",
+              sourceType:
+                "inline-text",
+              workspacePath:
+                "input/source.txt",
+              content:
+                test.input
+            }
+          ],
+          outputs: [
+            {
+              id:
+                "result",
+              workspacePath:
+                "out/result.txt",
+              required:
+                test.expectSuccess
+            }
+          ],
+          workingDirectory:
+            ".",
+          environmentProfile:
+            "offline-minimal",
+          timeoutMs:
+            5000,
+          gracefulCancellationMs:
+            100,
+          maxStdoutBytes:
+            16384,
+          maxStderrBytes:
+            16384,
+          maxCombinedOutputBytes:
+            32768,
+          expectedExitCodes: [
+            0
+          ],
+          networkPolicy:
+            "offline-strict",
+          cleanupPolicy:
+            "delete-workspace",
+          correlation: {
+            operatorRequestId:
+              input.operatorRequestId,
+            candidateDigest:
+              bundle.versionDigest,
+            baselineDigest:
+              input.baselineDigest,
+            testId:
+              test.id,
+            learningLane:
+              "repair"
+          }
+        };
+
+      const execution =
+        await executionAuthority
+          .execute(
+            request,
+            createExecutionAuthorization({
+              request,
+              requiredGateRefs: [
+                "m16-a4-repair-candidate-test-gate"
+              ],
+              completedGateRefs: [
+                "m16-a4-repair-candidate-test-gate"
+              ]
+            })
+          );
+
+      const output =
+        execution.outputs.find(
+          (candidate) =>
+            candidate.id ===
+            "result"
+        );
+
+      let actual:
+        string |
+        null =
+          null;
+
+      if (
+        output
+          ?.evidenceReference
+      ) {
+        actual =
+          fs.readFileSync(
+            path.join(
+              execution.evidenceRoot,
+              output.evidenceReference
+            ),
+            "utf8"
+          );
+      }
+
+      const successObserved =
+        execution.status ===
+          "SUCCEEDED_PROCESS";
+
+      const passed =
+        test.expectSuccess
+          ? (
+              successObserved &&
+              actual ===
+                test.expected
+            )
+          : !successObserved;
+
+      testResults.push({
+        testId:
+          test.id,
+        expectSuccess:
+          test.expectSuccess,
+        executionId,
+        executionStatus:
+          execution.status,
+        expected:
+          test.expected,
+        actual,
+        expectationHash:
+          hashBoundedValue({
+            expectSuccess:
+              test.expectSuccess,
+            expected:
+              test.expected
+          }),
+        resultHash:
+          hashBoundedValue({
+            status:
+              execution.status,
+            actual
+          }),
+        sourceNotMutated:
+          execution
+            .sourceNotMutated,
+        workspaceOutsideRepository:
+          execution
+            .workspaceOutsideRepository,
+        cleanupCleaned:
+          execution
+            .cleanup
+            .cleaned,
+        undeclaredOutputCount:
+          execution
+            .undeclaredOutputs
+            .length,
+        passed
+      });
+    }
+
+    const replayTest =
+      M16_A1_CANDIDATE_TESTS
+        .find(
+          (test) =>
+            test.id ===
+            "duplicate-lines"
+        );
+
+    if (!replayTest) {
+      throw new Error(
+        "M16-A4 deterministic replay fixture is missing."
+      );
+    }
+
+    const replayBaseline =
+      testResults.find(
+        (item) =>
+          item.testId ===
+          "duplicate-lines"
+      );
+
+    const replayExecutionId =
+      randomId(
+        "m16_a4_repair_exec_replay"
+      );
+
+    const replayRequest:
+      ExecutionRequest = {
+        executionId:
+          replayExecutionId,
+        attemptId:
+          input.attemptId,
+        authorizationId:
+          randomId(
+            "m16_a4_exec_auth"
+          ),
+        executableId:
+          repairExecutableId,
+        args: [
+          ...bundle.manifest
+            .approvedExecutionRecipe
+            .args
+        ],
+        inputs: [
+          {
+            id:
+              "source",
+            sourceType:
+              "inline-text",
+            workspacePath:
+              "input/source.txt",
+            content:
+              replayTest.input
+          }
+        ],
+        outputs: [
+          {
+            id:
+              "result",
+            workspacePath:
+              "out/result.txt",
+            required:
+              true
+          }
+        ],
+        workingDirectory:
+          ".",
+        environmentProfile:
+          "offline-minimal",
+        timeoutMs:
+          5000,
+        gracefulCancellationMs:
+          100,
+        maxStdoutBytes:
+          16384,
+        maxStderrBytes:
+          16384,
+        maxCombinedOutputBytes:
+          32768,
+        expectedExitCodes: [
+          0
+        ],
+        networkPolicy:
+          "offline-strict",
+        cleanupPolicy:
+          "delete-workspace",
+        correlation: {
+          operatorRequestId:
+            input.operatorRequestId,
+          candidateDigest:
+            bundle.versionDigest,
+          baselineDigest:
+            input.baselineDigest,
+          testId:
+            "deterministic-replay",
+          learningLane:
+            "repair"
+        }
+      };
+
+    const replayExecution =
+      await executionAuthority
+        .execute(
+          replayRequest,
+          createExecutionAuthorization({
+            request:
+              replayRequest,
+            requiredGateRefs: [
+              "m16-a4-repair-candidate-test-gate"
+            ],
+            completedGateRefs: [
+              "m16-a4-repair-candidate-test-gate"
+            ]
+          })
+        );
+
+    const replayOutput =
+      replayExecution.outputs.find(
+        (candidate) =>
+          candidate.id ===
+          "result"
+      );
+
+    const replayActual =
+      replayOutput
+        ?.evidenceReference
+        ? fs.readFileSync(
+            path.join(
+              replayExecution
+                .evidenceRoot,
+              replayOutput
+                .evidenceReference
+            ),
+            "utf8"
+          )
+        : null;
+
+    const deterministicReplay =
+      replayExecution.status ===
+        "SUCCEEDED_PROCESS" &&
+      replayActual ===
+        replayBaseline
+          ?.actual;
+
+    const candidateTestsPass =
+      testResults.every(
+        (item) =>
+          item.passed
+      ) &&
+      deterministicReplay;
+
+    if (!candidateTestsPass) {
+      throw new Error(
+        "M16-A4 repair candidate-local deterministic tests did not pass."
+      );
+    }
+
+    const activeAfter =
+      this.store.recoveryGet(
+        "SELECT active_version_digest, authority_identity FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+        [
+          input.capabilityId,
+          "catalog"
+        ]
+      );
+
+    const certification =
+      this.store.recoveryGet(
+        "SELECT certification_id FROM capability_certifications WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          bundle.versionDigest
+        ]
+      );
+
+    const promotion =
+      this.store.recoveryGet(
+        "SELECT promotion_id FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          bundle.versionDigest
+        ]
+      );
+
+    const candidateAfter =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status, learning_lane, baseline_version_digest FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          bundle.versionDigest
+        ]
+      );
+
+    if (
+      String(
+        candidateAfter
+          ?.lifecycle_status ??
+        ""
+      ) !== "CANDIDATE" ||
+      String(
+        candidateAfter
+          ?.learning_lane ??
+        ""
+      ) !== "repair" ||
+      String(
+        candidateAfter
+          ?.baseline_version_digest ??
+        ""
+      ) !== input.baselineDigest ||
+      certification ||
+      promotion ||
+      String(
+        activeAfter
+          ?.active_version_digest ??
+        ""
+      ) !== input.baselineDigest ||
+      String(
+        activeAfter
+          ?.authority_identity ??
+        ""
+      ) !== "control-plane"
+    ) {
+      throw new Error(
+        "M16-A4 repair candidate-only state invariant failed."
+      );
+    }
+
+    const executableMaterializedArgs =
+      executable.materializeArgs(
+        {
+          executableId:
+            repairExecutableId,
+          args: [
+            ...bundle.manifest
+              .approvedExecutionRecipe
+              .args
+          ]
+        } as any,
+        path.join(
+          this.projectRoot,
+          ".sera",
+          "capability-engine-composition",
+          input.attemptId,
+          ".m16-a4-repair-executable-identity"
+        )
+      );
+
+    const executableArtifactPath =
+      executableMaterializedArgs[0];
+
+    if (
+      !executableArtifactPath ||
+      !fs.existsSync(
+        executableArtifactPath
+      )
+    ) {
+      throw new Error(
+        "M16-A4 repair executable artifact is unavailable for identity verification."
+      );
+    }
+
+    const executableArtifactSha256 =
+      fileSha256(
+        executableArtifactPath
+      );
+
+    const evidenceRoot =
+      path.join(
+        this.projectRoot,
+        ".sera",
+        "capability-engine-composition",
+        input.attemptId
+      );
+
+    const evidencePath =
+      writeJson(
+        path.join(
+          evidenceRoot,
+          "m16-a4-repair-candidate.json"
+        ),
+        {
+          schemaVersion:
+            "sera.m16-a4-repair-candidate.v1",
+          attemptId:
+            input.attemptId,
+          operatorRequestId:
+            input.operatorRequestId,
+          capabilityId:
+            input.capabilityId,
+          baseline: {
+            versionDigest:
+              input.baselineDigest,
+            lifecycleStatus:
+              "PROMOTED",
+            authorityIdentity:
+              "control-plane",
+            rollbackReady:
+              true
+          },
+          regressionEvidence: {
+            path:
+              regressionEvidencePath,
+            sha256:
+              actualRegressionHash,
+            observedDeficiency:
+              regressionRecord
+                .observedDeficiency
+          },
+          learningSignal: {
+            signalId:
+              learningSignal
+                .signalId,
+            signalType:
+              learningSignal
+                .signalType,
+            baselineVersionDigest:
+              learningSignal
+                .baselineVersionDigest,
+            confidenceSource:
+              learningSignal
+                .confidenceSource,
+            trustStatus:
+              learningSignal
+                .trustStatus
+          },
+          proposal: {
+            proposalId:
+              proposal.proposalId,
+            sessionId:
+              proposal.sessionId,
+            source:
+              proposal.source,
+            learningLane:
+              proposal.learningLane,
+            riskClass:
+              proposal.riskClass,
+            candidateRequestHash:
+              proposal
+                .candidateRequestHash
+          },
+          candidate: {
+            versionDigest:
+              bundle.versionDigest,
+            version:
+              bundle.version,
+            candidateRoot:
+              bundle.candidateRoot,
+            lifecycleStatus:
+              "CANDIDATE",
+            learningLane:
+              "repair",
+            baselineVersionDigest:
+              input.baselineDigest,
+            rollbackCompatibility:
+              bundle.manifest
+                .rollbackCompatibility,
+            bytes:
+              bundle.bytes
+          },
+          executable: {
+            id:
+              executable.id,
+            fingerprint:
+              executable.fingerprint,
+            artifactSha256:
+              executableArtifactSha256,
+            args:
+              bundle.manifest
+                .approvedExecutionRecipe
+                .args,
+            offlineCompatible:
+              executable
+                .offlineCompatible,
+            networkCapable:
+              executable
+                .networkCapable
+          },
+          validation: {
+            candidateTestsPass,
+            deterministicReplay,
+            tests:
+              testResults
+          },
+          state: {
+            activeVersionDigest:
+              input.baselineDigest,
+            candidateCertified:
+              false,
+            candidatePromoted:
+              false,
+            activePointerChanged:
+              false
+          },
+          offline:
+            true,
+          publicNetworkUse:
+            false,
+          cloudProviderUse:
+            false,
+          modelUse:
+            false,
+          externalPackageAcquisition:
+            false,
+          repositoryMutation:
+            false
+        }
+      );
+
+    const evidenceHash =
+      fileSha256(
+        evidencePath
+      );
+
+    const evidenceReferenceId =
+      this.controlPlane
+        .recordEvidenceReference({
+          attemptId:
+            input.attemptId,
+          evidenceType:
+            "m16-a4-tested-repair-candidate",
+          location:
+            path
+              .relative(
+                this.projectRoot,
+                evidencePath
+              )
+              .replace(/\\/g, "/"),
+          integrityHash:
+            evidenceHash,
+          producer:
+            "governed-capability-engine-composition",
+          metadata: {
+            capabilityId:
+              input.capabilityId,
+            baselineDigest:
+              input.baselineDigest,
+            candidateDigest:
+              bundle.versionDigest,
+            regressionEvidenceHash:
+              actualRegressionHash,
+            learningSignalId:
+              learningSignal.signalId,
+            learningLane:
+              "repair",
+            candidateTestsPass,
+            deterministicReplay,
+            candidateOnly:
+              true,
+            activePointerChanged:
+              false
+          }
+        });
+
+    return {
+      capabilityId:
+        input.capabilityId,
+      baselineDigest:
+        input.baselineDigest,
+      regressionEvidencePath,
+      regressionEvidenceHash:
+        actualRegressionHash,
+      learningSignal,
+      proposal,
+      bundle,
+      candidateDigest:
+        bundle.versionDigest,
+      lifecycleStatus:
+        "CANDIDATE" as const,
+      learningLane:
+        "repair" as const,
+      candidateTestsPass,
+      deterministicReplay,
+      testResults,
+      certified:
+        false as const,
+      promoted:
+        false as const,
+      activeVersionDigest:
+        input.baselineDigest,
+      activePointerChanged:
+        false as const,
+      selectableForOrdinaryExecution:
+        false as const,
+      evidencePath,
+      evidenceHash,
+      evidenceReferenceIds: [
+        evidenceReferenceId
+      ],
+      offline:
+        true as const,
+      publicNetworkUse:
+        false as const,
+      cloudProviderUse:
+        false as const,
+      modelUse:
+        false as const,
+      externalPackageAcquisition:
+        false as const,
+      repositoryMutation:
+        false as const
+    };
+  }
+  async rollbackPromotedBoundedCapability(input: {
+    attemptId: string;
+    operatorRequestId: string;
+    sourceProposalId: string;
+    sourceSessionId: string;
+    capabilityId: string;
+    currentDigest: string;
+    targetDigest: string;
+    reason: string;
+    regressionEvidencePath: string;
+    regressionEvidenceHash: string;
+  }) {
+    this.requireRunningAttempt(
+      input.attemptId,
+      input.capabilityId
+    );
+
+    if (
+      input.capabilityId !==
+      "stable-unique-line-sort-v1"
+    ) {
+      throw new Error(
+        "M16-A4 rollback is bounded to stable-unique-line-sort-v1."
+      );
+    }
+
+    if (
+      !/^[a-f0-9]{64}$/.test(
+        input.currentDigest
+      ) ||
+      !/^[a-f0-9]{64}$/.test(
+        input.targetDigest
+      ) ||
+      !/^[a-f0-9]{64}$/.test(
+        input.regressionEvidenceHash
+      )
+    ) {
+      throw new Error(
+        "M16-A4 rollback requires exact lowercase SHA-256 digests."
+      );
+    }
+
+    if (
+      input.currentDigest ===
+      input.targetDigest
+    ) {
+      throw new Error(
+        "M16-A4 rollback current and target digests must be distinct."
+      );
+    }
+
+    if (
+      typeof input.reason !==
+        "string" ||
+      input.reason.trim().length ===
+        0
+    ) {
+      throw new Error(
+        "M16-A4 rollback requires an explicit operator reason."
+      );
+    }
+
+    const active =
+      this.store.recoveryGet(
+        "SELECT active_version_digest, authority_identity FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+        [
+          input.capabilityId,
+          "catalog"
+        ]
+      );
+
+    if (
+      !active ||
+      String(
+        active.active_version_digest ??
+        ""
+      ) !== input.currentDigest ||
+      String(
+        active.authority_identity ??
+        ""
+      ) !== "control-plane"
+    ) {
+      throw new Error(
+        "M16-A4 rollback requires the exact Control Plane-owned active current digest."
+      );
+    }
+
+    const current =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status, manifest_json, learning_lane, risk_class, baseline_version_digest FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.currentDigest
+        ]
+      );
+
+    if (
+      !current ||
+      String(
+        current.lifecycle_status ??
+        ""
+      ) !== "PROMOTED" ||
+      String(
+        current.learning_lane ??
+        ""
+      ) !== "repair" ||
+      String(
+        current.risk_class ??
+        ""
+      ) !== "low" ||
+      String(
+        current.baseline_version_digest ??
+        ""
+      ) !== input.targetDigest
+    ) {
+      throw new Error(
+        "M16-A4 rollback current version must be the exact promoted repair candidate whose baseline is the target digest."
+      );
+    }
+
+    const target =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status, manifest_json, risk_class FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.targetDigest
+        ]
+      );
+
+    if (
+      !target ||
+      ![
+        "CERTIFIED",
+        "PROMOTED",
+        "SUPERSEDED",
+        "ROLLED_BACK"
+      ].includes(
+        String(
+          target.lifecycle_status ??
+          ""
+        )
+      ) ||
+      String(
+        target.risk_class ??
+        ""
+      ) !== "low"
+    ) {
+      throw new Error(
+        "M16-A4 rollback target must be an exact prior low-risk certified version."
+      );
+    }
+
+    const currentCertification =
+      this.store.recoveryGet(
+        "SELECT certification_id, rollback_ready FROM capability_certifications WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.currentDigest
+        ]
+      );
+
+    const targetCertification =
+      this.store.recoveryGet(
+        "SELECT certification_id, rollback_ready FROM capability_certifications WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.targetDigest
+        ]
+      );
+
+    const currentPromotion =
+      this.store.recoveryGet(
+        "SELECT promotion_id, rollback_target_digest FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.currentDigest
+        ]
+      );
+
+    const targetPromotion =
+      this.store.recoveryGet(
+        "SELECT promotion_id FROM capability_promotions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.targetDigest
+        ]
+      );
+
+    if (
+      !currentCertification ||
+      Number(
+        currentCertification
+          .rollback_ready
+      ) !== 1 ||
+      !targetCertification ||
+      Number(
+        targetCertification
+          .rollback_ready
+      ) !== 1 ||
+      !currentPromotion ||
+      String(
+        currentPromotion
+          .rollback_target_digest ??
+        ""
+      ) !== input.targetDigest ||
+      !targetPromotion
+    ) {
+      throw new Error(
+        "M16-A4 rollback requires certified rollback-ready current and target versions with exact promotion history."
+      );
+    }
+
+    const proposal =
+      this.store.recoveryGet(
+        "SELECT proposal_id, session_id, capability_id, learning_lane, risk_class FROM capability_proposals WHERE proposal_id = ? AND session_id = ? AND capability_id = ?",
+        [
+          input.sourceProposalId,
+          input.sourceSessionId,
+          input.capabilityId
+        ]
+      );
+
+    if (
+      !proposal ||
+      String(
+        proposal.learning_lane ??
+        ""
+      ) !== "repair" ||
+      String(
+        proposal.risk_class ??
+        ""
+      ) !== "low"
+    ) {
+      throw new Error(
+        "M16-A4 rollback requires exact low-risk repair proposal provenance."
+      );
+    }
+
+    const currentManifest =
+      JSON.parse(
+        String(
+          current.manifest_json
+        )
+      );
+
+    const targetManifest =
+      JSON.parse(
+        String(
+          target.manifest_json
+        )
+      );
+
+    for (
+      const manifest of [
+        currentManifest,
+        targetManifest
+      ]
+    ) {
+      if (
+        manifest.capabilityId !==
+          input.capabilityId ||
+        manifest.networkPolicy !==
+          "offline-strict" ||
+        manifest.sideEffects !==
+          "none" ||
+        manifest.modelUsePolicy !==
+          "none" ||
+        manifest
+          .approvedExecutionRecipe
+          ?.shell !== false ||
+        manifest
+          .approvedExecutionRecipe
+          ?.args?.[0] !==
+          M16_A1_OPERATION
+      ) {
+        throw new Error(
+          "M16-A4 rollback version manifest violates the bounded offline capability contract."
+        );
+      }
+    }
+
+    if (
+      currentManifest.versionDigest !==
+        input.currentDigest ||
+      targetManifest.versionDigest !==
+        input.targetDigest
+    ) {
+      throw new Error(
+        "M16-A4 rollback manifest identity does not match exact current and target digests."
+      );
+    }
+
+    const regressionEvidencePath =
+      path.resolve(
+        input.regressionEvidencePath
+      );
+
+    const relativeRegressionPath =
+      path.relative(
+        this.projectRoot,
+        regressionEvidencePath
+      );
+
+    if (
+      relativeRegressionPath ===
+        ".." ||
+      relativeRegressionPath.startsWith(
+        `..${path.sep}`
+      ) ||
+      path.isAbsolute(
+        relativeRegressionPath
+      )
+    ) {
+      throw new Error(
+        "M16-A4 rollback regression evidence must remain inside the governed release root."
+      );
+    }
+
+    if (
+      !fs.existsSync(
+        regressionEvidencePath
+      ) ||
+      !fs.statSync(
+        regressionEvidencePath
+      ).isFile()
+    ) {
+      throw new Error(
+        "M16-A4 rollback requires an existing durable regression evidence file."
+      );
+    }
+
+    const actualRegressionHash =
+      fileSha256(
+        regressionEvidencePath
+      );
+
+    if (
+      actualRegressionHash !==
+        input.regressionEvidenceHash
+    ) {
+      throw new Error(
+        "M16-A4 rollback regression evidence hash mismatch."
+      );
+    }
+
+    const regressionRecord =
+      JSON.parse(
+        fs.readFileSync(
+          regressionEvidencePath,
+          "utf8"
+        )
+      );
+
+    if (
+      regressionRecord.schemaVersion !==
+        "sera.m16-a4-deterministic-regression.v1" ||
+      regressionRecord.capabilityId !==
+        input.capabilityId ||
+      regressionRecord.activeVersionDigest !==
+        input.currentDigest ||
+      regressionRecord.deterministic !==
+        true ||
+      regressionRecord.regressionObserved !==
+        true ||
+      typeof regressionRecord
+        .observedDeficiency !==
+        "string" ||
+      regressionRecord
+        .observedDeficiency
+        .trim().length === 0
+    ) {
+      throw new Error(
+        "M16-A4 rollback requires deterministic regression evidence bound to the exact active current digest."
+      );
+    }
+
+    const regressionEvidence = {
+      id:
+        randomId(
+          "m16_a4_rollback_regression"
+        ),
+      uri:
+        regressionEvidencePath,
+      sha256:
+        actualRegressionHash,
+      kind:
+        "m16-a4-deterministic-regression"
+    };
+
+    const authorization =
+      createCapabilityAuthorization({
+        authorizationType:
+          "rollback",
+        attemptId:
+          input.attemptId,
+        sessionId:
+          input.sourceSessionId,
+        proposalId:
+          input.sourceProposalId,
+        capabilityId:
+          input.capabilityId,
+        candidateRequestHash:
+          input.targetDigest,
+        learningLane:
+          "repair",
+        riskClass:
+          "low",
+        approvedExecutableIds: [
+          M16_A1_EXECUTABLE_ID
+        ],
+        baselineVersionDigest:
+          input.currentDigest
+      });
+
+    const engine =
+      new CapabilityEngine(
+        this.store,
+        {
+          projectRoot:
+            this.projectRoot
+        }
+      );
+
+    const rollback =
+      engine.rollback({
+        sessionId:
+          input.sourceSessionId,
+        capabilityId:
+          input.capabilityId,
+        currentDigest:
+          input.currentDigest,
+        targetDigest:
+          input.targetDigest,
+        reason:
+          input.reason.trim(),
+        regressionEvidence: [
+          regressionEvidence
+        ],
+        authorization,
+        idempotencyKey:
+          `m16-a4-rollback:${input.operatorRequestId}:${input.currentDigest}:${input.targetDigest}:${actualRegressionHash}`
+      });
+
+    const activeAfter =
+      this.store.recoveryGet(
+        "SELECT active_version_digest, authority_identity FROM capability_active_versions WHERE capability_id = ? AND activation_scope = ?",
+        [
+          input.capabilityId,
+          "catalog"
+        ]
+      );
+
+    const targetAfter =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.targetDigest
+        ]
+      );
+
+    const currentAfter =
+      this.store.recoveryGet(
+        "SELECT lifecycle_status FROM capability_versions WHERE capability_id = ? AND version_digest = ?",
+        [
+          input.capabilityId,
+          input.currentDigest
+        ]
+      );
+
+    const catalogAfter =
+      this.store.recoveryGet(
+        "SELECT active_version_digest, status FROM capability_catalog WHERE capability_id = ?",
+        [
+          input.capabilityId
+        ]
+      );
+
+    const rollbackRecord =
+      this.store.recoveryGet(
+        "SELECT rollback_id, current_version_digest, target_version_digest, authorization_id, regression_evidence_json FROM capability_rollbacks WHERE capability_id = ? AND current_version_digest = ? AND target_version_digest = ? ORDER BY rolled_back_at DESC LIMIT 1",
+        [
+          input.capabilityId,
+          input.currentDigest,
+          input.targetDigest
+        ]
+      );
+
+    if (
+      String(
+        activeAfter
+          ?.active_version_digest ??
+        ""
+      ) !== input.targetDigest ||
+      String(
+        activeAfter
+          ?.authority_identity ??
+        ""
+      ) !== "control-plane" ||
+      String(
+        targetAfter
+          ?.lifecycle_status ??
+        ""
+      ) !== "PROMOTED" ||
+      String(
+        currentAfter
+          ?.lifecycle_status ??
+        ""
+      ) !== "ROLLED_BACK" ||
+      String(
+        catalogAfter
+          ?.active_version_digest ??
+        ""
+      ) !== input.targetDigest ||
+      String(
+        catalogAfter
+          ?.status ??
+        ""
+      ) !== "PROMOTED" ||
+      !rollbackRecord ||
+      String(
+        rollbackRecord
+          .current_version_digest ??
+        ""
+      ) !== input.currentDigest ||
+      String(
+        rollbackRecord
+          .target_version_digest ??
+        ""
+      ) !== input.targetDigest ||
+      String(
+        rollbackRecord
+          .authorization_id ??
+        ""
+      ) !== authorization
+        .authorizationId
+    ) {
+      throw new Error(
+        "M16-A4 post-rollback state invariant failed."
+      );
+    }
+
+    const storedRegressionEvidence =
+      JSON.parse(
+        String(
+          rollbackRecord
+            .regression_evidence_json
+        )
+      );
+
+    if (
+      !Array.isArray(
+        storedRegressionEvidence
+      ) ||
+      storedRegressionEvidence.length !==
+        1 ||
+      storedRegressionEvidence[0]
+        ?.sha256 !==
+        actualRegressionHash ||
+      storedRegressionEvidence[0]
+        ?.uri !==
+        regressionEvidencePath
+    ) {
+      throw new Error(
+        "M16-A4 rollback record does not retain the exact regression evidence identity."
+      );
+    }
+
+    const evidenceRoot =
+      path.join(
+        this.projectRoot,
+        ".sera",
+        "capability-engine-composition",
+        input.attemptId
+      );
+
+    const evidencePath =
+      writeJson(
+        path.join(
+          evidenceRoot,
+          "m16-a4-rollback.json"
+        ),
+        {
+          schemaVersion:
+            "sera.m16-a4-rollback.v1",
+          attemptId:
+            input.attemptId,
+          operatorRequestId:
+            input.operatorRequestId,
+          sourceProvenance: {
+            proposalId:
+              input.sourceProposalId,
+            sessionId:
+              input.sourceSessionId,
+            learningLane:
+              "repair"
+          },
+          capabilityId:
+            input.capabilityId,
+          currentDigest:
+            input.currentDigest,
+          targetDigest:
+            input.targetDigest,
+          reason:
+            input.reason.trim(),
+          regressionEvidence: {
+            path:
+              regressionEvidencePath,
+            sha256:
+              actualRegressionHash,
+            observedDeficiency:
+              regressionRecord
+                .observedDeficiency
+          },
+          authorizationId:
+            authorization
+              .authorizationId,
+          rollbackId:
+            String(
+              rollbackRecord
+                .rollback_id
+            ),
+          rollback,
+          after: {
+            activeVersionDigest:
+              input.targetDigest,
+            activeAuthority:
+              "control-plane",
+            targetLifecycleStatus:
+              "PROMOTED",
+            currentLifecycleStatus:
+              "ROLLED_BACK",
+            catalogStatus:
+              "PROMOTED"
+          },
+          exactRollbackRecord:
+            true,
+          offline:
+            true,
+          publicNetworkUse:
+            false,
+          cloudProviderUse:
+            false,
+          modelUse:
+            false
+        }
+      );
+
+    const evidenceHash =
+      fileSha256(
+        evidencePath
+      );
+
+    const evidenceReferenceId =
+      this.controlPlane
+        .recordEvidenceReference({
+          attemptId:
+            input.attemptId,
+          evidenceType:
+            "m16-a4-explicit-rollback",
+          location:
+            path
+              .relative(
+                this.projectRoot,
+                evidencePath
+              )
+              .replace(/\\/g, "/"),
+          integrityHash:
+            evidenceHash,
+          producer:
+            "governed-capability-engine-composition",
+          metadata: {
+            capabilityId:
+              input.capabilityId,
+            currentDigest:
+              input.currentDigest,
+            targetDigest:
+              input.targetDigest,
+            regressionEvidenceHash:
+              actualRegressionHash,
+            authorizationId:
+              authorization
+                .authorizationId,
+            exactRollbackRecord:
+              true,
+            targetRestoredPromoted:
+              true,
+            currentMarkedRolledBack:
+              true,
+            authorityIdentity:
+              "control-plane"
+          }
+        });
+
+    return {
+      capabilityId:
+        input.capabilityId,
+      currentDigest:
+        input.currentDigest,
+      targetDigest:
+        input.targetDigest,
+      activeVersionDigest:
+        input.targetDigest,
+      targetLifecycleStatus:
+        "PROMOTED" as const,
+      currentLifecycleStatus:
+        "ROLLED_BACK" as const,
+      authorizationId:
+        authorization
+          .authorizationId,
+      rollbackId:
+        String(
+          rollbackRecord
+            .rollback_id
+        ),
+      regressionEvidencePath,
+      regressionEvidenceHash:
+        actualRegressionHash,
+      evidencePath,
+      evidenceHash,
+      evidenceReferenceIds: [
+        evidenceReferenceId
+      ],
+      rollbackPerformed:
+        true as const,
+      exactRollbackRecord:
+        true as const,
+      pointerAuthorityPreserved:
+        true as const,
+      catalogRestoredPromoted:
+        true as const,
+      offline:
+        true as const,
+      publicNetworkUse:
+        false as const,
+      cloudProviderUse:
+        false as const,
+      modelUse:
+        false as const
+    };
+  }
   async executePromotedBoundedCapability(input: {
     attemptId: string;
     operatorRequestId: string;
@@ -2577,7 +4736,19 @@ export class GovernedCapabilityEngineComposition {
       manifest
         .approvedExecutionRecipe;
 
-    const expectedArgs = [
+
+    const activeExecutableId =
+      String(
+        recipe?.executableId ??
+        ""
+      );
+
+    const boundedPromotedExecutableIds =
+      new Set<string>([
+        M16_A1_EXECUTABLE_ID,
+        "deterministic-text-transform-v2"
+      ]);
+const expectedArgs = [
       M16_A1_OPERATION,
       "input/source.txt",
       "out/result.txt",
@@ -2597,8 +4768,9 @@ export class GovernedCapabilityEngineComposition {
         "none" ||
       manifest.modelUsePolicy !==
         "none" ||
-      recipe?.executableId !==
-        M16_A1_EXECUTABLE_ID ||
+      !boundedPromotedExecutableIds.has(
+        activeExecutableId
+      ) ||
       recipe?.shell !== false ||
       JSON.stringify(
         recipe?.args
@@ -2615,7 +4787,7 @@ export class GovernedCapabilityEngineComposition {
     const executable =
       createDefaultExecutableRegistry()
         .get(
-          M16_A1_EXECUTABLE_ID
+          activeExecutableId
         );
 
     if (
@@ -2643,7 +4815,7 @@ export class GovernedCapabilityEngineComposition {
           "m16_a3_reattempt_auth"
         ),
       executableId:
-        M16_A1_EXECUTABLE_ID,
+        activeExecutableId,
       args:
         expectedArgs,
       inputs: [

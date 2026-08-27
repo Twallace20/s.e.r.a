@@ -255,7 +255,7 @@ describe("Isolated Execution Engine v1", () => {
   });
 
   it("lists only registered executable adapters", () => {
-    expect(createDefaultExecutableRegistry().list().map((item) => item.id)).toEqual(["deterministic-text-transform-v1", "missing-fixture", "network-fixture", "node-fixture", "text-normalizer-v1"]);
+    expect(createDefaultExecutableRegistry().list().map((item) => item.id)).toEqual(["deterministic-text-transform-v1", "deterministic-text-transform-v2", "missing-fixture", "network-fixture", "node-fixture", "text-normalizer-v1"]);
   });
 });
 

@@ -2,6 +2,7 @@ import path from "node:path";
 import type { ExecutionRequest } from "./execution-request";
 import { TEXT_NORMALIZER_VERSION } from "./text-normalizer-tool";
 import { DETERMINISTIC_TEXT_TRANSFORM_MAX_INPUT_BYTES, DETERMINISTIC_TEXT_TRANSFORM_VERSION, STABLE_UNIQUE_LINE_SORT_OPERATION } from "./deterministic-text-transform-tool";
+import { DETERMINISTIC_TEXT_TRANSFORM_V2_VERSION } from "./deterministic-text-transform-tool-v2";
 
 export interface ApprovedExecutable {
   id: string;
@@ -145,5 +146,79 @@ export function createDefaultExecutableRegistry(): ApprovedExecutableRegistry {
     }
   });
 
+  registry.register({
+    id: "deterministic-text-transform-v2",
+    resolvePath: () => process.execPath,
+    fingerprint: `node:${process.version}:${DETERMINISTIC_TEXT_TRANSFORM_V2_VERSION}`,
+    risk: "local-tool",
+    offlineCompatible: true,
+    networkCapable: false,
+    validateArgs(args) {
+      const expected = [
+        STABLE_UNIQUE_LINE_SORT_OPERATION,
+        "input/source.txt",
+        "out/result.txt",
+        String(DETERMINISTIC_TEXT_TRANSFORM_MAX_INPUT_BYTES)
+      ];
+
+      if (
+        args.length !== expected.length ||
+        args.some(
+          (arg, index) =>
+            arg !== expected[index]
+        )
+      ) {
+        throw new Error(
+          "deterministic-text-transform-v2 accepts only the bounded stable-unique-line-sort recipe."
+        );
+      }
+    },
+    materializeArgs(request, workspaceRoot) {
+      return [
+        (() => {
+          const sibling =
+            path.join(
+              __dirname,
+              "deterministic-text-transform-tool-v2.js"
+            );
+
+          const built =
+            path.resolve(
+              __dirname,
+              "..",
+              "dist",
+              "deterministic-text-transform-tool-v2.js"
+            );
+
+          const script =
+            require("node:fs")
+              .existsSync(sibling)
+              ? sibling
+              : require("node:fs")
+                  .existsSync(built)
+                ? built
+                : undefined;
+
+          if (!script) {
+            throw new Error(
+              "deterministic-text-transform-v2 bundled implementation is unavailable."
+            );
+          }
+
+          return script;
+        })(),
+        request.args[0],
+        path.join(
+          workspaceRoot,
+          request.args[1]
+        ),
+        path.join(
+          workspaceRoot,
+          request.args[2]
+        ),
+        request.args[3]
+      ];
+    }
+  });
   return registry;
 }
