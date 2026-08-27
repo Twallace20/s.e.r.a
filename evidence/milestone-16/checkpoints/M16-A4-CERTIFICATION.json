@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "sera.m16-a4-certification.v1",
+  "checkpoint": "M16-A4",
+  "title": "Regression, exact-digest rollback, restart persistence",
+  "status": "CERTIFIED",
+  "productBoundary": "S.E.R.A. Base MVP",
+  "milestone": "M16",
+  "subGate": "M16-A4",
+  "certifiedAt": "2026-08-27T14:38:45.2029626-07:00",
+  "certificationStatement": "M16-A4 and aggregate M16-A governed capability acquisition are certified against the exact remotely aligned implementation/evidence commit and immutable M16-A4 local-validation record.",
+  "implementationEvidence": {
+    "branch": "sera/runtime-capability-composition-v1",
+    "commit": "90b01d13e9313978d0a368996967de1e4eb3424b",
+    "remoteCommit": "90b01d13e9313978d0a368996967de1e4eb3424b",
+    "remoteAligned": true
+  },
+  "validationEvidence": {
+    "record": "evidence/milestone-16/checkpoints/M16-A4-LOCAL-VALIDATION.json",
+    "sha256": "719f04bb8be05195a9c0d727111f0d0d5621295d195f72d69a6288f4799995f5",
+    "status": "LOCALLY_VALIDATED",
+    "build": "PASS",
+    "diffCheck": "PASS",
+    "focusedM16": "17/17 PASS",
+    "desktopOperator": "237/237 PASS",
+    "capabilityEngine": "148/148 PASS",
+    "governedCapabilityComposition": "1/1 PASS",
+    "isolatedExecution": "54/54 PASS",
+    "directTestsTotal": "457/457 PASS"
+  },
+  "prerequisites": {
+    "m16A1": {
+      "status": "CERTIFIED",
+      "certificationCommit": "c172f5c8a66790b8790d9b592c416ed364acee5c"
+    },
+    "m16A2": {
+      "status": "CERTIFIED",
+      "certificationCommit": "3f71d9f69f939178f11c05f75c6544f73ebb63b7"
+    },
+    "m16A3": {
+      "status": "CERTIFIED",
+      "certificationCommit": "8ce84fd942a1ee67073d951719dda8f19cb5f118"
+    }
+  },
+  "acceptance": {
+    "authenticRegressionR1": true,
+    "r1ExactPromotedDigestBinding": true,
+    "boundedRepairCandidate": true,
+    "deterministicRepairTests": true,
+    "repairCandidateInitiallyInactive": true,
+    "governedEvaluation": true,
+    "reproducibility": true,
+    "explicitOperatorCertification": true,
+    "exactDigestV2Promotion": true,
+    "realTaskExecutionOnV2": true,
+    "distinctRegressionR2": true,
+    "noAutomaticRollback": true,
+    "explicitAuthenticatedRollback": true,
+    "exactCurrentAndTargetDigestRollback": true,
+    "priorCertifiedV1Restored": true,
+    "replacedV2MarkedRolledBack": true,
+    "controlPlaneAuthorityPreserved": true,
+    "exactRollbackRecordPersisted": true,
+    "restartPersistence": true,
+    "promotionHistoryPersisted": true,
+    "rollbackHistoryPersisted": true,
+    "equivalentRequestSatisfiedAfterRestart": true,
+    "restoredV1ExecutedAfterRestart": true,
+    "desktopLifecycleVisible": true,
+    "desktopLifecycleReadOnly": true,
+    "offline": true,
+    "publicNetworkUse": false,
+    "cloudProviderUse": false,
+    "modelUse": false,
+    "externalPackageAcquisition": false
+  },
+  "governedCapabilityAcquisition": {
+    "authenticGapToInactiveCandidate": "CERTIFIED",
+    "governedEvaluationAndOperatorDecision": "CERTIFIED",
+    "explicitPromotionAndRealTaskReattempt": "CERTIFIED",
+    "regressionRollbackRestartPersistence": "CERTIFIED",
+    "aggregateStatus": "CERTIFIED"
+  },
+  "authorityBoundaries": {
+    "operatorGateway": "authenticated validation dispatch and operator surface",
+    "productControlPlane": "attempt and terminal governance authority",
+    "governedCapabilityComposition": "bounded orchestration and evidence binding",
+    "capabilityEngine": "capability lifecycle mutation authority",
+    "desktopOperator": "read-only lifecycle visibility for certification/promotion/rollback history",
+    "automaticPromotion": false,
+    "automaticRollback": false
+  },
+  "scope": {
+    "m16A1": "CERTIFIED",
+    "m16A2": "CERTIFIED",
+    "m16A3": "CERTIFIED",
+    "m16A4": "CERTIFIED",
+    "m16A": "CERTIFIED",
+    "m16B": "NOT_STARTED",
+    "m16C": "NOT_STARTED",
+    "m16": "NOT_YET_CERTIFIED",
+    "baseMvp": "NOT_YET_CERTIFIED"
+  },
+  "certificationDeclarations": [
+    "M16-A4 PASS",
+    "M16-A PASS"
+  ],
+  "prohibitedClaims": [
+    "M16-B is certified.",
+    "M16-C is certified.",
+    "S.E.R.A. Base MVP is certified.",
+    "Portable offline release is certified.",
+    "Clean-machine installation is proven."
+  ],
+  "unresolvedBlockers": [],
+  "protectedUnrelatedWorktreeArtifacts": [
+    "evidence/milestone-5/knowledge-intake-snapshot-proof.json",
+    "evidence/milestone-5/latest/.work/",
+    "m5-07-capture.cjs",
+    "m5-07-final-capture.cjs",
+    "m5-07-snapshot-capture.cjs"
+  ],
+  "nextAuthorizedGate": "M16-B Portable Offline Base MVP",
+  "nextAuthorizedAction": "Build the current portable Windows x64 release candidate and begin release-only offline dependency-closure proof.",
+  "certificationCommit": null
+}
