@@ -8,6 +8,7 @@ import type { BootStageName } from "./restricted-user-identity-binding";
 export const INSTALLATION_IDENTITY_SCHEMA="sera.restricted-user-installation-identity.v1";
 export const COLLECTOR_IDENTITY_SCHEMA="sera.restricted-user-subject-collector-identity.v1";
 export const BOOT_STAGE_SCHEMA="sera.restricted-user-boot-stage.v1";
+export const PREPARATION_AUTHORITY_SCHEMA="sera.restricted-user-preparation-authority.v1";
 export const RESTRICTED_INVOCATION_MODES=["NON_PROMOTABLE_DEVELOPMENT_SMOKE","NON_PROMOTABLE_PRODUCTION_ROUNDTRIP_TEST","REAL_RESTRICTED_USER_PROOF"] as const;
 export type RestrictedInvocationMode=typeof RESTRICTED_INVOCATION_MODES[number];
 const collectorRelative="collectors/restricted-user-collector.cjs";
@@ -20,10 +21,147 @@ export function prepareProductionIdentityBindings(preparationPath:string,options
  if((options.invocationMode??prep.invocationMode)==="NON_PROMOTABLE_PRODUCTION_ROUNDTRIP_TEST")prep.roundTripAdapters=options.roundTripAdapters??prep.roundTripAdapters;
  fs.mkdirSync(stateRoot,{recursive:true});const identityPath=path.join(stateRoot,"installation-identity.json"),releaseManifest=read(prep.release.releaseManifestPath),releaseIdentity=String(releaseManifest.version??releaseManifest.releaseIdentity??prep.release.releaseManifestDigest),now=options.now??(()=>new Date().toISOString());
  let identity:any;if(fs.existsSync(identityPath)){identity=read(identityPath);if(identity.schemaVersion!==INSTALLATION_IDENTITY_SCHEMA||!identity.installationId)throw new Error("INSTALLATION_IDENTITY_MALFORMED");}
- else{identity={schemaVersion:INSTALLATION_IDENTITY_SCHEMA,installationId:(options.uuid??crypto.randomUUID)(),createdAt:now(),hostProfileId:prep.hostProfileId,proofSessionId:prep.sessionId,nonce:prep.nonce,releaseZipDigest:prep.release.zipSha256,releaseManifestDigest:prep.release.releaseManifestDigest,extractedTreeDigest:prep.release.extractedTreeDigest,releaseIdentity,installationStateRelativePath:"State/installation-identity.json"};fs.writeFileSync(identityPath,`${JSON.stringify(identity,null,2)}\n`,{flag:"wx"});}
- for(const [k,v] of Object.entries({hostProfileId:prep.hostProfileId,proofSessionId:prep.sessionId,nonce:prep.nonce,releaseManifestDigest:prep.release.releaseManifestDigest,extractedTreeDigest:prep.release.extractedTreeDigest,releaseIdentity}))if(identity[k]!==v)throw new Error("INSTALLATION_RELEASE_BINDING_MISMATCH");
+ else{identity={schemaVersion:INSTALLATION_IDENTITY_SCHEMA,installationId:(options.uuid??crypto.randomUUID)(),createdAt:now(),hostProfileId:prep.hostProfileId,proofSessionId:prep.sessionId,nonce:prep.nonce,releaseZipDigest:prep.release.zipSha256,releaseManifestDigest:prep.release.releaseManifestDigest,extractedTreeDigest:prep.release.extractedTreeDigest,releaseIdentity,preparationPath:file,installationStateRelativePath:"State/installation-identity.json"};fs.writeFileSync(identityPath,`${JSON.stringify(identity,null,2)}\n`,{flag:"wx"});}
+ for(const [k,v] of Object.entries({hostProfileId:prep.hostProfileId,proofSessionId:prep.sessionId,nonce:prep.nonce,preparationPath:file,releaseManifestDigest:prep.release.releaseManifestDigest,extractedTreeDigest:prep.release.extractedTreeDigest,releaseIdentity}))if(identity[k]!==v)throw new Error("INSTALLATION_RELEASE_BINDING_MISMATCH");
  const collectorPath=fs.realpathSync(path.join(releaseRoot,...collectorRelative.split("/"))),runtimePath=fs.realpathSync(prep.release.runtimePath),entry=releaseManifest.files?.find((x:any)=>x.path===collectorRelative);if(!entry||entry.sha256!==sha256File(collectorPath)||entry.size!==fs.statSync(collectorPath).size)throw new Error("SUBJECT_COLLECTOR_RELEASE_MISMATCH");
- prep.schemaVersion="sera.restricted-user-preparation-manifest.v5.5";prep.identityBindingSchema="sera.restricted-user-identity-bindings.v5.3";prep.invocationMode=options.invocationMode??prep.invocationMode??"NON_PROMOTABLE_DEVELOPMENT_SMOKE";if(!RESTRICTED_INVOCATION_MODES.includes(prep.invocationMode))throw new Error("PREPARATION_INVOCATION_MODE_REQUIRED");prep.installationIdentity=identity.installationId;prep.installationIdentityRecord={path:identityPath,relativePath:"State/installation-identity.json",sha256:sha256File(identityPath),size:fs.statSync(identityPath).size};prep.installationBinding={releaseIdentity,releaseManifestDigest:prep.release.releaseManifestDigest,extractedTreeDigest:prep.release.extractedTreeDigest,hostProfileId:prep.hostProfileId,proofSessionId:prep.sessionId,nonce:prep.nonce};prep.subjectCollector={relativePath:collectorRelative,canonicalPath:collectorPath,size:entry.size,sha256:entry.sha256,releaseManifestEntry:entry,runtimePath,runtimeSize:fs.statSync(runtimePath).size,runtimeSha256:sha256File(runtimePath)};prep.expectedStages=["PRE_RESTART","POST_RESTART"];prep.bootObservationSchemaVersion=BOOT_STAGE_SCHEMA;prep.evidenceRoots={subject:{canonicalPath:evidenceRoot,identity:sha256(path.resolve(evidenceRoot).toLowerCase())},observer:{canonicalPath:path.resolve(prep.observerRoot),identity:sha256(path.resolve(prep.observerRoot).toLowerCase())}};fs.writeFileSync(file,`${JSON.stringify(prep,null,2)}\n`);return prep;
+ prep.schemaVersion="sera.restricted-user-preparation-manifest.v5.5";prep.identityBindingSchema="sera.restricted-user-identity-bindings.v5.3";prep.invocationMode=options.invocationMode??prep.invocationMode??"NON_PROMOTABLE_DEVELOPMENT_SMOKE";if(!RESTRICTED_INVOCATION_MODES.includes(prep.invocationMode))throw new Error("PREPARATION_INVOCATION_MODE_REQUIRED");prep.installationIdentity=identity.installationId;prep.installationIdentityRecord={path:identityPath,relativePath:"State/installation-identity.json",sha256:sha256File(identityPath),size:fs.statSync(identityPath).size};prep.installationBinding={releaseIdentity,releaseManifestDigest:prep.release.releaseManifestDigest,extractedTreeDigest:prep.release.extractedTreeDigest,hostProfileId:prep.hostProfileId,proofSessionId:prep.sessionId,nonce:prep.nonce};prep.subjectCollector={relativePath:collectorRelative,canonicalPath:collectorPath,size:entry.size,sha256:entry.sha256,releaseManifestEntry:entry,runtimePath,runtimeSize:fs.statSync(runtimePath).size,runtimeSha256:sha256File(runtimePath)};prep.expectedStages=["PRE_RESTART","POST_RESTART"];prep.bootObservationSchemaVersion=BOOT_STAGE_SCHEMA;prep.evidenceRoots={subject:{canonicalPath:evidenceRoot,identity:sha256(path.resolve(evidenceRoot).toLowerCase())},observer:{canonicalPath:path.resolve(prep.observerRoot),identity:sha256(path.resolve(prep.observerRoot).toLowerCase())}};fs.writeFileSync(file,`${JSON.stringify(prep,null,2)}\n`);writePreparationAuthority(file,prep);return prep;
+}
+
+
+function preparationAuthorityExpected(preparationPath:string,prep:any):any{
+ const file=path.resolve(preparationPath);
+ const observerRoot=path.resolve(String(prep.observerRoot??""));
+ const installation=readVerifiedInstallationIdentity(prep);
+
+ return{
+  schemaVersion:PREPARATION_AUTHORITY_SCHEMA,
+  preparationPath:file,
+  preparationManifestDigest:sha256File(file),
+  observerRoot,
+  observerRootIdentity:sha256(observerRoot.toLowerCase()),
+  installationIdentity:prep.installationIdentity,
+  installationIdentityRecordDigest:prep.installationIdentityRecord?.sha256,
+  hostProfileId:prep.hostProfileId,
+  proofSessionId:prep.sessionId,
+  nonceDigest:sha256(String(prep.nonce??"")),
+  releaseIdentity:prep.installationBinding?.releaseIdentity,
+  releaseZipDigest:prep.release?.zipSha256,
+  releaseManifestDigest:prep.release?.releaseManifestDigest,
+  extractedTreeDigest:prep.release?.extractedTreeDigest,
+  runtimeDigest:prep.subjectCollector?.runtimeSha256,
+  installationPreparationPath:path.resolve(String(installation.preparationPath??""))
+ };
+}
+
+function preparationAuthorityPath(prep:any):string{
+ const observerRoot=String(prep.observerRoot??"");
+
+ if(!observerRoot){
+  throw new Error("PREPARATION_AUTHORITY_MISMATCH");
+ }
+
+ return path.join(
+  path.resolve(observerRoot),
+  "preparation-authority.json"
+ );
+}
+
+export function writePreparationAuthority(preparationPath:string,prepInput?:any):any{
+ const file=path.resolve(preparationPath);
+ const prep=prepInput??read(file);
+ const authorityPath=preparationAuthorityPath(prep);
+
+ fs.mkdirSync(
+  path.dirname(authorityPath),
+  {recursive:true}
+ );
+
+ const expected=
+  preparationAuthorityExpected(
+   file,
+   prep
+  );
+
+ if(fs.existsSync(authorityPath)){
+  verifyPreparationAuthority(file);
+  return read(authorityPath);
+ }
+
+ fs.writeFileSync(
+  authorityPath,
+  `${JSON.stringify(expected,null,2)}\n`,
+  {flag:"wx"}
+ );
+
+ verifyPreparationAuthority(file);
+
+ return expected;
+}
+
+export function verifyPreparationAuthority(preparationPath:string):any{
+ try{
+  const file=path.resolve(preparationPath);
+  const prep=read(file);
+  const authorityPath=
+   preparationAuthorityPath(prep);
+
+  if(!fs.existsSync(authorityPath)){
+   throw new Error("PREPARATION_AUTHORITY_MISMATCH");
+  }
+
+  const stat=
+   fs.lstatSync(authorityPath);
+
+  if(
+   !stat.isFile()||
+   stat.isSymbolicLink()
+  ){
+   throw new Error("PREPARATION_AUTHORITY_MISMATCH");
+  }
+
+  const authority=
+   read(authorityPath);
+
+  const expected=
+   preparationAuthorityExpected(
+    file,
+    prep
+   );
+
+  for(
+   const [key,value]
+   of Object.entries(expected)
+  ){
+   if(authority[key]!==value){
+    throw new Error("PREPARATION_AUTHORITY_MISMATCH");
+   }
+  }
+
+  if(
+   Object.keys(authority)
+    .sort()
+    .join("\n") !==
+   Object.keys(expected)
+    .sort()
+    .join("\n")
+  ){
+   throw new Error("PREPARATION_AUTHORITY_MISMATCH");
+  }
+
+  return authority;
+ }catch(error){
+  if(
+   error instanceof Error &&
+   error.message ===
+    "PREPARATION_AUTHORITY_MISMATCH"
+  ){
+   throw error;
+  }
+
+  throw new Error(
+   "PREPARATION_AUTHORITY_MISMATCH"
+  );
+ }
 }
 
 export function readVerifiedInstallationIdentity(prep:any):any{const file=prep.installationIdentityRecord?.path??"",record=read(file),stat=fs.statSync(file);if(record.schemaVersion!==INSTALLATION_IDENTITY_SCHEMA||record.installationId!==prep.installationIdentity||stat.size!==prep.installationIdentityRecord.size||sha256File(file)!==prep.installationIdentityRecord.sha256)throw new Error("INSTALLATION_IDENTITY_MALFORMED");return record}

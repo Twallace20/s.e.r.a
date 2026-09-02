@@ -5,10 +5,21 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts"
+  ],
   "references": [
-    { "path": "../knowledge-runtime" },
-    { "path": "../model-runtime" },
-    { "path": "../runtime-state" }
+    {
+      "path": "../knowledge-runtime"
+    },
+    {
+      "path": "../model-runtime"
+    },
+    {
+      "path": "../runtime-state"
+    },
+    {
+      "path": "../operator-gateway"
+    }
   ]
 }

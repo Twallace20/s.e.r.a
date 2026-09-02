@@ -358,6 +358,309 @@ export function validateCleanEnvironmentEvidence(evidenceRoot: string): CleanEvi
   };
 }
 
+
+type PortableRuntimePackageRecord = {
+  name: string;
+  destination: string;
+  main: string;
+};
+
+function portableCompiledRoot(): string {
+  const direct = path.join(
+    __dirname,
+    "packaged-desktop-operator-host.js"
+  );
+
+  if (fs.existsSync(direct)) {
+    return __dirname;
+  }
+
+  const dist = path.resolve(
+    __dirname,
+    "..",
+    "dist"
+  );
+
+  if (
+    fs.existsSync(
+      path.join(
+        dist,
+        "packaged-desktop-operator-host.js"
+      )
+    )
+  ) {
+    return dist;
+  }
+
+  throw new PortableBaseMvpError(
+    "Compiled packaged Desktop Operator host is missing. Run the TypeScript build before packaging.",
+    "desktop_operator_host_compiled_output_missing"
+  );
+}
+
+function workspacePackageDirectory(
+  projectRoot: string,
+  packageName: string
+): string {
+  const shortName =
+    packageName.replace(/^@sera\//, "");
+
+  const candidates = [
+    path.join(
+      projectRoot,
+      "packages",
+      shortName
+    ),
+    path.join(
+      projectRoot,
+      "apps",
+      shortName
+    )
+  ];
+
+  const found =
+    candidates.find((candidate) =>
+      fs.existsSync(
+        path.join(
+          candidate,
+          "package.json"
+        )
+      )
+    );
+
+  if (!found) {
+    throw new PortableBaseMvpError(
+      `Workspace package is missing: ${packageName}`,
+      "portable_runtime_workspace_package_missing"
+    );
+  }
+
+  return found;
+}
+
+function packageProductionRuntimeClosure(
+  projectRoot: string,
+  packageRoot: string
+): PortableRuntimePackageRecord[] {
+  const queue = [
+    "@sera/operator-gateway"
+  ];
+
+  const seen =
+    new Set<string>();
+
+  const records:
+    PortableRuntimePackageRecord[] = [];
+
+  while (queue.length > 0) {
+    const packageName =
+      queue.shift()!;
+
+    if (seen.has(packageName)) {
+      continue;
+    }
+
+    seen.add(packageName);
+
+    const sourceRoot =
+      workspacePackageDirectory(
+        projectRoot,
+        packageName
+      );
+
+    const packageJsonPath =
+      path.join(
+        sourceRoot,
+        "package.json"
+      );
+
+    const packageJson =
+      JSON.parse(
+        fs.readFileSync(
+          packageJsonPath,
+          "utf8"
+        )
+      );
+
+    const dependencies =
+      Object.keys(
+        packageJson.dependencies ?? {}
+      );
+
+    const seraDependencies =
+      dependencies.filter(
+        (name) =>
+          name.startsWith("@sera/")
+      );
+
+    const externalDependencies =
+      dependencies.filter(
+        (name) =>
+          !name.startsWith("@sera/")
+      );
+
+    if (
+      externalDependencies.length > 0
+    ) {
+      throw new PortableBaseMvpError(
+        `External runtime dependencies are prohibited in the production closure: ${packageName} -> ${externalDependencies.join(", ")}`,
+        "portable_runtime_external_dependency"
+      );
+    }
+
+    const main =
+      String(
+        packageJson.main ??
+        "dist/index.js"
+      );
+
+    const sourceMain =
+      path.join(
+        sourceRoot,
+        ...main.split("/")
+      );
+
+    if (
+      !fs.existsSync(sourceMain)
+    ) {
+      throw new PortableBaseMvpError(
+        `Compiled runtime entrypoint missing: ${packageName} -> ${main}`,
+        "portable_runtime_compiled_entrypoint_missing"
+      );
+    }
+
+    const sourceDist =
+      path.join(
+        sourceRoot,
+        "dist"
+      );
+
+    if (
+      !fs.existsSync(sourceDist)
+    ) {
+      throw new PortableBaseMvpError(
+        `Compiled dist missing: ${packageName}`,
+        "portable_runtime_compiled_dist_missing"
+      );
+    }
+
+    const destinationRoot =
+      path.join(
+        packageRoot,
+        "node_modules",
+        "@sera",
+        packageName.replace(
+          /^@sera\//,
+          ""
+        )
+      );
+
+    fs.mkdirSync(
+      destinationRoot,
+      { recursive: true }
+    );
+
+    fs.copyFileSync(
+      packageJsonPath,
+      path.join(
+        destinationRoot,
+        "package.json"
+      )
+    );
+
+    fs.cpSync(
+      sourceDist,
+      path.join(
+        destinationRoot,
+        "dist"
+      ),
+      {
+        recursive: true,
+        force: true
+      }
+    );
+
+    records.push({
+      name: packageName,
+      destination:
+        relativePortablePath(
+          packageRoot,
+          destinationRoot
+        ),
+      main
+    });
+
+    for (
+      const dependency
+      of seraDependencies
+    ) {
+      queue.push(dependency);
+    }
+  }
+
+  return records.sort(
+    (a, b) =>
+      a.name.localeCompare(b.name)
+  );
+}
+
+function packageDesktopOperatorHost(
+  packageRoot: string
+): void {
+  const compiledRoot =
+    portableCompiledRoot();
+
+  const appRoot =
+    path.join(
+      packageRoot,
+      "app"
+    );
+
+  fs.mkdirSync(
+    appRoot,
+    { recursive: true }
+  );
+
+  const hostSource =
+    path.join(
+      compiledRoot,
+      "packaged-desktop-operator-host.js"
+    );
+
+  fs.copyFileSync(
+    hostSource,
+    path.join(
+      appRoot,
+      "desktop-operator-host.cjs"
+    )
+  );
+
+  const localRuntimeFiles =
+    fs.readdirSync(compiledRoot)
+      .filter(
+        (name) =>
+          /^restricted-user-.*\.js$/
+            .test(name)
+      )
+      .sort();
+
+  for (
+    const name
+    of localRuntimeFiles
+  ) {
+    fs.copyFileSync(
+      path.join(
+        compiledRoot,
+        name
+      ),
+      path.join(
+        appRoot,
+        name
+      )
+    );
+  }
+}
+
 export function buildPortableBaseMvp(input: { projectRoot?: string; outputRoot?: string } = {}): BaseMvpReleaseResult {
   const projectRoot = path.resolve(input.projectRoot ?? process.cwd());
   const releaseId = `base_mvp_${new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14)}_${randomId()}`;
@@ -374,10 +677,12 @@ export function buildPortableBaseMvp(input: { projectRoot?: string; outputRoot?:
   fs.mkdirSync(path.dirname(runtimePath), { recursive: true });
   fs.copyFileSync(process.execPath, runtimePath);
   writeText(path.join(packageRoot, "Launch-SERA.cmd"), launcherScript());
-  writeText(path.join(packageRoot, "Stop-SERA.cmd"), "@echo off\r\necho S.E.R.A. portable stop placeholder. Close the runtime host window if it is running.\r\n");
+  writeText(path.join(packageRoot, "Stop-SERA.cmd"), stopLauncherScript());
   writeText(path.join(packageRoot, "Diagnose-SERA.cmd"), "@echo off\r\necho S.E.R.A. portable diagnostics\r\nwhere node\r\nwhere ollama\r\n");
   writeText(path.join(packageRoot, "README-FIRST.txt"), readmeFirst());
   writeText(path.join(packageRoot, "app", "sera-portable-entry.cjs"), portableEntryScript());
+  packageDesktopOperatorHost(packageRoot);
+  const runtimePackages = packageProductionRuntimeClosure(projectRoot, packageRoot);
   writePortableCollectors(packageRoot);
   writeJson(path.join(packageRoot, "config", "portable-policy.json"), baseMvpPolicy());
   writeJson(path.join(packageRoot, "config", "capability-claim-registry.json"), capabilityClaimRegistry());
@@ -419,6 +724,13 @@ export function buildPortableBaseMvp(input: { projectRoot?: string; outputRoot?:
       privilegedObserver: collectorManifestRecord(packageRoot, "collectors/privileged-observer.cjs"),
       processMonitor: collectorManifestRecord(packageRoot, "collectors/process-start-monitor.ps1")
     },
+    desktopOperator: {
+      loopbackHost: "127.0.0.1",
+      port: 4317,
+      lifecycleActions: ["start", "status", "stop"],
+      host: collectorManifestRecord(packageRoot, "app/desktop-operator-host.cjs")
+    },
+    runtimePackages,
     limitations,
     files: listFiles(packageRoot).map((file) => ({
       path: relativePortablePath(packageRoot, file),
@@ -582,6 +894,102 @@ export function inspectCleanEnvironmentOptions(input: { projectRoot?: string; ou
   return result;
 }
 
+
+function desktopOperatorHostBinding(
+  manifest: any,
+  payload:
+    | {
+        size: number;
+        sha256: string;
+      }
+    | null
+): boolean {
+  if (!payload) {
+    return false;
+  }
+
+  const desktopOperator =
+    manifest?.desktopOperator;
+
+  const dedicated =
+    desktopOperator?.host;
+
+  const genericEntries =
+    Array.isArray(manifest?.files)
+      ? manifest.files.filter(
+          (entry: any) =>
+            entry?.path ===
+            "app/desktop-operator-host.cjs"
+        )
+      : [];
+
+  if (
+    genericEntries.length !== 1
+  ) {
+    return false;
+  }
+
+  const generic =
+    genericEntries[0];
+
+  const lifecycleActions =
+    desktopOperator
+      ?.lifecycleActions;
+
+  return (
+    desktopOperator
+      ?.loopbackHost ===
+      "127.0.0.1" &&
+
+    desktopOperator
+      ?.port ===
+      4317 &&
+
+    Array.isArray(
+      lifecycleActions
+    ) &&
+
+    JSON.stringify(
+      lifecycleActions
+    ) ===
+      JSON.stringify(
+        [
+          "start",
+          "status",
+          "stop"
+        ]
+      ) &&
+
+    dedicated
+      ?.path ===
+      "app/desktop-operator-host.cjs" &&
+
+    dedicated
+      ?.required ===
+      true &&
+
+    generic
+      ?.path ===
+      dedicated.path &&
+
+    generic
+      ?.size ===
+      dedicated.size &&
+
+    generic
+      ?.sha256 ===
+      dedicated.sha256 &&
+
+    dedicated
+      ?.size ===
+      payload.size &&
+
+    dedicated
+      ?.sha256 ===
+      payload.sha256
+  );
+}
+
 export function verifyPortableBaseMvp(subject: string): BaseMvpVerificationResult {
   const resolved = path.resolve(subject);
   const checks: Record<string, boolean> = {};
@@ -594,22 +1002,67 @@ export function verifyPortableBaseMvp(subject: string): BaseMvpVerificationResul
     checks.zipNonEmpty = fs.statSync(resolved).size > 100;
     const sidecarPath = `${resolved}.sha256.json`;
     checks.sidecarPresent = fs.existsSync(sidecarPath);
-    checks.sidecarMatches = checks.sidecarPresent ? JSON.parse(fs.readFileSync(sidecarPath, "utf8")).sha256 === sha256File(resolved) : false;
-    const zipEntries = readStoredZipEntries(resolved);
-    const runtimeEntry = zipEntries.get(`SERA-Base-MVP-v1/${PORTABLE_BASE_MVP_RUNTIME_PATH}`);
-    const manifestEntry = zipEntries.get("SERA-Base-MVP-v1/release-manifest.json");
-    const launcherEntry = zipEntries.get("SERA-Base-MVP-v1/Launch-SERA.cmd");
+    let sidecar: any = null;
+    try {
+      sidecar = checks.sidecarPresent ? JSON.parse(fs.readFileSync(sidecarPath, "utf8")) : null;
+    } catch {
+      sidecar = null;
+    }
+    const zipDigest = sha256File(resolved);
+    checks.sidecarMatches = Boolean(
+      sidecar?.schemaVersion === "sera.portable-release-sidecar.v1" &&
+      sidecar?.artifactName === PORTABLE_BASE_MVP_ARTIFACT_NAME &&
+      sidecar?.sha256 === zipDigest &&
+      sidecar?.size === fs.statSync(resolved).size &&
+      sidecar?.manifestPath === "SERA-Base-MVP-v1/release-manifest.json" &&
+      sidecar?.checksumPath === "SERA-Base-MVP-v1/SHA256SUMS.txt"
+    );
+    const archive = readStoredZipEntries(resolved);
+    checks.zipStructure = archive.valid;
+    checks.zipEntriesUnique = archive.duplicatePaths.length === 0;
+    const prefix = "SERA-Base-MVP-v1/";
+    checks.zipPackageRootExact = archive.paths.length > 0 && archive.paths.every((entry) => entry.startsWith(prefix) && portableReleasePath(entry.slice(prefix.length)));
+    const zipEntries = new Map<string, ReleaseFileRecord>();
+    if (checks.zipPackageRootExact) {
+      for (const [entry, bytes] of archive.entries) {
+        const relative = entry.slice(prefix.length);
+        zipEntries.set(relative, {
+          size: bytes.length,
+          sha256: sha256Buffer(bytes),
+          read: () => bytes
+        });
+      }
+    }
+    const runtimeEntry = zipEntries.get(PORTABLE_BASE_MVP_RUNTIME_PATH);
+    const manifestEntry = zipEntries.get("release-manifest.json");
+    const checksumEntry = zipEntries.get("SHA256SUMS.txt");
+    const launcherEntry = zipEntries.get("Launch-SERA.cmd");
+    const stopLauncherEntry = zipEntries.get("Stop-SERA.cmd");
+    const desktopOperatorHostEntry = zipEntries.get("app/desktop-operator-host.cjs");
     let zipManifest: any = null;
-    try { zipManifest = manifestEntry ? JSON.parse(manifestEntry.toString("utf8")) : null; } catch { /* blocked below */ }
+    try { zipManifest = manifestEntry ? JSON.parse(manifestEntry.read().toString("utf8")) : null; } catch { /* blocked below */ }
+    checks.manifestPresent = Boolean(manifestEntry);
+    checks.checksumPresent = Boolean(checksumEntry);
+    Object.assign(checks, releaseIntegrityChecks(zipManifest, zipEntries, checksumEntry?.read() ?? null));
     checks.runtimeBundled = Boolean(runtimeEntry);
-    checks.runtimeDigestMatchesManifest = Boolean(runtimeEntry && zipManifest?.runtime?.sha256 === sha256Buffer(runtimeEntry));
-    checks.launcherExplicitRuntime = Boolean(launcherEntry && launcherUsesBundledRuntime(launcherEntry.toString("utf8")));
+    checks.runtimeDigestMatchesManifest = Boolean(runtimeEntry && zipManifest?.runtime?.size === runtimeEntry.size && zipManifest?.runtime?.sha256 === runtimeEntry.sha256 && zipManifest?.runtime?.required === true && zipManifest?.runtime?.executable === true);
+    checks.launcherExplicitRuntime = Boolean(launcherEntry && launcherUsesBundledRuntime(launcherEntry.read().toString("utf8")));
+    checks.stopLauncherExplicitRuntime = Boolean(stopLauncherEntry && stopLauncherUsesBundledRuntime(stopLauncherEntry.read().toString("utf8")));
+    checks.desktopOperatorHostBound = desktopOperatorHostBinding(
+      zipManifest,
+      desktopOperatorHostEntry
+        ? {
+            size: desktopOperatorHostEntry.size,
+            sha256: desktopOperatorHostEntry.sha256
+          }
+        : null
+    );
     return {
       ok: Object.values(checks).every(Boolean),
       status: Object.values(checks).every(Boolean) ? "VERIFIED" : "BLOCKED",
       subject: resolved,
       zipPath: resolved,
-      sha256: sha256File(resolved),
+      sha256: zipDigest,
       checks,
       limitations,
       modelUse: false,
@@ -627,8 +1080,16 @@ export function verifyPortableBaseMvp(subject: string): BaseMvpVerificationResul
   checks.policyPresent = fs.existsSync(path.join(packageRoot, "config", "portable-policy.json"));
   checks.claimRegistryPresent = fs.existsSync(path.join(packageRoot, "config", "capability-claim-registry.json"));
   checks.fixtureCorpusPresent = fs.existsSync(path.join(packageRoot, "fixtures", "base-mvp-v1"));
-  checks.cleanEnvironmentNotClaimed = checks.manifestPresent ? JSON.parse(fs.readFileSync(manifestPath, "utf8")).cleanEnvironmentProofRequired === true : false;
-  const manifest = checks.manifestPresent ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : null;
+  let manifest: any = null;
+  try {
+    manifest = checks.manifestPresent ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : null;
+  } catch {
+    manifest = null;
+  }
+  checks.cleanEnvironmentNotClaimed = manifest?.cleanEnvironmentProofRequired === true;
+  const directory = checks.packageRootPresent ? readDirectoryReleaseFiles(packageRoot) : { valid: false, files: new Map<string, ReleaseFileRecord>() };
+  checks.noUnsafePayloadEntries = directory.valid;
+  Object.assign(checks, releaseIntegrityChecks(manifest, directory.files, checks.checksumPresent ? fs.readFileSync(checksumPath) : null));
   const runtimeRelative = manifest?.runtime?.path;
   const runtimePath = typeof runtimeRelative === "string" ? path.resolve(packageRoot, ...runtimeRelative.split("/")) : "";
   checks.runtimePathSafe = typeof runtimeRelative === "string" && runtimeRelative === PORTABLE_BASE_MVP_RUNTIME_PATH && runtimePath.startsWith(`${packageRoot}${path.sep}`);
@@ -636,6 +1097,74 @@ export function verifyPortableBaseMvp(subject: string): BaseMvpVerificationResul
   checks.runtimeDigestMatchesManifest = checks.runtimeBundled && manifest.runtime.size === fs.statSync(runtimePath).size && manifest.runtime.sha256 === sha256File(runtimePath) && manifest.runtime.required === true && manifest.runtime.executable === true;
   const launcherText = checks.launcherPresent ? fs.readFileSync(path.join(packageRoot, "Launch-SERA.cmd"), "utf8") : "";
   checks.launcherExplicitRuntime = launcherUsesBundledRuntime(launcherText);
+  const stopLauncherPath = path.join(packageRoot, "Stop-SERA.cmd");
+  checks.stopLauncherPresent = fs.existsSync(stopLauncherPath);
+  checks.stopLauncherExplicitRuntime = checks.stopLauncherPresent && stopLauncherUsesBundledRuntime(fs.readFileSync(stopLauncherPath, "utf8"));
+
+  const desktopOperatorHostPath =
+    path.join(
+      packageRoot,
+      "app",
+      "desktop-operator-host.cjs"
+    );
+
+  let desktopOperatorHostPayload:
+    | {
+        size: number;
+        sha256: string;
+      }
+    | null = null;
+
+  if (
+    fs.existsSync(
+      desktopOperatorHostPath
+    )
+  ) {
+    try {
+      const lexical =
+        fs.lstatSync(
+          desktopOperatorHostPath
+        );
+
+      const real =
+        fs.realpathSync(
+          desktopOperatorHostPath
+        );
+
+      const exactPath =
+        path.resolve(real)
+          .toLowerCase() ===
+        path.resolve(
+          desktopOperatorHostPath
+        ).toLowerCase();
+
+      if (
+        lexical.isFile() &&
+        !lexical.isSymbolicLink() &&
+        exactPath
+      ) {
+        desktopOperatorHostPayload = {
+          size:
+            lexical.size,
+          sha256:
+            sha256File(
+              desktopOperatorHostPath
+            )
+        };
+      }
+    }
+    catch {
+      desktopOperatorHostPayload =
+        null;
+    }
+  }
+
+  checks.desktopOperatorHostBound =
+    desktopOperatorHostBinding(
+      manifest,
+      desktopOperatorHostPayload
+    );
+
   return {
     ok: Object.values(checks).every(Boolean),
     status: Object.values(checks).every(Boolean) ? "VERIFIED" : "BLOCKED",
@@ -920,41 +1449,398 @@ function launcherScript(): string {
     "@echo off",
     "setlocal",
     "cd /d %~dp0",
-    "echo Starting S.E.R.A. Base MVP portable candidate...",
-    "echo This launcher requires an existing local Node runtime and an existing local Ollama installation.",
-    "where ollama >nul 2>nul || (echo Ollama not found. & exit /b 1)",
-    "if not exist \"%~dp0runtime\\node.exe\" (echo Bundled runtime not found. & exit /b 1)",
-    "\"%~dp0runtime\\node.exe\" \"%~dp0app\\sera-portable-entry.cjs\"",
-    "endlocal"
+    "echo Starting S.E.R.A. Base MVP...",
+    "if \"%~1\"==\"\" (echo Usage: Launch-SERA.cmd ^<preparation-manifest.json^> & exit /b 2)",
+    "set \"SERA_PREPARATION=%~f1\"",
+    "if not exist \"%SERA_PREPARATION%\" (echo Governed preparation manifest not found. & exit /b 3)",
+    "if not exist \"%~dp0runtime\\node.exe\" (echo Bundled runtime not found. & exit /b 4)",
+    "if not exist \"%~dp0app\\desktop-operator-host.cjs\" (echo Packaged Desktop Operator host not found. & exit /b 5)",
+    "\"%~dp0runtime\\node.exe\" \"%~dp0app\\desktop-operator-host.cjs\" start --preparation \"%SERA_PREPARATION%\" --stage PRE_RESTART",
+    "set \"SERA_EXIT=%ERRORLEVEL%\"",
+    "endlocal & exit /b %SERA_EXIT%"
+  ].join("\r\n") + "\r\n";
+}
+
+function stopLauncherScript(): string {
+  return [
+    "@echo off",
+    "setlocal",
+    "cd /d %~dp0",
+    "echo Stopping S.E.R.A. Base MVP...",
+    "if \"%~1\"==\"\" (echo Usage: Stop-SERA.cmd ^<preparation-manifest.json^> & exit /b 2)",
+    "set \"SERA_PREPARATION=%~f1\"",
+    "if not exist \"%SERA_PREPARATION%\" (echo Governed preparation manifest not found. & exit /b 3)",
+    "if not exist \"%~dp0runtime\\node.exe\" (echo Bundled runtime not found. & exit /b 4)",
+    "if not exist \"%~dp0app\\desktop-operator-host.cjs\" (echo Packaged Desktop Operator host not found. & exit /b 5)",
+    "\"%~dp0runtime\\node.exe\" \"%~dp0app\\desktop-operator-host.cjs\" stop --preparation \"%SERA_PREPARATION%\" --stage PRE_RESTART",
+    "set \"SERA_EXIT=%ERRORLEVEL%\"",
+    "endlocal & exit /b %SERA_EXIT%"
   ].join("\r\n") + "\r\n";
 }
 
 function launcherUsesBundledRuntime(script: string): boolean {
-  const normalized = script.replace(/\//g, "\\").toLowerCase();
-  const explicit = normalized.includes('"%~dp0runtime\\node.exe" "%~dp0app\\sera-portable-entry.cjs"');
-  const bareNode = /(^|[\r\n&|]\s*)node(?:\.exe)?\s/i.test(script);
-  const pathLookup = /where\s+node/i.test(script);
-  const absoluteDevelopmentPath = /[a-z]:\\(?!%)/i.test(script) || /(?:^|\s)(?:\.\.\\)+/i.test(script);
-  return explicit && !bareNode && !pathLookup && !absoluteDevelopmentPath;
+  return lifecycleLauncherUsesBundledRuntime(script, "start");
 }
 
-function readStoredZipEntries(zipPath: string): Map<string, Buffer> {
+function stopLauncherUsesBundledRuntime(script: string): boolean {
+  return lifecycleLauncherUsesBundledRuntime(script, "stop");
+}
+
+function lifecycleLauncherUsesBundledRuntime(script: string, action: "start" | "stop"): boolean {
+  const normalized =
+    script.replace(/\//g, "\\").toLowerCase();
+
+  const bundledRuntime =
+    normalized.includes(
+      '"%~dp0runtime\\node.exe"'
+    );
+
+  const packagedHost =
+    normalized.includes(
+      '"%~dp0app\\desktop-operator-host.cjs"'
+    );
+
+  const productionAction =
+    normalized.includes(
+      ` ${action} --preparation `
+    );
+
+  const governedStage =
+    normalized.includes(
+      ' --stage pre_restart'
+    );
+
+  const preparationArgument =
+    normalized.includes(
+      'set "sera_preparation=%~f1"'
+    );
+
+  const bareNode =
+    /(^|[\r\n&|]\s*)node(?:\.exe)?\s/i.test(
+      script
+    );
+
+  const nodeLookup =
+    /where\s+node/i.test(
+      script
+    );
+
+  const npmOrGit =
+    /(^|[\r\n&|]\s*)(npm|npx|git)(?:\.cmd|\.exe)?\s/i.test(
+      script
+    );
+
+  const absoluteDevelopmentPath =
+    /[a-z]:\\(?!%)/i.test(script) ||
+    /(?:^|\s)(?:\.\.\\)+/i.test(script);
+
+  return (
+    bundledRuntime &&
+    packagedHost &&
+    productionAction &&
+    governedStage &&
+    preparationArgument &&
+    !bareNode &&
+    !nodeLookup &&
+    !npmOrGit &&
+    !absoluteDevelopmentPath
+  );
+}
+
+interface ReleaseFileRecord {
+  size: number;
+  sha256: string;
+  read: () => Buffer;
+}
+
+interface StoredZipArchive {
+  valid: boolean;
+  entries: Map<string, Buffer>;
+  paths: string[];
+  duplicatePaths: string[];
+}
+
+function portableReleasePath(value: unknown): value is string {
+  if (typeof value !== "string" || value.length === 0 || value.includes("\\") || value.includes("\0")) return false;
+  if (value.startsWith("/") || /^[a-z]:/i.test(value) || path.posix.normalize(value) !== value) return false;
+  return value.split("/").every((part) => part.length > 0 && part !== "." && part !== "..");
+}
+
+function readDirectoryReleaseFiles(packageRoot: string): { valid: boolean; files: Map<string, ReleaseFileRecord> } {
+  const files = new Map<string, ReleaseFileRecord>();
+  let valid = true;
+  let rootReal = "";
+  try {
+    rootReal = path.resolve(fs.realpathSync(packageRoot));
+  } catch {
+    return { valid: false, files };
+  }
+  const rootPrefix = `${rootReal.toLowerCase()}${path.sep}`;
+  const visit = (current: string): void => {
+    let names: string[] = [];
+    try {
+      names = fs.readdirSync(current).sort((a, b) => a.localeCompare(b));
+    } catch {
+      valid = false;
+      return;
+    }
+    for (const name of names) {
+      const full = path.join(current, name);
+      try {
+        const lexical = fs.lstatSync(full);
+        const real = path.resolve(fs.realpathSync(full));
+        const relative = relativePortablePath(packageRoot, full);
+        if (lexical.isSymbolicLink() || !real.toLowerCase().startsWith(rootPrefix) || !portableReleasePath(relative)) {
+          valid = false;
+          continue;
+        }
+        if (lexical.isDirectory()) {
+          visit(full);
+        } else if (lexical.isFile()) {
+          if (files.has(relative)) valid = false;
+          let digest: string | undefined;
+          const record: ReleaseFileRecord = {
+            size: lexical.size,
+            read: () => fs.readFileSync(full)
+          } as ReleaseFileRecord;
+          Object.defineProperty(record, "sha256", {
+            enumerable: true,
+            get: () => digest ??= sha256File(full)
+          });
+          files.set(relative, record);
+        } else {
+          valid = false;
+        }
+      } catch {
+        valid = false;
+      }
+    }
+  };
+  visit(packageRoot);
+  return { valid, files };
+}
+
+function releaseIntegrityChecks(manifest: any, actualFiles: Map<string, ReleaseFileRecord>, checksumBytes: Buffer | null): Record<string, boolean> {
+  const checks: Record<string, boolean> = {};
+  checks.manifestIdentity = Boolean(
+    manifest?.schemaVersion === PORTABLE_BASE_MVP_SCHEMA &&
+    manifest?.version === PORTABLE_BASE_MVP_VERSION &&
+    manifest?.artifactName === PORTABLE_BASE_MVP_ARTIFACT_NAME &&
+    manifest?.packageRootName === "SERA-Base-MVP-v1" &&
+    manifest?.platform === "windows-x64" &&
+    manifest?.publicNetworkUse === false &&
+    manifest?.modelUse === false &&
+    manifest?.cleanEnvironmentProofRequired === true
+  );
+
+  const manifestFiles: any[] = Array.isArray(manifest?.files) ? manifest.files : [];
+  const expectedPayload = new Map<string, { size: number; sha256: string }>();
+  let manifestRecordsWellFormed = manifestFiles.length > 0;
+  let manifestFilesUnique = true;
+  for (const record of manifestFiles) {
+    const wellFormed = Boolean(
+      portableReleasePath(record?.path) &&
+      record.path !== "release-manifest.json" &&
+      record.path !== "SHA256SUMS.txt" &&
+      Number.isSafeInteger(record?.size) &&
+      record.size >= 0 &&
+      typeof record?.sha256 === "string" &&
+      /^[0-9a-f]{64}$/.test(record.sha256)
+    );
+    manifestRecordsWellFormed = manifestRecordsWellFormed && wellFormed;
+    if (!wellFormed) continue;
+    if (expectedPayload.has(record.path)) manifestFilesUnique = false;
+    else expectedPayload.set(record.path, { size: record.size, sha256: record.sha256 });
+  }
+  checks.manifestFilesUnique = manifestRecordsWellFormed && manifestFilesUnique;
+  checks.manifestStructure = checks.manifestIdentity && manifestRecordsWellFormed && manifestFilesUnique;
+
+  const checksum = parseChecksumFile(checksumBytes);
+  const manifestRecord = actualFiles.get("release-manifest.json");
+  const manifestChecksum = checksum.entries.get("release-manifest.json");
+  checks.manifestAuthenticAgainstChecksum = Boolean(manifestRecord && manifestChecksum && manifestRecord.sha256 === manifestChecksum);
+  const actualPayloadPaths = [...actualFiles.keys()].filter((entry) => entry !== "release-manifest.json" && entry !== "SHA256SUMS.txt");
+  checks.manifestFilesComplete = checks.manifestStructure && [...expectedPayload.keys()].every((entry) => actualFiles.has(entry));
+  checks.noUndeclaredPayload = checks.manifestStructure && actualPayloadPaths.every((entry) => expectedPayload.has(entry));
+  checks.manifestPayloadAuthentic = checks.manifestFilesComplete && checks.manifestAuthenticAgainstChecksum && [...expectedPayload].every(([entry, record]) => {
+    const actual = actualFiles.get(entry);
+    return Boolean(actual && actual.size === record.size && actual.sha256 === record.sha256);
+  });
+  checks.manifestPayloadClosure = checks.manifestFilesComplete && checks.noUndeclaredPayload && checks.manifestPayloadAuthentic;
+
+  checks.checksumStructure = checksum.valid;
+  checks.checksumEntriesUnique = checksum.valid && checksum.duplicatePaths.length === 0;
+  const expectedChecksumPaths = [...actualFiles.keys()].filter((entry) => entry !== "SHA256SUMS.txt");
+  checks.checksumFilesComplete = checksum.valid && expectedChecksumPaths.every((entry) => checksum.entries.has(entry));
+  checks.noUndeclaredChecksums = checksum.valid && [...checksum.entries.keys()].every((entry) => entry !== "SHA256SUMS.txt" && actualFiles.has(entry));
+  checks.checksumPayloadAuthentic = checks.checksumFilesComplete && [...checksum.entries].every(([entry, digest]) => actualFiles.get(entry)?.sha256 === digest);
+  checks.checksumClosure = checks.checksumEntriesUnique && checks.checksumFilesComplete && checks.noUndeclaredChecksums && checks.checksumPayloadAuthentic;
+
+  Object.assign(checks, runtimePackageIntegrityChecks(manifest, actualFiles));
+  return checks;
+}
+
+function parseChecksumFile(bytes: Buffer | null): { valid: boolean; entries: Map<string, string>; duplicatePaths: string[] } {
+  const entries = new Map<string, string>();
+  const duplicatePaths: string[] = [];
+  if (!bytes) return { valid: false, entries, duplicatePaths };
+  const text = bytes.toString("utf8");
+  if (!text.endsWith("\n")) return { valid: false, entries, duplicatePaths };
+  const lines = text.replace(/\r\n/g, "\n").slice(0, -1).split("\n");
+  if (lines.length === 0 || lines.some((line) => line.length === 0)) return { valid: false, entries, duplicatePaths };
+  for (const line of lines) {
+    const match = line.match(/^([0-9a-f]{64})  (.+)$/);
+    if (!match || !portableReleasePath(match[2])) return { valid: false, entries, duplicatePaths };
+    if (entries.has(match[2])) duplicatePaths.push(match[2]);
+    else entries.set(match[2], match[1]);
+  }
+  return { valid: true, entries, duplicatePaths };
+}
+
+function runtimePackageIntegrityChecks(manifest: any, actualFiles: Map<string, ReleaseFileRecord>): Record<string, boolean> {
+  const packages: any[] = Array.isArray(manifest?.runtimePackages) ? manifest.runtimePackages : [];
+  const names = new Set<string>();
+  const destinations = new Set<string>();
+  let recordsWellFormed = packages.length > 0;
+  let unique = true;
+  let ordered = true;
+  for (let index = 0; index < packages.length; index += 1) {
+    const record = packages[index];
+    const shortName = typeof record?.name === "string" && /^@sera\/[a-z0-9-]+$/.test(record.name) ? record.name.slice("@sera/".length) : "";
+    const wellFormed = Boolean(
+      shortName &&
+      record?.destination === `node_modules/@sera/${shortName}` &&
+      portableReleasePath(record?.main)
+    );
+    recordsWellFormed = recordsWellFormed && wellFormed;
+    if (!wellFormed) continue;
+    if (names.has(record.name) || destinations.has(record.destination)) unique = false;
+    names.add(record.name);
+    destinations.add(record.destination);
+    if (index > 0 && String(packages[index - 1]?.name).localeCompare(record.name) >= 0) ordered = false;
+  }
+  const packagePayloads = [...actualFiles.keys()].filter((entry) => entry.startsWith("node_modules/@sera/"));
+  const payloadsDeclared = packagePayloads.every((entry) => {
+    const parts = entry.split("/");
+    return parts.length >= 4 && destinations.has(parts.slice(0, 3).join("/"));
+  });
+  let packageManifestsBound = recordsWellFormed && unique;
+  let dependenciesClosed = recordsWellFormed && unique;
+  for (const record of packages) {
+    if (!record || typeof record.destination !== "string" || typeof record.main !== "string") {
+      packageManifestsBound = false;
+      dependenciesClosed = false;
+      continue;
+    }
+    const packageJson = actualFiles.get(`${record.destination}/package.json`);
+    const main = actualFiles.get(`${record.destination}/${record.main}`);
+    if (!packageJson || !main) {
+      packageManifestsBound = false;
+      dependenciesClosed = false;
+      continue;
+    }
+    try {
+      const parsed = JSON.parse(packageJson.read().toString("utf8"));
+      packageManifestsBound = packageManifestsBound && parsed?.name === record.name && parsed?.main === record.main;
+      const dependencies = parsed?.dependencies ?? {};
+      if (!dependencies || typeof dependencies !== "object" || Array.isArray(dependencies)) {
+        dependenciesClosed = false;
+      } else {
+        dependenciesClosed = dependenciesClosed && Object.keys(dependencies).every((dependency) => /^@sera\/[a-z0-9-]+$/.test(dependency) && names.has(dependency));
+      }
+    } catch {
+      packageManifestsBound = false;
+      dependenciesClosed = false;
+    }
+  }
+  return {
+    runtimePackagesStructure: recordsWellFormed && unique && ordered,
+    runtimePackagesUnique: recordsWellFormed && unique,
+    runtimePackagePayloadsDeclared: recordsWellFormed && payloadsDeclared,
+    runtimePackageManifestsBound: packageManifestsBound,
+    runtimePackageDependenciesClosed: dependenciesClosed,
+    runtimePackagesClosure: recordsWellFormed && unique && ordered && payloadsDeclared && packageManifestsBound && dependenciesClosed
+  };
+}
+
+function readStoredZipEntries(zipPath: string): StoredZipArchive {
   const data = fs.readFileSync(zipPath);
   const entries = new Map<string, Buffer>();
+  const paths: string[] = [];
+  const duplicatePaths: string[] = [];
+  const locals = new Map<number, { name: string; size: number; crc: number }>();
+  let valid = data.length >= 22;
+  const endOffset = data.length - 22;
+  if (!valid || data.readUInt32LE(endOffset) !== 0x06054b50 || data.readUInt16LE(endOffset + 20) !== 0) {
+    return { valid: false, entries, paths, duplicatePaths };
+  }
+  const disk = data.readUInt16LE(endOffset + 4);
+  const centralDisk = data.readUInt16LE(endOffset + 6);
+  const entriesOnDisk = data.readUInt16LE(endOffset + 8);
+  const totalEntries = data.readUInt16LE(endOffset + 10);
+  const centralSize = data.readUInt32LE(endOffset + 12);
+  const centralOffset = data.readUInt32LE(endOffset + 16);
+  valid = disk === 0 && centralDisk === 0 && entriesOnDisk === totalEntries && centralOffset + centralSize === endOffset;
   let offset = 0;
-  while (offset + 30 <= data.length && data.readUInt32LE(offset) === 0x04034b50) {
+  while (valid && offset < centralOffset) {
+    if (offset + 30 > centralOffset || data.readUInt32LE(offset) !== 0x04034b50) {
+      valid = false;
+      break;
+    }
+    const flags = data.readUInt16LE(offset + 6);
+    const method = data.readUInt16LE(offset + 8);
+    const crc = data.readUInt32LE(offset + 14);
     const size = data.readUInt32LE(offset + 18);
+    const uncompressedSize = data.readUInt32LE(offset + 22);
     const nameLength = data.readUInt16LE(offset + 26);
     const extraLength = data.readUInt16LE(offset + 28);
     const nameStart = offset + 30;
     const contentStart = nameStart + nameLength + extraLength;
     const contentEnd = contentStart + size;
-    if (contentEnd > data.length) break;
+    if (flags !== 0 || method !== 0 || size !== uncompressedSize || contentEnd > centralOffset) {
+      valid = false;
+      break;
+    }
     const name = data.subarray(nameStart, nameStart + nameLength).toString("utf8");
-    entries.set(name, data.subarray(contentStart, contentEnd));
+    const content = data.subarray(contentStart, contentEnd);
+    if (crc32(content) !== crc) valid = false;
+    if (entries.has(name)) duplicatePaths.push(name);
+    else entries.set(name, content);
+    paths.push(name);
+    locals.set(offset, { name, size, crc });
     offset = contentEnd;
   }
-  return entries;
+  valid = valid && offset === centralOffset && paths.length === totalEntries;
+  const centralPaths: string[] = [];
+  offset = centralOffset;
+  while (valid && offset < endOffset) {
+    if (offset + 46 > endOffset || data.readUInt32LE(offset) !== 0x02014b50) {
+      valid = false;
+      break;
+    }
+    const flags = data.readUInt16LE(offset + 8);
+    const method = data.readUInt16LE(offset + 10);
+    const crc = data.readUInt32LE(offset + 16);
+    const size = data.readUInt32LE(offset + 20);
+    const uncompressedSize = data.readUInt32LE(offset + 24);
+    const nameLength = data.readUInt16LE(offset + 28);
+    const extraLength = data.readUInt16LE(offset + 30);
+    const commentLength = data.readUInt16LE(offset + 32);
+    const localOffset = data.readUInt32LE(offset + 42);
+    const nameStart = offset + 46;
+    const next = nameStart + nameLength + extraLength + commentLength;
+    if (flags !== 0 || method !== 0 || size !== uncompressedSize || next > endOffset) {
+      valid = false;
+      break;
+    }
+    const name = data.subarray(nameStart, nameStart + nameLength).toString("utf8");
+    const local = locals.get(localOffset);
+    if (!local || local.name !== name || local.size !== size || local.crc !== crc) valid = false;
+    centralPaths.push(name);
+    offset = next;
+  }
+  valid = valid && offset === endOffset && centralPaths.length === totalEntries && JSON.stringify(centralPaths) === JSON.stringify(paths) && duplicatePaths.length === 0;
+  return { valid, entries, paths, duplicatePaths };
 }
 
 function portableEntryScript(): string {

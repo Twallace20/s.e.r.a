@@ -40,5 +40,374 @@ export function collectPostRestart(preparationPath:string):any{
  const manifest=finalizeEvidenceManifest({root,profileId:prep.profileId,evidenceMode:"governed-windows-v2",sessionId:prep.sessionId,nonce:prep.nonce,proofSid:prep.expectedProofSid,collectorId:"sera-windows-collector/v4",collectorSha256:collector.sha256,installationIdentity:prep.installationIdentity,installationIdentityRecordDigest:prep.installationIdentityRecord?.sha256,subjectCollectorDigest:prep.subjectCollector?.sha256,preparationManifestDigest:sha256File(path.join(root,"preparation-manifest.json")),governanceDecisionDigest:sha256File(path.join(root,"governance-decision.json")),stageFor:p=>p.startsWith("post/")||p.startsWith("observer/post-")?"post-restart":p.startsWith("pre/")||p.startsWith("raw/")||p.startsWith("visual/")||p.startsWith("observer/pre-")?"pre-restart":"preparation"});return{ok:true,status:"POST_RESTART_OBSERVED",evidenceRoot:root,previousPid:release.pid,currentPid:process.pid,manifestDigest:manifest.manifestDigest};
 }
 function readPreparation(file:string):any{if(!fs.existsSync(path.resolve(file)))throw new RestrictedCollectionBlockedError("PREPARATION_MANIFEST_MISSING","Preparation manifest is required.");return JSON.parse(fs.readFileSync(path.resolve(file),"utf8"));}function readInstallationId(fileInput:string,prep:any):string{const file=path.resolve(String(fileInput??""));if(!fs.existsSync(file))throw new RestrictedCollectionBlockedError("INSTALLATION_IDENTITY_MISSING","Governed installation identity is required.");const record=JSON.parse(fs.readFileSync(file,"utf8"));if(record.installationId!==prep.installationIdentity||record.proofSessionId!==prep.sessionId||record.nonce!==prep.nonce||record.hostProfileId!==prep.hostProfileId||record.releaseManifestDigest!==prep.release.releaseManifestDigest||record.extractedTreeDigest!==prep.release.extractedTreeDigest)throw new RestrictedCollectionBlockedError("INSTALLATION_RELEASE_BINDING_MISMATCH","Installation identity binding changed.");return record.installationId;}function requireWindows():void{if(process.platform!=="win32")throw new RestrictedCollectionBlockedError("WINDOWS_REQUIRED","Collector requires Windows.");}function requireWindowsUnlessInjected(source?:()=>Buffer):void{if(!source)requireWindows();}
+
+export function finalizeRestrictedUserEvidence(
+ preparationPath:string,
+ options:{
+  onTransitionLocked?:()=>void
+ }={}
+):any{
+ const resolvedPreparation=
+  path.resolve(
+   preparationPath
+  );
+
+ const prep=
+  readPreparation(
+   resolvedPreparation
+  );
+
+ const evidenceRoot=
+  path.dirname(
+   resolvedPreparation
+  );
+
+ const controlRoot=
+  path.join(
+   path.dirname(evidenceRoot),
+   "State",
+   "desktop-operator"
+  );
+
+ const lockPath=
+  path.join(
+   controlRoot,
+   "proof-transition.lock"
+  );
+
+ const sealPath=
+  path.join(
+   evidenceRoot,
+   "desktop-operator-finalization.seal"
+  );
+
+ const block=(
+  code:string,
+  message:string
+ ):never=>{
+  throw new RestrictedCollectionBlockedError(
+   code,
+   message
+  );
+ };
+
+ fs.mkdirSync(
+  controlRoot,
+  {recursive:true}
+ );
+
+ try{
+  fs.mkdirSync(
+   lockPath
+  );
+ }catch{
+  block(
+   "PACKAGED_DESKTOP_OPERATOR_TRANSITION_AMBIGUOUS",
+   "Desktop Operator lifecycle transition is already in progress."
+  );
+ }
+
+ let sealWritten=false;
+
+ try{
+  options.onTransitionLocked?.();
+
+  const stages=[
+   {
+    stage:"PRE_RESTART",
+    prefix:"pre"
+   },
+   {
+    stage:"POST_RESTART",
+    prefix:"post"
+   }
+  ] as const;
+
+  const lifecycleRecords:any[]=[];
+
+  for(
+   const descriptor
+   of stages
+  ){
+   const controlPath=
+    path.join(
+     controlRoot,
+     `${descriptor.prefix}-control.json`
+    );
+
+   const lifecyclePath=
+    path.join(
+     evidenceRoot,
+     "desktop-operator",
+     `${descriptor.prefix}-lifecycle.json`
+    );
+
+   if(
+    fs.existsSync(
+     controlPath
+    )
+   ){
+    let control:any;
+
+    try{
+     control=
+      JSON.parse(
+       fs.readFileSync(
+        controlPath,
+        "utf8"
+       )
+      );
+    }catch{
+     block(
+      "PACKAGED_DESKTOP_OPERATOR_LIFECYCLE_REQUIRED",
+      "Desktop Operator lifecycle control state is unreadable."
+     );
+    }
+
+    if(
+     Number.isInteger(
+      control?.pid
+     ) &&
+     control.pid > 0
+    ){
+     let active=false;
+
+     try{
+      process.kill(
+       control.pid,
+       0
+      );
+
+      active=true;
+     }catch{
+      active=false;
+     }
+
+     if(active){
+      block(
+       "PACKAGED_DESKTOP_OPERATOR_OWNED_PROCESS_ACTIVE",
+       "Desktop Operator owned process is still active."
+      );
+     }
+    }
+   }
+
+   if(
+    !fs.existsSync(
+     lifecyclePath
+    )
+   ){
+    block(
+     "PACKAGED_DESKTOP_OPERATOR_LIFECYCLE_REQUIRED",
+     "Complete PRE and POST Desktop Operator lifecycle evidence is required before finalization."
+    );
+   }
+
+   let lifecycle:any;
+
+   try{
+    lifecycle=
+     JSON.parse(
+      fs.readFileSync(
+       lifecyclePath,
+       "utf8"
+      )
+     );
+   }catch{
+    block(
+     "PACKAGED_DESKTOP_OPERATOR_LIFECYCLE_REQUIRED",
+     "Desktop Operator lifecycle evidence is unreadable."
+    );
+   }
+
+   if(
+    lifecycle?.stage !==
+     descriptor.stage ||
+    lifecycle?.state !==
+     "STOPPED" ||
+    lifecycle?.ownedProcessExitConfirmed !==
+     true ||
+    !lifecycle?.shutdownRequestedAt ||
+    !lifecycle?.stoppedAt
+   ){
+    block(
+     "PACKAGED_DESKTOP_OPERATOR_LIFECYCLE_REQUIRED",
+     "Desktop Operator lifecycle evidence is not terminal."
+    );
+   }
+
+   lifecycleRecords.push(
+    lifecycle
+   );
+  }
+
+  if(
+   fs.existsSync(
+    sealPath
+   )
+  ){
+   block(
+    "PACKAGED_DESKTOP_OPERATOR_LIFECYCLE_REQUIRED",
+    "Restricted-user evidence has already been finalized."
+   );
+  }
+
+  if(
+   !fs.existsSync(
+    path.join(
+     evidenceRoot,
+     "governance-decision.json"
+    )
+   ) &&
+   prep.governanceDecisionPath &&
+   fs.existsSync(
+    prep.governanceDecisionPath
+   )
+  ){
+   fs.copyFileSync(
+    prep.governanceDecisionPath,
+    path.join(
+     evidenceRoot,
+     "governance-decision.json"
+    )
+   );
+  }
+
+  const collector=
+   prep.subjectCollector ??
+   prep.collectors?.find(
+    (candidate:any)=>
+     candidate.relativePath===
+      "collectors/restricted-user-collector.cjs"
+   );
+
+  if(!collector){
+   block(
+    "COLLECTOR_IDENTITY_MISSING",
+    "Prepared collector identity is required."
+   );
+  }
+
+  const seal={
+   schemaVersion:
+    "sera.packaged-desktop-operator-finalization.v1",
+   proofSessionId:
+    prep.sessionId,
+   installationIdentity:
+    prep.installationIdentity,
+   preLifecyclePid:
+    lifecycleRecords[0].pid,
+   postLifecyclePid:
+    lifecycleRecords[1].pid,
+   finalizedAt:
+    new Date().toISOString()
+  };
+
+  fs.writeFileSync(
+   sealPath,
+   `${JSON.stringify(seal,null,2)}\n`,
+   {flag:"wx"}
+  );
+
+  sealWritten=true;
+
+  const governancePath=
+   path.join(
+    evidenceRoot,
+    "governance-decision.json"
+   );
+
+  if(
+   !fs.existsSync(
+    governancePath
+   )
+  ){
+   block(
+    "GOVERNANCE_DECISION_MISSING",
+    "Governance decision is required before finalization."
+   );
+  }
+
+  const manifest=
+   finalizeEvidenceManifest({
+    root:evidenceRoot,
+    profileId:prep.profileId,
+    evidenceMode:"governed-windows-v2",
+    sessionId:prep.sessionId,
+    nonce:prep.nonce,
+    proofSid:prep.expectedProofSid,
+    collectorId:
+     "sera-windows-collector/v5.7",
+    collectorSha256:
+     collector.sha256,
+    installationIdentity:
+     prep.installationIdentity,
+    installationIdentityRecordDigest:
+     prep.installationIdentityRecord?.sha256,
+    subjectCollectorDigest:
+     prep.subjectCollector?.sha256,
+    preparationManifestDigest:
+     sha256File(
+      resolvedPreparation
+     ),
+    governanceDecisionDigest:
+     sha256File(
+      governancePath
+     ),
+    stageFor:p=>
+     p.startsWith("post/") ||
+     p.startsWith("observer/post-") ||
+     p.includes("post-lifecycle")
+      ? "post-restart"
+      : p.startsWith("pre/") ||
+        p.startsWith("raw/") ||
+        p.startsWith("visual/") ||
+        p.startsWith("observer/pre-") ||
+        p.includes("pre-lifecycle")
+       ? "pre-restart"
+       : "preparation"
+   });
+
+  return{
+   ok:true,
+   status:"RESTRICTED_USER_EVIDENCE_FINALIZED",
+   evidenceRoot,
+   sealPath,
+   manifestPath:
+    path.join(
+     evidenceRoot,
+     "restricted-user-evidence-manifest.json"
+    ),
+   manifestDigest:
+    manifest.manifestDigest
+  };
+ }catch(error){
+  if(
+   sealWritten &&
+   !fs.existsSync(
+    path.join(
+     evidenceRoot,
+     "restricted-user-evidence-manifest.json"
+    )
+   )
+  ){
+   fs.rmSync(
+    sealPath,
+    {force:true}
+   );
+  }
+
+  throw error;
+ }finally{
+  fs.rmSync(
+   lockPath,
+   {
+    recursive:true,
+    force:true
+   }
+  );
+ }
+}
+
 export { VISUAL_STAGES };
 export function invokePackagedCollector(preparationPath:string,action:string,args:string[]=[]):any{const prep=readPreparation(preparationPath),mode=prep.invocationMode;if(!["NON_PROMOTABLE_DEVELOPMENT_SMOKE","NON_PROMOTABLE_PRODUCTION_ROUNDTRIP_TEST","REAL_RESTRICTED_USER_PROOF"].includes(mode))throw new RestrictedCollectionBlockedError("PREPARATION_INVOCATION_MODE_REQUIRED","Preparation must govern invocation mode.");const root=fs.realpathSync(prep.release.expectedExtractionRoot),runtime=fs.realpathSync(prep.release.runtimePath??path.join(root,"runtime","node.exe")),collector=fs.realpathSync(path.join(root,"collectors","restricted-user-collector.cjs"));if(!runtime.startsWith(`${root}${path.sep}`)||!collector.startsWith(`${root}${path.sep}`))throw new RestrictedCollectionBlockedError("RELEASE_CONTAINED_COLLECTOR_REQUIRED","Packaged runtime and collector are required.");const result=spawnSync(runtime,[collector,action,...args],{shell:false,encoding:"utf8",timeout:30_000,windowsHide:true,cwd:root,env:{SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,TEMP:process.env.TEMP,TMP:process.env.TMP,PATH:path.dirname(runtime),SERA_PROOF_INVOCATION:mode}});let output:any;const lines=`${String(result.stdout)}\n${String(result.stderr)}`.split(/\r?\n/).map(x=>x.trim()).filter(x=>x.startsWith("{")).reverse();try{if(!lines.length)throw new Error("missing JSON");output=JSON.parse(lines[0]);}catch{output={ok:false,status:"BLOCKED",reasonCode:"PACKAGED_COLLECTOR_OUTPUT_INVALID",exitCode:result.status};}return{...output,repositoryDelegation:true,invocation:mode,claimsGranted:[]};}

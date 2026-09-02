@@ -16,6 +16,172 @@ export function readObserverJsonFile(file:string):any {
   return parseObserverJsonText(fs.readFileSync(file,"utf8"));
 }
 
+
+export function parseRawObserverEvents(text:string):any[]{
+  const events:any[]=[];
+
+  for(
+    const rawLine
+    of String(text??"").split(/\r?\n/)
+  ){
+    const line=rawLine.trim();
+
+    if(!line){
+      continue;
+    }
+
+    const event=
+      parseObserverJsonText(
+        line
+      );
+
+    events.push({
+      ...event,
+      timestamp:
+        event.eventTimestamp,
+      executableName:
+        event.processName,
+      executablePath:
+        event.enrichment?.executablePath,
+      owner:
+        event.enrichment?.owner,
+      ownerSid:
+        event.enrichment?.ownerSid,
+      sessionId:
+        event.enrichment?.sessionId,
+      commandLine:
+        event.enrichment?.commandLine,
+      sourceEventType:
+        event.sourceEventType,
+      enrichmentStatus:
+        event.enrichmentStatus
+    });
+  }
+
+  return events;
+}
+
+export function auditLifecycleObserverAuthority(
+  events:any[],
+  pre:any,
+  post:any,
+  subjectSid:string,
+  windowsSessionId:number|string,
+  runtimePath:string
+):string[]{
+  const reasons:string[]=[];
+
+  const add=(code:string)=>{
+    if(!reasons.includes(code)){
+      reasons.push(code);
+    }
+  };
+
+  const normalizePath=(value:unknown)=>
+    path.resolve(
+      String(value??"")
+    )
+    .replaceAll("/","\\")
+    .toLowerCase();
+
+  const auditStage=(
+    prefix:"PRE"|"POST",
+    lifecycle:any
+  )=>{
+    const pid=
+      lifecycle?.pid;
+
+    const event=
+      (events??[]).find(
+        (candidate:any)=>
+          candidate?.pid===pid
+      );
+
+    if(!event){
+      add(
+        `${prefix}_LIFECYCLE_RAW_PROCESS_MISSING`
+      );
+      return;
+    }
+
+    if(
+      event.ownerSid !==
+      subjectSid
+    ){
+      add(
+        `${prefix}_LIFECYCLE_RAW_SID_MISMATCH`
+      );
+    }
+
+    if(
+      String(event.sessionId) !==
+      String(windowsSessionId)
+    ){
+      add(
+        `${prefix}_LIFECYCLE_RAW_SESSION_MISMATCH`
+      );
+    }
+
+    if(
+      normalizePath(
+        event.executablePath
+      ) !==
+      normalizePath(
+        runtimePath
+      )
+    ){
+      add(
+        `${prefix}_LIFECYCLE_RAW_RUNTIME_PATH_MISMATCH`
+      );
+    }
+
+    const timestamp=
+      Date.parse(
+        String(
+          event.timestamp??""
+        )
+      );
+
+    const startedAt=
+      Date.parse(
+        String(
+          lifecycle?.startedAt??""
+        )
+      );
+
+    const stoppedAt=
+      Date.parse(
+        String(
+          lifecycle?.stoppedAt??""
+        )
+      );
+
+    if(
+      !Number.isFinite(timestamp) ||
+      !Number.isFinite(startedAt) ||
+      !Number.isFinite(stoppedAt) ||
+      timestamp < startedAt ||
+      timestamp > stoppedAt
+    ){
+      add(
+        `${prefix}_LIFECYCLE_RAW_TIME_WINDOW_MISMATCH`
+      );
+    }
+  };
+
+  auditStage(
+    "PRE",
+    pre
+  );
+
+  auditStage(
+    "POST",
+    post
+  );
+
+  return reasons.sort();
+}
+
 export function isOwnedObserverChild(ownedPid:number,candidatePid:number):boolean {
   return Number.isInteger(ownedPid)&&ownedPid>0&&candidatePid===ownedPid;
 }

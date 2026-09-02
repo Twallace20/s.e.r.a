@@ -1,11 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import { EVIDENCE_MANIFEST_FILE, EVIDENCE_MANIFEST_SCHEMA, listBundleFiles, manifestDigest, normalizedTreeDigest, readJson, safeArtifactPath, sha256File, type EvidenceManifest } from "./restricted-user-evidence";
+import { EVIDENCE_MANIFEST_FILE, EVIDENCE_MANIFEST_SCHEMA, listBundleFiles, manifestDigest, normalizedTreeDigest, readJson, safeArtifactPath, sha256, sha256File, type EvidenceManifest } from "./restricted-user-evidence";
 import { captureStage, collectPostRestart, collectPreRestart, createPreparationManifest } from "./restricted-user-observations";
 import { auditLiveBinding } from "./restricted-user-live-binding";
 import { deriveSubjectProcessTree, verifyPrivilegedObserverEvidence } from "./restricted-user-privileged-observer";
 import { auditIdentityBindings } from "./restricted-user-identity-binding";
-import { prepareProductionIdentityBindings,readVerifiedInstallationIdentity,RESTRICTED_INVOCATION_MODES,type RestrictedInvocationMode } from "./restricted-user-production-bindings";
+import { prepareProductionIdentityBindings,readVerifiedInstallationIdentity,RESTRICTED_INVOCATION_MODES,type RestrictedInvocationMode , verifyPreparationAuthority } from "./restricted-user-production-bindings";
 
 export const RESTRICTED_USER_PROFILE_ID = "same-host-restricted-user-release-only-v1";
 export const RESTRICTED_USER_MODEL = "llama3.2:1b";
@@ -33,10 +33,259 @@ const loopback = (value: string) => value === "127.0.0.1" || value === "::1";
 
 export function restrictedUserPolicy(): Record<string, unknown> { return { schemaVersion: "sera.restricted-user-release-only-policy.v2", profileId: RESTRICTED_USER_PROFILE_ID, allowedClaims: ["RELEASE_INDEPENDENCE_PROVEN", "CERTIFIED_HOST_PROFILE_PROVEN"], deniedClaims: ["CROSS_HOST_PORTABILITY_PROVEN"], threatModel: "Operational same-host evidence; no malicious-administrator, kernel, firmware, collector-control, or hardware-backed attestation claim.", model: RESTRICTED_USER_MODEL, preparationIsPlanOnly: true, collectionRequiresRealRestrictedEnvironment: true, milestone16Complete: false, currentCertification: "fresh-process-offline-restart-relocated-root-lesson-persistence-proof-v1" }; }
 
+
+export function auditPackagedDesktopOperatorLifecycle(
+  prep:any,
+  manifest:any,
+  pre:any,
+  post:any
+):string[]{
+  const reasons:string[]=[];
+
+  const failIf=(
+    code:string,
+    pass:boolean
+  )=>{
+    if(
+      !pass &&
+      !reasons.includes(code)
+    ){
+      reasons.push(code);
+    }
+  };
+
+  const expectedSchema=
+    "sera.packaged-desktop-operator-lifecycle.v1";
+
+  const expectedRuntimePath=
+    path.resolve(
+      String(
+        prep.subjectCollector?.runtimePath ??
+        prep.release?.runtimePath ??
+        ""
+      )
+    );
+
+  const expectedEntrypointPath=
+    path.resolve(
+      String(
+        prep.release?.expectedExtractionRoot ??
+        ""
+      ),
+      "app",
+      "desktop-operator-host.cjs"
+    );
+
+  const auditStage=(
+    prefix:"PRE"|"POST",
+    stage:"PRE_RESTART"|"POST_RESTART",
+    record:any
+  )=>{
+    const present=
+      !!record &&
+      Object.keys(record).length>0;
+
+    failIf(
+      `${prefix}_LIFECYCLE_RECORD_MISSING`,
+      present
+    );
+
+    if(!present){
+      return;
+    }
+
+    failIf(
+      `${prefix}_LIFECYCLE_SCHEMA_MISMATCH`,
+      record.schemaVersion===
+        expectedSchema
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_STAGE_MISMATCH`,
+      record.stage===stage
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_SESSION_MISMATCH`,
+      record.proofSessionId===
+        prep.sessionId
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_NONCE_DIGEST_MISMATCH`,
+      record.nonceDigest===
+        sha256(
+          String(
+            prep.nonce??""
+          )
+        )
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_RELEASE_IDENTITY_MISMATCH`,
+      record.releaseIdentity===
+        prep.installationBinding?.releaseIdentity
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_INSTALLATION_IDENTITY_MISMATCH`,
+      record.installationIdentity===
+        prep.installationIdentity
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_RUNTIME_PATH_MISMATCH`,
+      path.resolve(
+        String(
+          record.runtimePath??""
+        )
+      ).toLowerCase()===
+        expectedRuntimePath.toLowerCase()
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_RUNTIME_DIGEST_MISMATCH`,
+      record.runtimeSha256===
+        (
+          prep.subjectCollector?.runtimeSha256 ??
+          prep.release?.runtimeSha256
+        )
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_ENTRYPOINT_PATH_MISMATCH`,
+      path.resolve(
+        String(
+          record.entrypointPath??""
+        )
+      ).toLowerCase()===
+        expectedEntrypointPath.toLowerCase()
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_ENTRYPOINT_DIGEST_MISMATCH`,
+      record.entrypointSha256===
+        manifest.desktopOperator?.host?.sha256
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_SUBJECT_SID_MISMATCH`,
+      record.subjectSid===
+        prep.expectedProofSid
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_HOST_MISMATCH`,
+      record.host==="127.0.0.1"
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_PORT_MISMATCH`,
+      record.port===4317
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_SHUTDOWN_STATE_MISMATCH`,
+      record.state==="STOPPED"
+    );
+
+    const shutdownPresent=
+      typeof record.shutdownRequestedAt==="string" &&
+      Number.isFinite(
+        Date.parse(
+          record.shutdownRequestedAt
+        )
+      );
+
+    failIf(
+      `${prefix}_LIFECYCLE_SHUTDOWN_REQUEST_MISSING`,
+      shutdownPresent
+    );
+
+    failIf(
+      `${prefix}_LIFECYCLE_EXIT_UNCONFIRMED`,
+      record.ownedProcessExitConfirmed===true
+    );
+
+    const started=
+      Date.parse(
+        String(
+          record.startedAt??""
+        )
+      );
+
+    const shutdown=
+      Date.parse(
+        String(
+          record.shutdownRequestedAt??""
+        )
+      );
+
+    const stopped=
+      Date.parse(
+        String(
+          record.stoppedAt??""
+        )
+      );
+
+    const timestampsValid=
+      Number.isFinite(started) &&
+      Number.isFinite(shutdown) &&
+      Number.isFinite(stopped);
+
+    failIf(
+      `${prefix}_LIFECYCLE_TIMESTAMP_INVALID`,
+      timestampsValid
+    );
+
+    if(timestampsValid){
+      failIf(
+        `${prefix}_LIFECYCLE_TIMESTAMP_ORDER_INVALID`,
+        started<=shutdown &&
+        shutdown<=stopped
+      );
+    }
+  };
+
+  auditStage(
+    "PRE",
+    "PRE_RESTART",
+    pre
+  );
+
+  auditStage(
+    "POST",
+    "POST_RESTART",
+    post
+  );
+
+  const prePresent=
+    !!pre &&
+    Object.keys(pre).length>0;
+
+  const postPresent=
+    !!post &&
+    Object.keys(post).length>0;
+
+  if(
+    prePresent &&
+    postPresent
+  ){
+    failIf(
+      "LIFECYCLE_PRE_POST_IDENTITY_NOT_DISTINCT",
+      pre.pid!==post.pid &&
+      JSON.stringify(pre)!==
+        JSON.stringify(post)
+    );
+  }
+
+  return reasons.sort();
+}
+
 export function prepareRestrictedUserProof(input: any = {}): Record<string, unknown> {
   if (!input.releaseZip || !input.releaseManifest || !input.extractionRoot || !input.proofAccountName || !input.proofSid || !input.developmentSid || !input.hostProfileId || !input.governanceDecision || !input.observerRoot || !Array.isArray(input.collectorFiles)) return { ok: false, status: "BLOCKED", reasonCodes: ["PREPARATION_INPUTS_REQUIRED"], executesSystemChanges: false };
   const invocationMode:RestrictedInvocationMode=input.invocationMode??"NON_PROMOTABLE_DEVELOPMENT_SMOKE";if(!RESTRICTED_INVOCATION_MODES.includes(invocationMode))return{ok:false,status:"BLOCKED",reasonCodes:["PREPARATION_INVOCATION_MODE_REQUIRED"],executesSystemChanges:false};const outputRoot=path.resolve(input.outputRoot??path.join(process.cwd(),".sera","base-mvp","restricted-user-plan")),existingPath=path.join(outputRoot,"preparation-manifest.json");
-  if(fs.existsSync(existingPath)){const existing=readJson(existingPath),same=existing.invocationMode===invocationMode&&existing.hostProfileId===input.hostProfileId&&existing.expectedProofSid===input.proofSid&&existing.developmentSid===input.developmentSid&&path.resolve(existing.observerRoot)===path.resolve(input.observerRoot)&&existing.release?.zipSha256===sha256File(input.releaseZip)&&existing.release?.releaseManifestDigest===sha256File(input.releaseManifest)&&path.resolve(existing.release?.expectedExtractionRoot??"")===path.resolve(input.extractionRoot);if(!same)return{ok:false,status:"BLOCKED",reasonCodes:["PREPARATION_CONFLICT"],executesSystemChanges:false};try{readVerifiedInstallationIdentity(existing)}catch{return{ok:false,status:"BLOCKED",reasonCodes:["INSTALLATION_IDENTITY_MALFORMED"],executesSystemChanges:false}}return{ok:true,status:"PREPARATION_REUSED",path:existingPath,sessionId:existing.sessionId,installationIdentity:existing.installationIdentity,installationIdentityRecord:existing.installationIdentityRecord,subjectCollector:existing.subjectCollector,executesSystemChanges:false}}
+  if(fs.existsSync(existingPath)){const existing=readJson(existingPath),same=existing.invocationMode===invocationMode&&existing.hostProfileId===input.hostProfileId&&existing.expectedProofSid===input.proofSid&&existing.developmentSid===input.developmentSid&&path.resolve(existing.observerRoot)===path.resolve(input.observerRoot)&&existing.release?.zipSha256===sha256File(input.releaseZip)&&existing.release?.releaseManifestDigest===sha256File(input.releaseManifest)&&path.resolve(existing.release?.expectedExtractionRoot??"")===path.resolve(input.extractionRoot);if(!same)return{ok:false,status:"BLOCKED",reasonCodes:["PREPARATION_CONFLICT"],executesSystemChanges:false};try{readVerifiedInstallationIdentity(existing)}catch{return{ok:false,status:"BLOCKED",reasonCodes:["INSTALLATION_IDENTITY_MALFORMED"],executesSystemChanges:false}}try{verifyPreparationAuthority(existingPath)}catch{return{ok:false,status:"BLOCKED",reasonCodes:["PREPARATION_AUTHORITY_MISMATCH"],executesSystemChanges:false}}return{ok:true,status:"PREPARATION_REUSED",path:existingPath,sessionId:existing.sessionId,installationIdentity:existing.installationIdentity,installationIdentityRecord:existing.installationIdentityRecord,subjectCollector:existing.subjectCollector,executesSystemChanges:false}}
   const result:any=createPreparationManifest({ projectRoot: input.projectRoot ?? process.cwd(), outputRoot, releaseZip: input.releaseZip, extractionRoot: input.extractionRoot, releaseManifest: input.releaseManifest, collectorFiles: input.collectorFiles, proofAccountName: input.proofAccountName, proofSid: input.proofSid, developmentSid: input.developmentSid, hostProfileId: input.hostProfileId, governanceDecision: input.governanceDecision, observerRoot:path.resolve(input.observerRoot), developmentStatePaths: input.developmentStatePaths, networkRestorationState: input.networkRestorationState });const prepared=prepareProductionIdentityBindings(result.path,{invocationMode,roundTripAdapters:input.roundTripAdapters});return { ...result,status:"PREPARATION_CREATED", installationIdentity:prepared.installationIdentity, installationIdentityRecord:prepared.installationIdentityRecord, subjectCollector:prepared.subjectCollector, executesSystemChanges: false };
 }
 export const collectRestrictedUserPreRestart = (preparation: string) => collectPreRestart(preparation);

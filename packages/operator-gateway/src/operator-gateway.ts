@@ -69,6 +69,12 @@ export interface OperatorGatewayConfig {
   port?: number;
   installationId?: string;
   runtimeInstanceId?: string;
+  packagedLifecycleIdentity?: Record<string, unknown>;
+  packagedLifecycleIdentityTokenHash?: string;
+  packagedLifecycleShutdown?: {
+    tokenHash: string;
+    request: () => void;
+  };
   controlPlane?: ControlPlane;
   executionAuthority?: ExecutionAuthority;
   now?: () => Date;
@@ -147,6 +153,12 @@ export class OperatorGateway {
   private readonly controlPlane: ControlPlane;
   private readonly productControlPlane: ProductControlPlane;
   private readonly executionAuthority?: ExecutionAuthority;
+  private readonly packagedLifecycleIdentity?: Record<string, unknown>;
+  private readonly packagedLifecycleIdentityTokenHash?: string;
+  private readonly packagedLifecycleShutdown?: {
+    tokenHash: string;
+    request: () => void;
+  };
   private readonly studioRuntime: StudioRuntime;
   private readonly learningGovernanceRuntime: LearningGovernanceRuntime;
   private readonly governedCapabilityEngineComposition: GovernedCapabilityEngineComposition;
@@ -163,6 +175,54 @@ export class OperatorGateway {
     this.port = config.port ?? 0;
     this.now = config.now ?? (() => new Date());
     this.executionAuthority = config.executionAuthority;
+    this.packagedLifecycleIdentity =
+      config.packagedLifecycleIdentity;
+    this.packagedLifecycleIdentityTokenHash =
+      config.packagedLifecycleIdentityTokenHash;
+    this.packagedLifecycleShutdown =
+      config.packagedLifecycleShutdown;
+
+    const packagedLifecycleParts = [
+      this.packagedLifecycleIdentity,
+      this.packagedLifecycleIdentityTokenHash,
+      this.packagedLifecycleShutdown
+    ];
+
+    const packagedLifecycleConfigured =
+      packagedLifecycleParts.filter(
+        (value) => value !== undefined
+      ).length;
+
+    if (
+      packagedLifecycleConfigured !== 0 &&
+      packagedLifecycleConfigured !==
+        packagedLifecycleParts.length
+    ) {
+      throw new OperatorGatewayBlockedError(
+        "Packaged lifecycle configuration must be complete.",
+        "packaged_lifecycle_configuration_incomplete"
+      );
+    }
+
+    if (
+      packagedLifecycleConfigured > 0 &&
+      (
+        !/^[a-f0-9]{64}$/.test(
+          this.packagedLifecycleIdentityTokenHash ?? ""
+        ) ||
+        !/^[a-f0-9]{64}$/.test(
+          this.packagedLifecycleShutdown?.tokenHash ?? ""
+        ) ||
+        this.packagedLifecycleIdentityTokenHash !==
+          this.packagedLifecycleShutdown?.tokenHash
+      )
+    ) {
+      throw new OperatorGatewayBlockedError(
+        "Packaged lifecycle authority binding is invalid.",
+        "packaged_lifecycle_authority_invalid"
+      );
+    }
+
     validateLoopbackHost(this.host);
     const stateConfig = createRuntimeStateConfig({
       projectRoot: this.projectRoot,
@@ -2868,6 +2928,44 @@ export class OperatorGateway {
     if (resource === "innovations") return id ? this.learningGovernanceRuntime.inspect(id) : { innovations: this.learningGovernanceRuntime.innovations() };
     throw new OperatorGatewayBlockedError("Learning Governance route not found.", "route_not_found");
   }
+
+  private validatePackagedLifecycleToken(
+    request: IncomingMessage,
+    expectedHash: string | undefined
+  ): void {
+    if (!expectedHash) {
+      throw new OperatorGatewayBlockedError(
+        "Packaged lifecycle endpoint is unavailable.",
+        "packaged_lifecycle_unavailable"
+      );
+    }
+
+    const raw =
+      request.headers[
+        "x-sera-lifecycle-token"
+      ];
+
+    const token =
+      Array.isArray(raw)
+        ? raw[0]
+        : raw;
+
+    if (
+      !token ||
+      !safeEqual(
+        expectedHash,
+        packagedLifecycleTokenHash(
+          String(token)
+        )
+      )
+    ) {
+      throw new OperatorGatewayBlockedError(
+        "Packaged lifecycle authority is required.",
+        "packaged_lifecycle_authentication_required"
+      );
+    }
+  }
+
   close() { this.studioRuntime.close(); this.store.close(); }
 
   private route(request: IncomingMessage, response: ServerResponse): void {
@@ -2876,6 +2974,33 @@ export class OperatorGateway {
       if (!isAllowedHostHeader(request.headers.host, this.boundPort())) throw new OperatorGatewayBlockedError("Host header blocked.", "host_header_blocked");
       if (request.headers.origin && !String(request.headers.origin).startsWith(`http://127.0.0.1:${this.boundPort()}`) && !String(request.headers.origin).startsWith(`http://localhost:${this.boundPort()}`)) throw new OperatorGatewayBlockedError("Origin blocked.", "origin_blocked");
       if (request.method === "GET") {
+        if (
+          url.pathname ===
+          "/api/v1/operator/packaged-lifecycle"
+        ) {
+          if (
+            !this.packagedLifecycleIdentity
+          ) {
+            throw new OperatorGatewayBlockedError(
+              "Packaged lifecycle endpoint is unavailable.",
+              "packaged_lifecycle_unavailable"
+            );
+          }
+
+          this.validatePackagedLifecycleToken(
+            request,
+            this.packagedLifecycleIdentityTokenHash
+          );
+
+          return sendJson(
+            response,
+            envelope(
+              true,
+              this.packagedLifecycleIdentity
+            )
+          );
+        }
+
         const asset = this.assets.find((candidate) => candidate.path === url.pathname);
         if (asset) return send(response, 200, asset.contentType, asset.body);
         if (url.pathname === "/api/v1/operator/status") return sendJson(response, envelope(true, this.status()));
@@ -2946,6 +3071,44 @@ export class OperatorGateway {
           return sendJson(response, envelope(true, { events: this.events() }));
         }
       }
+
+      if (
+        request.method === "POST" &&
+        url.pathname ===
+          "/api/v1/operator/packaged-lifecycle/shutdown"
+      ) {
+        const shutdown =
+          this.packagedLifecycleShutdown;
+
+        if (!shutdown) {
+          throw new OperatorGatewayBlockedError(
+            "Packaged lifecycle shutdown is unavailable.",
+            "packaged_lifecycle_unavailable"
+          );
+        }
+
+        this.validatePackagedLifecycleToken(
+          request,
+          shutdown.tokenHash
+        );
+
+        sendJson(
+          response,
+          envelope(
+            true,
+            {
+              accepted: true
+            }
+          )
+        );
+
+        setImmediate(
+          () => shutdown.request()
+        );
+
+        return;
+      }
+
       if (request.method === "POST" && url.pathname === "/api/v1/operator/session") {
         void readJson(request)
           .then((body) => sendJson(response, envelope(true, this.createSession({ idempotencyKey: String(body.idempotencyKey ?? `session:${randomId()}`) }))))
@@ -3683,6 +3846,19 @@ function redact(value: string): string {
 
 function stableHash(value: unknown): string {
   return crypto.createHash("sha256").update(JSON.stringify(value, Object.keys(value as Record<string, unknown>).sort()), "utf8").digest("hex");
+}
+
+
+function packagedLifecycleTokenHash(
+  value: string
+): string {
+  return crypto
+    .createHash("sha256")
+    .update(
+      JSON.stringify(value),
+      "utf8"
+    )
+    .digest("hex");
 }
 
 function hashSecret(value: string): string {
