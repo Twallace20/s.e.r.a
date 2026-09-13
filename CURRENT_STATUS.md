@@ -12,7 +12,7 @@ Last updated: 2026-09-13
 - **M16-A: complete**
 - **M16-B2: ACTIVE / NOT YET CLOSED**
 
-The current branch is actively advancing M16-B2. Recent repository work is focused on the restricted-user / privileged-observer proof chain, including post-restart Node process identity evidence.
+The current branch is actively advancing M16-B2. Frozen product candidate: **M16-B2-v10**. Authentic Attempt 21 preparation exists and remains **UNCONSUMED**; offline handoff staging is the next gate. The active B2 proof scope is **PRE_RESTART** on the certified same-host profile. Recent repository work repaired privileged-observer Node identity evidence to bind the packaged Node executable path and SHA-256.
 
 Continue from the current repository, runtime, and preserved proof state. Do **not** restart M16-A or discard previously accepted M16-B2 evidence unless current repository/runtime truth proves that necessary. Failed or non-promotable proof roots remain historical evidence and must not be silently rewritten into success.
 
