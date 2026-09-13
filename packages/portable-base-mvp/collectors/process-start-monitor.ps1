@@ -38,7 +38,21 @@ try {
       $owner = Invoke-CimMethod -InputObject $process -MethodName GetOwner -ErrorAction Stop
       $ownerSid = Invoke-CimMethod -InputObject $process -MethodName GetOwnerSid -ErrorAction Stop
       $classification = 'OBSERVED_AND_ENRICHED'
-      $enriched = @{ executablePath=$process.ExecutablePath; commandLine=$process.CommandLine; sessionId=$process.SessionId; owner="$($owner.Domain)\$($owner.User)"; ownerSid=$ownerSid.Sid }
+      $executableSha256 = $null
+      if (
+        $trace.ProcessName -ieq 'node.exe' -and
+        -not [string]::IsNullOrWhiteSpace([string]$process.ExecutablePath) -and
+        (Test-Path -LiteralPath $process.ExecutablePath -PathType Leaf)
+      ) {
+        $executableSha256 =
+          (
+            Get-FileHash `
+              -LiteralPath $process.ExecutablePath `
+              -Algorithm SHA256 `
+              -ErrorAction Stop
+          ).Hash.ToLowerInvariant()
+      }
+      $enriched = @{ executablePath=$process.ExecutablePath; executableSha256=$executableSha256; commandLine=$process.CommandLine; sessionId=$process.SessionId; owner="$($owner.Domain)\$($owner.User)"; ownerSid=$ownerSid.Sid }
     } catch [Microsoft.Management.Infrastructure.CimException] {
       $classification = if ($_.Exception.Message -match 'Access') {'ENRICHMENT_ACCESS_DENIED'} else {'ENRICHMENT_PROCESS_EXITED'}
     } catch { $classification = 'ENRICHMENT_ERROR' }
