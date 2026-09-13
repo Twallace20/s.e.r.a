@@ -1,4 +1,8 @@
-﻿Status: CLOSED_CLEANLY
+# Historical Phase Closeout Snapshot
+
+> **OUTDATED FOR LIVE PROJECT STATUS.** This file is retained only as historical audit evidence for an older Phase190 closeout. For the current S.E.R.A. execution state, see `CURRENT_STATUS.md` on the active branch.
+
+Status: CLOSED_CLEANLY
 Phase: s.e.r.a_phase190_closeout_order_and_handoff_identity_hard_gate_v1_overlay
 Branch: main
 Timestamp: 20260707_105815
